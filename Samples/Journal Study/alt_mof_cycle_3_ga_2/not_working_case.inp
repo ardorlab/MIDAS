@@ -1,0 +1,208 @@
+'COM'  * --------------------------------------------*
+'COM'  *                                             *
+'COM'  *               GENERIC PWR MODEL             *
+'COM'  *                 UO 2 DESGIGN                *
+'COM'  *                C Y C L E    1               *
+'COM'  *                                             *
+'COM'  * --------------------------------------------*
+
+
+'DIM.PWR' 15/                                      * PWR with 15 rows of fuel assemblies
+'DIM.CAL' 25, 2/                                   * 12 axial nodes in the fuel, Quarter core
+'DIM.DEP' 'EXP' 'SAM' 'HBOR' 'HTMO' 'PIN' 'EBP' 'HTF' /  * Select depletion arguments
+
+'COR.DAT' 21.50, 365.76 105.48, 557.0, 557.33/     * core data given above
+'COR.SYM' 'ROT'/                                  * Core symmetry
+
+'TIT.CAS' 'PWR CYCLE 1 U02 CORE - NOMINAL CYCLE'/      * Title for each case in run
+'TIT.PRO' 'GENERIC PWR EQUILIBRIUM CYCLE'/        * Project name
+
+'COM' SPECIFY THE REFLECTOR LOCATIONS
+'FUE.TYP' 1
+2  5  2  5  2  5  2  8  1
+5  2  6  2  5  2  7  3  1
+2  6  2  5  2  9  2  4  1
+5  2  5  2  5  2  11 3  1
+2  5  2  5  10 6  3  1  1
+5  2  9  2  6  8  3  1  0
+2  7  2  11 3  3  1  1  0
+8  3  4  3  1  1  1  0  0 
+1  1  1  1  1  0  0  0  0/
+
+'COM'   1 - 220 1 - 220 1 - 220 1 - 312 100
+'COM'   220 1 - 224 1 - 220 1 - 324 3 - 100
+'COM'   1 - 224 1 - 220 1 - 216 1 - 3 8 100
+'COM'   220 1 - 220 1 - 220 1 - 316 3 - 100
+'COM'   1 - 220 1 - 220 2 - 224 3 - 100 100
+'COM'   220 1 - 216 1 - 224 312 3 - 100
+'COM'   1 - 324 1 - 316 3 - 3 - 100 100
+'COM'   312 3 - 3 8 3 - 100 100 100
+'COM'   100 100 100 100 100/
+
+
+'COM'               SERIAL   NUMBER TO    FUEL    BATCH
+'COM'               LABEL     CREATE      TYPE   NUMBER
+'FUE.NEW' 'TYPE01', 'A01',      65,        2,    ,,1/
+'FUE.NEW' 'TYPE02', 'B01',      32,        3,    ,,1/
+'FUE.NEW' 'TYPE03', 'C01',      8,         4,    ,,1/
+'FUE.NEW' 'TYPE04', 'D01',      36,        5,    ,,1/
+'FUE.NEW' 'TYPE05', 'E01',      16,        6,    ,,1/
+'FUE.NEW' 'TYPE06', 'F01',      8,         7,    ,,1/
+'FUE.NEW' 'TYPE07', 'G01',      8,         8,    ,,1/
+'FUE.NEW' 'TYPE08', 'H01',      8,         9,    ,,1/
+'FUE.NEW' 'TYPE09', 'I01',      4,        10,    ,,1/
+'FUE.NEW' 'TYPE11', 'J01',      8,        11,    ,,1/
+'FUE.NEW' 'TYPE12', 'K01',      8,        12,    ,,1/
+'FUE.NEW' 'TYPE13', 'L01',      8,        13,    ,,1/
+'FUE.NEW' 'TYPE14', 'M01',      8,        14,    ,,1/
+'FUE.NEW' 'TYPE15', 'N01',      8,        15,    ,,1/
+'FUE.NEW' 'TYPE16', 'P01',      8,        16,    ,,1/
+'FUE.NEW' 'TYPE17', 'Q01',      8,        17,    ,,1/
+'FUE.NEW' 'TYPE18', 'R01',      8,        18,    ,,1/
+'FUE.NEW' 'TYPE19', 'S01',      8,        19,    ,,1/
+'FUE.NEW' 'TYPE20', 'T01',      8,        20,    ,,1/
+'FUE.NEW' 'TYPE21', 'U01',      8,        21,    ,,1/
+'FUE.NEW' 'TYPE22', 'V01',      8,        22,    ,,1/
+'FUE.NEW' 'TYPE23', 'W01',      8,        23,    ,,1/
+
+'RES' 'NEWFUEL'/                                  * Loa4 fue.new data
+'COM' 'RENAME ASSEMBLY IDs FOR EQUILIBRIUM CYCLE STUDY'
+
+'LIB' 'pwr.nnone.lib'/    * Library created by CMSLINK
+
+'REF.LIB'  ,01 'TOPREF'/             * Reflector composition: Link segment name 'RADREF'in the CMSLINK library
+           ,02 'BOTREF'/
+           ,03 'RADREF'/
+'SEG.LIB'  ,04 'lat21'/         * Fuel composition: same as for reflector case
+           ,05 'lat26'/
+           ,06 'lat31'/
+           ,07 'lat26P16'/
+           ,08 'lat26P20'/
+           ,09 'lat26P24'/
+           ,10 'lat31P8'/
+           ,11 'lat31P12'/
+           ,12 'lat31P16'/
+           ,13 'lat31P24'/
+           ,14 'gad12'/
+           ,15 'gad24'/
+           ,16 'ifba80'/
+           ,17 'ifba120'/
+           ,18 'lat49'/
+           ,19 'lat49P12'/
+           ,20 'lat49p16'/
+           ,21 'lat49P24'/
+           ,22 'gad49_12'/
+           ,23 'gad49_24'/
+           ,24 'ifba49_80'/
+           ,25 'ifba49_120'/
+
+'FUE.ZON'  1,  1,  'RADREF'     2,0.0  03,365.76  1/
+'FUE.ZON'  2,  1,  'lat21'      2,0.0  04,365.76  1/
+'FUE.ZON'  3,  1,  'lat26'      2,0.0  05,365.76  1/
+'FUE.ZON'  4,  1,  'lat26P16'   2,0.0  07,365.76  1/
+'FUE.ZON'  5,  1,  'lat26P20'   2,0.0  08,365.76  1/
+'FUE.ZON'  6,  1,  'lat26P24'   2,0.0  09,365.76  1/
+'FUE.ZON'  7,  1,  'lat31'      2,0.0  06,365.76  1/
+'FUE.ZON'  8,  1,  'lat31P8'    2,0.0  10,365.76  1/
+'FUE.ZON'  9,  1,  'lat31P12'   2,0.0  11,365.76  1/
+'FUE.ZON'  10, 1,  'lat31P16'   2,0.0  12,365.76  1/
+'FUE.ZON'  11, 1,  'lat31P24'   2,0.0  13,365.76  1/
+'FUE.ZON'  12, 1,  'gad12'      2,0.0  14,365.76  1/
+'FUE.ZON'  13, 1,  'gad24'      2,0.0  15,365.76  1/
+'FUE.ZON'  14, 1,  'ifba80'     2,0.0  16,365.76  1/
+'FUE.ZON'  15, 1,  'ifba120'    2,0.0  17,365.76  1/
+'FUE.ZON'  16, 1,  'lat49'      2,0.0  18,365.76  1/
+'FUE.ZON'  17, 1,  'lat49P12'   2,0.0  19,365.76  1/
+'FUE.ZON'  18, 1,  'lat49P16'   2,0.0  20,365.76  1/
+'FUE.ZON'  19, 1,  'lat49P24'   2,0.0  21,365.76  1/
+'FUE.ZON'  20, 1,  'gad49_12'   2,0.0  22,365.76  1/
+'FUE.ZON'  21, 1,  'gad49_24'   2,0.0  23,365.76  1/
+'FUE.ZON'  22, 1,  'ifba49_90'  2,0.0  24,365.76  1/
+'FUE.ZON'  23, 1,  'ifba49_120' 2,0.0  25,365.76  1/
+
+'FUE.GRD'   'ON'    63.249 3.810 'MID'
+                   115.449 3.810 'MID'
+                   167.649 3.810 'MID'
+                   219.849 3.810 'MID'
+                   272.049 3.810 'MID'
+                   324.249 3.810 'MID'/
+
+'BAT.LAB'  1,'CYC-1' /
+'BAT.EDT' 'ON' 'ARPF' 'AEXP' 'AKIN' '3PIN' '3XPO' /
+
+
+'COM' GENERIC MODEL:  FUEL TEMPERATURE CALC
+
+'SEG.TFU', 0,    0.0,  217.0,   17.0/            * Segment fuel temperature fit calculated by INTERPIN
+
+'COM' EXPOSURE IN GWD/MT
+
+'TAB.TFU'   1, 0, 'EXP', 8, 'POW',      1
+           0.0    5.0   10.0   15.0   20.0   30.0   40.0   50.0
+   1.0,   68.2   23.7   3.4    0.0   -1.6   -0.9   -0.6   -2.1/
+
+'COM' CONTROL RODS
+'COM' BANK   D  C  B  A  SA  SB
+'COM'  #     1  2  3  4  5   6
+'CRD.GRP' 1
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 1 0 0 0 1 0 0 0 1 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 1 0 0 0 1 0 0 0 1 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 1 0 0 0 1 0 0 0 1 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0/
+
+'CRD.DAT' 226,1.5875/                            * Control rod position and centimeters per step
+'CRD.ZON' 1,1, 'AGINCD' 0,7.743 10,365.76/       * 0 - uncontrolled region
+
+'HYD.ITE'/                                       * Hydraulic iteration
+
+'ITE.BOR' 1300/                                   * Soluble boron criticality search
+
+'DEP.CYC' 'CYCLE01' 0.0,01 /              * Initialize cycle exposure and the starting date for the cycle
+
+'PIN.EDT' 'ON' 'SUMM' '2PIN' '2PLO' /            * Execute the pin reconstr. and edit given parameters in sum. list
+
+'COR.OPE' 100.0, 100.0, 2250/                    * Set core operating power, flow and pressu
+'COR.TIN' 557.33 /       
+'DEP.STA' 'AVE' 0.0 0.5 1 2 -0.5 20/
+
+'COM'
+'COM'             SRC PRMA   START VAL    EPS    GRP  PAS  TRGT  TRVAL  TREPS     TRG
+'COM'                         (STEPS)   (STEPS)
+'COM'                 v         v        v        v    v    v      v      v        v
+'COM' -----------+----------+--------+--------+------+----+-----+------+--------+------+
+'ITE.SRC'  'SET'    'EOLEXP' ,        ,   0.02 ,      ,    ,     ,      ,        , 'MINBOR'
+      10         ,          ,        ,        ,      , 4  ,  4  ,      ,        ,      /
+'COM' -----------+----------+--------+--------+------+----+-----+------+--------+------+
+'COM'                 ^         ^        ^        ^     ^    ^     ^
+'COM'              TRGVAL      SP1      SP2      SP3  SP4   SP5   SP6
+'COM'
+'COM' SP1 = search var initial perturbation
+'COM' SP2 = search var maximum change between successive cases
+'COM' SP3 = search var minimum change between successive cases
+'COM' SP4 = search var maximum value allowed
+'COM' SP5 = search var number of iterations before search begins
+'COM' SP6 = search var number of iterations for each search cases
+'COM' SP7 = search var initial perturbation
+
+'FUE.INI','JILAB'/
+
+'PRI.STA' '2EXP' '2RPF' '2KIN'/
+'PIN.EDT' 'ON'  '3PXP'  /
+'PIN.ASM' 'ALL-3D'/
+'PIN.ZED' 25*1/
+'WRE' 's3.pwr.uo2.c01.depl.res' 0.0 8.0 20000 /       * Save results at given exposure values
+
+
+'STA'/
+'END'/

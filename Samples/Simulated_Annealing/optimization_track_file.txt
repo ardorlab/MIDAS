@@ -1,0 +1,430 @@
+Beginning Optimization
+Current Optimization Genereration 0
+Average Solution Fitness: 1.0
+Highest Solution Fitness: 1.0
+Highest Fitness Solution max_boron:  0.49421527964189815
+Highest Fitness Solution FDeltaH:  0.1442737633394584
+Highest Fitness Solution cycle_length:  0.9623001922029482
+Highest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Three,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Three,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Two,  Assembly_Two,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Five,  Assembly_Three,  Assembly_Two,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Four,  Assembly_Four,  Assembly_Two,  Assembly_Two,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  Lowest Fitness Solution Fitness: 1.0
+Lowest Fitness Solution max_boron:  0.49421527964189815
+Lowest Fitness Solution FDeltaH:  0.1442737633394584
+Lowest Fitness Solution cycle_length:  0.9623001922029482
+Lowest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Three,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Three,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Two,  Assembly_Two,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Five,  Assembly_Three,  Assembly_Two,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Four,  Assembly_Four,  Assembly_Two,  Assembly_Two,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  max_boron Best: 0.49421527964189815
+max_boron Average: 0.49421527964189815
+max_boron Worst: 0.49421527964189815
+FDeltaH Best: 0.1442737633394584
+FDeltaH Average: 0.1442737633394584
+FDeltaH Worst: 0.1442737633394584
+cycle_length Best: 0.9623001922029482
+cycle_length Average: 0.9623001922029482
+cycle_length Worst: 0.9623001922029482
+
+
+Current Optimization Genereration 0
+Average Solution Fitness: 1.0
+Highest Solution Fitness: 1.0
+Highest Fitness Solution max_boron:  0.49421527964189815
+Highest Fitness Solution FDeltaH:  0.1442737633394584
+Highest Fitness Solution cycle_length:  0.9623001922029482
+Highest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Three,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Three,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Two,  Assembly_Two,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Five,  Assembly_Three,  Assembly_Two,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Four,  Assembly_Four,  Assembly_Two,  Assembly_Two,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  Lowest Fitness Solution Fitness: 1.0
+Lowest Fitness Solution max_boron:  0.49421527964189815
+Lowest Fitness Solution FDeltaH:  0.1442737633394584
+Lowest Fitness Solution cycle_length:  0.9623001922029482
+Lowest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Three,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Three,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Two,  Assembly_Two,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Five,  Assembly_Three,  Assembly_Two,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Four,  Assembly_Four,  Assembly_Two,  Assembly_Two,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  max_boron Best: 0.49421527964189815
+max_boron Average: 0.5393970944157158
+max_boron Worst: 0.5845789091895336
+FDeltaH Best: 0.1442737633394584
+FDeltaH Average: 0.35730552253930087
+FDeltaH Worst: 0.5703372817391433
+cycle_length Best: 0.9623001922029482
+cycle_length Average: 0.6415639045539312
+cycle_length Worst: 0.3208276169049141
+
+
+Current Optimization Genereration 0
+Average Solution Fitness: 1.0
+Highest Solution Fitness: 1.0
+Highest Fitness Solution max_boron:  0.5845789091895336
+Highest Fitness Solution FDeltaH:  0.5703372817391433
+Highest Fitness Solution cycle_length:  0.3208276169049141
+Highest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Three,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Three,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Two,  Assembly_Two,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Five,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Four,  Assembly_Four,  Assembly_Two,  Assembly_Two,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  Lowest Fitness Solution Fitness: 1.0
+Lowest Fitness Solution max_boron:  0.5845789091895336
+Lowest Fitness Solution FDeltaH:  0.5703372817391433
+Lowest Fitness Solution cycle_length:  0.3208276169049141
+Lowest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Three,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Three,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Two,  Assembly_Two,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Five,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Four,  Assembly_Four,  Assembly_Two,  Assembly_Two,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  max_boron Best: 0.32169167399954746
+max_boron Average: 0.4531352915945405
+max_boron Worst: 0.5845789091895336
+FDeltaH Best: 0.010854325083655247
+FDeltaH Average: 0.2905958034113993
+FDeltaH Worst: 0.5703372817391433
+cycle_length Best: 0.3537715231174572
+cycle_length Average: 0.33729957001118566
+cycle_length Worst: 0.3208276169049141
+
+
+Current Optimization Genereration 0
+Average Solution Fitness: 1.0
+Highest Solution Fitness: 1.0
+Highest Fitness Solution max_boron:  0.32169167399954746
+Highest Fitness Solution FDeltaH:  0.010854325083655247
+Highest Fitness Solution cycle_length:  0.3537715231174572
+Highest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Three,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Three,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Two,  Assembly_Two,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Three,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Four,  Assembly_Four,  Assembly_Two,  Assembly_Two,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  Lowest Fitness Solution Fitness: 1.0
+Lowest Fitness Solution max_boron:  0.32169167399954746
+Lowest Fitness Solution FDeltaH:  0.010854325083655247
+Lowest Fitness Solution cycle_length:  0.3537715231174572
+Lowest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Three,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Three,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Two,  Assembly_Two,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Three,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Four,  Assembly_Four,  Assembly_Two,  Assembly_Two,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  max_boron Best: 0.2390890950112008
+max_boron Average: 0.2803903845053741
+max_boron Worst: 0.32169167399954746
+FDeltaH Best: 0.010854325083655247
+FDeltaH Average: 0.044325777390025134
+FDeltaH Worst: 0.07779722969639502
+cycle_length Best: 0.9750092462542661
+cycle_length Average: 0.6643903846858616
+cycle_length Worst: 0.3537715231174572
+
+
+Current Optimization Genereration 0
+Average Solution Fitness: 1.0
+Highest Solution Fitness: 1.0
+Highest Fitness Solution max_boron:  0.2390890950112008
+Highest Fitness Solution FDeltaH:  0.07779722969639502
+Highest Fitness Solution cycle_length:  0.9750092462542661
+Highest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Three,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Three,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Four,  Assembly_Two,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Three,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Four,  Assembly_Four,  Assembly_Two,  Assembly_Two,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  Lowest Fitness Solution Fitness: 1.0
+Lowest Fitness Solution max_boron:  0.2390890950112008
+Lowest Fitness Solution FDeltaH:  0.07779722969639502
+Lowest Fitness Solution cycle_length:  0.9750092462542661
+Lowest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Three,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Three,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Four,  Assembly_Two,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Three,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Four,  Assembly_Four,  Assembly_Two,  Assembly_Two,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  max_boron Best: 0.2390890950112008
+max_boron Average: 0.307815327054328
+max_boron Worst: 0.37654155909745524
+FDeltaH Best: 0.07779722969639502
+FDeltaH Average: 0.4639611750849985
+FDeltaH Worst: 0.850125120473602
+cycle_length Best: 0.9750092462542661
+cycle_length Average: 0.7541121614664279
+cycle_length Worst: 0.5332150766785896
+
+
+Current Optimization Genereration 0
+Average Solution Fitness: 1.0
+Highest Solution Fitness: 1.0
+Highest Fitness Solution max_boron:  0.37654155909745524
+Highest Fitness Solution FDeltaH:  0.850125120473602
+Highest Fitness Solution cycle_length:  0.5332150766785896
+Highest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Three,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Three,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Four,  Assembly_Two,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Five,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Four,  Assembly_Four,  Assembly_Two,  Assembly_Two,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  Lowest Fitness Solution Fitness: 1.0
+Lowest Fitness Solution max_boron:  0.37654155909745524
+Lowest Fitness Solution FDeltaH:  0.850125120473602
+Lowest Fitness Solution cycle_length:  0.5332150766785896
+Lowest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Three,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Three,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Four,  Assembly_Two,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Five,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Four,  Assembly_Four,  Assembly_Two,  Assembly_Two,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  max_boron Best: 0.37654155909745524
+max_boron Average: 0.5050334200044011
+max_boron Worst: 0.6335252809113469
+FDeltaH Best: 0.21168101599517308
+FDeltaH Average: 0.5309030682343876
+FDeltaH Worst: 0.850125120473602
+cycle_length Best: 0.5332150766785896
+cycle_length Average: 0.42146005049640306
+cycle_length Worst: 0.30970502431421654
+
+
+Current Optimization Genereration 0
+Average Solution Fitness: 1.0
+Highest Solution Fitness: 1.0
+Highest Fitness Solution max_boron:  0.6335252809113469
+Highest Fitness Solution FDeltaH:  0.21168101599517308
+Highest Fitness Solution cycle_length:  0.30970502431421654
+Highest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Three,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Five,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Four,  Assembly_Two,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Five,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Four,  Assembly_Four,  Assembly_Two,  Assembly_Two,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  Lowest Fitness Solution Fitness: 1.0
+Lowest Fitness Solution max_boron:  0.6335252809113469
+Lowest Fitness Solution FDeltaH:  0.21168101599517308
+Lowest Fitness Solution cycle_length:  0.30970502431421654
+Lowest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Three,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Five,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Four,  Assembly_Two,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Five,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Four,  Assembly_Four,  Assembly_Two,  Assembly_Two,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  max_boron Best: 0.30617701062399894
+max_boron Average: 0.4698511457676729
+max_boron Worst: 0.6335252809113469
+FDeltaH Best: 0.14259591720496634
+FDeltaH Average: 0.1771384666000697
+FDeltaH Worst: 0.21168101599517308
+cycle_length Best: 0.6942464898574618
+cycle_length Average: 0.5019757570858392
+cycle_length Worst: 0.30970502431421654
+
+
+Current Optimization Genereration 0
+Average Solution Fitness: 1.0
+Highest Solution Fitness: 1.0
+Highest Fitness Solution max_boron:  0.30617701062399894
+Highest Fitness Solution FDeltaH:  0.14259591720496634
+Highest Fitness Solution cycle_length:  0.6942464898574618
+Highest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Three,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Five,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Four,  Assembly_Two,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Five,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Four,  Assembly_Four,  Assembly_Two,  Assembly_Four,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  Lowest Fitness Solution Fitness: 1.0
+Lowest Fitness Solution max_boron:  0.30617701062399894
+Lowest Fitness Solution FDeltaH:  0.14259591720496634
+Lowest Fitness Solution cycle_length:  0.6942464898574618
+Lowest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Three,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Five,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Four,  Assembly_Two,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Five,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Four,  Assembly_Four,  Assembly_Two,  Assembly_Four,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  max_boron Best: 0.30617701062399894
+max_boron Average: 0.357158313659717
+max_boron Worst: 0.4081396166954351
+FDeltaH Best: 0.14259591720496634
+FDeltaH Average: 0.5102461931181315
+FDeltaH Worst: 0.8778964690312965
+cycle_length Best: 0.6942464898574618
+cycle_length Average: 0.5862531633394067
+cycle_length Worst: 0.47825983682135154
+
+
+Current Optimization Genereration 0
+Average Solution Fitness: 1.0
+Highest Solution Fitness: 1.0
+Highest Fitness Solution max_boron:  0.4081396166954351
+Highest Fitness Solution FDeltaH:  0.8778964690312965
+Highest Fitness Solution cycle_length:  0.47825983682135154
+Highest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Three,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Five,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Four,  Assembly_Two,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Five,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Two,  Assembly_Four,  Assembly_Two,  Assembly_Four,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  Lowest Fitness Solution Fitness: 1.0
+Lowest Fitness Solution max_boron:  0.4081396166954351
+Lowest Fitness Solution FDeltaH:  0.8778964690312965
+Lowest Fitness Solution cycle_length:  0.47825983682135154
+Lowest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Three,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Five,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Four,  Assembly_Two,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Five,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Two,  Assembly_Four,  Assembly_Two,  Assembly_Four,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  max_boron Best: 0.4081396166954351
+max_boron Average: 0.582978790494768
+max_boron Worst: 0.7578179642941009
+FDeltaH Best: 0.28497365746757464
+FDeltaH Average: 0.5814350632494356
+FDeltaH Worst: 0.8778964690312965
+cycle_length Best: 0.5795881569176102
+cycle_length Average: 0.5289239968694809
+cycle_length Worst: 0.47825983682135154
+
+
+Current Optimization Genereration 0
+Average Solution Fitness: 1.0
+Highest Solution Fitness: 1.0
+Highest Fitness Solution max_boron:  0.7578179642941009
+Highest Fitness Solution FDeltaH:  0.28497365746757464
+Highest Fitness Solution cycle_length:  0.5795881569176102
+Highest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Three,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Five,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Two,  Assembly_Two,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Five,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Two,  Assembly_Four,  Assembly_Two,  Assembly_Four,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  Lowest Fitness Solution Fitness: 1.0
+Lowest Fitness Solution max_boron:  0.7578179642941009
+Lowest Fitness Solution FDeltaH:  0.28497365746757464
+Lowest Fitness Solution cycle_length:  0.5795881569176102
+Lowest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Three,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Five,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Two,  Assembly_Two,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Five,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Two,  Assembly_Four,  Assembly_Two,  Assembly_Four,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  max_boron Best: 0.755446886245097
+max_boron Average: 0.756632425269599
+max_boron Worst: 0.7578179642941009
+FDeltaH Best: 0.1753325040492143
+FDeltaH Average: 0.23015308075839447
+FDeltaH Worst: 0.28497365746757464
+cycle_length Best: 0.5795881569176102
+cycle_length Average: 0.511522707528111
+cycle_length Worst: 0.4434572581386118
+
+
+Current Optimization Genereration 0
+Average Solution Fitness: 1.0
+Highest Solution Fitness: 1.0
+Highest Fitness Solution max_boron:  0.755446886245097
+Highest Fitness Solution FDeltaH:  0.1753325040492143
+Highest Fitness Solution cycle_length:  0.4434572581386118
+Highest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Three,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Five,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Two,  Assembly_Four,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Five,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Two,  Assembly_Four,  Assembly_Two,  Assembly_Four,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  Lowest Fitness Solution Fitness: 1.0
+Lowest Fitness Solution max_boron:  0.755446886245097
+Lowest Fitness Solution FDeltaH:  0.1753325040492143
+Lowest Fitness Solution cycle_length:  0.4434572581386118
+Lowest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Three,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Five,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Two,  Assembly_Four,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Five,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Two,  Assembly_Four,  Assembly_Two,  Assembly_Four,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  max_boron Best: 0.08680596788101447
+max_boron Average: 0.42112642706305575
+max_boron Worst: 0.755446886245097
+FDeltaH Best: 0.1753325040492143
+FDeltaH Average: 0.2999370789465583
+FDeltaH Worst: 0.4245416538439023
+cycle_length Best: 0.5576360384220094
+cycle_length Average: 0.5005466482803106
+cycle_length Worst: 0.4434572581386118
+
+
+Current Optimization Genereration 0
+Average Solution Fitness: 1.0
+Highest Solution Fitness: 1.0
+Highest Fitness Solution max_boron:  0.08680596788101447
+Highest Fitness Solution FDeltaH:  0.4245416538439023
+Highest Fitness Solution cycle_length:  0.5576360384220094
+Highest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Three,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Five,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Four,  Assembly_Two,  Assembly_Four,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Five,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Two,  Assembly_Four,  Assembly_Two,  Assembly_Four,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  Lowest Fitness Solution Fitness: 1.0
+Lowest Fitness Solution max_boron:  0.08680596788101447
+Lowest Fitness Solution FDeltaH:  0.4245416538439023
+Lowest Fitness Solution cycle_length:  0.5576360384220094
+Lowest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Three,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Five,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Four,  Assembly_Two,  Assembly_Four,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Five,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Two,  Assembly_Four,  Assembly_Two,  Assembly_Four,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  max_boron Best: 0.08680596788101447
+max_boron Average: 0.46178063479631737
+max_boron Worst: 0.8367553017116203
+FDeltaH Best: 0.09099696789649847
+FDeltaH Average: 0.2577693108702004
+FDeltaH Worst: 0.4245416538439023
+cycle_length Best: 0.5576360384220094
+cycle_length Average: 0.40597785805900877
+cycle_length Worst: 0.25431967769600816
+
+
+Current Optimization Genereration 0
+Average Solution Fitness: 1.0
+Highest Solution Fitness: 1.0
+Highest Fitness Solution max_boron:  0.8367553017116203
+Highest Fitness Solution FDeltaH:  0.09099696789649847
+Highest Fitness Solution cycle_length:  0.25431967769600816
+Highest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Five,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Five,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Four,  Assembly_Two,  Assembly_Four,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Five,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Two,  Assembly_Four,  Assembly_Two,  Assembly_Four,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  Lowest Fitness Solution Fitness: 1.0
+Lowest Fitness Solution max_boron:  0.8367553017116203
+Lowest Fitness Solution FDeltaH:  0.09099696789649847
+Lowest Fitness Solution cycle_length:  0.25431967769600816
+Lowest Fitness Solution
+Reflector,  Reflector,  Assembly_Five,  Assembly_One,  Assembly_Two,  Assembly_Five,  Assembly_One,  Assembly_Five,  Assembly_Three,  Reflector,  
+Assembly_Five,  Reflector,  Assembly_Four,  Assembly_Four,  Assembly_One,  Assembly_Five,  Assembly_Two,  Reflector,  Assembly_One,  Assembly_Four,  
+Reflector,  Assembly_Four,  Reflector,  Assembly_Four,  Assembly_Two,  Assembly_Four,  Assembly_One,  Assembly_Two,  Assembly_Four,  Assembly_Five,  
+Assembly_Five,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Two,  Assembly_Five,  Assembly_Three,  Reflector,  Assembly_Two,  Reflector,  
+Assembly_Two,  Assembly_Three,  Assembly_Two,  Assembly_Four,  Assembly_Two,  Assembly_Four,  Assembly_Three,  Assembly_Four,  Reflector,  Assembly_Five,  
+Assembly_One,  Assembly_Four,  Assembly_One,  Assembly_One,  Assembly_Five,  Assembly_Three,  max_boron Best: 0.8367553017116203
+max_boron Average: 0.8833089948335853
+max_boron Worst: 0.9298626879555504
+FDeltaH Best: 0.09099696789649847
+FDeltaH Average: 0.1265829411187479
+FDeltaH Worst: 0.16216891434099734
+cycle_length Best: 0.296995654145245
+cycle_length Average: 0.27565766592062657
+cycle_length Worst: 0.25431967769600816
+
+
