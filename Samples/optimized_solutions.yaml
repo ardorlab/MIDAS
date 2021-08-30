@@ -1,0 +1,1740 @@
+child_17_9:
+  fitness: 0.9982730284007001
+  genome:
+  - Assembly_Four
+  - Assembly_One
+  - Reflector
+  - Assembly_Four
+  - Assembly_Three
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_Two
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Five
+  - Assembly_One
+  - Assembly_Four
+  - Reflector
+  - Assembly_One
+  - Assembly_Five
+  - Reflector
+  - Assembly_One
+  - Assembly_One
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_Five
+  - Reflector
+  - Assembly_One
+  - Assembly_Four
+  - Reflector
+  - Assembly_Five
+  - Assembly_Three
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.24850632798839556
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.9968877618545798
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.9982730284007001
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.7847952430053907
+      weight: 1.0
+child_22_1:
+  fitness: 0.9981244454324699
+  genome:
+  - Assembly_Three
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Two
+  - Assembly_Five
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Five
+  - Assembly_Five
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_One
+  - Assembly_Two
+  - Assembly_One
+  - Assembly_Five
+  - Reflector
+  - Assembly_Three
+  - Reflector
+  - Assembly_Four
+  - Assembly_Four
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Three
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_One
+  - Assembly_One
+  - Assembly_Three
+  - Reflector
+  - Assembly_Four
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.5062564427264806
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.1548479743504082
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.9981244454324699
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.24326114277723487
+      weight: 1.0
+child_33_20:
+  fitness: 0.9365859633077965
+  genome:
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Two
+  - Reflector
+  - Assembly_Five
+  - Reflector
+  - Reflector
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Two
+  - Reflector
+  - Reflector
+  - Assembly_Three
+  - Assembly_Two
+  - Reflector
+  - Reflector
+  - Assembly_Three
+  - Assembly_Two
+  - Reflector
+  - Assembly_Two
+  - Reflector
+  - Assembly_Three
+  - Assembly_Two
+  - Reflector
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Four
+  - Reflector
+  - Assembly_Five
+  - Assembly_One
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.15989398698494217
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.09546238502890025
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.9365859633077965
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.9986658211939664
+      weight: 1.0
+child_37_25:
+  fitness: 0.9722767718815708
+  genome:
+  - Assembly_Four
+  - Assembly_Four
+  - Assembly_Five
+  - Reflector
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Five
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_One
+  - Assembly_Three
+  - Reflector
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Three
+  - Reflector
+  - Assembly_Four
+  - Assembly_Two
+  - Reflector
+  - Assembly_Five
+  - Reflector
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Two
+  - Reflector
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.5510796227421824
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.005731602924509471
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.9722767718815708
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.5205377786375515
+      weight: 1.0
+child_39_10:
+  fitness: 0.8754436716721019
+  genome:
+  - Assembly_Four
+  - Assembly_One
+  - Reflector
+  - Assembly_Four
+  - Assembly_Three
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_Two
+  - Assembly_One
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_One
+  - Assembly_Four
+  - Reflector
+  - Assembly_Four
+  - Assembly_Five
+  - Reflector
+  - Assembly_One
+  - Assembly_One
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_Five
+  - Reflector
+  - Assembly_One
+  - Assembly_Four
+  - Reflector
+  - Assembly_Five
+  - Assembly_Three
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.9373693105945019
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.18790510024767448
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.8754436716721019
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.2921833030033103
+      weight: 1.0
+child_39_22:
+  fitness: 0.9795089226328256
+  genome:
+  - Assembly_Four
+  - Assembly_Three
+  - Assembly_Five
+  - Reflector
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_One
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_Three
+  - Reflector
+  - Assembly_Five
+  - Assembly_Four
+  - Assembly_Five
+  - Reflector
+  - Assembly_Four
+  - Assembly_Four
+  - Reflector
+  - Assembly_Five
+  - Reflector
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Two
+  - Reflector
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.22028260189815485
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.037199253156905865
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.9795089226328256
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.1168913631915649
+      weight: 1.0
+child_40_10:
+  fitness: 0.9014110252830728
+  genome:
+  - Assembly_Four
+  - Assembly_One
+  - Reflector
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_Two
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Five
+  - Assembly_One
+  - Assembly_Four
+  - Reflector
+  - Assembly_Three
+  - Assembly_Five
+  - Reflector
+  - Assembly_One
+  - Assembly_One
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_Five
+  - Reflector
+  - Assembly_One
+  - Assembly_Four
+  - Reflector
+  - Assembly_Five
+  - Assembly_Three
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.09339534458680476
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.9868894743478666
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.9014110252830728
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.9493978649712074
+      weight: 1.0
+child_41_19:
+  fitness: 0.9780757344554524
+  genome:
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Two
+  - Reflector
+  - Assembly_Five
+  - Reflector
+  - Reflector
+  - Assembly_Five
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Two
+  - Reflector
+  - Reflector
+  - Assembly_Three
+  - Assembly_Two
+  - Reflector
+  - Reflector
+  - Assembly_Three
+  - Assembly_Two
+  - Reflector
+  - Assembly_Two
+  - Reflector
+  - Assembly_Three
+  - Assembly_Two
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Three
+  - Reflector
+  - Reflector
+  - Assembly_Five
+  - Assembly_One
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.963858710761539
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.7313617270293097
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.9780757344554524
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.4420345850651649
+      weight: 1.0
+child_43_2:
+  fitness: 0.8625461309101652
+  genome:
+  - Assembly_Four
+  - Assembly_Four
+  - Assembly_Five
+  - Reflector
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_One
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_Three
+  - Reflector
+  - Assembly_Five
+  - Assembly_Four
+  - Assembly_Five
+  - Reflector
+  - Assembly_Four
+  - Assembly_Two
+  - Reflector
+  - Assembly_Five
+  - Reflector
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Two
+  - Reflector
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.11260527398276177
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.29658969434721183
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.8625461309101652
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.057578278498065405
+      weight: 1.0
+child_43_22:
+  fitness: 0.8906283020301344
+  genome:
+  - Assembly_Four
+  - Assembly_Two
+  - Assembly_One
+  - Reflector
+  - Assembly_Five
+  - Reflector
+  - Reflector
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_Two
+  - Assembly_Five
+  - Assembly_Two
+  - Reflector
+  - Reflector
+  - Assembly_Three
+  - Assembly_Four
+  - Reflector
+  - Reflector
+  - Assembly_Five
+  - Assembly_Four
+  - Reflector
+  - Assembly_Two
+  - Reflector
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Five
+  - Assembly_Three
+  - Reflector
+  - Reflector
+  - Assembly_Five
+  - Assembly_One
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.2532084424400357
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.21126058719535334
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.8906283020301344
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.9333126460614125
+      weight: 1.0
+child_45_25:
+  fitness: 0.9421656890810897
+  genome:
+  - Assembly_Four
+  - Assembly_Three
+  - Assembly_Five
+  - Reflector
+  - Assembly_Three
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Two
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Two
+  - Reflector
+  - Assembly_Three
+  - Assembly_One
+  - Assembly_Three
+  - Reflector
+  - Assembly_Four
+  - Assembly_Three
+  - Reflector
+  - Assembly_Five
+  - Reflector
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Two
+  - Assembly_Five
+  - Assembly_Five
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Two
+  - Reflector
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.4695140326781525
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.6004444951877729
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.9421656890810897
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.007622271051829332
+      weight: 1.0
+child_46_10:
+  fitness: 0.9287470325997496
+  genome:
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_One
+  - Assembly_Five
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Five
+  - Assembly_One
+  - Assembly_Four
+  - Reflector
+  - Assembly_Three
+  - Assembly_Five
+  - Reflector
+  - Assembly_One
+  - Reflector
+  - Assembly_Two
+  - Assembly_Two
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_Four
+  - Reflector
+  - Assembly_One
+  - Assembly_Four
+  - Reflector
+  - Assembly_Five
+  - Assembly_Three
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.13797971027320022
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.990180636054728
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.9287470325997496
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.17565984931233658
+      weight: 1.0
+child_46_13:
+  fitness: 0.9981045997724749
+  genome:
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Five
+  - Reflector
+  - Assembly_Three
+  - Assembly_Three
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_Four
+  - Assembly_Two
+  - Reflector
+  - Assembly_Five
+  - Assembly_One
+  - Assembly_Five
+  - Reflector
+  - Assembly_Four
+  - Assembly_Three
+  - Reflector
+  - Assembly_Five
+  - Reflector
+  - Assembly_One
+  - Assembly_Two
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Two
+  - Reflector
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.22904514348971905
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.2833500360280423
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.9981045997724749
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.6001784361129756
+      weight: 1.0
+child_47_24:
+  fitness: 0.9575751458837533
+  genome:
+  - Assembly_Four
+  - Assembly_One
+  - Reflector
+  - Assembly_Four
+  - Assembly_Three
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_Two
+  - Assembly_One
+  - Assembly_One
+  - Assembly_Two
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_One
+  - Assembly_Four
+  - Reflector
+  - Assembly_Four
+  - Assembly_Five
+  - Reflector
+  - Assembly_One
+  - Assembly_One
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_Five
+  - Reflector
+  - Assembly_One
+  - Assembly_Four
+  - Reflector
+  - Assembly_Five
+  - Assembly_Three
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.19669697690838428
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.9830208442203662
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.9575751458837533
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.3529739682160994
+      weight: 1.0
+child_48_12:
+  fitness: 0.856134274955994
+  genome:
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_One
+  - Assembly_Five
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Five
+  - Assembly_One
+  - Assembly_Four
+  - Reflector
+  - Assembly_Three
+  - Assembly_Five
+  - Reflector
+  - Assembly_One
+  - Reflector
+  - Assembly_Two
+  - Assembly_Two
+  - Assembly_Four
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_Four
+  - Reflector
+  - Assembly_One
+  - Assembly_Four
+  - Reflector
+  - Assembly_Five
+  - Assembly_Three
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.5689440101087233
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.6678872461425209
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.856134274955994
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.04634826254473534
+      weight: 1.0
+child_48_16:
+  fitness: 0.5870063804837072
+  genome:
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Two
+  - Reflector
+  - Assembly_Five
+  - Reflector
+  - Reflector
+  - Assembly_Five
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Two
+  - Reflector
+  - Reflector
+  - Assembly_Three
+  - Assembly_Two
+  - Reflector
+  - Reflector
+  - Assembly_Three
+  - Assembly_Two
+  - Reflector
+  - Assembly_Two
+  - Reflector
+  - Assembly_Three
+  - Assembly_Two
+  - Reflector
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Four
+  - Reflector
+  - Assembly_Five
+  - Assembly_One
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.4510773146860738
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.17821282532968852
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.5870063804837072
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.8817365448092506
+      weight: 1.0
+child_48_17:
+  fitness: 0.7986641593834986
+  genome:
+  - Assembly_Five
+  - Assembly_One
+  - Assembly_Two
+  - Reflector
+  - Assembly_Five
+  - Reflector
+  - Reflector
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_Four
+  - Assembly_Four
+  - Assembly_Two
+  - Reflector
+  - Reflector
+  - Assembly_Three
+  - Assembly_Two
+  - Reflector
+  - Reflector
+  - Assembly_Three
+  - Assembly_Two
+  - Reflector
+  - Assembly_Two
+  - Reflector
+  - Assembly_Three
+  - Assembly_Two
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Three
+  - Reflector
+  - Reflector
+  - Assembly_Five
+  - Assembly_One
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.24730614130092288
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.4356834099834348
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.7986641593834986
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.6868151422035541
+      weight: 1.0
+child_48_18:
+  fitness: 0.21925767669907914
+  genome:
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_One
+  - Assembly_One
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Five
+  - Assembly_One
+  - Assembly_Four
+  - Reflector
+  - Assembly_Three
+  - Assembly_Two
+  - Reflector
+  - Assembly_One
+  - Reflector
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_Four
+  - Reflector
+  - Assembly_One
+  - Assembly_Four
+  - Reflector
+  - Assembly_Five
+  - Assembly_Three
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.2800540435061035
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.3904104387166103
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.21925767669907914
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.18866456981527413
+      weight: 1.0
+child_48_29:
+  fitness: 0.537698302215243
+  genome:
+  - Assembly_Four
+  - Assembly_One
+  - Reflector
+  - Assembly_Four
+  - Assembly_Three
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_Two
+  - Assembly_One
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Five
+  - Assembly_One
+  - Assembly_Four
+  - Reflector
+  - Assembly_Two
+  - Assembly_Five
+  - Reflector
+  - Assembly_One
+  - Assembly_One
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_Five
+  - Reflector
+  - Assembly_One
+  - Assembly_Four
+  - Reflector
+  - Assembly_Five
+  - Assembly_Three
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.9292540680791058
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.6918211297714796
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.537698302215243
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.8674003499468353
+      weight: 1.0
+child_49_0:
+  fitness: 0.6172713346466796
+  genome:
+  - Assembly_Four
+  - Assembly_Four
+  - Assembly_Three
+  - Reflector
+  - Assembly_Three
+  - Assembly_Three
+  - Assembly_Four
+  - Reflector
+  - Assembly_Five
+  - Assembly_Two
+  - Assembly_Five
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Five
+  - Reflector
+  - Reflector
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Three
+  - Reflector
+  - Assembly_Two
+  - Assembly_Five
+  - Reflector
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Two
+  - Assembly_Two
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.780502066557954
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.7777887467213161
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.6172713346466796
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.5722569289381277
+      weight: 1.0
+child_49_14:
+  fitness: 0.21543102154746085
+  genome:
+  - Assembly_Four
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Five
+  - Assembly_Five
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_One
+  - Assembly_Three
+  - Reflector
+  - Assembly_Two
+  - Reflector
+  - Assembly_Four
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Three
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_One
+  - Assembly_One
+  - Assembly_Three
+  - Reflector
+  - Assembly_Four
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.6861260662743638
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.4650921702715163
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.21543102154746085
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.9161127273484052
+      weight: 1.0
+child_49_16:
+  fitness: 0.2540698838560721
+  genome:
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Two
+  - Reflector
+  - Assembly_Five
+  - Assembly_Five
+  - Reflector
+  - Assembly_Five
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Two
+  - Reflector
+  - Reflector
+  - Assembly_Three
+  - Assembly_Two
+  - Reflector
+  - Reflector
+  - Assembly_Three
+  - Assembly_Two
+  - Reflector
+  - Assembly_Two
+  - Reflector
+  - Assembly_Three
+  - Assembly_Two
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Three
+  - Reflector
+  - Reflector
+  - Reflector
+  - Assembly_One
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.40794371026609355
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.4963623922023641
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.2540698838560721
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.01696480629938213
+      weight: 1.0
+child_49_18:
+  fitness: 0.9848122120440388
+  genome:
+  - Assembly_Four
+  - Assembly_Four
+  - Assembly_Five
+  - Reflector
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Five
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_One
+  - Assembly_Three
+  - Reflector
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Three
+  - Reflector
+  - Assembly_Four
+  - Assembly_Two
+  - Reflector
+  - Assembly_Five
+  - Reflector
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Five
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Two
+  - Reflector
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.10972300275925506
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.6664526946403813
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.9848122120440388
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.5365190291087055
+      weight: 1.0
+child_49_21:
+  fitness: 0.5098377943260773
+  genome:
+  - Assembly_Four
+  - Assembly_One
+  - Reflector
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_Two
+  - Assembly_Five
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Five
+  - Assembly_One
+  - Assembly_Four
+  - Reflector
+  - Assembly_Three
+  - Assembly_Four
+  - Reflector
+  - Assembly_One
+  - Assembly_One
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_Five
+  - Reflector
+  - Assembly_One
+  - Assembly_Four
+  - Reflector
+  - Assembly_Five
+  - Assembly_Three
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.2843857155466688
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.3760406442232478
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.5098377943260773
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.01755315824382664
+      weight: 1.0
+child_49_22:
+  fitness: 0.6901768190832014
+  genome:
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Two
+  - Reflector
+  - Assembly_Five
+  - Reflector
+  - Reflector
+  - Assembly_Five
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Two
+  - Reflector
+  - Reflector
+  - Assembly_Three
+  - Assembly_Four
+  - Reflector
+  - Reflector
+  - Assembly_Three
+  - Assembly_Two
+  - Reflector
+  - Assembly_Two
+  - Reflector
+  - Assembly_Three
+  - Assembly_Two
+  - Reflector
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Four
+  - Reflector
+  - Assembly_Five
+  - Assembly_One
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.4399617972490468
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.4666447885811067
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.6901768190832014
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.9055202585499968
+      weight: 1.0
+child_49_24:
+  fitness: 0.3489326222724912
+  genome:
+  - Assembly_Four
+  - Assembly_Three
+  - Assembly_Five
+  - Reflector
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_One
+  - Assembly_One
+  - Assembly_Two
+  - Assembly_Three
+  - Reflector
+  - Assembly_Five
+  - Assembly_Four
+  - Assembly_Five
+  - Reflector
+  - Assembly_Four
+  - Assembly_Four
+  - Reflector
+  - Assembly_Five
+  - Reflector
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Two
+  - Reflector
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.32047804613687136
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.9260103583814034
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.3489326222724912
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.6984355410422899
+      weight: 1.0
+child_49_27:
+  fitness: 0.6656158541627487
+  genome:
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_One
+  - Assembly_Five
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_One
+  - Assembly_Four
+  - Reflector
+  - Assembly_Three
+  - Assembly_Five
+  - Reflector
+  - Assembly_One
+  - Reflector
+  - Assembly_Two
+  - Assembly_Two
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_Four
+  - Reflector
+  - Assembly_One
+  - Assembly_Four
+  - Reflector
+  - Assembly_Five
+  - Assembly_Three
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.9856634092331951
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.17242131075904166
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.6656158541627487
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.3306119082039921
+      weight: 1.0
+child_49_5:
+  fitness: 0.20613741938353414
+  genome:
+  - Assembly_Four
+  - Assembly_One
+  - Reflector
+  - Assembly_Four
+  - Assembly_Three
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Five
+  - Assembly_One
+  - Assembly_Four
+  - Reflector
+  - Assembly_One
+  - Assembly_Two
+  - Reflector
+  - Assembly_One
+  - Assembly_One
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_Five
+  - Reflector
+  - Assembly_One
+  - Assembly_Four
+  - Reflector
+  - Assembly_Five
+  - Assembly_Three
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.4495579123671064
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.1606000289673878
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.20613741938353414
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.8985973586391992
+      weight: 1.0
+child_49_6:
+  fitness: 0.9583846262518351
+  genome:
+  - Assembly_Four
+  - Assembly_Four
+  - Assembly_Five
+  - Reflector
+  - Assembly_Three
+  - Assembly_Three
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_One
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_Three
+  - Reflector
+  - Assembly_Five
+  - Assembly_Four
+  - Assembly_Five
+  - Reflector
+  - Assembly_Four
+  - Assembly_Two
+  - Reflector
+  - Assembly_Five
+  - Reflector
+  - Assembly_One
+  - Assembly_Two
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Five
+  - Assembly_Four
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Two
+  - Reflector
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.31377688349741284
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.25728362481634637
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.9583846262518351
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.2558637298442864
+      weight: 1.0
+child_49_9:
+  fitness: 0.9982119773892416
+  genome:
+  - Assembly_Four
+  - Assembly_One
+  - Reflector
+  - Assembly_Five
+  - Assembly_Three
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_Two
+  - Assembly_One
+  - Assembly_One
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Five
+  - Assembly_One
+  - Assembly_Four
+  - Reflector
+  - Assembly_Two
+  - Assembly_Five
+  - Reflector
+  - Assembly_One
+  - Assembly_One
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Two
+  - Assembly_Three
+  - Assembly_Four
+  - Assembly_One
+  - Assembly_Three
+  - Assembly_Four
+  - Reflector
+  - Assembly_One
+  - Assembly_Four
+  - Reflector
+  - Assembly_Five
+  - Assembly_Three
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      value: 0.984405460435927
+      weight: 400.0
+    PinPowerPeaking:
+      goal: less_than_target
+      target: 2.1
+      value: 0.402563937221564
+      weight: 400.0
+    cycle_length:
+      goal: maximize
+      value: 0.9982119773892416
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 0.8159759460058595
+      weight: 1.0
