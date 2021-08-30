@@ -1,0 +1,2500 @@
+child_0_21:
+  fitness: -1022.6999999999999
+  genome:
+  - A3
+  - B1
+  - B11
+  - B30
+  - C32
+  - B10
+  - A56
+  - B2
+  - B7
+  - B17
+  - A19
+  - B20
+  - C37
+  - C17
+  - A33
+  - B16
+  - C31
+  - C31
+  - C32
+  - B12
+  - B27
+  - A44
+  - B14
+  - C16
+  - B9
+  - B19
+  - C41
+  - B6
+  - B8
+  - B23
+  - B3
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.777
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 439.4
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1502.1
+      weight: 1.0
+child_1_41:
+  fitness: -679.3000000000002
+  genome:
+  - A22
+  - B17
+  - B16
+  - B11
+  - B12
+  - A59
+  - A8
+  - B23
+  - C34
+  - B9
+  - B30
+  - C52
+  - C22
+  - B19
+  - A53
+  - A30
+  - C31
+  - C21
+  - C49
+  - C28
+  - B14
+  - B10
+  - B3
+  - C44
+  - B6
+  - B27
+  - B2
+  - B1
+  - B8
+  - B20
+  - B7
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.69
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 479.7
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1634.0
+      weight: 1.0
+child_1_9:
+  fitness: -611.9000000000003
+  genome:
+  - B30
+  - B16
+  - A56
+  - B10
+  - B20
+  - B2
+  - A7
+  - C7
+  - B1
+  - A40
+  - B17
+  - B27
+  - B23
+  - C27
+  - A32
+  - B11
+  - C36
+  - C16
+  - B19
+  - C38
+  - B14
+  - A58
+  - C55
+  - C40
+  - B12
+  - B7
+  - C37
+  - B9
+  - B8
+  - B3
+  - B6
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.708
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 419.5
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1416.4
+      weight: 1.0
+child_2_20:
+  fitness: -746.2
+  genome:
+  - B22
+  - A41
+  - B10
+  - B11
+  - B8
+  - B16
+  - A29
+  - C43
+  - C10
+  - B27
+  - B17
+  - B19
+  - B23
+  - B9
+  - A43
+  - A12
+  - C30
+  - C43
+  - B6
+  - C51
+  - B20
+  - A41
+  - C39
+  - B2
+  - C30
+  - B3
+  - C38
+  - B7
+  - B14
+  - B12
+  - B1
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.755
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 403.8
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1253.4
+      weight: 1.0
+child_2_22:
+  fitness: -819.8
+  genome:
+  - B10
+  - B11
+  - B22
+  - A42
+  - B27
+  - B20
+  - A55
+  - C38
+  - C20
+  - A4
+  - A21
+  - B12
+  - B8
+  - B9
+  - B30
+  - B17
+  - C14
+  - C49
+  - B14
+  - B19
+  - B6
+  - A26
+  - C25
+  - B2
+  - C45
+  - C35
+  - C23
+  - B3
+  - B7
+  - B23
+  - B1
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.755
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 412.7
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1382.5
+      weight: 1.0
+child_2_44:
+  fitness: -692.2000000000007
+  genome:
+  - A22
+  - B17
+  - B16
+  - B11
+  - B12
+  - A59
+  - A8
+  - B23
+  - C34
+  - B9
+  - B30
+  - C52
+  - C22
+  - B19
+  - A53
+  - A30
+  - C31
+  - C21
+  - C46
+  - C28
+  - B14
+  - B10
+  - B3
+  - C44
+  - B6
+  - B27
+  - B2
+  - B1
+  - B8
+  - B20
+  - B7
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.691
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 479.0
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1641.2
+      weight: 1.0
+child_2_47:
+  fitness: -652.9000000000008
+  genome:
+  - B2
+  - B10
+  - A7
+  - B17
+  - B20
+  - B11
+  - B16
+  - C29
+  - C34
+  - A31
+  - B30
+  - B19
+  - C10
+  - C5
+  - A59
+  - A31
+  - C57
+  - B1
+  - B3
+  - C39
+  - B27
+  - A9
+  - C34
+  - C31
+  - B9
+  - B8
+  - B14
+  - B12
+  - B7
+  - B6
+  - B23
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.737
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 423.7
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1316.6
+      weight: 1.0
+child_2_48:
+  fitness: -1263.4000000000003
+  genome:
+  - A40
+  - B16
+  - A34
+  - B8
+  - B12
+  - B10
+  - B11
+  - B27
+  - B14
+  - B22
+  - B30
+  - C57
+  - B6
+  - B2
+  - A7
+  - A22
+  - B1
+  - C2
+  - C33
+  - C5
+  - B9
+  - A51
+  - B7
+  - C47
+  - C16
+  - C47
+  - C41
+  - B3
+  - B23
+  - B20
+  - B19
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.821
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 374.0
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1457.4
+      weight: 1.0
+child_3_0:
+  fitness: -948.3000000000001
+  genome:
+  - A40
+  - B8
+  - B30
+  - A18
+  - C41
+  - A32
+  - B11
+  - B27
+  - B23
+  - B10
+  - B22
+  - C57
+  - B14
+  - C31
+  - A14
+  - B16
+  - B9
+  - B2
+  - C33
+  - C5
+  - B1
+  - A51
+  - B7
+  - C47
+  - C40
+  - B6
+  - C41
+  - B12
+  - B3
+  - B20
+  - B19
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.779
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 402.9
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1381.2
+      weight: 1.0
+child_3_35:
+  fitness: -574.1000000000009
+  genome:
+  - A43
+  - B8
+  - A7
+  - B17
+  - B2
+  - A56
+  - B16
+  - B12
+  - C34
+  - B11
+  - B30
+  - B23
+  - B27
+  - C5
+  - B10
+  - A30
+  - C33
+  - B14
+  - C49
+  - C28
+  - B9
+  - A9
+  - B6
+  - C44
+  - C41
+  - C30
+  - B20
+  - B1
+  - B7
+  - B19
+  - B3
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.719
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 395.9
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1105.1
+      weight: 1.0
+child_3_39:
+  fitness: -859.7000000000008
+  genome:
+  - A12
+  - A41
+  - B10
+  - B30
+  - B2
+  - A37
+  - B16
+  - B9
+  - C20
+  - A4
+  - A21
+  - B14
+  - B6
+  - B12
+  - B22
+  - B17
+  - C14
+  - C49
+  - C9
+  - B19
+  - B8
+  - B27
+  - C25
+  - C46
+  - C45
+  - C35
+  - B3
+  - B1
+  - B7
+  - B23
+  - B20
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.723
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 428.9
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1598.6
+      weight: 1.0
+child_3_43:
+  fitness: -1365.400000000001
+  genome:
+  - A9
+  - B11
+  - A20
+  - A53
+  - B8
+  - B10
+  - A9
+  - C43
+  - B19
+  - B20
+  - B22
+  - C37
+  - B12
+  - B3
+  - A28
+  - B30
+  - C47
+  - B14
+  - C55
+  - C51
+  - B23
+  - B16
+  - B1
+  - C8
+  - C20
+  - C26
+  - B6
+  - B2
+  - B27
+  - B9
+  - B7
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.844
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 415.5
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1485.9
+      weight: 1.0
+child_3_46:
+  fitness: -1699.3000000000006
+  genome:
+  - B11
+  - B9
+  - B16
+  - A22
+  - B12
+  - A59
+  - B17
+  - B3
+  - C34
+  - A8
+  - B30
+  - C31
+  - B6
+  - B19
+  - A59
+  - A31
+  - C52
+  - C21
+  - C57
+  - C55
+  - B14
+  - B10
+  - B23
+  - C31
+  - C22
+  - B20
+  - B2
+  - B1
+  - B8
+  - B27
+  - B7
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.857
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 486.9
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1826.2
+      weight: 1.0
+child_3_47:
+  fitness: -784.2000000000008
+  genome:
+  - A22
+  - B17
+  - B16
+  - B11
+  - B12
+  - A59
+  - A8
+  - B23
+  - C34
+  - B9
+  - B30
+  - C52
+  - C22
+  - B19
+  - A53
+  - A30
+  - C31
+  - C21
+  - C49
+  - C28
+  - B14
+  - B10
+  - B20
+  - C44
+  - B6
+  - B27
+  - B2
+  - B1
+  - B8
+  - B3
+  - B7
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.717
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 477.1
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1601.3
+      weight: 1.0
+child_3_6:
+  fitness: -786.4
+  genome:
+  - B2
+  - B10
+  - A7
+  - B17
+  - B20
+  - B11
+  - B16
+  - C29
+  - C34
+  - A31
+  - B30
+  - B19
+  - C10
+  - C5
+  - A59
+  - A31
+  - B3
+  - B7
+  - C57
+  - C55
+  - B27
+  - A9
+  - C34
+  - C31
+  - B9
+  - B8
+  - B14
+  - B12
+  - B1
+  - B6
+  - B23
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.767
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 423.6
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1263.4
+      weight: 1.0
+child_4_1:
+  fitness: -968.8000000000006
+  genome:
+  - A43
+  - B8
+  - A7
+  - B17
+  - B1
+  - A56
+  - B16
+  - B12
+  - C34
+  - B11
+  - B30
+  - B23
+  - C33
+  - C5
+  - B10
+  - A30
+  - B27
+  - B14
+  - C49
+  - C28
+  - B9
+  - A9
+  - B6
+  - C44
+  - B20
+  - C30
+  - C41
+  - B2
+  - B7
+  - B19
+  - B3
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.796
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 386.2
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1088.6
+      weight: 1.0
+child_4_14:
+  fitness: -1168.4000000000005
+  genome:
+  - A21
+  - A28
+  - B10
+  - A41
+  - B8
+  - B16
+  - B22
+  - C16
+  - C38
+  - B27
+  - B17
+  - C10
+  - B23
+  - B9
+  - A16
+  - A12
+  - C45
+  - C23
+  - B6
+  - C51
+  - B20
+  - B11
+  - C52
+  - B2
+  - C6
+  - B3
+  - B19
+  - B7
+  - B12
+  - B14
+  - B1
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.794
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 404.9
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1528.3
+      weight: 1.0
+child_4_18:
+  fitness: -1272.000000000001
+  genome:
+  - A35
+  - A10
+  - B11
+  - B10
+  - C22
+  - B30
+  - B16
+  - B12
+  - C18
+  - A31
+  - A9
+  - B27
+  - C33
+  - C10
+  - B20
+  - B17
+  - B1
+  - B7
+  - B3
+  - C54
+  - B9
+  - A59
+  - B6
+  - C55
+  - B23
+  - C30
+  - C41
+  - B14
+  - B19
+  - B2
+  - B8
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.858
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 393.0
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1264.6
+      weight: 1.0
+child_4_2:
+  fitness: -732.8000000000009
+  genome:
+  - A12
+  - A41
+  - B10
+  - B30
+  - B2
+  - A37
+  - B16
+  - B9
+  - C20
+  - A4
+  - A21
+  - B14
+  - B6
+  - B12
+  - B22
+  - B17
+  - C14
+  - C49
+  - C9
+  - B19
+  - B8
+  - B27
+  - C25
+  - C46
+  - C56
+  - C35
+  - B3
+  - B1
+  - B7
+  - B23
+  - B20
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.725
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 431.5
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1464.3
+      weight: 1.0
+child_4_21:
+  fitness: -682.2000000000003
+  genome:
+  - B10
+  - B11
+  - B22
+  - A42
+  - B27
+  - A26
+  - A55
+  - B8
+  - C20
+  - A4
+  - A21
+  - B12
+  - C38
+  - B9
+  - B30
+  - B17
+  - C14
+  - C49
+  - B14
+  - B19
+  - B6
+  - B20
+  - C25
+  - B2
+  - C45
+  - C35
+  - C23
+  - B3
+  - B7
+  - B23
+  - B1
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.728
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 408.9
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1376.1
+      weight: 1.0
+child_4_23:
+  fitness: -889.1000000000004
+  genome:
+  - A9
+  - B11
+  - B10
+  - A41
+  - B8
+  - A20
+  - A9
+  - C43
+  - B19
+  - B22
+  - B20
+  - C10
+  - B23
+  - B9
+  - A16
+  - B30
+  - C45
+  - B14
+  - B1
+  - C51
+  - B12
+  - B16
+  - C55
+  - C8
+  - C6
+  - C26
+  - B6
+  - B2
+  - B27
+  - B3
+  - B7
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.772
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 374.7
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1328.8
+      weight: 1.0
+child_4_25:
+  fitness: -653.7000000000007
+  genome:
+  - A40
+  - B8
+  - B30
+  - A18
+  - B20
+  - A32
+  - B17
+  - C30
+  - B27
+  - B11
+  - B16
+  - C34
+  - C33
+  - C31
+  - B10
+  - A49
+  - B23
+  - B14
+  - C33
+  - B6
+  - B9
+  - A51
+  - B1
+  - C47
+  - C40
+  - B12
+  - C41
+  - B19
+  - B3
+  - B2
+  - B7
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.705
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 435.6
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1489.3
+      weight: 1.0
+child_4_26:
+  fitness: -314.5000000000007
+  genome:
+  - B16
+  - B23
+  - B17
+  - A56
+  - B20
+  - A43
+  - B30
+  - B12
+  - B27
+  - B11
+  - A7
+  - B9
+  - C42
+  - C30
+  - B10
+  - A3
+  - C34
+  - B14
+  - C33
+  - B6
+  - B8
+  - A50
+  - C41
+  - C25
+  - B1
+  - C17
+  - C11
+  - B2
+  - B7
+  - B19
+  - B3
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.647
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 428.4
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1432.9
+      weight: 1.0
+child_4_3:
+  fitness: -1266.7000000000007
+  genome:
+  - B30
+  - A41
+  - B10
+  - A12
+  - B2
+  - A30
+  - B16
+  - B9
+  - C20
+  - A4
+  - A21
+  - B14
+  - B6
+  - B12
+  - B22
+  - B17
+  - C14
+  - C49
+  - C9
+  - B19
+  - B8
+  - B27
+  - C25
+  - C46
+  - C45
+  - C35
+  - B3
+  - B1
+  - B7
+  - B23
+  - B20
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.818
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 429.7
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1531.4
+      weight: 1.0
+child_4_38:
+  fitness: -1070.3000000000006
+  genome:
+  - A3
+  - B16
+  - B11
+  - B10
+  - C41
+  - B30
+  - A56
+  - B2
+  - B7
+  - B17
+  - A38
+  - C37
+  - B20
+  - C41
+  - A43
+  - B1
+  - C11
+  - C6
+  - C11
+  - B12
+  - B27
+  - A44
+  - B14
+  - C16
+  - B9
+  - B19
+  - C32
+  - B8
+  - B6
+  - B23
+  - B3
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.786
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 402.9
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1468.2
+      weight: 1.0
+child_4_4:
+  fitness: -2170.0000000000005
+  genome:
+  - A56
+  - B30
+  - B22
+  - A26
+  - B20
+  - A2
+  - A4
+  - B7
+  - B14
+  - B11
+  - B17
+  - C19
+  - C35
+  - B27
+  - B10
+  - A49
+  - B8
+  - B12
+  - C5
+  - C30
+  - B9
+  - B16
+  - C19
+  - B6
+  - C29
+  - C25
+  - C14
+  - B3
+  - B1
+  - B2
+  - B23
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.992
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 385.7
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1520.7
+      weight: 1.0
+child_4_43:
+  fitness: -689.5000000000009
+  genome:
+  - A22
+  - B17
+  - B16
+  - B11
+  - B12
+  - A59
+  - A8
+  - B23
+  - C34
+  - B9
+  - B30
+  - C52
+  - C22
+  - B19
+  - A53
+  - A30
+  - C31
+  - C21
+  - C46
+  - C28
+  - B14
+  - B10
+  - B3
+  - C44
+  - B20
+  - B27
+  - B2
+  - B1
+  - B8
+  - B6
+  - B7
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.695
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 476.7
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1616.2
+      weight: 1.0
+child_4_46:
+  fitness: -940.5
+  genome:
+  - A29
+  - A28
+  - B10
+  - A41
+  - B8
+  - B16
+  - B22
+  - C43
+  - B19
+  - B27
+  - B17
+  - C10
+  - B23
+  - B9
+  - A16
+  - A12
+  - C45
+  - C23
+  - B6
+  - C38
+  - B20
+  - B11
+  - C52
+  - B2
+  - C6
+  - B3
+  - C38
+  - B7
+  - B12
+  - B14
+  - B1
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.759
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 385.3
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1455.8
+      weight: 1.0
+child_4_48:
+  fitness: -1302.7000000000003
+  genome:
+  - A26
+  - B16
+  - B22
+  - B8
+  - B12
+  - B10
+  - B11
+  - B27
+  - B14
+  - A34
+  - B30
+  - C57
+  - B6
+  - B2
+  - A7
+  - A22
+  - B1
+  - C2
+  - C33
+  - C5
+  - B9
+  - A51
+  - B7
+  - C47
+  - C16
+  - C47
+  - C20
+  - B3
+  - B23
+  - B20
+  - B19
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.829
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 369.2
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1451.9
+      weight: 1.0
+child_5_15:
+  fitness: -380.50000000000006
+  genome:
+  - B30
+  - B8
+  - A40
+  - A56
+  - B20
+  - A43
+  - B17
+  - B1
+  - B27
+  - B11
+  - B16
+  - C34
+  - C42
+  - C30
+  - B10
+  - A3
+  - B23
+  - B14
+  - C33
+  - B6
+  - B9
+  - A50
+  - C30
+  - C25
+  - C40
+  - B12
+  - C11
+  - B7
+  - B3
+  - B2
+  - B19
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.674
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 436.3
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1371.8
+      weight: 1.0
+child_5_23:
+  fitness: -967.0000000000007
+  genome:
+  - B2
+  - B10
+  - A7
+  - B17
+  - B20
+  - B11
+  - B30
+  - C29
+  - C34
+  - A31
+  - B16
+  - B19
+  - C10
+  - C5
+  - A59
+  - A31
+  - B3
+  - B1
+  - C57
+  - C55
+  - B27
+  - A9
+  - C34
+  - C31
+  - B9
+  - B8
+  - B14
+  - B12
+  - B7
+  - B6
+  - B23
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.802
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 418.0
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1226.5
+      weight: 1.0
+child_5_24:
+  fitness: -1258.4
+  genome:
+  - A26
+  - B16
+  - A34
+  - B8
+  - B12
+  - B10
+  - B11
+  - B27
+  - B14
+  - B22
+  - B30
+  - C57
+  - B6
+  - B2
+  - A7
+  - A13
+  - B1
+  - C2
+  - C33
+  - C5
+  - B9
+  - A51
+  - B7
+  - C47
+  - C16
+  - C47
+  - C41
+  - B3
+  - B23
+  - B20
+  - B19
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.825
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 365.7
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1424.1
+      weight: 1.0
+child_5_25:
+  fitness: -956.300000000001
+  genome:
+  - A26
+  - B16
+  - A54
+  - B8
+  - B12
+  - B10
+  - B11
+  - B27
+  - B14
+  - B22
+  - B30
+  - C57
+  - B6
+  - B2
+  - A7
+  - A22
+  - B1
+  - C2
+  - C33
+  - C37
+  - B9
+  - A51
+  - B7
+  - C47
+  - C16
+  - C47
+  - C41
+  - B3
+  - B23
+  - B20
+  - B19
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.739
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 395.4
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1581.7
+      weight: 1.0
+child_5_26:
+  fitness: -625.7000000000003
+  genome:
+  - A12
+  - A41
+  - B10
+  - B30
+  - B2
+  - A57
+  - B16
+  - B9
+  - C20
+  - A4
+  - A21
+  - B14
+  - B6
+  - B12
+  - B22
+  - B17
+  - C14
+  - C49
+  - C9
+  - B19
+  - B8
+  - B27
+  - C25
+  - C46
+  - C56
+  - C35
+  - B3
+  - B1
+  - B7
+  - B23
+  - B20
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.7
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 432.2
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1482.9
+      weight: 1.0
+child_5_27:
+  fitness: -447.900000000001
+  genome:
+  - A12
+  - A41
+  - B10
+  - B30
+  - B2
+  - A37
+  - B16
+  - B9
+  - C57
+  - A4
+  - A21
+  - B14
+  - B6
+  - B12
+  - B22
+  - B17
+  - C14
+  - C49
+  - C9
+  - B19
+  - B8
+  - B27
+  - C25
+  - C46
+  - C45
+  - C35
+  - B3
+  - B1
+  - B7
+  - B23
+  - B20
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.62
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 426.3
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1699.2
+      weight: 1.0
+child_5_3:
+  fitness: -839.1
+  genome:
+  - A56
+  - B30
+  - B22
+  - A10
+  - B20
+  - A2
+  - A4
+  - B7
+  - B14
+  - B11
+  - B17
+  - C19
+  - C39
+  - B27
+  - B10
+  - A3
+  - B8
+  - B12
+  - C29
+  - C30
+  - B9
+  - B16
+  - C38
+  - B6
+  - C29
+  - C25
+  - C14
+  - B3
+  - B1
+  - B2
+  - B23
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.763
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 375.6
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1324.7
+      weight: 1.0
+child_5_31:
+  fitness: -835.0000000000005
+  genome:
+  - A26
+  - B8
+  - B30
+  - B10
+  - B9
+  - A32
+  - B11
+  - B27
+  - B12
+  - A18
+  - B22
+  - C57
+  - B14
+  - C31
+  - A7
+  - B16
+  - C41
+  - B2
+  - C33
+  - C5
+  - B1
+  - A51
+  - B7
+  - C47
+  - C16
+  - B6
+  - C20
+  - B23
+  - B3
+  - B20
+  - B19
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.736
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 397.0
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1477.0
+      weight: 1.0
+child_5_36:
+  fitness: -493.3000000000008
+  genome:
+  - A19
+  - B1
+  - B11
+  - A56
+  - B19
+  - B16
+  - B30
+  - B2
+  - B7
+  - B17
+  - A3
+  - B12
+  - C37
+  - C5
+  - A59
+  - B10
+  - C31
+  - C31
+  - C57
+  - B20
+  - B27
+  - A44
+  - B14
+  - C31
+  - B9
+  - C32
+  - C41
+  - B6
+  - B8
+  - B23
+  - B3
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.703
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 396.7
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1275.9
+      weight: 1.0
+child_5_37:
+  fitness: -1966.6000000000004
+  genome:
+  - B30
+  - B10
+  - A7
+  - B16
+  - B8
+  - A31
+  - B17
+  - C29
+  - C34
+  - A31
+  - B2
+  - C55
+  - C10
+  - C17
+  - A33
+  - B11
+  - B3
+  - B7
+  - C32
+  - B19
+  - B27
+  - A9
+  - C34
+  - C16
+  - B9
+  - B20
+  - B14
+  - B12
+  - B1
+  - B6
+  - B23
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 2.004
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 428.4
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1263.0
+      weight: 1.0
+child_5_42:
+  fitness: -632.9000000000004
+  genome:
+  - B10
+  - B22
+  - B11
+  - A42
+  - B27
+  - A26
+  - A55
+  - B8
+  - C20
+  - A4
+  - A21
+  - B12
+  - C38
+  - B9
+  - B30
+  - B17
+  - C14
+  - C49
+  - B14
+  - B19
+  - B6
+  - B20
+  - C25
+  - B2
+  - C45
+  - C35
+  - C23
+  - B3
+  - B7
+  - B23
+  - B1
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.718
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 409.5
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1377.4
+      weight: 1.0
+child_5_44:
+  fitness: -826.3000000000004
+  genome:
+  - A22
+  - B17
+  - B16
+  - B11
+  - B12
+  - A59
+  - A8
+  - B23
+  - C34
+  - B9
+  - B30
+  - C52
+  - C22
+  - B19
+  - A53
+  - A30
+  - C31
+  - C21
+  - C38
+  - C28
+  - B14
+  - B10
+  - B3
+  - C44
+  - B6
+  - B27
+  - B2
+  - B1
+  - B8
+  - B20
+  - B7
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.738
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 472.7
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1534.0
+      weight: 1.0
+child_5_46:
+  fitness: -1228.2000000000003
+  genome:
+  - B11
+  - A10
+  - B10
+  - B9
+  - B19
+  - A29
+  - B16
+  - C32
+  - B7
+  - A4
+  - A38
+  - B6
+  - C7
+  - C41
+  - A43
+  - B22
+  - C55
+  - C6
+  - C11
+  - B14
+  - B1
+  - B30
+  - C56
+  - B12
+  - C52
+  - B8
+  - B3
+  - B27
+  - B20
+  - B2
+  - B23
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.843
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 420.2
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1358.4
+      weight: 1.0
+child_5_47:
+  fitness: -876.3000000000004
+  genome:
+  - A22
+  - B17
+  - B16
+  - B11
+  - B12
+  - A59
+  - A8
+  - B23
+  - C34
+  - B9
+  - B30
+  - C52
+  - B19
+  - C22
+  - A53
+  - A30
+  - C31
+  - C21
+  - C22
+  - C28
+  - B14
+  - B10
+  - B20
+  - C44
+  - B6
+  - B27
+  - B2
+  - B1
+  - B8
+  - B3
+  - B7
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.756
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 480.8
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1502.1
+      weight: 1.0
+child_5_48:
+  fitness: -1494.0000000000005
+  genome:
+  - A22
+  - B17
+  - B16
+  - B11
+  - B12
+  - A59
+  - A8
+  - B23
+  - C34
+  - B9
+  - B30
+  - C31
+  - B3
+  - B19
+  - A59
+  - A31
+  - C52
+  - C21
+  - C57
+  - C55
+  - B14
+  - B10
+  - C22
+  - C40
+  - B6
+  - B27
+  - B2
+  - B1
+  - B8
+  - B20
+  - B7
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.828
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 477.1
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1756.1
+      weight: 1.0
+child_5_5:
+  fitness: -1007.5
+  genome:
+  - A12
+  - A41
+  - B30
+  - B10
+  - B2
+  - A30
+  - B27
+  - B14
+  - C20
+  - A4
+  - A21
+  - B9
+  - B6
+  - B12
+  - B22
+  - B17
+  - C14
+  - C49
+  - C9
+  - B19
+  - B8
+  - B16
+  - C25
+  - C46
+  - C45
+  - C35
+  - B3
+  - B1
+  - B7
+  - B23
+  - B20
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.759
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 429.3
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1566.8
+      weight: 1.0
+child_5_6:
+  fitness: -663.5000000000003
+  genome:
+  - B30
+  - B11
+  - A56
+  - B10
+  - B7
+  - B16
+  - A7
+  - C7
+  - B1
+  - A40
+  - B2
+  - C37
+  - B23
+  - C27
+  - A32
+  - B17
+  - C36
+  - C16
+  - B19
+  - C38
+  - B14
+  - A58
+  - C55
+  - C40
+  - B12
+  - B20
+  - B27
+  - B9
+  - B8
+  - B3
+  - B6
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.702
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 432.4
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1510.9
+      weight: 1.0
+child_5_8:
+  fitness: -912.0
+  genome:
+  - A29
+  - A28
+  - B10
+  - A41
+  - B8
+  - B16
+  - B22
+  - C43
+  - C38
+  - B27
+  - B17
+  - C10
+  - B23
+  - B9
+  - A16
+  - A12
+  - C45
+  - C23
+  - B6
+  - C38
+  - B20
+  - B11
+  - C52
+  - B2
+  - C6
+  - B3
+  - B19
+  - B7
+  - B12
+  - B14
+  - B1
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.751
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 398.5
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1480.5
+      weight: 1.0
+initial_child_22:
+  fitness: -882.0
+  genome:
+  - B2
+  - B10
+  - A7
+  - B17
+  - B20
+  - B11
+  - B16
+  - C29
+  - C34
+  - A31
+  - B30
+  - B19
+  - C10
+  - C5
+  - A59
+  - A31
+  - B3
+  - B1
+  - C57
+  - C55
+  - B27
+  - A9
+  - C34
+  - C31
+  - B9
+  - B8
+  - B14
+  - B12
+  - B7
+  - B6
+  - B23
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.785
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 418.0
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1226.4
+      weight: 1.0
+initial_child_31:
+  fitness: -797.7000000000004
+  genome:
+  - A29
+  - A28
+  - B10
+  - A41
+  - B8
+  - B16
+  - B22
+  - C43
+  - C38
+  - B27
+  - B17
+  - C10
+  - B23
+  - B9
+  - A16
+  - A12
+  - C45
+  - C23
+  - B6
+  - C51
+  - B20
+  - B11
+  - C52
+  - B2
+  - C6
+  - B3
+  - B19
+  - B7
+  - B12
+  - B14
+  - B1
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.722
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 404.5
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1517.2
+      weight: 1.0
+initial_parent_23:
+  fitness: -1261.400000000001
+  genome:
+  - B11
+  - A10
+  - B10
+  - B9
+  - B19
+  - A29
+  - B16
+  - C32
+  - B7
+  - A4
+  - A38
+  - B6
+  - C7
+  - C41
+  - A43
+  - B22
+  - C11
+  - C6
+  - C11
+  - B14
+  - B1
+  - B30
+  - C56
+  - B12
+  - C52
+  - B8
+  - B3
+  - B27
+  - B20
+  - B2
+  - B23
+  parameters:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      value: 1.846
+      weight: 5000.0
+    cycle_length:
+      goal: maximize
+      target: 540.0
+      value: 405.6
+      weight: 1.0
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      value: 1362.0
+      weight: 1.0

@@ -1,0 +1,81 @@
+'DIM.PWR' 15 15 15 0/
+'DIM.CAL' 12 2 2 1/
+'DIM.DEP' 'EXP ' 'SAM ' 'HBOR' 'HTMO' 'PIN ' 'EBP '/
+'ERR.CHK' 'PERMIT'/
+
+
+'FUE.LAB',6/
+ 1  1                                           TYPE01 TYPE01 TYPE01                                          
+ 2  1                             TYPE01 TYPE01 TYPE01 J-06   TYPE01 TYPE01 TYPE01                            
+ 3  1                      TYPE01 TYPE01 L-13   L-04   F-14   J-04   G-14   TYPE01 TYPE01                     
+ 4  1               TYPE01 F-03   C-05   J-10   C-12   G-04   G-15   D-11   B-10   C-10   TYPE01              
+ 5  1        TYPE01 TYPE01 F-02   E-10   A-09   H-11   E-14   K-05   H-15   K-11   E-13   TYPE01 TYPE01       
+ 6  1        TYPE01 B-07   E-04   A-08   H-13   B-11   F-13   J-14   N-08   J-15   K-07   N-05   TYPE01       
+ 7  1 TYPE01 TYPE01 M-09   A-07   L-10   B-09   H-07   M-03   G-08   L-14   L-08   M-13   D-05   TYPE01 TYPE01
+ 8  1 TYPE01 K-09   B-06   M-07   B-05   C-06   N-12   G-09   C-04   N-10   P-11   D-09   P-10   F-07   TYPE01
+ 9  1 TYPE01 TYPE01 M-11   D-03   E-08   E-02   J-08   D-13   H-09   P-07   E-06   R-09   D-07   TYPE01 TYPE01
+10  1        TYPE01 C-11   F-09   G-01   C-08   G-02   K-03   P-05   H-03   R-08   L-12   P-09   TYPE01       
+11  1        TYPE01 TYPE01 L-03   F-05   H-01   F-11   L-02   H-05   R-07   L-06   K-14   TYPE01 TYPE01       
+12  1               TYPE01 N-06   P-06   M-05   J-01   J-12   N-04   G-06   N-11   K-13   TYPE01              
+13  1                      TYPE01 TYPE01 J-02   G-12   K-02   E-12   E-03   TYPE01 TYPE01                     
+14  1                             TYPE01 TYPE01 TYPE01 G-10   TYPE01 TYPE01 TYPE01                            
+15  1                                           TYPE01 TYPE01 TYPE01                                          
+ 0  0
+
+'FUE.NEW','TYPE01','E200', 52,  10,,,  2 / 
+
+
+'RES' 's3.pwr.uo2.c01.depl.res' 20000.  /
+
+'TIT.CAS' 'PWR CYCLE 2 U02 CORE - TRANSITION TO EQ - FIRST FEED' /
+'BAT.LAB'  2 'CYC-2' /
+
+'SEG.LIB'  10 'PWRU345C00' /
+'FUE.ZON'  10, 3, 'PWRU345C00'  3,0.0 10 ,365.76  2/
+ 
+'SEG.LIB'  05 'PWRU250R12'/ 
+'SEG.DAT'  05 2.50, 0.71,  0,12/
+
+'SEG.LIB'  06 'PWRU250R16'/ 
+'SEG.DAT'  06 2.50, 0.71,  0,16/
+
+'SEG.LIB'  08 'PWRU320R16'/
+'SEG.DAT'  08 3.20, 0.71, 0,16/ 
+
+ 
+ 
+'DEP.STA' 'BOS' .000/
+'DEP.FPD' 2 .5 /
+'DEP.CYC' 'CYCLE 2 ' .0 2 /
+ 
+'ITE.BOR' 1400/
+
+'STA' /
+ 
+'DEP.STA' 'AVE' 0.0 1 2 -2 14.0/
+
+'COM'
+'COM'             SRC PRMA   START VAL    EPS    GRP  PAS  TRGT  TRVAL  TREPS     TRG
+'COM'                         (STEPS)   (STEPS)
+'COM'                 v         v        v        v    v    v      v      v        v
+'COM' -----------+----------+--------+--------+------+----+-----+------+--------+------+
+'ITE.SRC'  'SET'    'EOLEXP' ,        ,   0.02 ,      ,    ,     ,      ,        , 'MINBOR' 
+      10         ,          ,        ,        ,      , 4  ,  4  ,      ,        ,      /
+'COM' -----------+----------+--------+--------+------+----+-----+------+--------+------+
+'COM'                 ^         ^        ^        ^     ^    ^     ^      
+'COM'              TRGVAL      SP1      SP2      SP3  SP4   SP5   SP6    
+'COM'
+'COM' SP1 = search var initial perturbation
+'COM' SP2 = search var maximum change between successive cases
+'COM' SP3 = search var minimum change between successive cases
+'COM' SP4 = search var maximum value allowed
+'COM' SP5 = search var number of iterations before search begins
+'COM' SP6 = search var number of iterations for each search cases
+'COM' SP7 = search var initial perturbation
+
+'FUE.INI' 'JILAB' /
+
+'WRE' 's3.pwr.uo2.c02.depl.res' /
+
+'STA'/
+'END'/

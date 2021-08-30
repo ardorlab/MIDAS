@@ -1,0 +1,856 @@
+optimization: 
+  methodology: genetic_algorithm
+  cleanup:
+    perform: True 
+  population_size: 50 
+  number_of_generations: 250
+  mutation:
+    method: [mutate_by_type,mutate_fixed]
+    common_chromosomes:
+      fresh_enr_center: [C16,C17,C18,C26,C27,C28,C36,C37,C38,C3,C4,C5,
+                         C6,C2,C11,C12,C13,C14,C15,C19,C20,C21,C22,
+                        C23,C24,C25,C29,C30,C31,C32,C33,C34,C35,C39,C40,C41,
+                        C42,C43,C44,C45,C46,C47,C48,C49,C50,C51,C52,
+                        C53,C54,C55,C56,C57,C58,C59]
+                        #
+      fresh_enr_axial: [A16,A17,A18,A26,A27,A28,A36,A37,A38,A3,A4,A5,A6,A2,
+                        A11,A12,A13,A14,A15,A19,A20,A21,A22,A23,A24,A25,A29,
+                        A30,A31,A32,A33,A34,A35,A39,A40,A41,A42,A43,A44,A45,
+                        A46,A47,A48,A49,A50,A51,A52,A53,A54,A55,A56,A57,A58,A59]
+                        #
+      burned:
+        - [B1,B2,B3,B6,B7,B8,B9,B10,B11,B12,B14,B16,B17,B20,B22,B23,
+           B27,B19,B30]
+           #B4,B5,B13,B15,B18,B21,B24,B26,B25,B28,B29,
+    initial_rate: 0.25
+    final_rate: 0.55
+  reproducer: unique_genes
+  fixed_groups:
+    fresh_enr_center: 8
+    fresh_enr_axial: 5
+    burned: 18
+  selection:
+    fitness: weighted
+    method: tournament
+  data_type: loading_pattern
+  objectives:
+    cycle_length:
+      goal: maximize
+      weight: 1.
+      target: 540.
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      weight: 1.
+    FDeltaH:
+      goal: less_than_target
+      target: 1.525
+      weight: 5000.
+genome:
+  chromosomes:
+    C2:
+      gene_group: fresh_enr_center
+      type: 2
+      serial: A01
+      name: 3.2_w/o_no_bp
+      map: &ID001
+       [0,
+        0, 0,
+        0, 1, 0,
+        0, 1, 1, 0,
+        0, 1, 1, 1, 0,
+        0, 1, 1, 1, 1, 0,
+        0, 1, 1, 1, 1, 1,
+        0, 0, 0, 0]
+    C3:
+      gene_group: fresh_enr_center
+      type: 3
+      serial: B01
+      map: *ID001
+    C4:
+      gene_group: fresh_enr_center
+      type: 4
+      serial: C01
+      map: *ID001
+    C5:
+      gene_group: fresh_enr_center
+      type: 5
+      serial: D01
+      map: *ID001
+    C6:
+      gene_group: fresh_enr_center
+      type: 6
+      serial: E01
+      map: *ID001
+    C7:
+      gene_group: fresh_enr_center
+      type: 7
+      serial: F01
+      map: *ID001
+    C8:
+      gene_group: fresh_enr_center
+      type: 8
+      serial: G01
+      map: *ID001
+    C9:
+      gene_group: fresh_enr_center
+      type: 9
+      serial: H01
+      map: *ID001
+    C10:
+      gene_group: fresh_enr_center
+      type: 10
+      serial: J01
+      map: *ID001
+    C11:
+      gene_group: fresh_enr_center
+      type: 11
+      serial: K01
+      map: *ID001
+    C12:
+      gene_group: fresh_enr_center
+      type: 12
+      serial: L01
+      map: *ID001
+    C13:
+      gene_group: fresh_enr_center
+      type: 13
+      serial: M01
+      map: *ID001
+    C14:
+      gene_group: fresh_enr_center
+      type: 14
+      serial: N01
+      map: *ID001
+    C15:
+      gene_group: fresh_enr_center
+      type: 15
+      serial: P01
+      map: *ID001
+#       [0,
+#        0, 0,
+#        0, 1, 0,
+#        0, 1, 1, 0,
+#        0, 1, 1, 1, 0,
+#        0, 1, 1, 1, 1, 0,
+#        0, 1, 1, 1, 1, 1,
+#        0, 1, 1, 1]
+    C16:
+      gene_group: fresh_enr_center
+      type: 16
+      serial: Q01
+      map: *ID001
+    C17:
+      gene_group: fresh_enr_center
+      type: 17
+      serial: R01
+      map: *ID001
+    C18:
+      gene_group: fresh_enr_center
+      type: 18
+      serial: S01
+      map: *ID001
+    C19:
+      gene_group: fresh_enr_center
+      type: 19
+      serial: T01
+      map: *ID001
+    C20:
+      gene_group: fresh_enr_center
+      type: 20
+      serial: U01
+      map: *ID001
+    C21:
+      gene_group: fresh_enr_center
+      type: 21
+      serial: V01
+      map: *ID001
+    C22:
+      gene_group: fresh_enr_center
+      type: 22
+      serial: W01
+      map: *ID001
+    C23:
+      gene_group: fresh_enr_center
+      type: 23
+      serial: X01
+      map: *ID001
+    C24:
+      gene_group: fresh_enr_center
+      type: 24
+      serial: Y01
+      map: *ID001
+    C25:
+      gene_group: fresh_enr_center
+      type: 25
+      serial: Z01
+      map: *ID001
+    C26:
+      gene_group: fresh_enr_center
+      type: 26
+      serial: AA01
+      map: *ID001
+    C27:
+      gene_group: fresh_enr_center
+      type: 27
+      serial: BB01
+      map: *ID001
+    C28:
+      gene_group: fresh_enr_center
+      type: 28
+      serial: CC01
+      map: *ID001
+    C29:
+      gene_group: fresh_enr_center
+      type: 29
+      serial: DD01
+      map: *ID001
+    C30:
+      gene_group: fresh_enr_center
+      type: 30
+      serial: EE01
+      map: *ID001
+    C31:
+      gene_group: fresh_enr_center
+      type: 31
+      serial: FF01
+      map: *ID001
+    C32:
+      gene_group: fresh_enr_center
+      type: 32
+      serial: HH01
+      map: *ID001
+    C33:
+      gene_group: fresh_enr_center
+      type: 33
+      serial: II01
+      map: *ID001
+    C34:
+      gene_group: fresh_enr_center
+      type: 34
+      serial: JJ01
+      map: *ID001
+    C35:
+      gene_group: fresh_enr_center
+      type: 35
+      serial: KK01
+      map: *ID001
+    C36:
+      gene_group: fresh_enr_center
+      type: 36
+      serial: LL01
+      map: *ID001
+    C37:
+      gene_group: fresh_enr_center
+      type: 37
+      serial: MM01
+      map: *ID001
+    C38:
+      gene_group: fresh_enr_center
+      type: 38
+      serial: NN01
+      map: *ID001
+    C39:
+      gene_group: fresh_enr_center
+      type: 39
+      serial: OO01
+      map: *ID001
+    C40:
+      gene_group: fresh_enr_center
+      type: 40
+      serial: PP01
+      map: *ID001
+    C41:
+      gene_group: fresh_enr_center
+      type: 41
+      serial: QQ01
+      map: *ID001
+    C42:
+      gene_group: fresh_enr_center
+      type: 42
+      serial: RR01
+      map: *ID001
+    C43:
+      gene_group: fresh_enr_center
+      type: 43
+      serial: SS01
+      map: *ID001
+    C44:
+      gene_group: fresh_enr_center
+      type: 44
+      serial: TT01
+      map: *ID001
+    C45:
+      gene_group: fresh_enr_center
+      type: 35
+      serial: UU01
+      map: *ID001
+    C46:
+      gene_group: fresh_enr_center
+      type: 46
+      serial: VV01
+      map: *ID001
+    C47:
+      gene_group: fresh_enr_center
+      type: 47
+      serial: WW01
+      map: *ID001
+    C48:
+      gene_group: fresh_enr_center
+      type: 48
+      serial: XX01
+      map: *ID001
+    C49:
+      gene_group: fresh_enr_center
+      type: 49
+      serial: YY01
+      map: *ID001
+    C50:
+      gene_group: fresh_enr_center
+      type: 50
+      serial: ZZ01
+      map: *ID001
+    C51:
+      gene_group: fresh_enr_center
+      type: 51
+      serial: AAA01
+      map: *ID001
+    C52:
+      gene_group: fresh_enr_center
+      type: 52
+      serial: BBB01
+      map: *ID001
+    C53:
+      gene_group: fresh_enr_center
+      type: 53
+      serial: CCC01
+      map: *ID001
+    C54:
+      gene_group: fresh_enr_center
+      type: 54
+      serial: DDD01
+      map: *ID001
+    C55:
+      gene_group: fresh_enr_center
+      type: 55
+      serial: EEE01
+      map: *ID001
+    C56:
+      gene_group: fresh_enr_center
+      type: 56
+      serial: FFF01
+      map: *ID001
+    C57:
+      gene_group: fresh_enr_center
+      type: 57
+      serial: HHH01
+      map: *ID001
+    C58:
+      gene_group: fresh_enr_center
+      type: 58
+      serial: III01
+      map: *ID001
+    C59:
+      gene_group: fresh_enr_center
+      type: 59
+      serial: JJJ01
+      map: *ID001
+    A2:
+      gene_group: fresh_enr_axial
+      type: 2
+      serial: A01
+      map: &ID002
+       [1,
+        1, 1,
+        1, 0, 1,
+        1, 0, 0, 1,
+        1, 0, 0, 0, 1,
+        1, 0, 0, 0, 0, 0,
+        1, 0, 0, 0, 0, 0,
+        0, 0, 0, 0]
+    A3:
+      gene_group: fresh_enr_axial
+      type: 3
+      serial: B01
+      map: *ID002
+    A4:
+      gene_group: fresh_enr_axial
+      type: 4
+      serial: C01
+      map: *ID002
+    A5:
+      gene_group: fresh_enr_axial
+      type: 5
+      serial: D01
+      map: *ID002
+    A6:
+      gene_group: fresh_enr_axial
+      type: 6
+      serial: E01
+      map: *ID002
+    A7:
+      gene_group: fresh_enr_axial
+      type: 7
+      serial: F01
+      map: *ID002
+    A8:
+      gene_group: fresh_enr_axial
+      type: 8
+      serial: G01
+      map: *ID002
+    A9:
+      gene_group: fresh_enr_axial
+      type: 9
+      serial: H01
+      map: *ID002
+    A10:
+      gene_group: fresh_enr_axial
+      type: 10
+      serial: J01
+      map: *ID002
+    A11:
+      gene_group: fresh_enr_axial
+      type: 11
+      serial: K01
+      map: *ID002
+    A12:
+      gene_group: fresh_enr_axial
+      type: 12
+      serial: L01
+      map: *ID002
+    A13:
+      gene_group: fresh_enr_axial
+      type: 13
+      serial: M01
+      map: *ID002
+    A14:
+      gene_group: fresh_enr_axial
+      type: 14
+      serial: N01
+      map: *ID002
+    A15:
+      gene_group: fresh_enr_axial
+      type: 15
+      serial: P01
+      map: *ID002
+#       [1,
+#        1, 1,
+#        1, 0, 1,
+#        1, 0, 0, 1,
+#        1, 0, 0, 0, 1,
+#        1, 0, 0, 0, 0, 1,
+#        1, 0, 0, 0, 0, 0,
+#        1, 0, 0, 0]
+    A16:
+      gene_group: fresh_enr_axial
+      type: 16
+      serial: Q01
+      map: *ID002
+    A17:
+      gene_group: fresh_enr_axial
+      type: 17
+      serial: R01
+      map: *ID002
+    A18:
+      gene_group: fresh_enr_axial
+      type: 18
+      serial: S01
+      map: *ID002
+    A19:
+      gene_group: fresh_enr_axial
+      type: 19
+      serial: T01
+      map: *ID002
+    A20:
+      gene_group: fresh_enr_axial
+      type: 20
+      serial: U01
+      map: *ID002
+    A21:
+      gene_group: fresh_enr_axial
+      type: 21
+      serial: V01
+      map: *ID002
+    A22:
+      gene_group: fresh_enr_axial
+      type: 22
+      serial: W01
+      map: *ID002
+    A23:
+      gene_group: fresh_enr_axial
+      type: 23
+      serial: X01
+      map: *ID002
+    A24:
+      gene_group: fresh_enr_axial
+      type: 24
+      serial: Y01
+      map: *ID002
+    A25:
+      gene_group: fresh_enr_axial
+      type: 25
+      serial: Z01
+      map: *ID002
+    A26:
+      gene_group: fresh_enr_axial
+      type: 26
+      serial: AA01
+      map: *ID002
+    A27:
+      gene_group: fresh_enr_axial
+      type: 27
+      serial: BB01
+      map: *ID002
+    A28:
+      gene_group: fresh_enr_axial
+      type: 28
+      serial: CC01
+      map: *ID002
+    A29:
+      gene_group: fresh_enr_axial
+      type: 29
+      serial: DD01
+      map: *ID002
+    A30:
+      gene_group: fresh_enr_axial
+      type: 30
+      serial: EE01
+      map: *ID002
+    A31:
+      gene_group: fresh_enr_axial
+      type: 31
+      serial: FF01
+      map: *ID002
+    A32:
+      gene_group: fresh_enr_axial
+      type: 32
+      serial: HH01
+      map: *ID002
+    A33:
+      gene_group: fresh_enr_axial
+      type: 33
+      serial: II01
+      map: *ID002
+    A34:
+      gene_group: fresh_enr_axial
+      type: 34
+      serial: JJ01
+      map: *ID002
+    A35:
+      gene_group: fresh_enr_axial
+      type: 35
+      serial: KK01
+      map: *ID002
+    A36:
+      gene_group: fresh_enr_axial
+      type: 36
+      serial: LL01
+      map: *ID002
+    A37:
+      gene_group: fresh_enr_axial
+      type: 37
+      serial: MM01
+      map: *ID002
+    A38:
+      gene_group: fresh_enr_axial
+      type: 38
+      serial: NN01
+      map: *ID002
+    A39:
+      gene_group: fresh_enr_axial
+      type: 39
+      serial: OO01
+      map: *ID002
+    A40:
+      gene_group: fresh_enr_axial
+      type: 40
+      serial: PP01
+      map: *ID002
+    A41:
+      gene_group: fresh_enr_axial
+      type: 41
+      serial: QQ01
+      map: *ID002
+    A42:
+      gene_group: fresh_enr_axial
+      type: 42
+      serial: RR01
+      map: *ID002
+    A43:
+      gene_group: fresh_enr_axial
+      type: 43
+      serial: SS01
+      map: *ID002
+    A44:
+      gene_group: fresh_enr_axial
+      type: 44
+      serial: TT01
+      map: *ID002
+    A45:
+      gene_group: fresh_enr_axial
+      type: 35
+      serial: UU01
+      map: *ID002
+    A46:
+      gene_group: fresh_enr_axial
+      type: 46
+      serial: VV01
+      map: *ID002
+    A47:
+      gene_group: fresh_enr_axial
+      type: 47
+      serial: WW01
+      map: *ID002
+    A48:
+      gene_group: fresh_enr_axial
+      type: 48
+      serial: XX01
+      map: *ID002
+    A49:
+      gene_group: fresh_enr_axial
+      type: 49
+      serial: YY01
+      map: *ID002
+    A50:
+      gene_group: fresh_enr_axial
+      type: 50
+      serial: ZZ01
+      map: *ID002
+    A51:
+      gene_group: fresh_enr_axial
+      type: 51
+      serial: AAA01
+      map: *ID002
+    A52:
+      gene_group: fresh_enr_axial
+      type: 52
+      serial: BBB01
+      map: *ID002
+    A53:
+      gene_group: fresh_enr_axial
+      type: 53
+      serial: CCC01
+      map: *ID002
+    A54:
+      gene_group: fresh_enr_axial
+      type: 54
+      serial: DDD01
+      map: *ID002
+    A55:
+      gene_group: fresh_enr_axial
+      type: 55
+      serial: EEE01
+      map: *ID002
+    A56:
+      gene_group: fresh_enr_axial
+      type: 56
+      serial: FFF01
+      map: *ID002
+    A57:
+      gene_group: fresh_enr_axial
+      type: 57
+      serial: HHH01
+      map: *ID002
+    A58:
+      gene_group: fresh_enr_axial
+      type: 58
+      serial: III01
+      map: *ID002
+    A59:
+      gene_group: fresh_enr_axial
+      type: 59
+      serial: JJJ01
+      map: *ID002  
+    B1:
+      type: [E-15,L-15,A-11,R-11,A-05,R-05,E-01,L-01]
+      gene_group: burned
+      unique: True
+      map: &ID003
+        [1,
+         1, 1,
+         1, 1, 1,
+         1, 1, 1, 1,
+         1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1]
+    B2:
+      type: [F-15,K-15,A-10,R-10,A-06,R-06,F-01,K-01]
+      gene_group: burned
+      unique: True
+      map: *ID003
+    B3:
+      type: [G-15,J-15,A-09,R-09,A-07,R-07,G-01,J-01]
+      gene_group: burned
+      unique: True
+      map: *ID003
+#    B4:
+#      type: [H-15,A-08,R-08,H-01]
+#      gene_group: burned
+#      unique: True
+#      map: *ID002
+#    B5:
+#      type: [C-14,N-14,B-13,P-13,B-03,P-03,C-02,N-02]
+#      gene_group: burned
+#      unique: True
+#      map: *ID003
+    B6:
+      type: [M-02,D-02,B-04,B-12,D-14,M-14,P-12,P-04]
+      gene_group: burned
+      unique: True
+      map: *ID003
+    B7:
+      type: [L-02,E-02,B-05,B-11,E-14,L-14,P-11,P-05]
+      gene_group: burned
+      unique: True
+      map: *ID003
+    B8:
+      type: [K-02,F-02,B-06,B-10,F-14,K-14,P-10,P-06]
+      gene_group: burned
+      unique: True
+      map: *ID003
+    B9:
+      type: [J-02,G-02,B-07,B-09,G-14,J-14,P-09,P-07]
+      gene_group: burned
+      unique: True
+      map: *ID003
+    B10:
+      type: [H-02,B-08,H-14,P-08]
+      gene_group: burned
+      unique: True
+      map: *ID002
+    B11:
+      type: [N-03,C-03,C-13,N-13]
+      gene_group: burned
+      unique: True
+      map: *ID002
+    B12:
+      type: [M-03,D-03,C-04,C-12,D-13,M-13,N-12,N-04]
+      gene_group: burned
+      unique: True
+      map: *ID003
+#    B13:
+#      type: [L-03,E-03,C-05,C-11,E-13,L-13,N-11,N-05]
+#      gene_group: burned
+#      unique: True
+#      map: *ID003
+    B14:
+      type: [K-03,F-03,C-06,C-10,F-13,K-13,N-10,N-06]
+      gene_group: burned
+      unique: True
+      map: *ID003
+#    B15:
+#      type: [J-03,G-03,C-07,C-09,G-13,J-13,N-09,N-07]
+#      gene_group: burned
+#      unique: True
+#      map: *ID003
+    B16:
+      type: [H-03,C-08,H-13,N-08]
+      gene_group: burned
+      unique: True
+      map: *ID002
+    B17:
+      type: [M-04,D-04,D-12,M-12]
+      gene_group: burned
+      unique: True
+      map: *ID002
+#    B18:
+#      type: [L-04,E-04,D-05,D-11,E-12,L-12,M-11,M-05]
+#      gene_group: burned
+#      unique: True
+#      map: *ID003
+    B19:
+      type: [K-04,F-04,D-06,D-10,F-12,K-12,M-10,M-06]
+      gene_group: burned
+      unique: True
+      map: *ID003
+    B20:
+      type: [J-04,G-04,D-07,D-09,G-12,J-12,M-09,M-07]
+      gene_group: burned
+      unique: True
+      map: *ID003
+#    B21:
+#      type: [H-04,D-08,H-12,M-08]
+#      gene_group: burned
+#      unique: True
+#      map: *ID002
+    B22:
+      type: [L-05,E-05,E-11,L-11]
+      gene_group: burned
+      unique: True
+      map: *ID002
+    B23:
+      type: [K-05,F-05,E-06,E-10,F-11,K-11,L-10,L-06]
+      gene_group: burned
+      unique: True
+      map: *ID003
+#    B24:
+#      type: [J-05,G-05,E-07,E-09,G-11,J-11,L-09,L-07]
+#      gene_group: burned
+#      unique: True
+#      map: *ID003
+#    B25:
+#      type: [H-05,E-08,H-11,L-08]
+#      gene_group: burned
+#      unique: True
+#      map: *ID002
+#    B26:
+#      type: [K-06,F-06,F-10,K-10]
+#      gene_group: burned
+#      unique: True
+#      map: *ID002
+    B27:
+      type: [J-06,G-06,F-07,F-09,G-10,J-10,K-09,K-07]
+      gene_group: burned
+      unique: True
+      map: *ID003
+#    B28:
+#      type: [H-06,F-08,H-10,K-08]
+#      gene_group: burned
+#      unique: True
+#      map: *ID002
+#    B29:
+#      type: [J-07,G-07,G-09,J-09]
+#      gene_group: burned
+#      unique: True
+#      map: *ID002
+    B30:
+      type: [H-07,G-08,H-09,J-08]
+      gene_group: burned
+      unique: True
+      map: *ID002    
+#    refl:
+#      gene_group: refl
+#      type: 1
+#      serial: A400
+#      name: 3.2_w/o_no_bp
+#      map: &ID002
+#       [0,
+#        0, 0,
+#        0, 0, 0,
+#        0, 0, 0, 0,
+#        0, 0, 0, 0, 0,
+#        0, 0, 0, 0, 0, 0,
+#        0, 0, 0, 0, 0, 0, 1,
+#        0, 0, 0, 0, 1, 1, 1,
+#        1, 1, 1, 1, 1] 
+    symmetry_list: []
+  assembly_data:
+    type: pwr
+    batch_number: 3
+    restart_file: mof_cycle_3.res
+    pins: 17
+    core_width: 15
+    load_point: 20000
+    depletion: 35
+    axial_nodes: 25
+    pressure: 2250.
+    boron: 900.
+    power: 100.
+    flow: 100.
+    inlet_temperature: 550.
+    map_size: full
+    symmetry: octant
+    cs_library: pwr.nnnewpulledbp.lib
+    reflector: False
+    number_assemblies: 193

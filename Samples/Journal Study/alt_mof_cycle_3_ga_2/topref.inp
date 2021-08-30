@@ -1,0 +1,102 @@
+* ------------------------------------------------------*
+*               GENERIC PWR MODEL                       *
+* ------------------------------------------------------*
+
+TIT * APR1400  TOP REFLECTOR MODEL- C0 ASSEMBLY
+
+************ INVARIANT DATA **************
+PDE 100.5 'KWL'                                                         * power density kw/L, Table 4.4-1, [DCD]
+PRE 155.132                                                             * Pressure (bar), Table 4.4-1, [DCD] 2250 psia 
+TFU 820.5                                                               * Fuel temperature (k) default value
+TMO 580.4                                                               * Moderator temperature (k), Table 4.4-1, [DCD], inlet Temp. 290.6C (563.75k), Outlet Temp. 323.9C (597.05k), Take aveage
+BOR 600                                                                 * The default value as recomended by Dr. Scott., Boron concentration ppm "Equilibrium" first cycle, 817 ppm at BOC
+
+*********************************************
+*AIR 0.0015599, 0.0, 600/8000=100.0                                     * density, Thermal expansion coefficient, temperature/ nuclide identification= Weight percent,   ** No He-4, use O-8 instead
+CAN ,,/306=100                                                          * ZIRLO, Temp calculated as 0.12 TFU + 0.88 TMO 
+BOX ,,/306=100
+B4C 1.8396 0.0 / 5000=78.00 6000=22                                     * Used for control rod, density and weight % of boron is calculated based on Table 4.2-1 DCD
+MI1 8.44/28000=58 24000=21.5 26000=5 42096=9 41000=3.65 6000=0.1 
+12000=0.5 14000=0.5 15000=0.015 16000=0.015 13000=0.4 27059=1           * Inconel 625, Reference in excell sheet(there is no Ti in CASMO data library)
+
+SPA 22.73,,,6.6356/306=92.494 718=7.506                                 * Spacer grid is a mixture of zirlo (9 mid grids) and inconel 718 (bottom grid), the calculation is done in reference excelsheet
+
+
+
+FUE 1 10.313,,,/3.64                                                    * Thermal coefficient= 10.835E-6, Enrichement=3.64
+FUE 2 10.313,,,/3.14
+
+
+PIN 1   0.4096  0.41785   0.475 /'1' 'AIR' 'CAN'                        * FUEL PIN (Enrichment=3.64), Table 4.2-1, DCD
+PIN 2   1.143   1.2446/'MOD' 'BOX' // 4                                 * INSTR TUBE
+PIN 3   1.143   1.2446/'MOD' 'BOX' // 4                                 * GUIDE TUBE
+
+
+************************************************
+PIN 3   0.936   0.94750  1.03650  1.1430  1.2446/'B4C' 'AIR'  
+'MI1'  'MOD' 'BOX' // 4 'CR1' 'ROD'                                     * Full strength-4Element Section A                    	* CONTROL ROD
+
+PIN 3   0.8433 0.85475 0.93605 0.9475 1.0365  1.143  1.2446/'B4C' 
+'AIR'  'BOX' 'AIR' 'MI1' 'MOD' 'BOX'// 4 'CR2' 'ROD'                    * Full strength-4Element Section B
+
+PIN 3   0.936   0.9475   1.0365   1.143   1.2446/'MI1' 'AIR'  
+'MI1'  'MOD' 'BOX' // 4 'CR3' 'ROD'                                     * Part strength-4Element 
+
+******************************************
+PIN 4   0.4096  0.41785   0.475 /'2' 'AIR' 'CAN'                        * FUEL PIN 3.14% enr.
+
+******************************************
+	 
+PWR 16,1.2852,20.77656,,,,,                                             * # of pins, pin pitch, Assembly pitch, Thickness of the box wall, The thickness of the half of wide water gap,(the calculation is set in the excelsheet) 
+
+
+***** SEGMENT SPECIFIC
+SIM 'TOPREF' 
+
+LPI
+2   
+4 1  
+1 1 1    
+1 1 4 3   
+1 1 4 3 3   
+1 1 1 4 4 1   
+1 1 1 1 1 1 1   
+1 1 1 1 1 1 4 4  
+****************************************************
+
+
+* Top reflector
+* Region 1:  
+*   Composition       Vol. Fract.
+*     H2O               59.57   
+*     SS                 6.98  
+*     Zr                 9.41 
+*     Air               24.16
+*
+HO1 'COO' = .596 'CRS' =  0.070 'BOX' =  .094 'AIR' = .242
+ 
+* Region 2:  
+*   Composition       Vol. Fract. 
+*     H2O                56.69    
+*     SS                 9.74   
+*     Zr                 9.41  
+*     Air               24.16 
+ 
+HO2 'COO' = .567 'CRS' = .097 'BOX' =  .094 'AIR' = .242
+ 
+* Region 3:  
+*   Composition       Vol. Fract.  
+*     H2O               52.72     
+*     SS                 9.17     
+*     Zr                 9.41     
+*     Inc                1.92     
+*     Air               26.77     
+ 
+
+MI1 8.22 / 718 = 100
+HO3 'COO' = .527 'CRS' =  .092 'BOX' =  .094 'MI1' =  .019 'AIR' = .268
+
+REF,2.38,3.0,11.02/'HO1' 'HO2' 'HO3'///'TOP'
+
+S3C 'HOT' 
+END

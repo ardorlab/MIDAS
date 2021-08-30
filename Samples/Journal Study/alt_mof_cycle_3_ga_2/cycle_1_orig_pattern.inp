@@ -1,0 +1,24 @@
+'RES' 'cycle_1.res' 0.0/
+
+'FUE.TYP'  1,  2  5  7 15  2  2 14 14  1/
+'FUE.TYP'  2,  5 11 11  6 11 13 14  2  1/
+'FUE.TYP'  3,  7 11  2 15  7  6  3  2  1/
+'FUE.TYP'  4, 15  6 15 11 15 15  5 10  1/
+'FUE.TYP'  5,  2 11  7 15  8 15 12  1  1/
+'FUE.TYP'  6,  2 13  6 15 15 10  3  1  0/
+'FUE.TYP'  7, 14 14  3  5 12  3  1  1  0/
+'FUE.TYP'  8, 14  2  2 10  1  1  1  0  0/
+'FUE.TYP'  9,  1  1  1  1  1  0  0  0  0/
+
+
+'COR.OPE' 100.0, 110.0, 2250.0/
+'COR.TIN' 550.0/ 
+
+'DEP.STA' 'AVE' 0.0 0.5 1 2 -1 35 /
+'COM' The following performs an automated search on cycle length at a boron concentration of 10 ppm
+'ITE.SRC' 'SET' 'EOLEXP' , , 0.02, , , , , , 'MINBOR' 10., , , , , 4, 4, , , /
+
+'WRE' 'cycle_2.res' 0.0 8.0 20000 /
+
+'STA'/
+'END'/
