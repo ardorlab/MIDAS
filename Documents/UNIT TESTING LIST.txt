@@ -1,0 +1,5 @@
+UNIT TESTING LIST
+
+1. Solution generator
+2. Settings reader in optimization
+3.
