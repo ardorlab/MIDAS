@@ -6,6 +6,7 @@ from matplotlib import pyplot
 from solution_types import return_triangular_string
 #from casmo import Casmo_Lattice
 
+
 class Optimization_Metric_Toolbox(object):
     """
     Class for measuring the performance of the optimization over time.
