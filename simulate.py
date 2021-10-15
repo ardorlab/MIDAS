@@ -392,7 +392,7 @@ class Simulate_Loading_Pattern_Solution(Solution):
                 if self.symmetry == 'OCTANT':
                     quarter_symmetry_list = [1,2,3,5,6,9,10,14,15,20,21,26]
                     octant_symmetry_list = [4,7,8,11,12,13,16,17,18,19,22,23,24,25]
-                elif self.symmetry == 'QUARTER'
+                elif self.symmetry == 'QUARTER':
                     quarter_symmetry_list = [1,2,3,5,6,9,10,14,15,20,21,26,23,24,
                                              4,7,8,11,12,13,16,17,18,19,22,25]
                     octant_symmetry_list = []
@@ -422,9 +422,9 @@ class Simulate_Loading_Pattern_Solution(Solution):
                                              2,5,9,14,20,27,35,12,13,16,17,
                                              18,19,22,23,24,25,26,29,30,31,
                                              32,33,34,37,38,39,40,41,42,44,45,46,47]
-                    octant_symmetry_list = []
-            else:
-                raise ValueError("Number of assemblies not tracked")
+                octant_symmetry_list = []
+        else:
+            raise ValueError("Number of assemblies not tracked")
 
         enrichment_sum = 0.
         for i,assembly in enumerate(self.genome):
