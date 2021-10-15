@@ -3,8 +3,8 @@
 #SBATCH -t 200:00:00                    # Walltime
 #SBATCH -N 1                           # Number of nodes
 #SBATCH -n 3                          # Number of processor cores (i.e. tasks)
-#SBATCH -J "pins"               # Job name
-#SBATCH -p gradq                      # Partition name
+#SBATCH -J "mof_pins"               # Job name
+#SBATCH -p defq                      # Partition name
 ##SBATCH --mail-user=UNITYID@ncsu.edu  # Email address
 ##SBATCH --mail-type=BEGIN             # Receive email when job start
 ##SBATCH --mail-type=END               # Receive email when job end
