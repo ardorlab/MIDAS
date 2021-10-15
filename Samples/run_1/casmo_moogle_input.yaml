@@ -1,0 +1,178 @@
+optimization: 
+  methodology: genetic_algorithm
+  population_size: 100
+  number_of_generations: 100
+  mutation:
+    method: mutate_by_genome
+    initial_rate: 0.25
+    final_rate: 0.55
+  reproducer: standard
+  selection:  
+    fitness: weighted
+    method: tournament
+  data_type: pin_lattice
+  objectives:
+    peak_pin_power:
+      goal: minimize
+      minimum: 1.00
+      maximum: 1.15
+      bin_size: 0.01
+      weight: 10.00
+    eoc_kinf:
+      goal: maximize
+      minimum: 0.950
+      maximum: 1.20
+      bin_size: 0.01
+      weight: 5.00
+    max_kinf:
+      goal: minimize
+      minimum: 1.00
+      maximum: 1.20
+      bin_size: 0.01
+      weight: 20.00
+genome:
+  chromosomes:
+    0: #Regular fuel rod locations
+      fuel: 1
+      pin: 1
+      map: &ID001 
+          [
+            0,
+            1, 1,
+            1, 1, 1,
+            0, 1, 1, 0,
+            1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 0,
+            0, 1, 1, 0, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1
+           ]
+      card: FUE 1  10.257/ 4.95
+    1: #GAD rod locations
+      fuel: 2
+      pin: 1
+      map: *ID001
+      card: FUE 2  10.111/ 1.8 64016= 5.0
+    2:
+      fuel: 3
+      pin: 1
+      map: *ID001
+      card: FUE 3  10.257/ 4.6
+    3:
+      fuel: 0
+      pin: 5
+      map: *ID001
+      card: FUE 3  10.257/ 4.6
+    4:
+      fuel: 4
+      pin: 1
+      map: *ID001
+      card: FUE 4 10.257/ 4.1
+    5:
+      fuel: 0
+      pin: 6
+      map: *ID001
+      card: FUE 4 10.257/ 4.1
+    6:
+      fuel: 0
+      pin: 4
+      map: *ID001 
+      card: FUE 1  10.257/ 4.95
+    7:
+      fuel: 5
+      pin: 1
+      map: *ID001
+      card: FUE 5 10.257/ 4.4
+    8:
+      fuel: 6
+      pin: 1
+      map: *ID001
+      card: FUE 6 10.257/ 4.7
+    9:
+      fuel: 7
+      pin: 1
+      map: *ID001
+      card: FUE 7 10.257/ 4.5
+    10: #GAD rod locations
+      fuel: 8
+      pin: 1
+      map: *ID001
+      card: FUE 8  10.111/ 1.8 64016= 3.0
+    11: #GAD rod locations
+      fuel: 9
+      pin: 1
+      map: *ID001
+      card: FUE 9  10.111/ 1.8 64016= 1.0
+    14:
+      fuel: 0
+      pin: 7
+      map: *ID001
+      card: FUE 5 10.257/ 4.4
+    15:
+      fuel: 0
+      pin: 8
+      map: *ID001
+      card: FUE 6 10.257/ 4.7
+    16:
+      fuel: 0
+      pin: 9
+      map: *ID001
+      card: FUE 7 10.257/ 4.5
+    17:
+      fuel: 0
+      pin: 10
+      map: *ID001
+      card: FUE 8  10.111/ 1.8 64016= 3.0
+    12:
+      fuel: 0
+      pin: 2
+      map:
+          [
+            1,
+            0, 0,
+            0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0
+           ]
+      card: ''
+    13:
+      fuel: 0
+      pin: 3
+      map:
+          [
+            0,
+            0, 0,
+            0, 0, 0,
+            1, 0, 0, 1,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 1,
+            1, 0, 0, 1, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0
+           ]
+      card: ''
+  additional:
+    pin_list:
+      - PIN 1 .4096 .418 .475 * Fuel Pin NO IFBA
+      - PIN 2 0.561 0.602 / 'COO'   'BOX' * INSTR TUBE
+      - PIN 3 0.561 0.602 / 'COO'   'BOX' * GUIDE TUBE
+      - MI1 3.85/302=81.306 5010=9.347 5011=9.347    * IFBA FUEL
+      - PIN 4 .4096 .4106 .418 .475/'1' 'MI1' 'AIR' 'BOX' * IFBA FUEL PIN
+      - PIN 5 .4096 .4106 .418 .475/'3' 'MI1' 'AIR' 'BOX' * IFBA FUEL PIN
+      - PIN 6 .4096 .4106 .418 .475/'4' 'MI1' 'AIR' 'BOX' * IFBA FUEL PIN
+      - PIN 7 .4096 .4106 .418 .475/'5' 'MI1' 'AIR' 'BOX' * IFBA FUEL PIN
+      - PIN 8 .4096 .4106 .418 .475/'6' 'MI1' 'AIR' 'BOX' * IFBA FUEL PIN
+      - PIN 9 .4096 .4106 .418 .475/'7' 'MI1' 'AIR' 'BOX' * IFBA FUEL PIN
+      - PIN 10 .4096 .4106 .418 .475/'8' 'MI1' 'AIR' 'BOX' * IFBA FUEL PIN
+    title: TTL * MOOGLE PWR optimization
+    fuel_temperature: 650.
+    moderator_temperature: 560.
+    boron: 900
+    void: VOI = 0.
+    power: 25.9588
+    depletion: -20
+    reactor: PWR 17 1.26 21.5
