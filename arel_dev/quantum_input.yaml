@@ -1,0 +1,71 @@
+optimization:
+  methodology: genetic_algorithm
+  population_size: 40
+  number_of_generations: 200
+  mutation:
+    method: mutate_fixed
+    initial_rate: 0.05
+    final_rate: 0.25
+  fixed_problem: True
+  fixed_groups:
+    assem_one: 34
+    assem_two: 35
+    refl: 19
+  selection:
+    fitness: quantum
+    method: tournament
+  data_type: loading_pattern
+  objectives:
+    cycle_length: 
+      goal: maximize
+    PinPowerPeaking:
+      goal: minimize
+genome:
+  chromosomes:
+    T1_1:
+      gene_group: assem_one
+      type: 5
+      map: &ID002
+        [1,  1,  1,  1,  1,  1,  1,  1,  1,  0,
+         1,  1,  1,  1,  1,  1,  1,  1,  1,  0,
+         1,  1,  1,  1,  1,  1,  1,  1,  1,  0,
+         1,  1,  1,  1,  1,  1,  1,  1,  1,  0,
+         1,  1,  1,  1,  1,  1,  1,  1,  0,  0,
+         1,  1,  1,  1,  1,  1,  1,  1,  0,  
+         1,  1,  1,  1,  1,  1,  1,  0,  0,  
+         1,  1,  1,  1,  1,  1,  0,  0,  
+         1,  1,  1,  1,  0,  0,  0,
+         0,  0,  0,  0,  0]
+    T2_1: &ID003
+      gene_group: assem_two
+      type: 15
+      map: *ID002
+    Reflector1: &ID004
+      gene_group: refl
+      map:
+        [0,  0,  0,  0,  0,  0,  0,  0,  0,  1,
+         0,  0,  0,  0,  0,  0,  0,  0,  0,  1,
+         0,  0,  0,  0,  0,  0,  0,  0,  0,  1,
+         0,  0,  0,  0,  0,  0,  0,  0,  0,  1,
+         0,  0,  0,  0,  0,  0,  0,  0,  1,  1,
+         0,  0,  0,  0,  0,  0,  0,  0,  1,  
+         0,  0,  0,  0,  0,  0,  0,  1,  1,  
+         0,  0,  0,  0,  0,  0,  1,  1,  
+         0,  0,  0,  0,  1,  1,  1,
+         1,  1,  1,  1,  1]
+      type: 1
+  assembly_data:
+    type: pwr
+    pins: 17
+    core_width: 17
+    load_point: 0.000
+    depletion: 20
+    axial_nodes: 25
+    batch_number: 0
+    pressure: 2250.
+    boron: 900.
+    power: 100.
+    flow: 100.
+    inlet_temperature: 550.
+    restart_file: AP1000_cycle_1.res
+    cs_library: cms.apr1400.lib
