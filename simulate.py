@@ -364,7 +364,7 @@ class Simulate_Loading_Pattern_Solution(Solution):
                     quarter_symmetry_list = [1,2,3,5,6,9,10,14,15,20,21,27,32]
                     octant_symmetry_list = [4,7,8,11,12,13,16,17,18,19,22,23,24,25,26,
                                             28,29,30,31,33,34]
-                elif self.symmetry == 'QUARTER'
+                elif self.symmetry == 'QUARTER':
                     quarter_symmetry_list = [1,2,3,5,6,9,10,14,15,20,21,27,32,4,7,8,
                                             11,12,13,16,17,18,19,22,23,24,25,26,
                                             28,29,30,31,33,34]
@@ -373,7 +373,7 @@ class Simulate_Loading_Pattern_Solution(Solution):
                 if self.symmetry == 'OCTANT':
                     quarter_symmetry_list = [1,3,6,10,15,20,24,2,5,9,14]
                     octant_symmetry_list = [4,7,8,11,12,13,16,17,18,19,21,22,23,25]
-                elif self.symmetry == 'QUARTER'
+                elif self.symmetry == 'QUARTER':
                     quarter_symmetry_list = [1,3,6,10,15,20,24,2,5,9,14,21,22,
                                              4,7,8,11,12,13,16,17,18,19,23,25]
                     octant_symmetry_list = []
@@ -383,7 +383,7 @@ class Simulate_Loading_Pattern_Solution(Solution):
                     quarter_symmetry_list = [1,2,3,5,6,9,10,14,15,20,21,27,32]
                     octant_symmetry_list = [4,7,8,11,12,13,16,17,18,19,22,23,24,25,26,
                                             28,29,30,31,33,34]
-                elif self.symmetry == 'QUARTER'
+                elif self.symmetry == 'QUARTER':
                     quarter_symmetry_list = [1,2,3,5,6,9,10,14,15,20,21,27,32,4,7,8,
                                             11,12,13,16,17,18,19,22,23,24,25,26,
                                             28,29,30,31,33,34]
