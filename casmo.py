@@ -9,7 +9,6 @@ from solution_types import compare_substrings
 from solution_types import return_triangular_string
 from metrics import Plotter
 
-
 class Casmo_Lattice(Solution):
     """
     Class specific to Casmo Functions. Contains the information to generate an 
