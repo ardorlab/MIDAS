@@ -1,0 +1,585 @@
+
+   This source code has included the following optional modules:
+ _____________________________________________________________________________________________________________________________
+      1 - MOX Models Present (v4)
+      2 - Speed Models Present
+      3 - Fortran-90 Code Present
+      4 - BIG_ENDIAN File Conversion Flag Active for I/O
+      5 - Pin Heavy Metal Loading Model Present
+      6 - Integrated Pin Exposure Model Present
+ _____________________________________________________________________________________________________________________________
+
+ Installed Dimension Limits:
+ Assembly Core Maps . . . .(34,34)            Control Rod Assembly Types . . 20           Core Flow Orificing Zones. . . 10
+ Nodal Core Maps. . . . . .(40,40)            Control Rod Axial Zones. . . .  7           Editing Batches. . . . . . . .500
+ Axial Nodes. . . . . . . . . . 52            Control Rod Groups . . . . . .150           TAB.TFU/XKS. .  20 Tables (10, 5)
+ Fuel Segment Types . . . . . .200            Control Sequence Passes. . . . 50           Axial Buckling Table Points. . 15
+ Fuel Assembly Types. . . . . .200            Depletion Arguments. . . . . . 30           Real Detector Locations. . . .250
+ Fuel Assembly Axial Zones. . . 19            Depletion Steps per Case . . .501           RES Input Restart Files. . . . 50
+ Fuel Mechanical Types. . . . . 20            PRI.INP(20)     PRI.STA(50)                 WRE Restart File Requests. . .501
+ Fuel Spacer Locations. . . . . 20            PIN.EDT(50)
+ Total Storage (Words). . .DYNAMIC            PRI.ITE(10)     PRI.MAC(10)
+                                              PRI.DFS(10)     BAT.EDT(50)
+
+ ----Listing of Input Cards - 288 Columns---- 
+
+ 'RES' '../cycle1.res' 0.0/
+  
+ 'FUE.TYP'  1, 1 3 1 3 3 3 2 6 4/
+ 'FUE.TYP'  2, 3 5 2 3 4 3 2 5 2/
+ 'FUE.TYP'  3, 1 2 3 5 6 1 1 5 1/
+ 'FUE.TYP'  4, 3 3 5 1 3 2 1 6 0/
+ 'FUE.TYP'  5, 3 4 6 3 1 5 4 5 0/
+ 'FUE.TYP'  6, 3 3 1 2 5 1 4 0 0/
+ 'FUE.TYP'  7, 2 2 1 1 4 4 0 0 0/
+ 'FUE.TYP'  8, 6 5 5 6 5 0 0 0 0/
+ 'FUE.TYP'  9, 4 2 1 0 0 0 0 0 0/
+  
+  
+ 'COR.OPE' 100.0, 100.0, 2250.0/
+ 'COR.TIN' 550.0/
+  
+ 'DEP.STA' 'AVE' 0.0 0.5 1 2 -1 20 /
+ 'COM' The following performs an automated search on cycle length at a boron concentration of 10 ppm
+ 'ITE.SRC' 'SET' 'EOLEXP' , , 0.02, , , , , , 'MINBOR' 10., , , , , 4, 4, , , /
+ 'STA'/
+ 'END'/
+1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page    1
+ Run: RUN NAME  ** Project: PROJECT NAME             ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Case  1 Step  0                                                                                    0.00 ppm    0.000 GWd/MT  
+
+ CASE   1  --- Entering Input Segment ---
+           --- Reading Input Cards ---
+ _____________________________________________________________________________________________________________________________
+ 
+ Input Cards:  RES    
+ _____________________________________________________________________________________________________________________________
+
+ RES - Begin to reload the core
+ _____________________________________________________________________________________________________________________________
+
+ RES - Opening restart file:../cycle1.res
+       Looking for exposure     0.0000
+
+ Reading PWR Restart file created by SIMULATE-3 version:1.00.02 
+ TIT.RUN = RUN NAME TIT.PRO = GENERIC PWR EQUILIBR
+ TIT.CAS = PWR CYCLE 1 U02 CORE - NOMINAL CYCLE                                            
+ DEP.CYC = CYCLE01  Step exposure =       0.0000  Core average exposure =   0.0000
+ Run Time = 17.35.39  Run Date = 17/10/07
+
+  Parameters on Restart File:
+  Parameter  Restart  Installed      Parameter  Restart  Installed      Parameter  Restart  Installed     
+  ---------  -------  ---------      ---------  -------  ---------      ---------  -------  ---------     
+  LIMSEG         200        200      LIMHYD           5          5      LIMID          40         40
+  LIMIDA          34         34      LIMJD           40         40      LIMKD          52         52
+  LIMMAP         250        250      LIMMDA          20         20      LIMMDB         30         30
+  LIMFUE         200        200      LIMNHT          10         10      LIMPAS         50         50
+  LIMRAY         150        150      LIMREG          19         19      LIMBTL        500        500
+  LIMTFU           4          4      LIMZON          20         20      LMNHYD         20         20
+  LIMBSQ          15         15      LIMGRD          35         35      LIMSPA         20         20
+  LCRZON           7          7      LIMCRD          20         20      ICLDIM   30000000   30000000
+  LIMBTS         500        500      LIMDEP         501        501      LIMWTR          3          3
+  LIMSUP           8          8      LIMRES          50         50      LIMWRE        501        501
+  LIMSET          20         20      LIMWLW          10         10      LIMLOK         10         10
+  LIMGT           25         25      LMRODS          15         15      LIMELE          8          8
+  LIMWLP          10         10      LIMLKG           3          3      LIMCYC        300        300
+  LIMBAT          50         50
+
+ Maximum length of segment/fuel type names on restart file: 20 characters
+
+ Restart File DIM.CAL:  KDFUEL = 12, IHAVE = 2, IF2X2 = 2, Core Symmetry = ROTATION
+ RESTART FILE DIM.DEP:  EXP , SAM , HBOR, HTMO, PIN , EBP , HTF 
+
+ DIM.PWR and DIM.CAL Specify Calculation Dimensions:
+
+ Full Core Assembly Map Width . IAFULL  15
+ Control Rod Map Width  . . . . . IRMX  15                                              Rows     Columns
+ Detector Map Width . . . . . . . ILMX  15        FUE.TYP Dimensions(+Reflector) IDR       9      JDR  9
+ Offset Assemblies Flag . . . . IOFSET   0        FUE.MAP Dimensions . . . . . . IDA       8      JDA  8
+ Axial Nodes (Incl. Refl.). . . . . KD  14        QTR.MAP Dimensions . . . . . . .ID      16      JD  16
+ Core Fraction Flag . . . . . . .IHAVE   2        Depletion Arguments  . . . . . .ND      18
+ Node Mesh per Assembly . . . . .IF2X2   2
+ Reflector Layers . . . . . . . . NREF   1
+ Radial Core Fraction . . . . . .    0.250
+ 
+
+ DIM.DEP - Depletion Argument Assignments:
+
+  1   IOD  - Iodine-135 - atoms/(bn-cm)       
+  2   XEN  - Xenon-135 - atoms/(bn-cm)        
+  3   PRO  - Promethium-149 - atoms/(bn-cm)   
+  4   SAM  - Samarium-149 - atoms/(bn-cm)     
+  5   EXP  - Exposure - GWd/t                 
+  6   HBOR - Moderator Boron History - ppm    
+  7   HTMO - Moderator Density History - g/cc 
+  8   EBP  - Burnable Poison Exposure - GWd/t 
+  9   HTFU - Fuel Temperature History -SQRT(K)
+ 10   EY-  - Surface Exposure - Y minus       
+ 11   EX+  - Surface Exposure - X plus        
+ 12   EY+  - Surface Exposure - Y plus        
+ 13   EX-  - Surface Exposure - X minus       
+ 14   HIS  - Spectral History - Average       
+ 15   HY-  - Spectral History - Y minus       
+ 16   HX+  - Spectral History - X plus        
+ 17   HY+  - Spectral History - Y plus        
+ 18   HX-  - Spectral History - X minus       
+ 
+1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page    2
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Case  1 Step  0 PWR CYCLE 1 U02 CORE - NOMINAL CYCLE                                               0.00 ppm    0.000 GWd/MT  
+ DIM.MEM - Dynamic Memory Allocation
+
+ Allocating 30000000 words to the container                                                          
+
+ RES - Logical Flags Controlling the Reloading Process:
+
+ Shuffling is according to new FUE.LAB  - F
+ Shuffling is according to new FUE.SER  - F
+ Reloading is direct, without shuffle   - T
+ All input is taken from this file      - T
+ Only depletion arguments are taken     - F
+ Rotations are according to new FUE.ROT - F
+
+ Input Cards:  FUE.TYP, FUE.TYP, FUE.TYP, FUE.TYP, FUE.TYP, FUE.TYP, FUE.TYP, FUE.TYP, FUE.TYP, COR.OPE, COR.TIN, DEP.STA
+ ** Note    -   ITESRC   - ITE.SRC - EOLEXP Search requested with KEF as target
+ Input Cards:  COM    , ITE.SRC, STA    
+ 
+ ** Caution -   NO3PIN   - BAT.EDT - Batch edit request for 3PIN ignored --only Q or N prefix is valid for this quantity
+ ** Caution -   NO3XPO   - BAT.EDT - Batch edit request for 3XPO ignored --only Q or N prefix is valid for this quantity
+ ** Caution -   NO2PIN   - BAT.EDT - Batch edit request for 2PIN ignored --only Q or N prefix is valid for this quantity
+ ** Caution -   NO2XPO   - BAT.EDT - Batch edit request for 2XPO ignored --only Q or N prefix is valid for this quantity
+1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page    3
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Case  1 Step  0 PWR CYCLE 1 U02 CORE - NOMINAL CYCLE                                            1774.20 ppm    0.000 GWd/MT  
+ _____________________________________________________________________________________________________________________________
+
+ SEG.LIB - Assignment of Cross Section Library Members to Segments
+ LIB     - ./cms.pwr-all.lib
+ Library                  Major  Minor  Assigned to    ---         Run Title / Date and Time ---
+ Name                     Flag   Flag     Segment
+
+ PWRU250G16                   0      0       6      GENERIC PWR MODEL  - FUEL PWRU250W12 BASE AND BRANCHES
+                                                    17/10/07   17:55:25   1.00.02
+ PWRU320G16                   0      0       8      GENERIC PWR MODEL  - FUEL PWRU250W12 BASE AND BRANCHES
+                                                    17/10/07   17:55:25   1.00.02
+ PWRU200C00                   0      0       4      GENERIC PWR MODEL - FUEL PWRU200C00 BASE AND BRANCHES
+                                                    17/10/07   17:55:25   1.00.02
+ PWRU250C00                   0      0       5      GENERIC PWR MODEL - FUEL PWRU250C00 BASE AND BRANCHES
+                                                    17/10/07   17:55:25   1.00.02
+ PWRU320C00                   0      0       7      GENERIC PWR MODEL - FUEL PWRU320C00 BASE AND BRANCHES
+                                                    17/10/07   17:55:25   1.00.02
+ RADREF                       0      0       1      GENERIC PWR MODEL - RADIAL BAFFLE/REFLECTOR
+                                                    17/10/07   17:55:25   1.00.02
+ TOPREF                       0      0       2      GENERIC PWR MODEL - PWR TOP AXIAL  REFLECTOR
+                                                    17/10/07   17:55:25   1.00.02
+ BOTREF                       0      0       3      GENERIC PWR MODEL - PWR BOTTOM REFLECTOR
+                                                    17/10/07   17:55:25   1.00.02
+ 
+ Library created by CMS-Link version: 1.00.02 at 17:55:25 on 2017/10/07
+1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page    4
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Case  1 Step  0 PWR CYCLE 1 U02 CORE - NOMINAL CYCLE                                            1774.20 ppm    0.000 GWd/MT  
+ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ Summary of Library Parameters
+                            Seg=1   Total   Heated   Fission   DFS Group 1   DFS Group 2
+ Seg  Name                  Ref=2   Rods     Rods    Product   W  S  E  N    W  S  E  N   MAC+FPD     DFS       Det
+ ---- --------------------  -----   -----   ------   -------   ----------    ----------   -------     ---       ---
+   1  RADREF                  2       0        0        0      1  1  1  1    1  1  1  1      T         T         T
+   2  TOPREF                  2       0        0        0      1  1  1  1    1  1  1  1      T         T         T
+   3  BOTREF                  2       0        0        0      1  1  1  1    1  1  1  1      T         T         T
+   4  PWRU200C00              1     289      264        4      0  1  0  0    0  1  0  0      T         T         T
+   5  PWRU250C00              1     289      264        4      0  1  0  0    0  1  0  0      T         T         T
+   6  PWRU250G16              1     289      264        4      0  1  0  0    0  1  0  0      T         T         T
+   7  PWRU320C00              1     289      264        4      0  1  0  0    0  1  0  0      T         T         T
+   8  PWRU320G16              1     289      264        4      0  1  0  0    0  1  0  0      T         T         T
+
+                              Pressure    Loading    
+ Seg  Name                     (psia)      (g/cc)     Steam Table Option      CASMO Version
+ ---- --------------------    --------    -------     ------------------    ------------------
+   1  RADREF                   2248.1     0.00000       TABLED ASME         CASMO-4E  1.00.02   
+   2  TOPREF                   2248.1     0.00000       TABLED ASME         CASMO-4E  1.00.02   
+   3  BOTREF                   2248.1     0.00000       TABLED ASME         CASMO-4E  1.00.02   
+   4  PWRU200C00               2248.1     2.73564       TABLED ASME         CASMO-4E  1.00.02   
+   5  PWRU250C00               2248.1     2.73562       TABLED ASME         CASMO-4E  1.00.02   
+   6  PWRU250G16               2248.1     2.73108       TABLED ASME         CASMO-4E  1.00.02   
+   7  PWRU320C00               2248.1     2.73559       TABLED ASME         CASMO-4E  1.00.02   
+   8  PWRU320G16               2248.1     2.73104       TABLED ASME         CASMO-4E  1.00.02   
+ _____________________________________________________________________________________________________________________________
+
+ Print Options:
+
+ Lines/Page  = 80
+ Columns/Page=126
+
+ PRI.INP No active edits
+ PRI.STA 2EXP    2RPF  
+ PRI.FTD Off
+ PRI.LIS On 
+ PRI.ITE No active edits
+ PRI.MAC No active edits
+ PRI.DFS No active edits
+ AUD.PRI No active edits
+ PIN.EDT On      SUMM    2PIN    2PLO  
+ DET.EDT No active edits
+ BAT.EDT On      ARPF    AEXP    AKIN    3PIN    3XPO    2PIN    2XPO  
+ CMS.EDT 2EXP    3EXP    3RPF    3PIN    2PIN    2RPF  
+ 
+ ** Note    -   HYDDLT   - HYD.DLT - Assembly inlet temperatures are modified by HYD.DLT map
+
+ HYD.DLT - F
+ I/J =    1      2      3      4      5      6      7      8
+  1   0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000
+  2   0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000
+  3   0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000
+  4   0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000
+  5   0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000
+  6   0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000
+  7   0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000
+  8   0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000
+1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page    5
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Case  1 Step  0 PWR CYCLE 1 U02 CORE - NOMINAL CYCLE                                            1774.20 ppm    0.000 GWd/MT  
+           
+ ************************************************************************************************************************
+ ************************************************************************************************************************
+ **********                                              Warning                                               **********
+ **********                            Average of delta T'S in above map is not 0.0                            **********
+ **********                         0.015 Degrees F is subtracted from above delta T's                         **********
+ ************************************************************************************************************************
+ ************************************************************************************************************************
+           
+           
+ ************************************************************************************************************************
+ ************************************************************************************************************************
+ **********                                 Assembly inlet flows are modified                                  **********
+ **********                                           by HYD.FLO map                                           **********
+ ************************************************************************************************************************
+ ************************************************************************************************************************
+           
+
+ HYD.FLOW
+ I/J =    1      2      3      4      5      6      7      8
+  1   1.000  1.000  1.000  1.000  1.000  1.000  1.000  1.000
+  2   1.000  1.000  1.000  1.000  1.000  1.000  1.000  1.000
+  3   1.000  1.000  1.000  1.000  1.000  1.000  1.000  1.000
+  4   1.000  1.000  1.000  1.000  1.000  1.000  1.000  1.000
+  5   1.000  1.000  1.000  1.000  1.000  1.000  1.000  1.000
+  6   1.000  1.000  1.000  1.000  1.000  1.000  1.000  1.000
+  7   1.000  1.000  1.000  1.000  1.000  1.000  1.000  1.000
+  8   1.000  1.000  1.000  1.000  1.000  1.000  1.000  1.000
+ _____________________________________________________________________________________________________________________________
+
+ Input Summary
+
+ Relative Power. . . . . . PERCTP     100.0000 %           Fuel Assemblies . . . . . . . .      166.0000
+ Relative Flow . . . . . . PERCWT     100.0000 %           Fuel Nodes (Assembly Size). . .     1992.0000
+ Thermal Power . . . . . . . .CTP    2960.4067 MWt         Assembly Pitch (Cold) . . DXASSM      21.5000 cm
+ Core Flow - Metric. . . . . .CWT   52408.9805 MT/hr       Node Height. . (Cold) . . . . DZ      30.4800 cm
+           - English . . . . .CWT     115.5401 Mlb/hr      Core Height. . (Cold) . . .HCORE     365.7600 cm
+ Rated Power Density . . . POWDEN     105.4800 kW/liter    Core Volume  . (Cold) . . . . .    28066.0469 liters
+ Rated Coolant Mass Flux . FLODEN     683.0000 kg/(cm2-hr) Core Fueled Area. . . . . . . .    19183.3750 cm2
+ Core Rated Thermal Power. . . .     2960.4067 MWt         Core Loading. . . . . . . . . .       73.9689 metric tons
+ Core Rated Flow - Metric. . . .    52408.9805 MT/hr       Fuel Rods in Core . . . . . . .         42240
+                 - English . . .      115.5401 Mlb/hr      Fuel Rods In Average Node . . .      264.0000
+ Explicit Core Fraction. . . . .        0.2500             Total Fuel Rod Length in Core .    160290.672 meters
+ Boundary Conditions . . . .  3                            Core Symmetry . . . . . . . . .        ROTATIONAL
+                            +-+-+                          Number of BP Rods at Midplane .             0
+                          3 + + +  0
+                            +-+-+
+                              0    0 (Diag)
+
+1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page    6
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Case  1 Step  0 PWR CYCLE 1 U02 CORE - NOMINAL CYCLE                                            1774.20 ppm    0.000 GWd/MT  
+
+ Fueled Segments:
+                                                                       Burnable     Present      Original
+                                                                       Poison       Number       Number
+ Seg.                         Loading     Enrichment       PU          Loading      Burnable     Burnable      Equivalent
+ Num. Segment Name             (g/cc)       (U235)        (WT%)        (g/cc)       Poison       Poison        Assemblies
+ ---- --------------------   ---------   ------------    -------      ----------   ----------   ----------    -----------
+   4  PWRU200C00              2.73564      2.00000        ------        ------              0            0         32.000
+   5  PWRU250C00              2.73562      2.50000        ------        ------              0            0         44.000
+   6  PWRU250G16              2.73108      2.50000        ------        ------              0            0         26.000
+   7  PWRU320C00              2.73559      3.20000        ------        ------              0            0         44.000
+   8  PWRU320G16              2.73104      3.20000        ------        ------              0            0         20.000
+
+ Reflector Segments:
+ Seg.
+ Num. Segment Name
+ ---- --------------------
+  1   RADREF              
+  2   TOPREF              
+  3   BOTREF              
+ 
+1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page    7
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Case  1 Step  0 PWR CYCLE 1 U02 CORE - NOMINAL CYCLE                                            1774.20 ppm    0.000 GWd/MT  
+
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+ Fuel Temperature Data (SEG.TFU/TAB.TFU)
+ TFU = TMO + A + (B+TABTFU(N))*POWER + C*POWER**2
+
+ Seg
+ Num.      Segment Name          A        B        C     TAB.TFU  TAB.XKS  TAB.XK2
+ ----  --------------------    -----    -----    -----   -------  -------  -------
+   4    PWRU200C00               0.0    217.0     17.0   Table 1  -------  -------
+   5    PWRU250C00               0.0    217.0     17.0   Table 1  -------  -------
+   6    PWRU250G16               0.0    217.0     17.0   Table 1  -------  -------
+   7    PWRU320C00               0.0    217.0     17.0   Table 1  -------  -------
+   8    PWRU320G16               0.0    217.0     17.0   Table 1  -------  -------
+
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+ Fuel Temperature Tables (TAB.TFU) (multipliers are extrapolated off ends of tables)
+
+ Table:  1
+ Primary Variable (Across):EXP 
+ Secondary Variable(Down) :POW 
+              0.000     5.000    10.000    15.000    20.000    30.000    40.000    50.000
+          --------------------------------------------------------------------------------
+   1.000  |  68.200    23.700     3.400     0.000    -1.600    -0.900    -0.600    -2.100
+1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page    8
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Case  1 Step  0 PWR CYCLE 1 U02 CORE - NOMINAL CYCLE                                            1774.20 ppm    0.000 GWd/MT  
+
+ Assembly Physical Descriptions
+ ------------------------------
+
+ Assm. Name    : RADIALREF           |   Assm. Name    : ASM200C00           |   Assm. Name    : ASM250C00
+ Assm. Sub Type:    1     1          |   Assm. Sub Type:    2     2          |   Assm. Sub Type:    3     3
+ Assm. Sub Type:    1     1          |   Assm. Sub Type:    2     2          |   Assm. Sub Type:    3     3
+ Assm. Class   : Reflector           |   Assm. Class   : Fuel                |   Assm. Class   : Fuel
+ Fuel  Type    : 1                   |   Fuel  Type    : 2                   |   Fuel  Type    : 3
+ Mech. Design  : 1                   |   Mech. Design  : 1                   |   Mech. Design  : 1
+ Loading (gram): 0.                  |   Loading (gram): 462522.             |   Loading (gram): 462518.
+ # Axial Zone  : 3                   |   # Axial Zone  : 3                   |   # Axial Zone  : 3
+ # Assm        : 45.000              |   # Assm in Core: 32.000              |   # Assm in Core: 44.000
+                                     |                                       |
+ **********************  396.240 cm  |   **********************  396.240 cm  |   **********************  396.240 cm
+ *     Segment:2      *              |   *     Segment:2      *              |   *     Segment:2      *
+ *       TOPREF       *              |   *       TOPREF       *              |   *       TOPREF       *
+ *     30.480 cm      *              |   *     30.480 cm      *              |   *     30.480 cm      *
+ **********************  365.760 cm  |   **********************  365.760 cm  |   **********************  365.760 cm
+ *     Segment:1      *              |   *     Segment:4      *              |   *     Segment:5      *
+ *       RADREF       *              |   *     PWRU200C00     *              |   *     PWRU250C00     *
+ *     365.760 cm     *              |   *     365.760 cm     *              |   *     365.760 cm     *
+ **********************    0.000 cm  |   **********************    0.000 cm  |   **********************    0.000 cm
+ *     Segment:3      *              |   *     Segment:3      *              |   *     Segment:3      *
+ *       BOTREF       *              |   *       BOTREF       *              |   *       BOTREF       *
+ *     30.480 cm      *              |   *     30.480 cm      *              |   *     30.480 cm      *
+ **********************  -30.480 cm  |   **********************  -30.480 cm  |   **********************  -30.480 cm
+
+ 
+1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page    9
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Case  1 Step  0 PWR CYCLE 1 U02 CORE - NOMINAL CYCLE                                            1774.20 ppm    0.000 GWd/MT  
+
+ Assm. Name    : ASM250G16           |   Assm. Name    : ASM320C00           |   Assm. Name    : ASM320G16
+ Assm. Sub Type:    4     4          |   Assm. Sub Type:    5     5          |   Assm. Sub Type:    6     6
+ Assm. Sub Type:    4     4          |   Assm. Sub Type:    5     5          |   Assm. Sub Type:    6     6
+ Assm. Class   : Fuel                |   Assm. Class   : Fuel                |   Assm. Class   : Fuel
+ Fuel  Type    : 4                   |   Fuel  Type    : 5                   |   Fuel  Type    : 6
+ Mech. Design  : 1                   |   Mech. Design  : 1                   |   Mech. Design  : 1
+ Loading (gram): 461750.             |   Loading (gram): 462513.             |   Loading (gram): 461745.
+ # Axial Zone  : 3                   |   # Axial Zone  : 3                   |   # Axial Zone  : 3
+ # Assm in Core: 26.000              |   # Assm in Core: 44.000              |   # Assm in Core: 20.000
+                                     |                                       |
+ **********************  396.240 cm  |   **********************  396.240 cm  |   **********************  396.240 cm
+ *     Segment:2      *              |   *     Segment:2      *              |   *     Segment:2      *
+ *       TOPREF       *              |   *       TOPREF       *              |   *       TOPREF       *
+ *     30.480 cm      *              |   *     30.480 cm      *              |   *     30.480 cm      *
+ **********************  365.760 cm  |   **********************  365.760 cm  |   **********************  365.760 cm
+ *     Segment:6      *              |   *     Segment:7      *              |   *     Segment:8      *
+ *     PWRU250G16     *              |   *     PWRU320C00     *              |   *     PWRU320G16     *
+ *     365.760 cm     *              |   *     365.760 cm     *              |   *     365.760 cm     *
+ **********************    0.000 cm  |   **********************    0.000 cm  |   **********************    0.000 cm
+ *     Segment:3      *              |   *     Segment:3      *              |   *     Segment:3      *
+ *       BOTREF       *              |   *       BOTREF       *              |   *       BOTREF       *
+ *     30.480 cm      *              |   *     30.480 cm      *              |   *     30.480 cm      *
+ **********************  -30.480 cm  |   **********************  -30.480 cm  |   **********************  -30.480 cm
+
+ 
+
+ Axial Nodal Boundaries (cm)
+ ---------------------------
+  15   396.2400
+  14   365.7600
+  13   335.2800
+  12   304.8000
+  11   274.3200
+  10   243.8400
+   9   213.3600
+   8   182.8800
+   7   152.4000
+   6   121.9200
+   5    91.4400
+   4    60.9600
+   3    30.4800
+   2     0.0000
+   1   -30.4800
+ 
+1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page   10
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Case  1 Step  0 PWR CYCLE 1 U02 CORE - NOMINAL CYCLE                                            1774.20 ppm    0.000 GWd/MT  
+
+
+ Grid Location Information
+ -------------------------
+ Axial Location(cm)   Thickness(cm)     Type
+ ------------------   -------------     ----
+      3.154              3.358          GRD
+     65.204              3.358          GRD
+    117.404              3.358          GRD
+    169.604              3.358          GRD
+    221.804              3.358          GRD
+    273.994              3.358          GRD
+    326.194              3.358          GRD
+ 
+1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page   11
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Case  1 Step  0 PWR CYCLE 1 U02 CORE - NOMINAL CYCLE                                            1774.20 ppm    0.000 GWd/MT  
+
+ Control Rod Descriptions
+ ------------------------
+ CRD.  Name    : AGINCD
+ CRD.  Type    : 1
+ Mech. Descrip : 1: PWR Finger
+ # Axial Zone  : 2
+ **********************  365.760 cm
+ *      TYPE:10       *
+ *GRAY FACTOR:  1.000 *
+ *     358.017 cm     *
+ **********************    7.743 cm
+ *       TYPE:0       *
+ *GRAY FACTOR:  1.000 *
+ *      7.743 cm      *
+ **********************    0.000 cm
+
+
+ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ Fuel Mechanical Designs           1
+ Total Pins                      289
+ Fuel Pins                       264
+ Non-Fuel Pins                    25
+ Number of Assemblies        41.5000
+
+ ** Error   -   A27      - FUE.SER at ( 8, 8) = A27 but FUE.TYP at ( 1, 1) = 1 (REFLECTOR)
+ ** Error   -   H-08     - FUE.LAB at ( 8, 8) = H-08 but FUE.TYP at ( 1, 1) = 1 (REFLECTOR)
+ ** Error   -   A28      - FUE.SER at ( 8, 10) = A28 but FUE.TYP at ( 1, 3) = 1 (REFLECTOR)
+ ** Error   -   F-08     - FUE.LAB at ( 8, 10) = F-08 but FUE.TYP at ( 1, 3) = 1 (REFLECTOR)
+ ** Error   -   A39      - FUE.SER at ( 10, 8) = A39 but FUE.TYP at ( 3, 1) = 1 (REFLECTOR)
+ ** Error   -   H-10     - FUE.LAB at ( 10, 8) = H-10 but FUE.TYP at ( 3, 1) = 1 (REFLECTOR)
+ ** Error   -   B34      - FUE.SER at ( 10, 13) = B34 but FUE.TYP at ( 3, 6) = 1 (REFLECTOR)
+ ** Error   -   C-10     - FUE.LAB at ( 10, 13) = C-10 but FUE.TYP at ( 3, 6) = 1 (REFLECTOR)
+ ** Error   -   C23      - FUE.SER at ( 10, 14) = C23 but FUE.TYP at ( 3, 7) = 1 (REFLECTOR)
+ ** Error   -   B-10     - FUE.LAB at ( 10, 14) = B-10 but FUE.TYP at ( 3, 7) = 1 (REFLECTOR)
+ ** Error   -   A45      - FUE.SER at ( 11, 11) = A45 but FUE.TYP at ( 4, 4) = 1 (REFLECTOR)
+ ** Error   -   E-11     - FUE.LAB at ( 11, 11) = E-11 but FUE.TYP at ( 4, 4) = 1 (REFLECTOR)
+ ** Error   -   C25      - FUE.SER at ( 11, 14) = C25 but FUE.TYP at ( 4, 7) = 1 (REFLECTOR)
+ ** Error   -   B-11     - FUE.LAB at ( 11, 14) = B-11 but FUE.TYP at ( 4, 7) = 1 (REFLECTOR)
+ ** Error   -   A50      - FUE.SER at ( 12, 12) = A50 but FUE.TYP at ( 5, 5) = 1 (REFLECTOR)
+ ** Error   -   D-12     - FUE.LAB at ( 12, 12) = D-12 but FUE.TYP at ( 5, 5) = 1 (REFLECTOR)
+ ** Error   -   B44      - FUE.SER at ( 13, 10) = B44 but FUE.TYP at ( 6, 3) = 1 (REFLECTOR)
+ ** Error   -   F-13     - FUE.LAB at ( 13, 10) = F-13 but FUE.TYP at ( 6, 3) = 1 (REFLECTOR)
+ ** Error   -   C32      - FUE.SER at ( 14, 10) = C32 but FUE.TYP at ( 7, 3) = 1 (REFLECTOR)
+ ** Error   -   F-14     - FUE.LAB at ( 14, 10) = F-14 but FUE.TYP at ( 7, 3) = 1 (REFLECTOR)
+ ** Error   -   C33      - FUE.SER at ( 14, 11) = C33 but FUE.TYP at ( 7, 4) = 1 (REFLECTOR)
+ ** Error   -   E-14     - FUE.LAB at ( 14, 11) = E-14 but FUE.TYP at ( 7, 4) = 1 (REFLECTOR)
+1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page   12
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Case  1 Step  0 PWR CYCLE 1 U02 CORE - NOMINAL CYCLE                                            1774.20 ppm    0.000 GWd/MT  
+
+ _____________________________________________________________________________________________________________________________
+
+
+ ERR.CHK - SYMROT - Expand to full core to check FUE.SUB/ROT for requested quarter core rotational symmetry              
+
+ ERR.CHK - SYMROT - Core Layout Passes Symmetry Check on Full Core FUE.SUB/ROT
+
+
+ ** Stop **  Errors in Input - Execution terminated due to preceding input errors
+           
+ ************************************************************************************************************************
+ ************************************************************************************************************************
+ **********                                          Errors in Input                                           **********
+ ************************************************************************************************************************
+ ************************************************************************************************************************
+           
+ ** Error   -   ABORT    - EXITS - Errors in Input
+ _____________________________________________________________________________________________________________________________
+
+ S u m m a r y   o f   E r r o r s / W a r n i n g s / C a u t i o n s   a n d   N o t e s          
+
+ Label   Times   Degree     Where      Info  
+ -----   -----   ------     -----      ----  
+
+ F-14        1   FATAL      FUE.LAB    shows no FUE.TYP
+ F-13        1   FATAL      FUE.LAB    shows no FUE.TYP
+ E-14        1   FATAL      FUE.LAB    shows no FUE.TYP
+ C33         1   FATAL      FUE.SER    shows no FUE.TYP
+ ABORT       1   FATAL      EXITS      Errors in Input
+ C32         1   FATAL      FUE.SER    shows no FUE.TYP
+ A27         1   FATAL      FUE.SER    shows no FUE.TYP
+ H-08        1   FATAL      FUE.LAB    shows no FUE.TYP
+ A28         1   FATAL      FUE.SER    shows no FUE.TYP
+ F-08        1   FATAL      FUE.LAB    shows no FUE.TYP
+ A39         1   FATAL      FUE.SER    shows no FUE.TYP
+ H-10        1   FATAL      FUE.LAB    shows no FUE.TYP
+ B34         1   FATAL      FUE.SER    shows no FUE.TYP
+ C-10        1   FATAL      FUE.LAB    shows no FUE.TYP
+ C23         1   FATAL      FUE.SER    shows no FUE.TYP
+ B-10        1   FATAL      FUE.LAB    shows no FUE.TYP
+ A45         1   FATAL      FUE.SER    shows no FUE.TYP
+ E-11        1   FATAL      FUE.LAB    shows no FUE.TYP
+ C25         1   FATAL      FUE.SER    shows no FUE.TYP
+ B-11        1   FATAL      FUE.LAB    shows no FUE.TYP
+ A50         1   FATAL      FUE.SER    shows no FUE.TYP
+ D-12        1   FATAL      FUE.LAB    shows no FUE.TYP
+ B44         1   FATAL      FUE.SER    shows no FUE.TYP
+ BADAVE      1   CAUTION    HYD.DLT    Average of HYD.DLT map is not 0.0
+ NO3XPO      1   CAUTION    BAT.EDT    Batch edit request for 3XPO ignored --only Q or N prefix is valid for this quantity
+ NO2XPO      1   CAUTION    BAT.EDT    Batch edit request for 2XPO ignored --only Q or N prefix is valid for this quantity
+ NO2PIN      1   CAUTION    BAT.EDT    Batch edit request for 2PIN ignored --only Q or N prefix is valid for this quantity
+ NO3PIN      1   CAUTION    BAT.EDT    Batch edit request for 3PIN ignored --only Q or N prefix is valid for this quantity
+ HYDDLT      1   NOTE       HYD.DLT    Assembly inlet temperatures are modified by HYD.DLT map
+ ITESRC      1   NOTE       ITE.SRC    EOLEXP Search requested with KEF as target
+
+ Errors can be permitted by listing the error's label on card 'ERR.CHK' 
+
+ Present Error Checker Related Input:
+      'ERR.DAT'    0.2500E-01/
+      'ERR.CHK'/
+      'ERR.SYM' 'ROT' 2/
+      'ERR.SUP'/
+
+
+
+1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page   13
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Case  1 Step  0 PWR CYCLE 1 U02 CORE - NOMINAL CYCLE                                            1774.20 ppm    0.000 GWd/MT  
+
+
+ S u m m a r y   o f   F i l e   A c t i v i t y
+
+ == Read Restart File: ../cycle1.res at Exp= 0.000 GWd/MT
+ ==      Created by S-3 Version: 1.00.02  at 17:35:39 on 17/10/07
+ == Read Library XS File: ./cms.pwr-all.lib
+ ==      Created by CMS-Link version: 1.00.02 at 17:55:25 on 2017/10/07
+1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page   14
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Case  1 Step  0                                                                                 1774.20 ppm    0.000 GWd/MT  
+
+                         Report on CPU Time in Seconds By Subroutine
+
+                                                                                     Milli-Sec
+                         Subroutine         CPU Time     % of Total         Calls     per Call
+                         ----------         --------     ----------         -----     --------
+
+ Total CPU Time        0.065 Seconds
+
+ Start Time/Date  16:30:02  21/10/15
+ End   Time/Date  16:30:02  21/10/15
+
+ Maximum Container Usage:   1536702 words
