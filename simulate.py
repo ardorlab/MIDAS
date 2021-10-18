@@ -422,7 +422,7 @@ class Simulate_Loading_Pattern_Solution(Solution):
                                              2,5,9,14,20,27,35,12,13,16,17,
                                              18,19,22,23,24,25,26,29,30,31,
                                              32,33,34,37,38,39,40,41,42,44,45,46,47]
-                octant_symmetry_list = []
+                    octant_symmetry_list = []
         else:
             raise ValueError("Number of assemblies not tracked")
 
