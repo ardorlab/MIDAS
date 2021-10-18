@@ -25,15 +25,15 @@
 
  'RES' '../cycle1.res' 0.0/
   
- 'FUE.TYP'  1, 1 4 2 5 1 6 5 2 1/
- 'FUE.TYP'  2, 4 4 3 6 1 3 3 5 5/
- 'FUE.TYP'  3, 2 3 5 3 6 1 3 4 6/
- 'FUE.TYP'  4, 5 6 3 5 4 2 1 1 0/
- 'FUE.TYP'  5, 1 1 6 4 3 6 6 1 0/
- 'FUE.TYP'  6, 6 3 1 2 6 6 2 0 0/
- 'FUE.TYP'  7, 5 3 3 1 6 2 0 0 0/
- 'FUE.TYP'  8, 2 5 4 1 1 0 0 0 0/
- 'FUE.TYP'  9, 1 5 6 0 0 0 0 0 0/
+ 'FUE.TYP'  1, 1 2 6 6 2 3 6 5 1/
+ 'FUE.TYP'  2, 2 4 6 1 4 1 3 5 2/
+ 'FUE.TYP'  3, 6 6 6 1 5 5 2 4 3/
+ 'FUE.TYP'  4, 6 1 1 2 6 2 1 4 0/
+ 'FUE.TYP'  5, 2 4 5 6 6 4 1 5 0/
+ 'FUE.TYP'  6, 3 1 5 2 4 6 3 0 0/
+ 'FUE.TYP'  7, 6 3 2 1 1 3 0 0 0/
+ 'FUE.TYP'  8, 5 5 4 4 5 0 0 0 0/
+ 'FUE.TYP'  9, 1 2 3 0 0 0 0 0 0/
   
   
  'COR.OPE' 100.0, 100.0, 2250.0/
@@ -45,7 +45,7 @@
  'STA'/
  'END'/
 1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page    1
- Run: RUN NAME  ** Project: PROJECT NAME             ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Run: RUN NAME  ** Project: PROJECT NAME             ** Run Time: 16.44.31.** Date: 2021/10/18    100.0% Flow  100.0% Power
  Case  1 Step  0                                                                                    0.00 ppm    0.000 GWd/MT  
 
  CASE   1  --- Entering Input Segment ---
@@ -125,7 +125,7 @@
  18   HX-  - Spectral History - X minus       
  
 1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page    2
- Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.44.31.** Date: 2021/10/18    100.0% Flow  100.0% Power
  Case  1 Step  0 PWR CYCLE 1 U02 CORE - NOMINAL CYCLE                                               0.00 ppm    0.000 GWd/MT  
  DIM.MEM - Dynamic Memory Allocation
 
@@ -149,7 +149,7 @@
  ** Caution -   NO2PIN   - BAT.EDT - Batch edit request for 2PIN ignored --only Q or N prefix is valid for this quantity
  ** Caution -   NO2XPO   - BAT.EDT - Batch edit request for 2XPO ignored --only Q or N prefix is valid for this quantity
 1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page    3
- Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.44.31.** Date: 2021/10/18    100.0% Flow  100.0% Power
  Case  1 Step  0 PWR CYCLE 1 U02 CORE - NOMINAL CYCLE                                            1774.20 ppm    0.000 GWd/MT  
  _____________________________________________________________________________________________________________________________
 
@@ -177,7 +177,7 @@
  
  Library created by CMS-Link version: 1.00.02 at 17:55:25 on 2017/10/07
 1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page    4
- Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.44.31.** Date: 2021/10/18    100.0% Flow  100.0% Power
  Case  1 Step  0 PWR CYCLE 1 U02 CORE - NOMINAL CYCLE                                            1774.20 ppm    0.000 GWd/MT  
  _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
@@ -238,14 +238,14 @@
   7   0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000
   8   0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000
 1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page    5
- Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.44.31.** Date: 2021/10/18    100.0% Flow  100.0% Power
  Case  1 Step  0 PWR CYCLE 1 U02 CORE - NOMINAL CYCLE                                            1774.20 ppm    0.000 GWd/MT  
            
  ************************************************************************************************************************
  ************************************************************************************************************************
  **********                                              Warning                                               **********
  **********                            Average of delta T'S in above map is not 0.0                            **********
- **********                         0.022 Degrees F is subtracted from above delta T's                         **********
+ **********                         0.019 Degrees F is subtracted from above delta T's                         **********
  ************************************************************************************************************************
  ************************************************************************************************************************
            
@@ -272,17 +272,17 @@
 
  Input Summary
 
- Relative Power. . . . . . PERCTP     100.0000 %           Fuel Assemblies . . . . . . . .      164.0000
- Relative Flow . . . . . . PERCWT     100.0000 %           Fuel Nodes (Assembly Size). . .     1968.0000
- Thermal Power . . . . . . . .CTP    2924.7390 MWt         Assembly Pitch (Cold) . . DXASSM      21.5000 cm
- Core Flow - Metric. . . . . .CWT   51777.5469 MT/hr       Node Height. . (Cold) . . . . DZ      30.4800 cm
-           - English . . . . .CWT     114.1480 Mlb/hr      Core Height. . (Cold) . . .HCORE     365.7600 cm
- Rated Power Density . . . POWDEN     105.4800 kW/liter    Core Volume  . (Cold) . . . . .    27727.9004 liters
- Rated Coolant Mass Flux . FLODEN     683.0000 kg/(cm2-hr) Core Fueled Area. . . . . . . .    18952.2500 cm2
- Core Rated Thermal Power. . . .     2924.7390 MWt         Core Loading. . . . . . . . . .       72.1034 metric tons
- Core Rated Flow - Metric. . . .    51777.5469 MT/hr       Fuel Rods in Core . . . . . . .         41184
-                 - English . . .      114.1480 Mlb/hr      Fuel Rods In Average Node . . .      264.0000
- Explicit Core Fraction. . . . .        0.2500             Total Fuel Rod Length in Core .    158359.453 meters
+ Relative Power. . . . . . PERCTP     100.0000 %           Fuel Assemblies . . . . . . . .      168.0000
+ Relative Flow . . . . . . PERCWT     100.0000 %           Fuel Nodes (Assembly Size). . .     2016.0000
+ Thermal Power . . . . . . . .CTP    2996.0742 MWt         Assembly Pitch (Cold) . . DXASSM      21.5000 cm
+ Core Flow - Metric. . . . . .CWT   53040.4141 MT/hr       Node Height. . (Cold) . . . . DZ      30.4800 cm
+           - English . . . . .CWT     116.9321 Mlb/hr      Core Height. . (Cold) . . .HCORE     365.7600 cm
+ Rated Power Density . . . POWDEN     105.4800 kW/liter    Core Volume  . (Cold) . . . . .    28404.1914 liters
+ Rated Coolant Mass Flux . FLODEN     683.0000 kg/(cm2-hr) Core Fueled Area. . . . . . . .    19414.5000 cm2
+ Core Rated Thermal Power. . . .     2996.0742 MWt         Core Loading. . . . . . . . . .       73.9442 metric tons
+ Core Rated Flow - Metric. . . .    53040.4141 MT/hr       Fuel Rods in Core . . . . . . .         42240
+                 - English . . .      116.9321 Mlb/hr      Fuel Rods In Average Node . . .      264.0000
+ Explicit Core Fraction. . . . .        0.2500             Total Fuel Rod Length in Core .    162221.891 meters
  Boundary Conditions . . . .  3                            Core Symmetry . . . . . . . . .        ROTATIONAL
                             +-+-+                          Number of BP Rods at Midplane .             0
                           3 + + +  0
@@ -290,7 +290,7 @@
                               0    0 (Diag)
 
 1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page    6
- Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.44.31.** Date: 2021/10/18    100.0% Flow  100.0% Power
  Case  1 Step  0 PWR CYCLE 1 U02 CORE - NOMINAL CYCLE                                            1774.20 ppm    0.000 GWd/MT  
 
  Fueled Segments:
@@ -299,11 +299,11 @@
  Seg.                         Loading     Enrichment       PU          Loading      Burnable     Burnable      Equivalent
  Num. Segment Name             (g/cc)       (U235)        (WT%)        (g/cc)       Poison       Poison        Assemblies
  ---- --------------------   ---------   ------------    -------      ----------   ----------   ----------    -----------
-   4  PWRU200C00              2.73564      2.00000        ------        ------              0            0         24.000
-   5  PWRU250C00              2.73562      2.50000        ------        ------              0            0         44.000
-   6  PWRU250G16              2.73108      2.50000        ------        ------              0            0         24.000
-   7  PWRU320C00              2.73559      3.20000        ------        ------              0            0         28.000
-   8  PWRU320G16              2.73104      3.20000        ------        ------              0            0         44.000
+   4  PWRU200C00              2.73564      2.00000        ------        ------              0            0         32.000
+   5  PWRU250C00              2.73562      2.50000        ------        ------              0            0         24.000
+   6  PWRU250G16              2.73108      2.50000        ------        ------              0            0         36.000
+   7  PWRU320C00              2.73559      3.20000        ------        ------              0            0         36.000
+   8  PWRU320G16              2.73104      3.20000        ------        ------              0            0         40.000
 
  Reflector Segments:
  Seg.
@@ -314,7 +314,7 @@
   3   BOTREF              
  
 1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page    7
- Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.44.31.** Date: 2021/10/18    100.0% Flow  100.0% Power
  Case  1 Step  0 PWR CYCLE 1 U02 CORE - NOMINAL CYCLE                                            1774.20 ppm    0.000 GWd/MT  
 
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -340,7 +340,7 @@
           --------------------------------------------------------------------------------
    1.000  |  68.200    23.700     3.400     0.000    -1.600    -0.900    -0.600    -2.100
 1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page    8
- Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.44.31.** Date: 2021/10/18    100.0% Flow  100.0% Power
  Case  1 Step  0 PWR CYCLE 1 U02 CORE - NOMINAL CYCLE                                            1774.20 ppm    0.000 GWd/MT  
 
  Assembly Physical Descriptions
@@ -354,7 +354,7 @@
  Mech. Design  : 1                   |   Mech. Design  : 1                   |   Mech. Design  : 1
  Loading (gram): 0.                  |   Loading (gram): 462522.             |   Loading (gram): 462518.
  # Axial Zone  : 3                   |   # Axial Zone  : 3                   |   # Axial Zone  : 3
- # Assm        : 41.000              |   # Assm in Core: 24.000              |   # Assm in Core: 44.000
+ # Assm        : 43.000              |   # Assm in Core: 32.000              |   # Assm in Core: 24.000
                                      |                                       |
  **********************  396.240 cm  |   **********************  396.240 cm  |   **********************  396.240 cm
  *     Segment:2      *              |   *     Segment:2      *              |   *     Segment:2      *
@@ -372,7 +372,7 @@
 
  
 1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page    9
- Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.44.31.** Date: 2021/10/18    100.0% Flow  100.0% Power
  Case  1 Step  0 PWR CYCLE 1 U02 CORE - NOMINAL CYCLE                                            1774.20 ppm    0.000 GWd/MT  
 
  Assm. Name    : ASM250G16           |   Assm. Name    : ASM320C00           |   Assm. Name    : ASM320G16
@@ -383,7 +383,7 @@
  Mech. Design  : 1                   |   Mech. Design  : 1                   |   Mech. Design  : 1
  Loading (gram): 461750.             |   Loading (gram): 462513.             |   Loading (gram): 461745.
  # Axial Zone  : 3                   |   # Axial Zone  : 3                   |   # Axial Zone  : 3
- # Assm in Core: 24.000              |   # Assm in Core: 28.000              |   # Assm in Core: 44.000
+ # Assm in Core: 36.000              |   # Assm in Core: 36.000              |   # Assm in Core: 40.000
                                      |                                       |
  **********************  396.240 cm  |   **********************  396.240 cm  |   **********************  396.240 cm
  *     Segment:2      *              |   *     Segment:2      *              |   *     Segment:2      *
@@ -420,7 +420,7 @@
    1   -30.4800
  
 1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page   10
- Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.44.31.** Date: 2021/10/18    100.0% Flow  100.0% Power
  Case  1 Step  0 PWR CYCLE 1 U02 CORE - NOMINAL CYCLE                                            1774.20 ppm    0.000 GWd/MT  
 
 
@@ -437,7 +437,7 @@
     326.194              3.358          GRD
  
 1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page   11
- Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.44.31.** Date: 2021/10/18    100.0% Flow  100.0% Power
  Case  1 Step  0 PWR CYCLE 1 U02 CORE - NOMINAL CYCLE                                            1774.20 ppm    0.000 GWd/MT  
 
  Control Rod Descriptions
@@ -463,28 +463,28 @@
  Total Pins                      289
  Fuel Pins                       264
  Non-Fuel Pins                    25
- Number of Assemblies        41.0000
+ Number of Assemblies        42.0000
 
  ** Error   -   A27      - FUE.SER at ( 8, 8) = A27 but FUE.TYP at ( 1, 1) = 1 (REFLECTOR)
  ** Error   -   H-08     - FUE.LAB at ( 8, 8) = H-08 but FUE.TYP at ( 1, 1) = 1 (REFLECTOR)
- ** Error   -   A29      - FUE.SER at ( 8, 12) = A29 but FUE.TYP at ( 1, 5) = 1 (REFLECTOR)
- ** Error   -   D-08     - FUE.LAB at ( 8, 12) = D-08 but FUE.TYP at ( 1, 5) = 1 (REFLECTOR)
- ** Error   -   B28      - FUE.SER at ( 9, 12) = B28 but FUE.TYP at ( 2, 5) = 1 (REFLECTOR)
- ** Error   -   D-09     - FUE.LAB at ( 9, 12) = D-09 but FUE.TYP at ( 2, 5) = 1 (REFLECTOR)
- ** Error   -   B34      - FUE.SER at ( 10, 13) = B34 but FUE.TYP at ( 3, 6) = 1 (REFLECTOR)
- ** Error   -   C-10     - FUE.LAB at ( 10, 13) = C-10 but FUE.TYP at ( 3, 6) = 1 (REFLECTOR)
+ ** Error   -   A35      - FUE.SER at ( 9, 11) = A35 but FUE.TYP at ( 2, 4) = 1 (REFLECTOR)
+ ** Error   -   E-09     - FUE.LAB at ( 9, 11) = E-09 but FUE.TYP at ( 2, 4) = 1 (REFLECTOR)
+ ** Error   -   A36      - FUE.SER at ( 9, 13) = A36 but FUE.TYP at ( 2, 6) = 1 (REFLECTOR)
+ ** Error   -   C-09     - FUE.LAB at ( 9, 13) = C-09 but FUE.TYP at ( 2, 6) = 1 (REFLECTOR)
+ ** Error   -   B33      - FUE.SER at ( 10, 11) = B33 but FUE.TYP at ( 3, 4) = 1 (REFLECTOR)
+ ** Error   -   E-10     - FUE.LAB at ( 10, 11) = E-10 but FUE.TYP at ( 3, 4) = 1 (REFLECTOR)
+ ** Error   -   A44      - FUE.SER at ( 11, 9) = A44 but FUE.TYP at ( 4, 2) = 1 (REFLECTOR)
+ ** Error   -   G-11     - FUE.LAB at ( 11, 9) = G-11 but FUE.TYP at ( 4, 2) = 1 (REFLECTOR)
+ ** Error   -   B37      - FUE.SER at ( 11, 10) = B37 but FUE.TYP at ( 4, 3) = 1 (REFLECTOR)
+ ** Error   -   F-11     - FUE.LAB at ( 11, 10) = F-11 but FUE.TYP at ( 4, 3) = 1 (REFLECTOR)
  ** Error   -   C25      - FUE.SER at ( 11, 14) = C25 but FUE.TYP at ( 4, 7) = 1 (REFLECTOR)
  ** Error   -   B-11     - FUE.LAB at ( 11, 14) = B-11 but FUE.TYP at ( 4, 7) = 1 (REFLECTOR)
- ** Error   -   A48      - FUE.SER at ( 12, 8) = A48 but FUE.TYP at ( 5, 1) = 1 (REFLECTOR)
- ** Error   -   H-12     - FUE.LAB at ( 12, 8) = H-12 but FUE.TYP at ( 5, 1) = 1 (REFLECTOR)
- ** Error   -   B41      - FUE.SER at ( 12, 9) = B41 but FUE.TYP at ( 5, 2) = 1 (REFLECTOR)
- ** Error   -   G-12     - FUE.LAB at ( 12, 9) = G-12 but FUE.TYP at ( 5, 2) = 1 (REFLECTOR)
- ** Error   -   B44      - FUE.SER at ( 13, 10) = B44 but FUE.TYP at ( 6, 3) = 1 (REFLECTOR)
- ** Error   -   F-13     - FUE.LAB at ( 13, 10) = F-13 but FUE.TYP at ( 6, 3) = 1 (REFLECTOR)
+ ** Error   -   A52      - FUE.SER at ( 13, 9) = A52 but FUE.TYP at ( 6, 2) = 1 (REFLECTOR)
+ ** Error   -   G-13     - FUE.LAB at ( 13, 9) = G-13 but FUE.TYP at ( 6, 2) = 1 (REFLECTOR)
  ** Error   -   C33      - FUE.SER at ( 14, 11) = C33 but FUE.TYP at ( 7, 4) = 1 (REFLECTOR)
  ** Error   -   E-14     - FUE.LAB at ( 14, 11) = E-14 but FUE.TYP at ( 7, 4) = 1 (REFLECTOR)
 1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page   12
- Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.44.31.** Date: 2021/10/18    100.0% Flow  100.0% Power
  Case  1 Step  0 PWR CYCLE 1 U02 CORE - NOMINAL CYCLE                                            1774.20 ppm    0.000 GWd/MT  
 
  _____________________________________________________________________________________________________________________________
@@ -511,25 +511,25 @@
  Label   Times   Degree     Where      Info  
  -----   -----   ------     -----      ----  
 
- F-13        1   FATAL      FUE.LAB    shows no FUE.TYP
- G-12        1   FATAL      FUE.LAB    shows no FUE.TYP
+ G-13        1   FATAL      FUE.LAB    shows no FUE.TYP
+ B-11        1   FATAL      FUE.LAB    shows no FUE.TYP
  E-14        1   FATAL      FUE.LAB    shows no FUE.TYP
  C33         1   FATAL      FUE.SER    shows no FUE.TYP
  ABORT       1   FATAL      EXITS      Errors in Input
- B44         1   FATAL      FUE.SER    shows no FUE.TYP
+ A52         1   FATAL      FUE.SER    shows no FUE.TYP
  A27         1   FATAL      FUE.SER    shows no FUE.TYP
  H-08        1   FATAL      FUE.LAB    shows no FUE.TYP
- A29         1   FATAL      FUE.SER    shows no FUE.TYP
- D-08        1   FATAL      FUE.LAB    shows no FUE.TYP
- B28         1   FATAL      FUE.SER    shows no FUE.TYP
- D-09        1   FATAL      FUE.LAB    shows no FUE.TYP
- B34         1   FATAL      FUE.SER    shows no FUE.TYP
- C-10        1   FATAL      FUE.LAB    shows no FUE.TYP
+ A35         1   FATAL      FUE.SER    shows no FUE.TYP
+ E-09        1   FATAL      FUE.LAB    shows no FUE.TYP
+ A36         1   FATAL      FUE.SER    shows no FUE.TYP
+ C-09        1   FATAL      FUE.LAB    shows no FUE.TYP
+ B33         1   FATAL      FUE.SER    shows no FUE.TYP
+ E-10        1   FATAL      FUE.LAB    shows no FUE.TYP
+ A44         1   FATAL      FUE.SER    shows no FUE.TYP
+ G-11        1   FATAL      FUE.LAB    shows no FUE.TYP
+ B37         1   FATAL      FUE.SER    shows no FUE.TYP
+ F-11        1   FATAL      FUE.LAB    shows no FUE.TYP
  C25         1   FATAL      FUE.SER    shows no FUE.TYP
- B-11        1   FATAL      FUE.LAB    shows no FUE.TYP
- A48         1   FATAL      FUE.SER    shows no FUE.TYP
- H-12        1   FATAL      FUE.LAB    shows no FUE.TYP
- B41         1   FATAL      FUE.SER    shows no FUE.TYP
  BADAVE      1   CAUTION    HYD.DLT    Average of HYD.DLT map is not 0.0
  NO3XPO      1   CAUTION    BAT.EDT    Batch edit request for 3XPO ignored --only Q or N prefix is valid for this quantity
  NO2XPO      1   CAUTION    BAT.EDT    Batch edit request for 2XPO ignored --only Q or N prefix is valid for this quantity
@@ -549,7 +549,7 @@
 
 
 1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page   13
- Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.44.31.** Date: 2021/10/18    100.0% Flow  100.0% Power
  Case  1 Step  0 PWR CYCLE 1 U02 CORE - NOMINAL CYCLE                                            1774.20 ppm    0.000 GWd/MT  
 
 
@@ -560,7 +560,7 @@
  == Read Library XS File: ./cms.pwr-all.lib
  ==      Created by CMS-Link version: 1.00.02 at 17:55:25 on 2017/10/07
 1S I M U L A T E - 3 ** Studsvik CMS Steady-State 3-D Reactor Simulator ** 1.00.02 _BASE   INT Created 12/05/08 ** Page   14
- Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.30.02.** Date: 2021/10/15    100.0% Flow  100.0% Power
+ Run: RUN NAME  ** Project: GENERIC PWR EQUILIBR     ** Run Time: 16.44.31.** Date: 2021/10/18    100.0% Flow  100.0% Power
  Case  1 Step  0                                                                                 1774.20 ppm    0.000 GWd/MT  
 
                          Report on CPU Time in Seconds By Subroutine
@@ -569,12 +569,9 @@
                          Subroutine         CPU Time     % of Total         Calls     per Call
                          ----------         --------     ----------         -----     --------
 
- Total CPU Time        0.055 Seconds
+ Total CPU Time        0.050 Seconds
 
- Start Time/Date  16:30:02  21/10/15
- End   Time/Date  16:30:03  21/10/15
-
- Elapsed Real Time     2.000 Seconds
- CPU Utilization       2.77%
+ Start Time/Date  16:44:31  21/10/18
+ End   Time/Date  16:44:31  21/10/18
 
  Maximum Container Usage:   1536702 words
