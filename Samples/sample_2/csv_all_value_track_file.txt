@@ -1,1 +1,0 @@
-Solution Number,  Solution Name,   Fitness,  max_boron,  PinPowerPeaking,  FDeltaH,  cycle_length,  
