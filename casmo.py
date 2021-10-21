@@ -1,6 +1,5 @@
 import os
 import sys
-import random
 import pickle
 import yaml
 from multiprocessing import Pool
@@ -73,11 +72,13 @@ class Casmo_Lattice(Solution):
         if 'control_rod' in info:
             self.control_rod_line = info['control_rod']
 
-    def create_input_file(self):
+    def evaluate(self):
         """
-        Performs all of the steps related to writing a CASMO input file.
+        Evaluates the given Casmo Solution.
 
-        Written by Brian Andersen. 4/16/2021.
+        Parameters: None
+
+        Written by Brian Andersen. 1/7/2020
         """
         infile = open("genome_key",'rb')
         genome_key = pickle.load(infile)
@@ -97,23 +98,10 @@ class Casmo_Lattice(Solution):
         pin_str  = return_triangular_string(pin_list)
 
         self.write_input_file(fuel_card_string,fuel_str,pin_str)
-
-    def execute_input_file(self):
-        """
-        Runs the CASMO input file.
-
-        WRitten by Brian Andersen. 4/16/2021.
-        """
         outline = "cd {} ;".format(self.name) 
         outline += "casmo4e -v u1.00.02 {}.inp".format(self.name) 
         os.system(outline)
 
-    def evaluate_objectives(self):
-        """
-        Evaluated the optimization objectives based on the outputs of the Casmo Output File.
-
-        Written by Brian Andersen. 4/16/2021.
-        """
         file_ = open("{}/{}.out".format(self.name,self.name),'r')
         file_lines = file_.readlines()
         file_.close()
@@ -150,47 +138,12 @@ class Casmo_Lattice(Solution):
         if 'boc_kinf' in self.parameters:
             if not kinf_list:
                 kinf_list = Extractor.kinf(file_lines)
-            self.parameters['boc_kinf']['value'] = kinf_list[0]
+            self.paramaters['boc_kinf']['value'] = kinf_list[0]
         if 'enrichment' in self.parameters:
             if 'enrichment' in self.neural_network:
                 pass
             else:
                 self.parameters['enrichment']['value'] = Extractor.enrichment(file_lines)
-        if 'input_enrichment' in self.parameters:
-            infile = open("genome_key",'rb')
-            genome_key = pickle.load(infile)
-            infile.close()
-
-            enrichment_sum = 0.
-            for gene in self.genome:
-                enrichment_sum += genome_key[gene]['enrichment']
-            self.parameters['input_enrichment']['value'] = enrichment_sum
-
-    def evaluate(self):
-        """
-        Evaluates the given Casmo Solution.
-
-        Parameters: None
-
-        Written by Brian Andersen. 1/7/2020
-        """
-        self.create_input_file()
-        self.execute_input_file()
-        self.evaluate_objectives()
-
-    def test_evaluate(self):
-        """
-        Evaluates the given Casmo Solution when in testing mode.
-        The only actual objective capable of being evaluated is 
-        input enrichment. 
-
-        Parameters: None
-
-        Written by Brian Andersen. 1/7/2020
-        """
-        self.create_input_file()
-        for param in self.parameters:
-            self.parameters[param]['value'] = random.random()
         if 'input_enrichment' in self.parameters:
             infile = open("genome_key",'rb')
             genome_key = pickle.load(infile)

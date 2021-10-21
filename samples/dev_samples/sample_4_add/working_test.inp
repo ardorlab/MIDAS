@@ -1,0 +1,55 @@
+'DIM.PWR' 15/
+'DIM.CAL' 25 2 2/
+'DIM.DEP' 'EXP' 'SAM' 'PIN' 'HTMO' 'HBOR' 'HTF'/
+'FUE.LAB',6/
+1   1                             N-04   R-07   P-05   TYPE11 P-11   R-09   N-12                               
+2   1               TYPE12 TYPE11 TYPE4  M-06   P-07   TYPE14 P-09   M-10   TYPE4  TYPE11 TYPE12               
+3   1        TYPE12 P-04   TYPE8  P-06   TYPE14 J-05   TYPE11 G-05   TYPE14 P-10   TYPE8  P-12   TYPE12        
+4   1        TYPE11 TYPE8  J-05   M-05   TYPE11 M-07   TYPE11 M-09   TYPE11 M-11   G-05   TYPE8  TYPE11        
+5   1 M-13   TYPE4  K-14   L-12   TYPE12 K-07   N-06   N-05   N-10   K-09   TYPE12 E-12   F-14   TYPE4  D-13   
+6   1 J-15   K-12   TYPE14 TYPE11 J-10   TYPE4  N-07   TYPE15 N-09   TYPE4  G-10   TYPE11 TYPE14 F-12   G-15   
+7   1 L-14   J-14   E-07   J-12   K-13   J-13   TYPE12 TYPE7  TYPE12 G-13   F-13   G-12   L-07   G-14   E-14   
+8   1 TYPE11 TYPE14 TYPE11 TYPE11 N-11   TYPE15 TYPE7  TYPE11 TYPE7  TYPE15 L-13   TYPE11 TYPE11 TYPE14 TYPE11 
+9   1 B-11   B-09   L-09   D-09   C-10   C-09   TYPE12 TYPE7  TYPE12 C-07   C-06   D-07   J-11   B-7    B-05   
+10  1 A-09   D-10   TYPE14 TYPE11 F-09   TYPE4  G-03   TYPE15 J-03   TYPE4  F-07   TYPE11 TYPE14 D-06   A-07   
+11  1 C-12   TYPE4  B-10   D-11   TYPE12 G-06   F-03   E-13   K-03   J-06   TYPE12 D-05   B-06   TYPE4  C-04   
+12  1        TYPE11 TYPE8  E-07   E-04   TYPE11 G-04   TYPE11 J-04   TYPE11 L-04   L-07   TYPE8  TYPE11        
+13  1        TYPE12 M-14   TYPE8  F-02   TYPE14 E-09   TYPE11 G-11   TYPE14 K-02   TYPE8  D-14   TYPE12        
+14  1               TYPE12 TYPE11 TYPE4  F-04   G-02   TYPE14 J-02   K-04   TYPE4  TYPE11 TYPE12               
+15  1                             D-03   G-01   E-02   TYPE11 L-02   J-01   M-03  
+0   0
+'FUE.NEW', 'TYPE03', E300, 180, 3,,,2/
+'FUE.NEW', 'TYPE04', A300, 160, 4,,,2/
+'FUE.NEW', 'TYPE08', B300, 160, 8,,,2/
+'FUE.NEW', 'TYPE13', C300, 80, 13,,,2/
+'FUE.NEW', 'TYPE07', D300, 120, 7,,,2/
+'FUE.NEW', 'TYPE11', F300, 80, 11,,,2/
+'FUE.NEW', 'TYPE12', G300, 200, 12,,,2/
+'FUE.NEW', 'TYPE14', H300, 160, 14,,,2/
+'FUE.NEW', 'TYPE15', J300, 160, 15,,,2/
+'RES' 'cycle_2.res' 21.140/
+'SEG.LIB'  ,04 'lat21'/         * Fuel composition: same as for reflector case
+           ,05 'lat26'/
+           ,06 'lat31'/
+           ,07 'lat26P16'/
+           ,08 'lat26P20'/
+           ,09 'lat26P24'/
+           ,10 'lat31P8'/
+           ,11 'lat31P12'/
+           ,12 'lat31P16'/
+           ,13 'lat31P24'/
+           ,14 'gad12'/
+           ,15 'gad24'/
+           ,16 'ifba80'/
+           ,17 'ifba120'/ 
+
+'BAT.LAB' 2 'CYC-2' / 
+'COR.OPE' 100.0, 100.0, 2250.0/
+'COR.TIN' 550.0/ 
+
+'DEP.CYC' 'CYCLE2' 0.0 02/
+'DEP.STA' 'AVE' 0.0 0.5 1 2 -1 35 /
+'COM' The following performs an automated search on cycle length at a boron concentration of 10 ppm
+'ITE.SRC' 'SET' 'EOLEXP' , , 0.02, , , , , , 'MINBOR' 10., , , , , 4, 4, , , /
+'STA'/
+'END'/

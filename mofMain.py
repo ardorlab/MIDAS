@@ -1,14 +1,19 @@
+import os
+import sys
 import yaml
+import math
+import copy
+import numpy
+import random
 import pickle
 import argparse
-import copy
+from matplotlib import pyplot
+from multiprocessing import Pool
 import geneticAlgorithm as GA
 import simulatedAnnealing as SA
 from casmo import Casmo_Lattice
-from solution_types import Solution
 import simulate
 import fitness
-from methodology import Genetic_Algorithm,Serial_Simulated_Annealing
 
 class Optimization_Factory(object):
     """
@@ -22,7 +27,8 @@ class Optimization_Factory(object):
     
     Written by Brian Andersen. 1/7/2019
     """
-    def __init__(self,yaml_file):
+    def __init__(self,num_procs,yaml_file):
+        self.num_procs = num_procs
         with open(yaml_file) as f:
             self.file_settings = yaml.safe_load(f)
 
@@ -39,6 +45,8 @@ class Optimization_Factory(object):
             self.build_genetic_algorithm()
         elif methodology == 'simulated_annealing':
             self.build_simulated_annealing()
+        elif methodology == 'lava':
+            self.build_volcano()
         else:
             raise ValueError("Optimization Type Not Supported")
 
@@ -58,11 +66,12 @@ class Optimization_Factory(object):
         generation_    = self.build_generation()
         reproduction_  = self.build_reproduction(generation_.total)
         selection_     = self.build_selection()
-        self.optimization = Genetic_Algorithm(solution=solution_type_,
+        self.optimization = GA.Genetic_Algorithm(solution=solution_type_,
                                              population=population_,
                                              generation=generation_,
                                              reproduction=reproduction_,
                                              selection=selection_,
+                                             num_procs= self.num_procs,
                                              file_settings=self.file_settings)
     
     def build_simulated_annealing(self):
@@ -80,13 +89,21 @@ class Optimization_Factory(object):
         mutation_      = self.build_mutation(generation_.total)
         cooling_schedule_   = self.build_cooling_schedule()
         fitness_ = self.build_fitness('simulated_annealing')
-        self.optimization = Serial_Simulated_Annealing(solution=solution_type_,
-                                                       population=population_,
-                                                       generation=generation_,
-                                                       mutation=mutation_,
-                                                       cooling_schedule= cooling_schedule_,
-                                                       fitness=fitness_,
-                                                       file_settings=self.file_settings)
+        self.optimization = SA.SimulatedAnnealing(solution=solution_type_,
+                                             population=population_,
+                                             generation=generation_,
+                                             mutation=mutation_,
+                                             cooling_schedule= cooling_schedule_,
+                                             fitness=fitness_,
+                                             file_settings=self.file_settings)
+
+    def build_volcano(self):
+        """
+        Builds the volcano optimization methodology.
+        """
+        solution_type_ = self.build_solution()
+        fitness_ = self.build_fitness("lava")
+        self.optimization = lava.Volcano(solution=solution_type_,fitness=fitness_,settings=self.file_settings)
 
     def build_solution(self):
         """
@@ -114,8 +131,8 @@ class Optimization_Factory(object):
             infile.close()                      #simulate input file.
         elif data_type_string.lower() == "loading_pattern":
             solution_type = simulate.Simulate_Loading_Pattern_Solution
-        elif data_type_string.lower() == "test_problem":
-            solution_type = Solution
+        elif data_type_string.lower() == "fixed_loading_pattern":
+            solution_type = simulate.Unique_Assembly_Loading_Pattern_Solution
         else:
             raise TypeError("Unsupported Solution Type Implemented")
         
@@ -181,13 +198,9 @@ class Optimization_Factory(object):
             cooling schedule. At time of pull, his code was broken, and there wasn't sufficient documentation
             on how his code was derived to warrant fixing it. 
         """
-        cooling_settings = self.file_settings['optimization']['cooling_schedule']
-        temp = cooling_settings['temperature']
-        alpha = cooling_settings['alpha']
-        no_improvement = cooling_settings['improvement_counter']
-        cooling_schedule_= SA.Exponential_Decreasing_Cooling_Schedule(alpha,
-                                                                      temp,
-                                                                      no_improvement)
+        temp = self.file_settings['optimization']['cooling_schedule']['temperature']
+        alpha = self.file_settings['optimization']['cooling_schedule']['alpha']
+        cooling_schedule_= SA.Exponential_Decreasing_Cooling_Schedule(alpha,temp)
 
         return cooling_schedule_
 
@@ -240,7 +253,7 @@ class Optimization_Factory(object):
                     elif 'mutate_by_common' == MUTE_SETTING['dictionary'][key]:
                         map_ = self.file_settings['genome']['chromosomes']
                         temp4['map_genome'] = map_
-                mutator_ = GA.Submutation_Mutator(temp1,temp2,temp3,temp4,self.file_settings)
+                mutator_ = GA.Submutation_Mutator(temp1,temp2,temp3,temp4)
         
         #Lists are used to specify multiple types of mutation. Currently only two different
         #mutation types may be utilized at once. This is hard coded. If I were better at
@@ -411,15 +424,16 @@ class Optimization_Factory(object):
         
         return selection_
 
-class No_Solution_Front(object):
+class Assembly_Line(object):
     """
-    Class that can be implemented when no solution front
-    is desired. Is here for the possibility of extended functionality,
-    but in the current iteration largely serves no purpose.
+    Generic class for assembling various optimizations. The Factory is already getting
+    a little bit overencumbered. I imagine the it will get more complicated as 
+    additional optimization methodologies are added. It might be better to add
+    Assembly lines for building specific optimization methods to keep things more
+    organized.
+    
+    Written by Brian Andersen. 1/21/2020
     """
-    @staticmethod
-    def calculate(solution_list):
-        return None
 
 def calculate_number_gene_combinations(genome_map):
     """
@@ -439,6 +453,15 @@ def calculate_number_gene_combinations(genome_map):
             number_changes += len(genome_map[chromosome]['map'])  
 
     return number_changes
+
+class No_Solution_Front(object):
+    """
+    Class that can be implemented when no solution front
+    is desired.
+    """
+    @staticmethod
+    def calculate(solution_list):
+        return None
 
 if __name__ == "__main__":
     input_help_message = 'Input file containing all the information'
@@ -465,19 +488,26 @@ if __name__ == "__main__":
     else:
         raise ValueError("Input File needs to be a valid .yaml file")
 
-    factory = Optimization_Factory(args.input)
+    factory = Optimization_Factory(args.cpus,args.input)
     optimization = factory.assemble_optimization()
     print("Completed Factory Assembly")
 
-    print(f"Executing Optimization with {args.cpus}")
-    if args.restart:
-        print("Optimization is restarting from previous run")
-    if args.test:
-        print("Optimization is running in testing mode")
+    if args.cpus > 1:
+        print(args.test)
+        print(type(args.test))
+        print("Executing in parallel")
+        if args.test:
+            print("Test worked")
+            optimization.test_main_in_parallel()
+        else:
+            if args.restart:
+                optimization.restart_main_in_parallel()
+            else:
+                optimization.main_in_parallel()
+    else:
+        print("Executing in Serial")
+        optimization.main_in_serial()
 
-    optimization.main(args.cpus,args.restart,args.test)
-    
- 
 
 
 

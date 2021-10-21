@@ -1,0 +1,30 @@
+'COM' 'PWR Neural Network Libary'
+'NEW' 'pwr.nnew.lib'/
+'CAS' 'top_ref.cax' ,,, 'TOPREF' /
+'STA' /
+'CAS' 'bot_ref.cax' ,,, 'BOTREF'/
+'STA' /
+'CAS' 'zrefl.cax' ,,, 'RADREF'/
+'STA'/
+'END'/
+'CAS' 'lat21.cax' 'lat21' /
+'STA'/
+'CAS' 'lat26.cax'  'lat26' /
+'STA'/
+'CAS' 'lat31.cax'  'lat31' /
+'STA'/
+'CAS' 'lat26p16.cax' 'lat26P16' /
+'STA'/
+'CAS' 'lat26p20.cax' 'lat26P20' /
+'STA'/
+'CAS' 'lat26p24.cax' 'lat26P24' /
+'STA'/
+'CAS' 'lat31p8.cax' 'lat31P8' /
+'STA'/
+'CAS' 'lat31p12.cax' 'lat31P12' /
+'STA'/
+'CAS' 'lat31p16.cax' 'lat31P16' /
+'STA'/
+'CAS' 'lat31p24.cax' 'lat31P24' /
+'STA'/
+'END'/

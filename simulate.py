@@ -42,6 +42,8 @@ class Simulate_Assembly_Solution(Solution):
             self.number_pins = info['pins']
         if 'model' in info:
             self.model = info['model']
+        if 'fixed_problem' in settings['optimization']:
+            self.fixed_genome = settings['optimization']['fixed_problem']
 
     def evaluate(self):
         """
@@ -180,6 +182,10 @@ class Simulate_Loading_Pattern_Solution(Solution):
             self.pressure = info['pressure']
         if 'inlet_temperature' in info:
             self.inlet_temperature = info['inlet_temperature']
+        if 'fixed_problem' == settings['optimization']['reproducer']:
+            self.fixed_genome = True
+        elif 'unique_genes' == settings['optimization']['reproducer']:
+            self.fixed_genome = True
         if 'map_size' in info:
             self.map_size= info['map_size']
         if 'reflector' in info:
@@ -201,16 +207,220 @@ class Simulate_Loading_Pattern_Solution(Solution):
             if 'crud_mass_list' in settings['neural_network']:
                 self.expected_crud_mass_list = settings['neural_network']['crud_mass_list']
 
-    def execute_output_file(self):
+    def genes_in_group(self,chromosome_map,group_name):
         """
-        Runs the SIMULATE output file.
+        Returns a list of the genes in the chosen group
+        """
+        gene_list = []
+        for gene in chromosome_map:
+            if gene == 'symmetry_list':
+                pass
+            else:
+                if group_name == chromosome_map[gene]['gene_group']:
+                    gene_list.append(gene)
 
-        Written by Brian Andersen. 4/16/2021.
+        return gene_list
+
+    def is_gene_ok(self,chromosome_map,gene,space):
         """
-        sim_command = "/cm/shared/apps/ncsu/CasmoSimulate/bin/simulate3"
+        Checks if the gene is allowed in the desired location
+        """
+        gene_is_ok = True
+        if not chromosome_map[gene]['map'][space]:
+            gene_is_ok = False
+        if space in chromosome_map['symmetry_list']:
+            if self.my_group[chromosome_map[gene]['gene_group']] <= 1:
+                gene_is_ok = False
+        else:
+            if not self.my_group[chromosome_map[gene]['gene_group']]:
+                gene_is_ok = False
+        if 'unique' in chromosome_map[gene]:
+            if gene in self.genome:
+                gene_is_ok = False
+
+        return gene_is_ok
+
+    def generate_initial(self,chromosome_map):
+        """
+        Generates the initial solutions to the optimization problem.
+
+        Parameters: 
+            chromosome_map: Dictionary
+                The genome portion of the dictionary settings file. 
+
+        Written by Brian Andersen. 1/9/2020
+        """
+        chromosome_length = None
+        chromosome_list = list(chromosome_map.keys())
+        if 'symmetry_list' in chromosome_list:
+            chromosome_list.remove('symmetry_list')
+
+        for chromosome in chromosome_list:
+            if chromosome_length is None:
+                chromosome_length = len(chromosome_map[chromosome]['map'])
+            elif len(chromosome_map[chromosome]['map']) == chromosome_length:
+                pass
+            else:
+                raise ValueError("Chromosome Maps are of unequal length")
+
+        self.genome = []                                #Unburnt assemblies
+        for i in range(chromosome_length):              #better off just being implemented
+            no_gene_found = True                        #as a single gene.
+            while no_gene_found:
+                gene = random.choice(chromosome_list)
+                if chromosome_map[gene]['map'][i]:
+                    self.genome.append(gene)
+                    no_gene_found = False
+
+    def generate_initial_fixed(self,chromosome_map,gene_groups):
+        """
+        Generates initial solution when only specific number of assemblies
+        may be used.
+
+        Written by Brian Andersen 3/15/2020
+        """
+        chromosome_length = None
+        chromosome_list = list(chromosome_map.keys())
+        if 'symmetry_list' in chromosome_list:
+            chromosome_list.remove('symmetry_list')
+
+        for chromosome in chromosome_list:
+            if chromosome_length is None:
+                chromosome_length = len(chromosome_map[chromosome]['map'])
+            elif len(chromosome_map[chromosome]['map']) == chromosome_length:
+                pass
+            else:
+                raise ValueError("Chromosome Maps are of unequal length")
+
+        no_valid_solution = True
+        while no_valid_solution:
+            no_valid_solution = False
+            my_group = copy.deepcopy(gene_groups)
+            self.genome = [None]*chromosome_length
+            for i in range(chromosome_length):
+                no_gene_found = True
+                attempt_counter = 0
+                while no_gene_found:
+                    gene = random.choice(chromosome_list)
+                    if 'unique' in chromosome_map[gene]:
+                        if chromosome_map[gene]['unique']:
+                            if gene in self.genome:
+                                pass
+                            else:
+                                #This else loop activates if the gene is labeled unique but is not used. 
+                                if chromosome_map[gene]['map'][i] == 1:
+                                    if i in chromosome_map['symmetry_list']:
+                                        if my_group[chromosome_map[gene]['gene_group']] > 1:
+                                            self.genome[i] = gene
+                                            no_gene_found = False
+                                            my_group[chromosome_map[gene]['gene_group']] -= 2
+                                    else:
+                                        if my_group[chromosome_map[gene]['gene_group']] > 0:
+                                            self.genome[i] = gene
+                                            no_gene_found = False
+                                            my_group[chromosome_map[gene]['gene_group']] -= 1            
+                        else:
+                            #adding unique loop above this code
+                            if chromosome_map[gene]['map'][i] == 1:
+                                if i in chromosome_map['symmetry_list']:
+                                    if my_group[chromosome_map[gene]['gene_group']] > 1:
+                                        self.genome[i] = gene
+                                        no_gene_found = False
+                                        my_group[chromosome_map[gene]['gene_group']] -= 2
+                                else:
+                                    if my_group[chromosome_map[gene]['gene_group']] > 0:
+                                        self.genome[i] = gene
+                                        no_gene_found = False
+                                        my_group[chromosome_map[gene]['gene_group']] -= 1
+                    else:
+                        #adding unique loop above this code
+                        if chromosome_map[gene]['map'][i] == 1:
+                            if i in chromosome_map['symmetry_list']:
+                                if my_group[chromosome_map[gene]['gene_group']] > 1:
+                                    self.genome[i] = gene
+                                    no_gene_found = False
+                                    my_group[chromosome_map[gene]['gene_group']] -= 2
+                            else:
+                                if my_group[chromosome_map[gene]['gene_group']] > 0:
+                                    self.genome[i] = gene
+                                    no_gene_found = False
+                                    my_group[chromosome_map[gene]['gene_group']] -= 1
+                    attempt_counter += 1
+                    if attempt_counter == 100:
+                        no_gene_found = False
+                        no_valid_solution = True
+
+    def new_generate_initial_fixed(self,chromosome_map,gene_groups):
+        """
+        Generates initial solution when only speciific number of assemblies may be used.
+
+        Written by Brian Andersen 3/15/2020. Last edited 11/20/2020
+        """
+        #above here is the old code
+        chromosome_length = None
+        chromosome_list = list(chromosome_map.keys())
+        if 'symmetry_list' in chromosome_list:
+            chromosome_list.remove('symmetry_list')
+
+        for chromosome in chromosome_list:
+            if chromosome_length is None:
+                chromosome_length = len(chromosome_map[chromosome]['map'])
+            elif len(chromosome_map[chromosome]['map']) == chromosome_length:
+                pass
+            else:
+                raise ValueError("Chromosome Maps are of unequal length")
+
+        no_genome_found = True
+        while no_genome_found:
+            attempts = 0
+            self.my_group = copy.deepcopy(gene_groups)
+            self.genome = [None]*chromosome_length
+            unfilled_spaces = list(range(chromosome_length))
+            while unfilled_spaces:  
+                space_number = random.randint(0,len(unfilled_spaces)-1)
+                group_name = None
+                while not group_name:
+                    random_group = random.choice(list(self.my_group.keys()))
+                    if self.my_group[random_group] > 0:
+                        group_name = random_group
+                available_gene_list = self.genes_in_group(chromosome_map,group_name)
+                space = unfilled_spaces[space_number]
+                gene = random.choice(available_gene_list)
+                gene_is_ok = self.is_gene_ok(chromosome_map,gene,space)
+                if gene_is_ok:
+                    self.genome[space] = gene
+                    unfilled_spaces.remove(space)
+                    if space in chromosome_map['symmetry_list']:
+                        self.my_group[chromosome_map[gene]['gene_group']] -= 2
+                    else:
+                        self.my_group[chromosome_map[gene]['gene_group']] -= 1             
+                else:
+                    attempts += 1
+                if attempts == 100:
+                    break
+
+            bad_gene_list = []
+            for i,gene in enumerate(self.genome):
+                if not gene:
+                    bad_gene_list.append(i)
+
+            if not bad_gene_list:
+                no_genome_found = False                
+
+    def evaluate(self):
+        """
+        Evaluates Simulate Loading Pattern Solutions to core optimization
+
+        Parameters: None
+
+        Written by Brian Andersen. 1/8/2020
+        """
+        File_Writer.write_input_file(self)
+        sim_command = "~/../../../cm/shared/apps/ncsu/CasmoSimulate/bin/simulate3"
         line_ = "cd {} ; ".format(self.name)
         line_ += "{} {}_sim.inp".format(sim_command,self.name)
         os.system(line_)
+
         if os.path.isfile(f"{self.name}/{self.name}_sim.out"):
             file_ = open("{}/{}_sim.out".format(self.name,self.name))
             file_lines = file_.readlines()
@@ -227,18 +437,16 @@ class Simulate_Loading_Pattern_Solution(Solution):
                 file_lines = file_.readlines()
                 file_.close()
 
-        return file_lines
-
-    def evaluate_simulate_objectives(self,file_lines):
-        """
-        Evaluates optimization objectives directly related to the SIMULATE output.
-
-        Written by Brian Andersen 4/16/2021.
-        """
-        boron_list = [] #Because several implemented objectives rely on boron, having a list
-                        #can save a second or so in solution evaluation.
+        keff_list = []
+        boron_list = []
+        EFPD_list = []
+        FDH_list = []
+        peak_list = []
+        exposure_list = []
+        boron_list = []
         if 'eoc_keff' in self.parameters:
-            keff_list = Extractor.core_keff_list(file_lines)
+            if not keff_list:
+                keff_list = Extractor.core_keff_list(file_lines)
             self.parameters['eoc_keff']['value'] = keff_list[-1]
         if "eoc_boron" in self.parameters:
             if not boron_list:
@@ -264,8 +472,6 @@ class Simulate_Loading_Pattern_Solution(Solution):
             if not boron_list:
                 boron_list = Extractor.boron_list(file_lines)
             self.parameters["max_boron"]['value'] = max(boron_list)
-        if 'enrichment' in self.parameters:
-            self.parameters['enrichment']['value'] = self.evaluate_input_enrichment()
         if 'assembly_power' in self.parameters:
             radial_peaking = Extractor.assembly_peaking_factors(file_lines)
             max_peaking = 0.0
@@ -275,167 +481,178 @@ class Simulate_Loading_Pattern_Solution(Solution):
                         if radial_peaking[depl][row][col] > max_peaking:
                             max_peaking = radial_peaking[depl][row][col]
             self.parameters['assembly_power']['value'] = max_peaking
-
-    def evaluate_crud_objectives(self,file_lines):
-        """
-        Function for evaluating optimization objectives related to crud.
-
-        Written by Brian Andersen. 4/16/2021.
-        """
-        boron_list = Extractor.boron_list(file_lines)
-        FDH_list = Extractor.FDH_list(file_lines)
-        EFPD_list = Extractor.efpd_list(file_lines)         
-        power_matrix = Extractor.full_core_power_3D(file_lines,self.core_width,self.number_pins)
-        simulate_mesh = Extractor.axial_mesh_extractor(file_lines)
-                
-        power_matrix = Calculator.interpolate_powers_between_meshes(simulate_mesh,self.crud.MESH,power_matrix)
-            
-        self.crud.get_crud_distribution(power_matrix,boron_list,self.nickel_concentration,EFPD_list,FDH_list)
-                
-        if 'max_core_crud' in self.parameters:
-            self.parameters['max_core_crud']['value'] = self.crud.calculate_core_max_sum()   
-        if 'deviation_from_uniform' in self.parameters:
-            self.parameters['deviation_from_uniform']['value'] = self.crud.calculate_deviation_from_uniform(self.parameters['deviation_from_uniform']['state'])   
-        
-        if 'calculate_boron' in self.parameters:
-            self.parameters['calculate_boron']['value'] = self.crud.calculate_max_core_boron_mass(boron_list,self.expected_crud_mass_list,EFPD_list)
-        if 'crud_boron_sum' in self.parameters:
-            self.parameters['crud_boron_sum']['value'] = self.crud.calculate_core_life_boron_sum(boron_list,self.expected_crud_mass_list,EFPD_list)
-        if 'crud_boron_at_state' in self.parameters:
-            self.parameters['crud_boron_at_state']['value'] = self.crud.calculate_core_boron_mass_at_state(boron_list,
-                                                                                                           self.expected_crud_mass_list,
-                                                                                                           EFPD_list,   
-                                                                                                           self.parameters['crud_boron_at_state']['state'])
-        if 'number_crud_assemblies' in self.parameters:
-            if 'state' in self.parameters['number_crud_assemblies']:
-                self.parameters['number_crud_assemblies']['value'] = self.crud.calculate_number_crud_assemblies_at_state(self.parameters['number_crud_assemblies']['state'])
-            else:
-                number_assemblies_list = self.crud.calculate_number_crud_assemblies()
-                self.parameters['number_crud_assemblies']['value'] = max(number_assemblies_list)
-
-    def evaluate(self):
-        """
-        Evaluates Simulate Loading Pattern Solutions to core optimization
-
-        Parameters: None
-
-        Written by Brian Andersen. 1/8/2020
-        """
-        File_Writer.write_input_file(self)
-        file_lines = self.execute_output_file()
-        self.evaluate_simulate_objectives(file_lines)
-        
         evaluate_crud = False
+        evaluate_boron = False
+        out_of_crud_bounds = False
+        boron_parameters = ('max_core_boron','max_assembly_boron')
+
         for param in self.parameters:
             if hasattr(self,"crud"):
                 if param in self.crud.supported_crud_objectives:
                     evaluate_crud = True
         
         if evaluate_crud:
-            self.evaluate_crud_objectives(file_lines)     
-             
+            if not boron_list:
+                    boron_list = Extractor.boron_list(file_lines)
+            if not FDH_list:
+                FDH_list = Extractor.FDH_list(file_lines)
+            if not EFPD_list:
+                EFPD_list = Extractor.efpd_list(file_lines)         
+            power_matrix = Extractor.full_core_power_3D(file_lines,self.core_width,self.number_pins)
+            simulate_mesh = Extractor.axial_mesh_extractor(file_lines)
+                
+            power_matrix = Calculator.interpolate_powers_between_meshes(simulate_mesh,self.crud.MESH,power_matrix)
+            
+            self.crud.get_crud_distribution(power_matrix,boron_list,self.nickel_concentration,EFPD_list,FDH_list)
+                
+        if 'max_core_boron' in self.parameters:
+            self.parameters['max_core_boron']['value'] = self.crud.calculate_core_max_sum(boron_matrix)    
+        if 'max_assembly_boron' in self.parameters:
+            if out_of_crud_bounds:
+                self.parameters['max_assembly_boron']['value'] = 10000.
+            else:
+                self.parameters['max_assembly_boron']['value'] = self.crud.calculate_assembly_max_sum(boron_matrix)    
+        if 'max_assembly_crud' in self.parameters:
+            if out_of_crud_bounds:
+                self.parameters['max_assembly_crud']['value'] = 10000.
+            else:
+                self.parameters['max_assembly_crud']['value'] = self.crud.calculate_assembly_max_sum(crud_matrix)    
+        if 'max_core_crud' in self.parameters:
+            self.parameters['max_core_crud']['value'] = self.crud.calculate_core_max_sum()   
+        if 'deviation_from_uniform' in self.parameters:
+            self.parameters['deviation_from_uniform']['value'] = self.crud.calculate_deviation_from_uniform(self.parameters['deviation_from_uniform']['state'])   
+        if 'core_crud_at_state' in self.parameters:
+            if out_of_crud_bounds:
+                self.parameters['core_crud_at_state']['value'] = 10000.
+            else:
+                self.parameters['core_crud_at_state']['value'] = self.crud.calculate_core_crud_mass_at_state(crud_matrix,self.parameters['core_crud_at_state']['state'])
+        if 'calculate_boron' in self.parameters:
+            self.parameters['calculate_boron']['value'] = self.crud.calculate_max_core_boron_mass(boron_list,self.expected_crud_mass_list,EFPD_list)
+        if 'crud_boron_sum' in self.parameters:
+            self.parameters['crud_boron_sum']['value'] = self.crud.calculate_core_life_boron_sum(boron_list,self.expected_crud_mass_list,EFPD_list)
+        if 'crud_boron_at_state' in self.parameters:
+            self.parameters['crud_boron_at_state']['value'] = self.crud.calculate_core_boron_mass_at_state(boron_list,
+                                                                                                      self.expected_crud_mass_list,EFPD_list,
+                                                                                                      self.parameters['crud_boron_at_state']['state'])
+        if 'number_crud_assemblies' in self.parameters:
+            if out_of_crud_bounds:
+                self.parameters['number_crud_assemblies']['value'] = 10000.
+            else:
+                assembly_number_list = self.crud.calculate_number_crud_assemblies(crud_matrix)
+                self.parameters['number_crud_assemblies']['value'] = max(assembly_number_list)
+
+
+        if 'new_assemblies' in self.parameters:
+            burn_count = 0
+            for gene in self.genome:
+                if gene in self.burned_assembly_list:
+                    pass
+                else:
+                    burn_count += 1
+            if self.symmetry == 'octant':
+                self.parameters["new_assemblies"]['value'] = burn_count*8
+            elif self.symmetry == 'quarter':
+                self.parameters["new_assemblies"]['value'] = burn_count*4
+            else:
+                self.parameters["new_assemblies"]['value'] = burn_count
+                  
         gc.collect()    
+        
+class Unique_Assembly_Loading_Pattern_Solution(Simulate_Loading_Pattern_Solution):
+    """
+    Solution class used for optimizing the loading pattern of a pwr core
+    using a fixed set of genomes.
 
-    def test_evaluate(self):
+    Parameters: None
+
+    Written by Brian Andersen. 1/8/2020
+    """
+    def __init__(self):
+        Simulate_Loading_Pattern_Solution.__init__(self)
+
+    def generate_initial(self,chromosome_map):
         """
-        Evaluates the SIMULATE3 solution in testing mode. The only objective available
-        for direct evaluation is enrichment based on the input file.
+        Generates an initial solution to the optimization problem using
+        all genes in the fixed genome problem.
+
+        Parameters: None
+
+        Written by Brian Andersen. 1/8/2020
         """
-        File_Writer.write_input_file(self)
-        for param in self.parameters:
-            self.parameters[param]['value'] = random.random()
-        if 'enrichment' in self.parameters:
-            self.parameters['enrichment']['value'] = self.evaluate_input_enrichment()
+        chromosome_list = list(chromosome_map.keys())
+        self.genome = random.sample(chromosome_list,len(chromosome_list))
+        bad_gene_list = []
+        for i,gene in enumerate(self.genome):
+            if chromosome_map[gene]['map'][i] == 1:
+                pass
+            else:
+                bad_gene_list.append(gene)
 
-    def evaluate_input_enrichment(self):
+        for i,gene in enumerate(self.genome):
+            if chromosome_map[gene]['map'][i] == 1:
+                pass
+            else:
+                for ge in bad_gene_list:
+                    if chromosome_map[ge]['map'][i] == 1:
+                        self.genome[i] = ge
+                        bad_gene_list.remove(ge)
+
+    def evaluate(self):
         """
-        Calculates the enrichment of the reactor loading pattern based on the
-        values provided in the input file.
+        Evaluates the Simulate Loading Pattern Solutions to the 
+        core optimization.
 
-        Written by Brian Andersen. 4/18/2021.
+        Parameters: None
+
+        Written by Brian Andersen. 1/8/2020
         """
-        infile = open("genome_key",'rb')
-        genome_key = pickle.load(infile)
-        infile.close()
+        File_Writer.write_fixed_gene_reload_core(self)
+        sim_command = "~/../../../cm/shared/apps/ncsu/CasmoSimulate/bin/simulate3"
+        line_ = "cd {} ; ".format(self.name)
+        line_ += "{} {}_sim.inp".format(sim_command,self.name)
+        os.system(line_)
 
-        if self.number_assemblies == 157:
-            if self.reflector_present:
-                if self.symmetry == 'OCTANT':
-                    quarter_symmetry_list = [1,2,3,5,6,9,10,14,15,20,21,27,32]
-                    octant_symmetry_list = [4,7,8,11,12,13,16,17,18,19,22,23,24,25,26,
-                                            28,29,30,31,33,34]
-                elif self.symmetry == 'QUARTER':
-                    quarter_symmetry_list = [1,2,3,5,6,9,10,14,15,20,21,27,32,4,7,8,
-                                            11,12,13,16,17,18,19,22,23,24,25,26,
-                                            28,29,30,31,33,34]
-                    octant_symmetry_list = []
-            else:
-                if self.symmetry == 'OCTANT':
-                    quarter_symmetry_list = [1,3,6,10,15,20,24,2,5,9,14]
-                    octant_symmetry_list = [4,7,8,11,12,13,16,17,18,19,21,22,23,25]
-                elif self.symmetry == 'QUARTER':
-                    quarter_symmetry_list = [1,3,6,10,15,20,24,2,5,9,14,21,22,
-                                             4,7,8,11,12,13,16,17,18,19,23,25]
-                    octant_symmetry_list = []
-        elif self.number_assemblies == 193:
-            if self.reflector_present:
-                if self.symmetry == 'OCTANT':
-                    quarter_symmetry_list = [1,2,3,5,6,9,10,14,15,20,21,27,32]
-                    octant_symmetry_list = [4,7,8,11,12,13,16,17,18,19,22,23,24,25,26,
-                                            28,29,30,31,33,34]
-                elif self.symmetry == 'QUARTER':
-                    quarter_symmetry_list = [1,2,3,5,6,9,10,14,15,20,21,27,32,4,7,8,
-                                            11,12,13,16,17,18,19,22,23,24,25,26,
-                                            28,29,30,31,33,34]
-                    octant_symmetry_list = []
-            else:
-                if self.symmetry == 'OCTANT':
-                    quarter_symmetry_list = [1,2,3,5,6,9,10,14,15,20,21,26]
-                    octant_symmetry_list = [4,7,8,11,12,13,16,17,18,19,22,23,24,25]
-                elif self.symmetry == 'QUARTER':
-                    quarter_symmetry_list = [1,2,3,5,6,9,10,14,15,20,21,26,23,24,
-                                             4,7,8,11,12,13,16,17,18,19,22,25]
-                    octant_symmetry_list = []
-        elif self.number_assemblies == 241:
-            if self.reflector_present:
-                if self.symmetry == 'OCTANT':
-                    quarter_symmetry_list = [1,3,6,10,15,21,28,36,43,
-                                             2,5,9,14,20,27,35]
-                    octant_symmetry_list = [4,7,8,11,12,13,16,17,18,19,22,23,24,
-                                            25,26,29,30,31,32,33,34,37,38,39,40,
-                                            41,42,44,45,46,47]
-                if self.symmetry == 'QUARTER':
-                    quarter_symmetry_list = [1,3,6,10,15,21,28,36,43,4,7,8,11,
-                                             2,5,9,14,20,27,35,12,13,16,17,
-                                             18,19,22,23,24,25,26,29,30,31,
-                                             32,33,34,37,38,39,40,41,42,44,45,46,47]
-                    octant_symmetry_list = []
-            else:
-                if self.symmetry == 'OCTANT':
-                    quarter_symmetry_list = [1,3,6,10,15,21,28,36,43,
-                                             2,5,9,14,20,27,35]
-                    octant_symmetry_list = [4,7,8,11,12,13,16,17,18,19,22,23,24,
-                                            25,26,29,30,31,32,33,34,37,38,39,40,
-                                            41,42,44,45,46,47]
-                if self.symmetry == 'QUARTER':
-                    quarter_symmetry_list = [1,3,6,10,15,21,28,36,43,4,7,8,11,
-                                             2,5,9,14,20,27,35,12,13,16,17,
-                                             18,19,22,23,24,25,26,29,30,31,
-                                             32,33,34,37,38,39,40,41,42,44,45,46,47]
-                    octant_symmetry_list = []
-        else:
-            raise ValueError("Number of assemblies not tracked")
+        file_ = open("{}/{}_sim.out".format(self.name,self.name))
+        file_lines = file_.readlines()
+        file_.close()
 
-        enrichment_sum = 0.
-        for i,assembly in enumerate(self.genome):
-            if i in quarter_symmetry_list:
-                enrichment_sum += 4.*genome_key[assembly]['enrichment']
-            elif i in quarter_symmetry_list:
-                enrichment_sum += 8.*genome_key[assembly]['enrichment']
-            else:
-                enrichment_sum += genome_key[assembly]['enrichment']
+        if 'eoc_keff' in self.parameters:
+            keff_list = Extractor.core_keff_list(file_lines)
+            self.parameters['eoc_keff']['value'] = keff_list[-1]
+        if "eoc_boron" in self.parameters:
+            boron_list = Extractor.boron_list(file_lines)
+            self.parameters["eoc_boron"]['value'] = boron_list[-1]
+        if "cycle_length" in self.parameters:
+            EFPD_list = Extractor.efpd_list(file_lines)
+            self.parameters['cycle_length']['value'] = EFPD_list[-1]
+        if "FDeltaH" in self.parameters:
+            FDH_list = Extractor.FDH_list(file_lines)
+            self.parameters['FDeltaH']['value'] = max(FDH_list)
+        if "PinPowerPeaking" in self.parameters:
+            peak_list = Extractor.pin_peaking_list(file_lines)
+            self.parameters['PinPowerPeaking']['value'] = max(peak_list)
+        if "max_boron" in self.parameters:
+            boron_list = Extractor.boron_list(file_lines)
+            self.parameters["max_boron"]['value'] = max(boron_list)
+        if 'assembly_power' in self.parameters:
+            radial_peaking = Extractor.assembly_peaking_factors(file_lines)
+            max_peaking = 0.0
+            for depl in radial_peaking:
+                for row in radial_peaking[depl]:
+                    for col in radial_peaking[depl][row]:
+                        if radial_peaking[depl][row][col] > max_peaking:
+                            max_peaking = radial_peaking[depl][row][col]
+            self.parameters['assembly_power']['value'] = max_peaking
+        if 'old_assemblies' in self.parameters:
+            burned_assem_list = []
+            burn_count = 0
+            for gene in self.genome['loading_pattern']:
+                if gene == 'BURNED_ASSEMBLY':
+                    assy = self.genome['BURNED_ASSEMBLY'][burn_count]
+                    burned_assem_list.append(assy)
+                    burn_count += 1
 
-        return enrichment_sum
+            self.parameters["old_assemblies"]['value'] = burn_count*4
 
 class Extractor(object):
     """
