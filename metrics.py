@@ -8,310 +8,195 @@ from solution_types import return_triangular_string
 
 class Optimization_Metric_Toolbox(object):
     """
-    Class for measuring the performance of the optimization over time.
-    Currently designed to write three track files. 
-    The human_track_file is an output file designed to be easily read by a 
-    person to read how the optimization is progressing.
-    The generation_track_file is designed as a csv file for plotting at the 
-    end of the optimization.
-    The total_track_file is a csv file of all solutions developed in the
-    optimization for performing analysis of the effectiveness of the optimization.
-
-    Written by Brian Andersen 4/13/2021
+    Class for measuring the performance of the optimization.
     """
-    def __init__(self,restart,parameters):
-        self.solution_counter = 0
-        self.generation_counter = 0
-        self.human_track_file_name = "optimization_track_file.txt"
-        self.generation_track_file_name = "csv_optimization_track_file.txt"
-        self.total_track_file_name = "csv_all_value_track_file.txt"
+    def __init__(self):
+        self.best_solution_over_time = {}
+        self.best_solution_over_time['fitness'] = []
+        self.best_value_over_time = {}
+        self.worst_value_over_time = {}
+        self.worst_solution_over_time = {}
+        self.worst_solution_over_time['fitness'] = []
+        self.worst_fitness_over_time = []
+        self.average_fitness_over_time = []
+        self.average_value_over_time = {}
+        self.best_fitness_over_time = []
 
-        if restart:
-            human_track_file = open("optimization_track_file.txt",'a')
-            human_track_file.write("Restarting Optimization\n")
-            generation_track_file = open("csv_optimization_track_file.txt",'a')
-            generation_track_file.write("Restarting Optimization\n")
-            total_track_file = open("csv_all_value_track_file.txt",'a')
-            total_track_file.write("Restarting Optimization\n")
-        else:
-            human_track_file = open("optimization_track_file.txt",'w')
-            human_track_file.write("Beginning Optimization\n")
-
-            generation_track_file = open("csv_optimization_track_file.txt",'w')
-            generation_track_file.write("Solution Generation,  ")
-            generation_track_file.write("Highest Fitness,  ")
-            generation_track_file.write("Average Fitness,  ")
-            generation_track_file.write("Lowest Fitness,   ")
-            for param in parameters:
-                generation_track_file.write(f"Highest Fitness {param},"  )
-            for param in parameters:
-                generation_track_file.write(f"Lowest Fitness {param},"  )
-            for param in parameters:
-                generation_track_file.write(f"Best {param} in generation,  ")
-                generation_track_file.write(f"Average {param} in generation,  ")
-                generation_track_file.write(f"Worst {param} in generation,  ")
-            generation_track_file.write("\n")
-
-            total_track_file = open("csv_all_value_track_file.txt",'w')
-            total_track_file.write("Solution Number,  ")
-            total_track_file.write("Solution Name,   ")
-            total_track_file.write(f"Fitness,  ")
-            for param in parameters:
-                total_track_file.write(f"{param},  ")
-            total_track_file.write("\n")
-
-        human_track_file.close()
-        generation_track_file.close()
-        total_track_file.close()
-        
-    def end_of_optimization(self):
+    def check_best_worst_average(self,population):
         """
-        Writes that the optimization has ended successfully on all files
-        
-        Written by Brian Andersen. 4/14/2021.
+        Calculates the best worst and average of population in the generation.
         """
-        human_track_file = open("optimization_track_file.txt",'a')
-        human_track_file.write("End of Optimization\n")
-        generation_track_file = open("csv_optimization_track_file.txt",'a')
-        generation_track_file.write("End of Optimization\n")
-        total_track_file = open("csv_all_value_track_file.txt",'a')
-        total_track_file.write("End of Optimization\n")
+        max_fitness = -10000000000
+        min_fitness = 1000000000
+        #Determining the best worst and average values for each parameter. 
+        for param in population[0].parameters:
+            if param in self.best_value_over_time:
+                pass
+            else:
+                self.best_value_over_time[param] = []
+            if param in self.worst_value_over_time:
+                pass
+            else:
+                self.worst_value_over_time[param] = []
+            if param in self.average_value_over_time:
+                pass
+            else:
+                self.average_value_over_time[param] = []
+            param_list = []
+            for solution in population:
+                param_list.append(solution.parameters[param]['value'])
+            min_ = numpy.min(param_list)
+            max_ = numpy.max(param_list)
+            ave_ = numpy.average(param_list)
+            obj_ = population[0].parameters[param]['goal']
+            if obj_ == 'maximize':                               #Might need to include all additional possible objectives here
+                self.best_value_over_time[param].append(max_)
+                self.worst_value_over_time[param].append(min_)
+            else:
+                self.best_value_over_time[param].append(min_)
+                self.worst_value_over_time[param].append(max_)
+            self.average_value_over_time[param].append(ave_)
 
-    def track_generation(self,solutions_in_generation):
-        """
-        Main function for recording the solution parameters for a generation,
-        defined as a list of solutions.
+        list_ = []
+        for solution in population:
+            list_.append(solution.fitness)
+            if solution.fitness > max_fitness:
+                max_fitness = solution.fitness
+                self.current_best = solution
+            if solution.fitness < min_fitness:
+                min_fitness = solution.fitness
+                self.current_worst = solution
 
-        Written by Brian Andersen 4/13/2021
-        """
-        self.update_all_value_tracker(solutions_in_generation)
-        self.update_human_track_file(solutions_in_generation)
-        self.update_generation_track_file(solutions_in_generation)
-        self.generation_counter += 1
+        self.average_fitness_over_time.append(numpy.average(list_))
 
-    def update_generation_track_file(self,solutions_in_generation):
+        foo = self.current_best.fitness
+        self.best_solution_over_time['fitness'].append(foo)
+        for param in self.current_best.parameters:
+            if param in self.best_solution_over_time:
+                pass
+            else:
+                self.best_solution_over_time[param] = []
+            foo = self.current_best.parameters[param]["value"]
+            self.best_solution_over_time[param].append(foo)
+
+        foo = self.current_worst.fitness
+        self.worst_solution_over_time['fitness'].append(foo)
+        for param in self.current_worst.parameters:
+            if param in self.worst_solution_over_time:
+                pass
+            else:
+                self.worst_solution_over_time[param] = []
+            foo = self.current_worst.parameters[param]["value"]
+            self.worst_solution_over_time[param].append(foo)
+
+    def plotter(self):
         """
-        Writes the values of solutions presented in the solutions_in_generation
-        list into a csv format output file to simplify post processing data.
-        
-        Written by Brian Andersen. 4/14/2021
+        Plots the best, worst and average fitness and parameter values for
+        the optimization.
         """
-        lfs = self.return_lowest_fitness_in_list(solutions_in_generation) #Lowest Fitness
-        hfs = self.return_highest_fitness_in_list(solutions_in_generation) #Highest Fitness
-        average_fitness = self.calculate_average_fitness(solutions_in_generation)
-        best_dictionary = self.return_best_dictionary_values(solutions_in_generation)
-        average_dictionary = self.return_average_dictionary_values(solutions_in_generation)
-        worst_dictionary = self.return_worst_dictionary_values(solutions_in_generation)
-        track_file = open(self.generation_track_file_name,'a')
-        track_file.write(f"{self.generation_counter},  ")
-        track_file.write(f"{hfs.fitness},  ")
-        track_file.write(f"{average_fitness},  ")
-        track_file.write(f"{lfs.fitness},  ")
-        for param in hfs.parameters:
-            track_file.write(f"{hfs.parameters[param]['value']},  ")
-        for param in lfs.parameters:
-            track_file.write(f"{lfs.parameters[param]['value']},  ")
-        for param in best_dictionary:
-            track_file.write(f"{best_dictionary[param]},  ")
-            track_file.write(f"{average_dictionary[param]},  ")
-            track_file.write(f"{worst_dictionary[param]},  ")
+        for param in self.best_solution_over_time:
+            pyplot.figure()
+            foo1 = range(len(self.best_solution_over_time[param]))
+            foo2 = range(len(self.worst_solution_over_time[param]))
+            pyplot.plot(foo1,self.best_solution_over_time[param],label='Best')
+            pyplot.plot(foo2,self.worst_solution_over_time[param],label='Worst')
+            if param == 'fitness':
+                foo3 = range(len(self.average_fitness_over_time))
+                pyplot.plot(foo3,self.average_fitness_over_time,label='Average')
+            else:
+                foo3 = range(len(self.average_value_over_time[param]))
+                pyplot.plot(foo3,self.average_value_over_time[param],label='Average')
+
+            pyplot.xlabel('Generation')
+            pyplot.ylabel(param)
+            pyplot.title("{} for Best, Worst, and Average Solution over Time".format(param))
+            pyplot.legend()
+            pyplot.savefig("{}_over_time".format(param))            
+            
+    def write_track_file(self,population_class,generation_class):
+        """
+        Writes a file making it easier to track what is occuring in the optimization.
+        """
+        track_file = open('optimization_track_file.txt','a')
+        line_ = "Current generation of the optimization"
+        line_ +=" {} \n".format(generation_class.current)
+        track_file.write(line_)
+        line_ = "Size of Parent Population"
+        line_ += " {} \n".format(len(population_class.parents))
+        track_file.write(line_)
+        line_ ="Size of Child Population"
+        line_ +=" {} \n".format(len(population_class.children))
+        track_file.write(line_)
+        if population_class.solution_front:
+            line_ = "Size of Solution Front "
+            line_ += "{} \n".format(len(population_class.solution_front))
+            track_file.write(line_)
+        #Record information on the current best solution in the optimization
+        line_ = "Best Solution {}\n".format(self.current_best.name)
+        track_file.write(line_)
+        line_ = "Best Fitness {}\n".format(self.current_best.fitness)
+        track_file.write(line_)
+        for param in self.current_best.parameters:
+            value = self.current_best.parameters[param]['value']
+            line_ = "{} for best solution: {}  \n".format(param,value)
+            track_file.write(line_)
+        track_file.write("Best Solution Genome\n")
+        gene_count = 0
+        if type(self.current_best.genome) == list:
+            for gene in self.current_best.genome:
+                track_file.write("{}  ".format(gene))
+                gene_count += 1
+                if gene_count == 10:
+                    gene_count = 0
+                    track_file.write("\n")
         track_file.write("\n")
+
+        #Record information on the current worst solution in the optimization
+        line_ = "Worst Solution {}\n".format(self.current_worst.name)
+        track_file.write(line_)
+        line_ = "Worst Fitness {}\n".format(self.current_worst.fitness)
+        track_file.write(line_)
+        for param in self.current_worst.parameters:
+            value = self.current_worst.parameters[param]['value']
+            line_ = "{} for worst solution: {}  \n".format(param,value)
+            track_file.write(line_)
+        track_file.write("Worst Solution Genome\n")
+        gene_count = 0
+        for gene in self.current_worst.genome:
+            track_file.write("{}  ".format(gene))
+            gene_count += 1
+            if gene_count == 10:
+                gene_count = 0
+                track_file.write("\n")
+        track_file.write('\n')
+        for param in self.best_value_over_time:
+            foo = self.best_value_over_time[param][-1]
+            line = "{}: Best = {}\n".format(param,foo)
+            track_file.write(line)
+            foo = self.average_value_over_time[param][-1]
+            line = "{}: Average = {}\n".format(param,foo)
+            track_file.write(line)
+            foo = self.worst_value_over_time[param][-1]
+            line = "{}: Worst = {}\n".format(param,foo)
+            track_file.write(line)
+        track_file.write("\n\n\n")
+
+
         track_file.close()
 
-    def update_all_value_tracker(self,solutions_in_generation):
+    def record_optimized_solutions(self,population_class):
         """
-        Writes the values of solutions presented in the solutions_in_generation list
-        into the optimization.
-        
-        Written by Brian Andersen 4/13/2021
+        Records the optimized solutions of the optimization for review or use as at a later time.
+        Optimized solution results are recorded as a dictionary and stored in a yaml file.
         """
-        track_file = open(self.total_track_file_name,'a')
-        for solution in solutions_in_generation:
-            track_file.write(f"{self.solution_counter},    {solution.name},")
-            track_file.write(f"    {solution.fitness},")
-            for param in solution.parameters:
-                track_file.write(f"{solution.parameters[param]['value']},    ")
-            track_file.write('\n')
-            self.solution_counter += 1  
-        track_file.close()
 
-    def update_human_track_file(self,solutions_in_generation):
-        """
-        Writes the solution file that is designed to be readable by humans
-        so they can see how their optimization is progressing over time.
+        if population_class.solution_front:
+            list_ = population_class.solution_front[:]
+        else:
+            list_ = population_class.parents[:]
 
-        Written by Brian Andersen. 4/13/2021.
-        """
-        lfs = self.return_lowest_fitness_in_list(solutions_in_generation) #Lowest Fitness
-        hfs = self.return_highest_fitness_in_list(solutions_in_generation) #Highest Fitness
-        average_fitness = self.calculate_average_fitness(solutions_in_generation)
-        best_dictionary = self.return_best_dictionary_values(solutions_in_generation)
-        average_dictionary = self.return_average_dictionary_values(solutions_in_generation)
-        worst_dictionary = self.return_worst_dictionary_values(solutions_in_generation)
-        track_file = open(self.human_track_file_name,'a')
-        track_file.write(f"Current Optimization Genereration {self.generation_counter}\n")
-        track_file.write(f"Average Solution Fitness: {average_fitness}\n")
-        track_file.write(f"Highest Solution Fitness: {hfs.fitness}\n")
-        for param in hfs.parameters:
-            track_file.write(f"Highest Fitness Solution {param}:  {hfs.parameters[param]['value']}\n")
-        count = 0
-        track_file.write("Highest Fitness Solution\n")
-        for gene in hfs.genome:
-            track_file.write(f"{gene},  ")
-            count += 1
-            if count == 10:
-                track_file.write('\n')
-                count = 0
-        track_file.write(f"Lowest Fitness Solution Fitness: {lfs.fitness}\n")
-        for param in hfs.parameters:
-            track_file.write(f"Lowest Fitness Solution {param}:  {lfs.parameters[param]['value']}\n")
-        count = 0
-        track_file.write("Lowest Fitness Solution\n")
-        for gene in lfs.genome:
-            track_file.write(f"{gene},  ")
-            count += 1
-            if count == 10:
-                track_file.write('\n')
-                count = 0
-        for param in best_dictionary:
-            track_file.write(f"{param} Best: {best_dictionary[param]}\n")
-            track_file.write(f"{param} Average: {average_dictionary[param]}\n")
-            track_file.write(f"{param} Worst: {worst_dictionary[param]}\n")
-        track_file.write("\n\n")
-        track_file.close()
-
-    def return_best_dictionary_values(self,solution_list):
-        """
-        Returns a dictionary of the best values in the provided list for all of
-        the solutions
-        """
-        dictionary_ = {}
-        solution = solution_list[0]
-        for param in solution.parameters:
-            dictionary_[param] = solution.parameters[param]['value']
-            
-        for solution in solution_list:
-            for param in solution.parameters:
-                if solution.parameters[param]['goal'] == 'less_than_target':
-                    if solution.parameters[param]['value'] < dictionary_[param]:
-                        dictionary_[param] = solution.parameters[param]['value']
-                elif solution.parameters[param]['goal'] == 'minimize':
-                    if solution.parameters[param]['value'] < dictionary_[param]:
-                        dictionary_[param] = solution.parameters[param]['value']
-                elif solution.parameters[param]['goal'] == 'meet_target':
-                    if solution.parameters[param]['value'] < dictionary_[param]:
-                        dictionary_[param] = solution.parameters[param]['value']
-                elif solution.parameters[param]['goal'] == 'greater_than_target':
-                    if solution.parameters[param]['value'] > dictionary_[param]:
-                        dictionary_[param] = solution.parameters[param]['value']
-                elif solution.parameters[param]['goal'] == 'maximize':
-                    if solution.parameters[param]['value'] > dictionary_[param]:
-                        dictionary_[param] = solution.parameters[param]['value']
-                
-        return dictionary_
-
-    def return_worst_dictionary_values(self,solution_list):
-        """
-        Returns a dictionary of the best values in the provided list for all of
-        the solutions
-        """
-        dictionary_ = {}
-        solution = solution_list[0]
-        for param in solution.parameters:
-            dictionary_[param] = solution.parameters[param]['value']
-            
-        for solution in solution_list:
-            for param in solution.parameters:
-                if solution.parameters[param]['goal'] == 'less_than_target':
-                    if solution.parameters[param]['value'] > dictionary_[param]:
-                        dictionary_[param] = solution.parameters[param]['value']
-                elif solution.parameters[param]['goal'] == 'minimize':
-                    if solution.parameters[param]['value'] > dictionary_[param]:
-                        dictionary_[param] = solution.parameters[param]['value']
-                elif solution.parameters[param]['goal'] == 'meet_target':
-                    if solution.parameters[param]['value'] > dictionary_[param]:
-                        dictionary_[param] = solution.parameters[param]['value']
-                elif solution.parameters[param]['goal'] == 'greater_than_target':
-                    if solution.parameters[param]['value'] < dictionary_[param]:
-                        dictionary_[param] = solution.parameters[param]['value']
-                elif solution.parameters[param]['goal'] == 'maximize':
-                    if solution.parameters[param]['value'] < dictionary_[param]:
-                        dictionary_[param] = solution.parameters[param]['value']
-                
-        return dictionary_
-
-    def return_average_dictionary_values(self,solution_list):
-        """
-        Returns a dictionary of the best values in the provided list for all of
-        the solutions
-        """
-        average_dictionary = {}
-        solution = solution_list[0]
-        for param in solution.parameters:
-            average_dictionary[param] = []
-            
-        for solution in solution_list:
-            for param in solution.parameters:
-                average_dictionary[param].append(solution.parameters[param]['value'])
-                
-        dictionary_ = {}
-        for param in average_dictionary:
-            dictionary_[param] = numpy.average(average_dictionary[param])
-                
-        return dictionary_
-
-    def calculate_average_fitness(self,solution_list):
-        """
-        Calculates the average fitness of all the solutions in the list.
-
-        Written by Brian Andersen. 4/13/2021
-        """
-        fitness_list = []
-        for solution in solution_list:
-            fitness_list.append(solution.fitness)
-
-        return numpy.average(fitness_list)
-
-    def return_highest_fitness_in_list(self,solution_list):
-        """
-        Returns the solution with the lowest fitness value in the list.
-        This will make the function more utilitarian.
-
-        Written by Brian Andersen. 4/13/2021.
-        """
-        highest_fitness_solution = solution_list[0]
-        for solution in solution_list:
-            if solution.fitness > highest_fitness_solution.fitness:
-                highest_fitness_solution = solution
-
-        return highest_fitness_solution
-
-    def return_lowest_fitness_in_list(self,solution_list):
-        """
-        Returns the solution with the lowest fitness value in the list.
-        This will make the function more utilitarian.
-
-        Written by Brian Andersen. 4/13/2021.
-        """
-        lowest_fitness_solution = solution_list[0]
-        for solution in solution_list:
-            if solution.fitness < lowest_fitness_solution.fitness:
-                lowest_fitness_solution = solution
-
-        return lowest_fitness_solution
-
-    def record_optimized_solutions(self,optimized_list):
-        """
-        Records the optimized solutions of the optimization.
-
-        Written by Brian Andersen. 4/13/2021.
-        """
         optimized_dictionary = {}
-        for solution in optimized_list:
-            for param in solution.parameters:
-                temp = solution.parameters[param]['value']
-                solution.parameters[param]['value'] = float(temp)
-        for solution in optimized_list:
+        for solution in list_:
             optimized_dictionary[solution.name] = {}
             optimized_dictionary[solution.name]['genome'] = solution.genome
             optimized_dictionary[solution.name]['fitness'] = float(solution.fitness)
@@ -319,7 +204,6 @@ class Optimization_Metric_Toolbox(object):
 
         with open("optimized_solutions.yaml",'w') as yaml_file:
             yaml.dump(optimized_dictionary,yaml_file)
-        yaml_file.close()
 
 class Plotter(object):
     """
@@ -610,3 +494,148 @@ class Plotter(object):
                 rect = pyplot.Rectangle((i,j),1,1,color=plot_color,label=loading_pattern_dictionary[i][j])
                 ax.add_artist(rect)
         pyplot.savefig("{}_plot.png".format(solution.name))
+
+class Simulated_Annealing_Metric_Toolbox(object):
+    """
+    Class for recording the metrics from simulated anealing. However Johnny tracked the files
+    didn't make sense/didn't get correctly updated to Github, so I am doing it the way I would
+    have made him do it anyways.
+    """
+    def __init__(self):
+        self.best_solution_over_time = {}
+        self.other_solution_over_time = {}
+        self.best_solution_over_time['fitness'] = []
+        self.other_solution_over_time['fitness'] = []
+        self.temperature_over_time = []
+        self.acceptance_probability_over_time = []
+        self.generation = 0
+
+    def record_best_and_new_solution(self,best,other,cooling_schedule):
+        """
+        Records the parameters and objective values for the current best and
+        new solution.
+
+        NOTE: This record is performed before the annealing process takes place,
+        meaning that changes in the best solution to the optimization problem should
+        be seen one step after being recorded in the other solution column. 
+
+        Cooling schedule is also recorded so that overall probability can be judged.
+        """
+        for param in best.parameters:
+            if param in self.best_solution_over_time:
+                foo = best.parameters[param]['value']
+                self.best_solution_over_time[param].append(foo)
+            else:
+                foo = best.parameters[param]['value']
+                self.best_solution_over_time[param] = [foo]
+        for param in other.parameters:
+            if param in self.other_solution_over_time:
+                foo = other.parameters[param]['value']
+                self.other_solution_over_time[param].append(foo)
+            else:
+                foo = other.parameters[param]['value']
+                self.other_solution_over_time[param] = [foo]
+        self.best_solution_over_time['fitness'].append(best.fitness)
+        self.other_solution_over_time['fitness'].append(other.fitness)
+        acceptance = numpy.exp(-1*(other.fitness-best.fitness)/cooling_schedule.temperature)
+        if acceptance > 1.:
+            acceptance = 1.
+        self.acceptance_probability_over_time.append(acceptance)
+        self.temperature_over_time.append(cooling_schedule.temperature)
+        track_file = open('optimization_track_file.txt','a')
+        track_file.write(f"Current Generation {self.generation}\n")
+        track_file.write(f"Temperature {cooling_schedule.temperature}\n")
+        track_file.write(f"Acceptance probability {acceptance}\n")
+        track_file.write(f"{best.genome}\n")
+        track_file.write(f"{other.genome}\n")
+        track_file.write(f"Current best solution, {best.name}, Other solution, {other.name}\n")
+        track_file.write(f"Fitness                {round(best.fitness,3)},            ,{round(other.fitness,3)}\n")
+        for param in best.parameters:
+            track_file.write(f"{param}, {best.parameters[param]['value']},            ,{other.parameters[param]['value']}   \n")
+        track_file.write("\n\n\n")
+        track_file.close()
+        self.generation += 1
+
+    def plotter(self):
+        """
+        Plots the best, worst and average fitness and parameter values for
+        the optimization.
+        """
+        pyplot.figure()
+        pyplot.plot(range(len(self.acceptance_probability_over_time)),self.acceptance_probability_over_time)
+        pyplot.title("Acceptance Probability")
+        pyplot.xlabel("Generation")
+        pyplot.ylabel("Acceptance Probability")
+        pyplot.savefig("acceptance_probability.png")
+        pyplot.close()
+
+        pyplot.figure()
+        pyplot.plot(range(len(self.temperature_over_time)),self.temperature_over_time)
+        pyplot.title("Temperature over time")
+        pyplot.xlabel("Generation")
+        pyplot.ylabel("Temperature")
+        pyplot.savefig("temperature.png")
+        pyplot.close()
+        
+        for param in self.best_solution_over_time:
+            pyplot.figure()
+            foo1 = range(len(self.best_solution_over_time[param]))
+            foo2 = range(len(self.other_solution_over_time[param]))
+            pyplot.plot(foo1,self.best_solution_over_time[param],label='Best')
+            pyplot.plot(foo2,self.other_solution_over_time[param],label='Other')
+
+            pyplot.xlabel('Generation')
+            pyplot.ylabel(param)
+            pyplot.title("{} for Best and Other Solution over Time".format(param))
+            pyplot.legend()
+            pyplot.savefig("{}_over_time".format(param))            
+            pyplot.close()
+
+class Lava_Metric_Toolbox(object):
+    """
+    Toolbox for plotting the lava flow optimization. Not sure if this is really
+    necessary, or can be replaced with existing tools.
+    """
+    def __init__(self):
+        self.best_flow_over_time = {}
+        self.best_flow_over_time['fitness'] = []
+        self.generation_list = []
+
+    def update_best_values(self,flow,gen,count,solution):
+        """
+        Updates the dictionary of the best values of the flow.
+        Not really going to record the worst and average values, because they
+        don't necessarily mean anything in this optimization.
+        """
+        for param in solution.parameters:
+            if param in self.best_flow_over_time:
+                foo = solution.parameters[param]['value']
+                self.best_flow_over_time[param].append(foo)
+            else:
+                foo = solution.parameters[param]['value']
+                self.best_flow_over_time[param] = [foo]
+        self.best_flow_over_time['fitness'].append(solution.fitness)
+        self.generation_list.append(gen)
+        track_file = open(f'Flow_{flow}_track_file.txt','a')
+        track_file.write(f"{count},   {gen},   {solution.name},   ")
+        for param in solution.parameters:
+            track_file.write(f"{solution.parameters[param]['value']},   ")
+        track_file.write("\n\n")
+        track_file.close()
+
+    def plotter(self):
+        """
+        Plots the best_flow_dictionary for every parameter.
+        """
+        for param in self.best_flow_over_time:
+            pyplot.figure()
+            pyplot.plot(self.generation_list,self.best_flow_over_time[param])
+            pyplot.xlabel("Flow Number")
+            pyplot.ylabel(param)
+            pyplot.title(f"{param} over time for best solution")
+            pyplot.savefig(f"{param}_over_time")
+            pyplot.close()
+
+
+
+

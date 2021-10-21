@@ -1243,3 +1243,645 @@ class Double_Mutator(Mutation):
             child_genome = self.second_method.reproduce(genome)
 
         return child_genome
+
+class Genetic_Algorithm(object):
+    """
+    Class for performing optimization through a genetic algorithm
+
+    Parameters:
+        solution: Class
+            Contains the genome, fitness, and optimization
+            objective scores for solutions to the optimization problem.
+        population: Class
+            Class that contains the population size and stores the current
+            solutions in the parent and child populations.
+        generation: Class
+            Keeps track of the current and total number of generations that
+        reproduction: Class
+            Class for performing all actions related to producing new solutions
+            for the optimization.
+        selection: Class _evaluate
+            different solutions in the optimization.
+        file_settings: Dictionary
+            The settings file read into the optimization. Carried through because
+            some information needed to be carried along, but pickling all of the
+            information didn't seem like a good way to carrty it thorugh the optimization.
+
+    Written by Brian Andersen. 1/9/2020
+    """
+    def __init__(self, solution,
+                 population,
+                 generation,
+                 reproduction,
+                 selection,
+                 num_procs,
+                 file_settings):
+
+        self.solution = solution
+        self.population = population
+        self.generation = generation
+        self.repodroduction = reproduction
+        self.selection = selection
+        self.num_procs = num_procs
+        self.file_settings = file_settings
+        self.number_generations_post_cleanup = 2 #Arbitrarily chosen default.
+        if 'cleanup' in file_settings['optimization']:
+            if file_settings['optimization']['cleanup']['perform']:
+                self.perform_cleanup = True
+            else: 
+                self.perform_cleanup = False
+        else:
+            self.perform_cleanup = False
+        
+        if 'neural_network' in file_settings:
+            from crudworks import CRUD_Predictor
+            self.crud = CRUD_Predictor(file_settings)
+
+    def generate_initial_solutions(self,name):
+        """
+        Function for creating the initial solutions in the optimization.
+        """
+        foo = self.solution()
+        foo.name = f"{name}"
+        foo.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
+        foo.add_additional_information(self.file_settings)
+        #scrambler = Fixed_Genome_Mutator(1,1,200,self.file_settings)
+        if foo.fixed_genome:
+            foo.new_generate_initial_fixed(self.file_settings['genome']['chromosomes'],
+                                       self.file_settings['optimization']['fixed_groups'])
+        #   foo.genome = scrambler.reproduce(foo.genome)
+        else:
+            foo.generate_initial(self.file_settings['genome']['chromosomes'])
+
+        return foo
+
+    def main_in_parallel(self):
+        """
+        Performs optimization using a genetic algorithm in with
+        parallel computations
+
+        Parameters: None
+
+        Written by Brian Andersen. 1/9/2020
+        """
+        opt = Optimization_Metric_Toolbox()
+
+        track_file = open('optimization_track_file.txt', 'w')
+        track_file.write("Beginning Optimization \n")
+        track_file.close()
+
+        loading_pattern_tracker = open("loading_patterns.txt", 'w')
+        loading_pattern_tracker.close()
+
+        all_value_count = 0
+        all_values = open('all_value_tracker.txt','w')
+        all_values.close()
+        for i in range(self.population.size):
+            foo = self.generate_initial_solutions(f'initial_parent_{i}')
+            self.population.parents.append(foo)
+
+        for i in range(self.population.size):
+            foo = self.generate_initial_solutions(f'initial_child_{i}')
+            self.population.children.append(foo)
+
+        pool = Pool(processes=self.num_procs)
+        self.population.parents = pool.map(evaluate_function, self.population.parents)
+        self.population.children = pool.map(evaluate_function, self.population.children)
+        all_values = open('all_value_tracker.txt','a')
+        for sol in self.population.parents:
+            print(sol.name)
+            if not all_value_count:
+                for param in sol.parameters:
+                    all_values.write(f"{param},    ")
+                all_values.write('\n')
+            all_values.write(f"{all_value_count},    {sol.name},    ")
+            for param in sol.parameters:
+                all_values.write(f"{sol.parameters[param]['value']},    ")
+                print(f"{sol.parameters[param]['value']},    ")
+            all_values.write('\n')
+            all_value_count += 1
+        for sol in self.population.children:
+            all_values.write(f"{all_value_count},    {sol.name},")
+            for param in sol.parameters:
+                all_values.write(f"{sol.parameters[param]['value']},    ")
+            all_values.write('\n')
+            all_value_count += 1        
+        all_values.close()
+
+
+        #self.population.parents = pool.map(self.crud.evaluator,self.population.parents)
+        #self.population.children = pool.map(self.crud.evaluator,self.population.children)
+        self.population = self.selection.perform(self.population)
+        opt.check_best_worst_average(self.population.parents)
+        opt.write_track_file(self.population, self.generation)
+
+        scrambler = Fixed_Genome_Mutator(1,1,200,self.file_settings)
+        uniqueness = Unique_Solution_Analyzer(scrambler)
+        for self.generation.current in range(self.generation.total):
+            self.population.children = self.repodroduction.reproduce(self.population.parents, 
+                                                                     self.solution)
+            self.population.children = uniqueness.analyze(self.population.children)
+            for i,solution in enumerate(self.population.children):
+                solution.name = "child_{}_{}".format(self.generation.current, i)
+                solution.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
+                solution.add_additional_information(self.file_settings)
+
+
+            self.population.children = pool.map(evaluate_function, self.population.children)
+            all_values = open('all_value_tracker.txt','a')
+            for sol in self.population.children:
+                all_values.write(f"{all_value_count},   {sol.name},   ")
+                print(sol.name)
+                for param in sol.parameters:
+                    print(f"{sol.parameters[param]['value']},    ")
+                    all_values.write(f"{sol.parameters[param]['value']},    ")
+                all_values.write('\n')
+                all_value_count += 1
+            all_values.close()
+            #self.population.children = pool.map(self.crud.evaluator,self.population.children)
+            self.cleanup()
+            self.population = self.selection.perform(self.population)
+            opt.check_best_worst_average(self.population.parents)
+            opt.write_track_file(self.population, self.generation)
+            opt.record_optimized_solutions(self.population)
+
+        track_file = open('optimization_track_file.txt','a')
+        track_file.write("End of Optimization \n")
+        track_file.close()
+        all_values.close()
+        opt.plotter()
+
+    def main_in_serial(self):
+        """
+        Performs optimization using a genetic algorithm in serial.
+        Done because for some reason the neural network stuff seems to be
+        breaking with parallel.
+
+        Parameters: None
+
+        Written by Brian Andersen 1/9/2020
+        """
+        opt = Optimization_Metric_Toolbox()
+
+        track_file = open('optimization_track_file.txt', 'w')
+        track_file.write("Beginning Optimization \n")
+        track_file.close()
+
+        loading_pattern_tracker = open("loading patterns.txt", 'w')
+        loading_pattern_tracker.close()
+
+        for i in range(self.population.size):
+            foo = self.generate_initial_solutions('initial_parent')
+            foo.evaluate()
+            self.population.parents.append(foo)
+
+        for i in range(self.population.size):
+            foo = self.generate_initial_solutions('initial_child')
+            foo.evaluate()
+            self.population.children.append(foo)
+
+      #  self.population.parents = map(evaluate_function, self.population.parents)
+      #  self.population.children = map(evaluate_function, self.population.children)
+        self.population = self.selection.perform(self.population)
+        opt.check_best_worst_average(self.population.parents)
+        opt.write_track_file(self.population, self.generation)
+
+        uniqueness = Unique_Solution_Analyzer(scrambler)
+        for self.generation.current in range(self.generation.total):
+            self.population.children = self.repodroduction.reproduce(self.population.parents, 
+                                                                     self.solution)
+            self.population.children = uniqueness.analyze(self.population.children)
+            for i,solution in enumerate(self.population.children):
+                solution.name = "child_{}_{}".format(self.generation.current, i)
+                solution.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
+                solution.add_additional_information(self.file_settings)
+                solution.evaluate()
+
+           # self.population.children = map(evaluate_function, self.population.children)
+
+            self.population = self.selection.perform(self.population)
+            opt.check_best_worst_average(self.population.parents)
+            opt.write_track_file(self.population, self.generation)
+
+        opt.record_optimized_solutions(self.population)
+
+        track_file = open('optimization_track_file.txt','a')
+        track_file.write("End of Optimization \n")
+        track_file.close()
+
+        opt.plotter()
+
+    def cleanup(self):
+        """
+        Deletes solution results that are no longer relevant to the optimization.
+
+        Written by Brian Andersen 10/28/2020.
+        """
+        gc.collect()
+        if self.perform_cleanup:
+            if self.generation.current <= self.number_generations_post_cleanup:
+                pass
+            else:
+                for cl in range(self.population.size+20):
+                    file_name = f'initial_parent_{cl}'
+                    if os.path.isdir(file_name):
+                        delete_file = True
+                        for parent,child in zip(self.population.parents,self.population.children):
+                            if parent.name == file_name:
+                                delete_file = False
+                                break
+                            elif child.name == file_name:
+                                delete_file = False
+                                break
+                        if delete_file:
+                            if os.path.isfile(f"{file_name}/{file_name}_sim.out"):
+                                os.remove(f"{file_name}/{file_name}_sim.out")
+                    file_name = f'initial_child_{cl}'
+                    if os.path.isdir(file_name):
+                        delete_file = True
+                        for parent,child in zip(self.population.parents,self.population.children):
+                            if parent.name == file_name:
+                                delete_file = False
+                                break
+                            elif child.name == file_name:
+                                delete_file = False
+                                break
+                        if delete_file:
+                            if os.path.isfile(f"{file_name}/{file_name}_sim.out"):
+                                os.remove(f"{file_name}/{file_name}_sim.out")
+                for clgen in range(self.generation.current):
+                    for clpop in range(self.population.size+20):
+                        file_name = f"child_{clgen}_{clpop}"
+                        if os.path.isdir(file_name):
+                            delete_file = True
+                            for parent,child in zip(self.population.parents,self.population.children):
+                                if parent.name == file_name:
+                                    delete_file = False
+                                    break
+                                elif child.name == file_name:
+                                    delete_file = False
+                                    break
+                            if delete_file:
+                                if os.path.isfile(f"{file_name}/{file_name}_sim.out"):
+                                    os.remove(f"{file_name}/{file_name}_sim.out")
+
+    def evaluate_neural_networks(self,eval_pop):
+        """
+        So, the original method of analyzing neural networks in parallel didn't work.
+        There were way too many memory failures. So I am now pursuing this course, of
+        single evaluation. It will likely take a long time, unfortunately, but at present 
+        it represents the best solution to the memory error problems. It will be significantly 
+        sped up hopefully by performing the power analysis and interpolation in parallel.
+
+        WRitten by Brian Andersen. 11/11/20
+        """
+        print("Performing neural network evaluations")
+        for solution in eval_pop:
+            print(solution.name)
+            time1 = time.time()
+            crud_matrix = None      #
+            boron_matrix = None
+            no_crud_matrix = True   #Flag saying I haven't done the CRUD predictions yet
+            no_boron_matrix = True  #Flag saying I haven't done the Boron predictions yet.
+            axially_adjusted_crud = False #Flag saying I haven't axially adjusted CRUD yet.
+            if 'max_assembly_boron' in solution.parameters:
+                if 'value' in solution.parameters['max_assembly_boron']:  #Don't do anything since it already failed inspection
+                    pass
+                else:
+                    if os.path.isfile(f"{solution.name}/crud_input.h5"): #check input file exists. Maybe some sort of fluke
+                        if no_boron_matrix:
+                            if no_crud_matrix: #If the crud matrix hasn't been calculated yet.
+                                crud_matrix = self.crud.predict_crud_distribution(solution.name)
+                                no_crud_matrix = False
+                            boron_matrix = self.crud.predict_boron_distribution(crud_matrix,solution.name)
+                            boron_matrix = self.crud.adjust_prediction_axially(boron_matrix)
+                            no_boron_matrix = False
+                        
+                        #crud_matrix = self.crud.adjust_prediction_axially(crud_matrix)
+                        solution.parameters['max_assembly_boron']['value'] = self.crud.calculate_max_assembly_sum(boron_matrix)
+                    else:
+                        solution.parameters['max_assembly_boron']['value'] = 10000000. #If the input file doesn't exist give failed value
+            if 'max_core_boron' in solution.parameters:
+                if 'value' in solution.parameters['max_core_boron']:  #Don't do anything since it already failed inspection
+                    pass
+                else:
+                    if os.path.isfile(f"{solution.name}/crud_input.h5"): #check input file exists. Maybe some sort of fluke
+                        if no_boron_matrix:
+                            if no_crud_matrix: #If the crud matrix hasn't been calculated yet.
+                                crud_matrix = self.crud.predict_crud_distribution(solution.name)
+                                no_crud_matrix = False
+                            boron_matrix = self.crud.predict_boron_distribution(crud_matrix,solution.name)
+                            boron_matrix = self.crud.adjust_prediction_axially(boron_matrix)
+                            no_boron_matrix = False
+                        
+                        #crud_matrix = self.crud.adjust_prediction_axially(crud_matrix)
+                        solution.parameters['max_core_boron']['value'] = self.crud.calculate_core_max_sum(boron_matrix)
+                    else:
+                        solution.parameters['max_core_boron']['value'] = 10000000. #If the input file doesn't exist give failed value
+            if 'max_core_crud' in solution.parameters:
+                if 'value' in solution.parameters['max_core_crud']:  #Don't do anything since it already failed inspection
+                    pass
+                else:
+                    if os.path.isfile(f"{solution.name}/crud_input.h5"): #check input file exists. Maybe some sort of fluke
+                        if no_crud_matrix: #If the crud matrix hasn't been calculated yet.
+                            crud_matrix = self.crud.predict_crud_distribution(solution.name)
+                            no_crud_matrix = False
+                        if not axially_adjusted_crud:
+                            crud_matrix = self.crud.adjust_prediction_axially(crud_matrix)
+                            axially_adjusted_crud = True
+                        solution.parameters['max_core_crud']['value'] = self.crud.calculate_core_max_sum(crud_matrix)
+                    else:
+                        solution.parameters['max_core_crud']['value'] = 10000000. #If the input file doesn't exist give failed value
+            
+            if 'max_assembly_crud' in solution.parameters:
+                if 'value' in solution.parameters['max_core_crud']:  #Don't do anything since it already failed inspection
+                    pass
+                else:
+                    if os.path.isfile(f"{solution.name}/crud_input.h5"): #check input file exists. Maybe some sort of fluke
+                        if no_crud_matrix: #If the crud matrix hasn't been calculated yet.
+                            crud_matrix = self.crud.predict_crud_distribution(solution.name)
+                            no_crud_matrix = False
+                        if not axially_adjusted_crud:
+                            crud_matrix = self.crud.adjust_prediction_axially(crud_matrix)
+                            axially_adjusted_crud = True
+                        solution.parameters['max_assembly_crud']['value'] = self.crud.calculate_max_assembly_sum(crud_matrix)
+                    else:
+                        solution.parameters['max_assembly_crud']['value'] = 10000000. #If the input file doesn't exist give failed value
+            print(time.time()-time1)
+        return eval_pop
+
+    def test_main_in_parallel(self):
+        """
+        Performs optimization using a genetic algorithm in with
+        parallel computations
+
+        Parameters: None
+
+        Written by Brian Andersen. 1/9/2020
+        """
+        opt = Optimization_Metric_Toolbox()
+
+        track_file = open('optimization_track_file.txt', 'w')
+        track_file.write("Beginning Optimization \n")
+        track_file.close()
+
+        loading_pattern_tracker = open("loading_patterns.txt", 'w')
+        loading_pattern_tracker.close()
+
+        all_value_count = 0
+        all_values = open('all_value_tracker.txt','w')
+        all_values.close()
+        for i in range(self.population.size):
+            foo = self.solution()
+            foo.name = "initial_parent_{}".format(i)
+            foo.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
+            foo.add_additional_information(self.file_settings)
+            #scrambler = Fixed_Genome_Mutator(1,1,200,self.file_settings)
+            if foo.fixed_genome:
+                foo.new_generate_initial_fixed(self.file_settings['genome']['chromosomes'],
+                                           self.file_settings['optimization']['fixed_groups'])
+            #   foo.genome = scrambler.reproduce(foo.genome)
+            else:
+                foo.generate_initial(self.file_settings['genome']['chromosomes'])
+            self.population.parents.append(foo)
+
+        for i in range(self.population.size):
+            foo = self.solution()
+            foo.name = "initial_child_{}".format(i)
+            foo.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
+            foo.add_additional_information(self.file_settings)
+            if foo.fixed_genome:
+                foo.new_generate_initial_fixed(self.file_settings['genome']['chromosomes'],
+                                           self.file_settings['optimization']['fixed_groups'])
+            #    foo.genome = scrambler.reproduce(foo.genome)
+            else:
+                foo.generate_initial(self.file_settings['genome']['chromosomes'])
+            self.population.children.append(foo)
+
+        pool = Pool(processes=self.num_procs)
+        self.population.parents = pool.map(test_evaluate_function, self.population.parents)
+        self.population.children = pool.map(test_evaluate_function, self.population.children)
+        all_values = open('all_value_tracker.txt','a')
+        for sol in self.population.parents:
+            print(sol.name)
+            if not all_value_count:
+                for param in sol.parameters:
+                    all_values.write(f"{param},    ")
+                all_values.write('\n')
+            all_values.write(f"{all_value_count},    {sol.genome}    ")
+            for param in sol.parameters:
+                all_values.write(f"{sol.parameters[param]['value']},    ")
+                print(f"{sol.parameters[param]['value']},    ")
+            all_values.write('\n')
+            all_value_count += 1
+        for sol in self.population.children:
+            all_values.write(f"{all_value_count},   {sol.genome}   ")
+            for param in sol.parameters:
+                all_values.write(f"{sol.parameters[param]['value']},    ")
+            all_values.write('\n')
+            all_value_count += 1        
+        all_values.close()
+
+
+        #self.population.parents = pool.map(self.crud.evaluator,self.population.parents)
+        #self.population.children = pool.map(self.crud.evaluator,self.population.children)
+        self.population = self.selection.perform(self.population)
+        opt.check_best_worst_average(self.population.parents)
+        opt.write_track_file(self.population, self.generation)
+
+        scrambler = Fixed_Genome_Mutator(1,1,200,self.file_settings)
+        uniqueness = Unique_Solution_Analyzer(scrambler)
+        for self.generation.current in range(self.generation.total):
+            self.population.children = self.repodroduction.reproduce(self.population.parents, 
+                                                                     self.solution)
+            self.population.children = uniqueness.analyze(self.population.children)
+            for i,solution in enumerate(self.population.children):
+                solution.name = "child_{}_{}".format(self.generation.current, i)
+                solution.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
+                solution.add_additional_information(self.file_settings)
+
+
+            self.population.children = pool.map(test_evaluate_function, self.population.children)
+            all_values = open('all_value_tracker.txt','a')
+            for sol in self.population.children:
+                all_values.write(f"{all_value_count},    {sol.genome}    ")
+                print(sol.name)
+                for param in sol.parameters:
+                    print(f"{sol.parameters[param]['value']},    ")
+                    all_values.write(f"{sol.parameters[param]['value']},    ")
+                all_values.write('\n')
+                all_value_count += 1
+            all_values.close()
+            #self.population.children = pool.map(self.crud.evaluator,self.population.children)
+            self.cleanup()
+            self.population = self.selection.perform(self.population)
+            opt.check_best_worst_average(self.population.parents)
+            opt.write_track_file(self.population, self.generation)
+
+        opt.record_optimized_solutions(self.population)
+
+        track_file = open('optimization_track_file.txt','a')
+        track_file.write("End of Optimization \n")
+        track_file.close()
+        all_values.close()
+        opt.plotter()
+
+    def test_main_in_serial(self):
+        """
+        Performs optimization using a genetic algorithm in serial.
+        Done because for some reason the neural network stuff seems to be
+        breaking with parallel.
+
+        Parameters: None
+
+        Written by Brian Andersen 1/9/2020
+        """
+        opt = Optimization_Metric_Toolbox()
+
+        track_file = open('optimization_track_file.txt', 'w')
+        track_file.write("Beginning Optimization \n")
+        track_file.close()
+
+        loading_pattern_tracker = open("loading patterns.txt", 'w')
+        loading_pattern_tracker.close()
+
+        for i in range(self.population.size):
+            foo = self.solution()
+            foo.name = "initial_parent_{}".format(i)
+            foo.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
+            foo.add_additional_information(self.file_settings)
+            scrambler = Fixed_Genome_Mutator(1,1,200,self.file_settings)
+            if foo.fixed_genome:
+                foo.generate_initial_fixed(self.file_settings['genome']['chromosomes'],
+                                           self.file_settings['optimization']['fixed_groups'])
+                foo.genome = scrambler.reproduce(foo.genome)
+            else:
+                foo.generate_initial(self.file_settings['genome']['chromosomes'])
+            test_evaluate_function(foo)
+            self.population.parents.append(foo)
+
+        for i in range(self.population.size):
+            foo = self.solution()
+            foo.name = "initial_child_{}".format(i)
+            foo.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
+            foo.add_additional_information(self.file_settings)
+            if foo.fixed_genome:
+                foo.generate_initial_fixed(self.file_settings['genome']['chromosomes'],
+                                           self.file_settings['optimization']['fixed_groups'])
+                foo.genome = scrambler.reproduce(foo.genome)
+            else:
+                foo.generate_initial(self.file_settings['genome']['chromosomes'])
+            test_evaluate_function(foo)
+            self.population.children.append(foo)
+
+      #  self.population.parents = map(evaluate_function, self.population.parents)
+      #  self.population.children = map(evaluate_function, self.population.children)
+        self.population = self.selection.perform(self.population)
+        opt.check_best_worst_average(self.population.parents)
+        opt.write_track_file(self.population, self.generation)
+
+        uniqueness = Unique_Solution_Analyzer(scrambler)
+        for self.generation.current in range(self.generation.total):
+            self.population.children = self.repodroduction.reproduce(self.population.parents, 
+                                                                     self.solution)
+            self.population.children = uniqueness.analyze(self.population.children)
+            for i,solution in enumerate(self.population.children):
+                solution.name = "child_{}_{}".format(self.generation.current, i)
+                solution.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
+                solution.add_additional_information(self.file_settings)
+                test_evaluate_function(solution)
+
+           # self.population.children = map(evaluate_function, self.population.children)
+
+            self.population = self.selection.perform(self.population)
+            opt.check_best_worst_average(self.population.parents)
+            opt.write_track_file(self.population, self.generation)
+
+        opt.record_optimized_solutions(self.population)
+
+        track_file = open('optimization_track_file.txt','a')
+        track_file.write("End of Optimization \n")
+        track_file.close()
+
+        opt.plotter()
+
+    def restart_main_in_parallel(self):
+        """
+        Performs optimization using a genetic algorithm in with
+        parallel computations
+
+        Parameters: None
+
+        Written by Brian Andersen. 1/9/2020
+        """
+        opt = Optimization_Metric_Toolbox()
+
+        track_file = open('optimization_track_file.txt', 'a')
+        track_file.write("Restarting Optimization \n")
+        track_file.close()
+
+        all_value_count = 0
+        all_values = open('all_value_tracker.txt','a')
+        all_values.write("Restarting\n")
+        all_values.close()
+        with open('optimized_solutions.yaml') as current_solutions:
+            solutions = yaml.safe_load(current_solutions)
+
+        track_file = open('optimization_track_file.txt','r')
+        track_lines = track_file.readlines()
+        track_file.close()
+
+        for line in track_lines:
+            if "Current generation of the optimization" in line:
+                elems = line.strip().split()
+                current_gen = int(elems[-1]) + 1
+        track_lines = None
+
+        for solut in solutions:
+            foo = self.solution()
+            foo.name = solut
+            foo.genome = solutions[solut]['genome']
+            foo.parameters = solutions[solut]['parameters']
+            foo.fitness = float(solutions[solut]['fitness'])
+            self.population.parents.append(foo)
+
+        pool = Pool(processes=self.num_procs)
+
+        #self.population.parents = pool.map(self.crud.evaluator,self.population.parents)
+        #self.population.children = pool.map(self.crud.evaluator,self.population.children)
+        
+        scrambler = Fixed_Genome_Mutator(1,1,200,self.file_settings)
+        uniqueness = Unique_Solution_Analyzer(scrambler)
+        for self.generation.current in range(current_gen,self.generation.total):
+            self.population.children = self.repodroduction.reproduce(self.population.parents, 
+                                                                     self.solution)
+            self.population.children = uniqueness.analyze(self.population.children)
+            for i,solution in enumerate(self.population.children):
+                solution.name = "child_{}_{}".format(self.generation.current, i)
+                solution.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
+                solution.add_additional_information(self.file_settings)
+
+
+            self.population.children = pool.map(evaluate_function, self.population.children)
+            all_values = open('all_value_tracker.txt','a')
+            for sol in self.population.children:
+                all_values.write(f"{all_value_count},   {sol.name},   ")
+                print(sol.name)
+                for param in sol.parameters:
+                    print(f"{sol.parameters[param]['value']},    ")
+                    all_values.write(f"{sol.parameters[param]['value']},    ")
+                all_values.write('\n')
+                all_value_count += 1
+            all_values.close()
+            #self.population.children = pool.map(self.crud.evaluator,self.population.children)
+            self.cleanup()
+            self.population = self.selection.perform(self.population)
+            opt.check_best_worst_average(self.population.parents)
+            opt.write_track_file(self.population, self.generation)
+            opt.record_optimized_solutions(self.population)
+
+        track_file = open('optimization_track_file.txt','a')
+        track_file.write("End of Optimization \n")
+        track_file.close()
+        all_values.close()
+        opt.plotter()

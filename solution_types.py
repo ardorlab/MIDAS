@@ -31,42 +31,56 @@ class Solution(object):
     def add_additional_information(self,settings):
         pass
 
+    def generate_initial(self,chromosome_map):
+        """Generate initial genome for assembly optimization."""
+        chromosome_length = None
+        chromosome_list = list(chromosome_map.keys())
+
+        for chromosome in chromosome_map:
+            if chromosome_length is None:
+                chromosome_length = len(chromosome_map[chromosome]['map'])
+            elif len(chromosome_map[chromosome]['map']) == chromosome_length:
+                pass
+            else:
+                raise ValueError("Chromosome Maps are of unequal length")
+                
+        for i in range(chromosome_length):
+            no_gene_found = True
+            while no_gene_found:
+                gene = random.choice(chromosome_list)
+                if chromosome_map[gene]['map'][i]:
+                    self.genome.append(gene)
+                    no_gene_found = False
+
+    def generate_initial_uniform(self,chromosome_map):
+        chromosome_length = None
+        chromosome_list = list(chromosome_map.keys())
+
+        for chromosome in chromosome_map:
+            if chromosome_length is None:
+                chromosome_length = len(chromosome_map[chromosome]['map'])
+            elif len(chromosome_map[chromosome]['map']) == chromosome_length:
+                pass
+            else:
+                raise ValueError("Chromosome Maps are of unequal length")
+                
+        main_gene = random.choice(chromosome_list)
+        for i in range(chromosome_length):
+            if chromosome_map[main_gene]['map'][i] == 1:
+                self.genome.append(gene)
+            else:
+                no_gene_found = True
+                while no_gene_found:
+                    gene = random.choice(chromosome_list)
+                    if chromosome_map[gene]['map'][i] == 1:
+                        self.genome.append(gene)
+                        no_gene_found = False
+
     def evaluate(self):
         """
-        Evaluates the solution to the optimization problem. For this test problem,
-        the solution is based off of the genome. It can be run to create as ordered
-        of a gene as possible, or disordered. The score increases when similar genes
-        touch, the score decreases when dissimilar genes touch.
-
-        Written by Brian Andersen. 4/16/2021.
+        Evaluates the solution to the optimization problem.
         """
-        if 'organize' in self.parameters:
-            score = 0.
-            for i,gene in enumerate(self.genome):
-                if not i:
-                    if gene == self.genome[i+1]:
-                        score += 1.
-                    else:
-                        score -= 1.
-                else:
-                    if gene == self.genome[i-1]:
-                        score += 1
-                    else:
-                        score -= 1
-                    if self.genome[i+1] == len(self.genome):
-                        pass
-                    else:
-                        if gene == self.genome[i+1]:
-                            score += 1.
-                        else:
-                            score -= 1.
-            self.parameters['organize']['value'] = score
-
-    def test_evaluate(self):
-        """
-        Evaluates the solution to the optimization problem in testing mode.
-        """
-        self.evaluate()
+        pass
 
     def raise_value_error(self):
         """
@@ -129,7 +143,9 @@ def test_evaluate_function(solution):
 
     Written by Brian Andersen. 1/7/2019
     """
-    solution.test_evaluate()
+    #solution.evaluate()
+    for param in solution.parameters:
+        solution.parameters[param]['value'] = 10.*random.random()
 
     return solution
 
