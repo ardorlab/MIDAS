@@ -225,12 +225,17 @@ Here, the markers in the example input file are explained:
 
 The repository is structured in the following way:
 
-* Samples: Directory including various sample cases for users to get familiarized with MOF framework. Users just need to navigate to the sample folder and run MOF from there with the corresponding input file.
-  * Sample_1:
-  * Sample_2:
-  * Sample_3:
-  
-* Documentation: Directory including all additional documentation.
+* samples: Directory including various sample cases for users to get familiarized with MOF framework. Users just need to navigate to the sample folder and run MOF from there with the corresponding input file or use the run.sh bash file on the RDFMG cluster. The samples consist of examples of genetic algorithm and simulated annealing optimization problems for a reduced number of code calculations. All the samples should finish within 10 minutes. Users are encourage to change the number of code evaluations (e.g. generations number) to experiment with optimization algorithms. Parallel execution is implemented only for genetic algorithm and the user could increase the number of allocated processors to evaluate the impact on the execution time.
+  * sample_1: Fuel Lattice Optimization with CASMO4 code. Genetic algorithm is used with 2 generations and 10 population per generation. 
+  * sample_2: First Cycle Core Loading Pattern Optimization with SIMULATE3. Genetic algorithm is used with 2 generations and 10 population per generation. 
+  * sample_3: First Cycle Core Loading Pattern Optimization with SIMULATE3. Simulated annealing is used with 20 iterations. 
+  * sample_4: Third Cycle Core Loading Pattern Optimization with SIMULATE3. Genetic algorithm is used with 2 generations and 10 population per generation. 
+  * sample_5: Third Cycle Core Loading Pattern Optimization with SIMULATE3. Simulated annealing is used with 20 iterations.
+  * dev_samples: Sample cases under development and not fully functional yet.
+
+* rl_dev: Directory containing under development reinforcement learning optimization files. This is not functional yet. This folder will be deleted once reinforcement learning is integrated in the main MOF.
+
+* documentation: Directory including all additional documentation.
 
 * casmo.py: Python file that handles CASMO Lattice calculations evaluation and data extraction.
 
@@ -239,8 +244,6 @@ The repository is structured in the following way:
 * fitness.py: Python file for selecting and computing the objective function of the optimization. 
 
 * geneticAlgorithm.py: Python file that stores all classes and functions for performing Genetic Algorithm optimization.
-
-* methodology.py: Python file where general usefull functions such as solution generation are stored.
 
 * metrics.py: Python file including tools for tracking solutions and storing the generated optimization data.
 
@@ -252,7 +255,7 @@ The repository is structured in the following way:
 
 * solution_types.py: Python file for storing the solutions of the optimization together with some usefull functions.
 
-* submission_script.sh: Bash file example for running MOF through SLURM on a cluster.
+* submission_script.sh: Bash file example for running MOF through SLURM on the RDFMG cluster.
 
 
 	

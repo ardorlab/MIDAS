@@ -1,11 +1,10 @@
-<<<<<<< HEAD
 #!/bin/bash
 
 #SBATCH -t 30:00:00                    # Walltime
 #SBATCH -N 1                           # Number of nodes
 #SBATCH -n 8                          # Number of processor cores (i.e. tasks)
 #SBATCH -J "MOF"               # Job name
-#SBATCH -p shortq                      # Partition name
+#SBATCH -p defq                      # Partition name
 ##SBATCH --mail-user=UNITYID@ncsu.edu  # Email address
 ##SBATCH --mail-type=BEGIN             # Receive email when job start
 ##SBATCH --mail-type=END               # Receive email when job end
@@ -21,7 +20,7 @@ cd $SLURM_SUBMIT_DIR
 rm -r initial_*
 rm -r child_*
 
-python mofMain.py --input ne_512_project.yaml --cpus 8
+python mofMain.py --input input_file.yaml --cpus 8
 
 ##stress-ng --cpu $SLURM_CPUS_ON_NODE --timeout 60s --metrics-brief
 
