@@ -15,18 +15,20 @@ Current optimization methodologies supported by the MOF are:
 
 # Code Installation
 
-The first thing to do is install Miniconda or Anaconda. This will allow you to create a controlled Python environment where you can
+It is highly advised to install Miniconda or Anaconda. This will allow you to create a controlled Python environment where you can
 install the required packages, especially if you want to use it in a cluster with limited permissions. Go to the 
-site: https://docs.conda.io/en/latest/miniconda.html and download the latest Python 3 installer. Now install conda and the 
+site: https://docs.conda.io/en/latest/miniconda.html and download the latest Python 3 installer. The installer is a bash file with an example name "miniconda_install.sh". Now install conda and the 
 required dependencies entering the following commands:
 
-    bash file_i_just_uploaded.sh
+    bash miniconda_install.sh
 
-    pip install yaml 
+    pip install pyyaml 
 
-    pip install numpy
+    conda install numpy
 
-    pip install matplotlib
+    conda install matplotlib
+	
+	conda install h5py
 
     git clone https://github.com/gkdelipei/MOF.git
 
