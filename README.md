@@ -9,7 +9,6 @@ MOF is designed to provide users with a variety of optimization methodologies to
 Current optimization methodologies supported by the MOF are:
 
 * Genetic Algorithm
-
 * Simulated Annealing
   
 
@@ -36,17 +35,14 @@ Congratulations. The code is now installed in your local machine.
   
 # Running the Code 
 
-
 Enter your local MOF directory and navigate to one of the sample problems. Type:
 
     python mofMain.py --input sample_problem_input.yaml --cpus 4 
 
-   
-Running the code is as sample as that. mofMain is the main function of the python code obviously. There are two 
-commands here though. The first is __--input__. This command is used to designate the input yaml file that you want to run.
-In the example it is just the input yaml file corresponding to the selected sample case. The second command is
-__--cpus__. This command is used to designate how many processors you want to apply to the optimization problem. In the 
-case we just ran, four.
+Running the code is as sample as that. mofMain is the main function of the python code. There are two 
+commands here. The first is __--input__. This command is used to designate the input yaml file that you want to run.
+In the example it is just the input yaml file corresponding to the selected sample case. The second command
+__--cpus__ is used to designate how many processors you want to apply to the optimization problem. In the example four are specified.
 
 # YAML Input File Format
 
@@ -259,6 +255,3 @@ The repository is structured in the following way:
 
 * submission_script.sh: Bash file example for running MOF through SLURM on the RDFMG cluster.
 
-
-	
-	
