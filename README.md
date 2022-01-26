@@ -29,7 +29,7 @@ required dependencies entering the following commands:
 	
 	conda install h5py
 
-    git clone https://github.com/gkdelipei/MOF.git
+    git clone https://github.com/ardorlab/MOF.git
 
 Congratulations. The code is now installed in your local machine.
   
