@@ -231,8 +231,6 @@ The repository is structured in the following way:
   * sample_5: Third Cycle Core Loading Pattern Optimization with SIMULATE3. Simulated annealing is used with 20 iterations.
   * dev_samples: Sample cases under development and not fully functional yet.
 
-* rl_dev: Directory containing under development reinforcement learning optimization files. This is not functional yet. This folder will be deleted once reinforcement learning is integrated in the main MOF.
-
 * documentation: Directory including all additional documentation.
 
 * casmo.py: Python file that handles CASMO Lattice calculations evaluation and data extraction.
