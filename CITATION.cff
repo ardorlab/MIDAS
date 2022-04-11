@@ -12,6 +12,6 @@ authors:
   orcid: "https://orcid.org/0000-0002-1144-1632"
 title: "Modular Optimization Framework "
 version: 1.0
-#doi: 10.5281/zenodo.1234
+doi: 10.48550/arXiv.2204.00141
 date-released: 2021-10-18
 url: "https://github.com/ardorlab/MOF"
