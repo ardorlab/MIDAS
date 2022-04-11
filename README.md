@@ -1,5 +1,5 @@
-This is the Modular Optimization Framework repository. It utilizes inheritance, object-oriented, and functional programming to
-create a simple, robust tool for solving optimization problems. It has been applied primarily to nuclear engineering design problems. 
+Welcome to the Modular Optimization Framework repository. MOF utilizes inheritance, object-oriented, and functional programming to
+create a simple, robust tool for solving optimization problems. It has been applied primarily to nuclear engineering design problems. For theory and applications, refer to https://doi.org/10.48550/arXiv.2204.00141.
 
 
 # MOF: Modular Optimization Framework
