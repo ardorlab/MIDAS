@@ -253,3 +253,7 @@ The repository is structured in the following way:
 
 * submission_script.sh: Bash file example for running MOF through SLURM on the RDFMG cluster.
 
+# Resources
+
+https://arxiv.org/abs/2204.00141
+
