@@ -258,4 +258,4 @@ The repository is structured in the following way:
 https://arxiv.org/abs/2204.00141
 
 
-<img src="img/mof.JPG" alt="drawing" width="400"/> 
+![Alt text](img/mof.JPG)
