@@ -318,8 +318,30 @@ class Simulate3_Core_17_17():
 
         Written by Gregory Delipei 7/14/2022
         """
-        pass
+        avail_actions = self.get_actions()
+        action_type = act['Type']
+        action_location = act['Location']
+        action = act['Value']
 
+        if action in avail_actions[action_type][action_location]:
+            if action_type =='Exchange':
+                loc_value = self.core_dict['core'][action_location]['Value']
+                action_value = self.core_dict['core'][action]['Value']
+                self.core_dict['core'][action_location]['Value'] = action_value
+                self.core_dict['fuel'][action_location]['Value'] = action_value
+                self.core_dict['core'][action]['Value'] = loc_value
+                self.core_dict['fuel'][action]['Value'] = loc_value
+            elif action_type=='Change':
+                loc_value = self.core_dict['core'][action_location]['Value']
+                loc_symmetry=len(self.core_dict['fuel'][action_location]['Symmetric_Assemblies'])+1
+                self.core_dict['core'][action_location]['Value'] = action
+                self.core_dict['fuel'][action_location]['Value'] = action
+                self.core_dict['Inventory'][loc_value]['In_Design']-=loc_symmetry
+                self.core_dict['Inventory'][action]['In_Design']+=loc_symmetry
+        else:
+            raise ValueError(
+                f"The selected action is not valid."
+            )
         return
 
     def get_actions(self):
@@ -518,15 +540,15 @@ if __name__ == "__main__":
 
 
     core_inventory={'FE500': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'E500'},
-                    'FE450Gd8': {'Max_Limit':20, 'In_Design':0, 'Cost':0, 'Tag':'FE450Gd8'},
-                    'FE450Bp8': {'Max_Limit':20, 'In_Design':0, 'Cost':0, 'Tag':'FE450Bp8'},
+                    'FE450Gd8': {'Max_Limit':48, 'In_Design':0, 'Cost':0, 'Tag':'FE450Gd8'},
+                    'FE450Bp8': {'Max_Limit':48, 'In_Design':0, 'Cost':0, 'Tag':'FE450Bp8'},
                     'FE340Bp4': {'Max_Limit':48, 'In_Design':0, 'Cost':0, 'Tag':'FE340Bp4'},
                     'FE340Gd4': {'Max_Limit':48, 'In_Design':0, 'Cost':0, 'Tag':'FE340Gd4'},
                     'RB1': {'Max_Limit':45, 'In_Design':0, 'Cost':0, 'Tag':'RB1'},
                     'RB2': {'Max_Limit':45, 'In_Design':0, 'Cost':0, 'Tag':'RB2'},
                     'RB3': {'Max_Limit':40, 'In_Design':0, 'Cost':0, 'Tag':'RB3'}
                     }
-    core_inventory_groups={'Fresh': {'Values':['FE500','FE450Gd8','FE450Bp8','FE340Bp4','FE340Gd4'], 'Limit': 'Exact', 'Limit_Value':84},
+    core_inventory_groups={'Fresh': {'Values':['FE500','FE450Gd8','FE450Bp8','FE340Bp4','FE340Gd4'], 'Limit': 'Exact', 'Limit_Value':85},
                         'Reload': {'Values':['RB1','RB2','RB3'], 'Limit': 'Max', 'Limit_Value':200 }
                         }
 
@@ -551,3 +573,16 @@ if __name__ == "__main__":
     act=at.get_actions()
     sum_act=len(act['Exchange'][loc]) + len(act['Change'][loc])
     print(f"Sum of Actions for {loc}: {sum_act}")
+
+    loc = 'K10'
+    sact={'Type': 'Change',
+            'Location': loc,
+            'Value': act['Change'][loc][0]}
+
+    loc_value = at.core_dict['core'][loc]['Value']
+    print(f"Location In Design before action: {at.core_dict['Inventory'][loc_value]['In_Design']}")
+    print(f"Action In Design before action: {at.core_dict['Inventory'][act['Change'][loc][0]]['In_Design']}")
+    at.action(sact)
+    at.plot_design('core_plot_act.png')
+    print(f"Location In Design after action: {at.core_dict['Inventory'][loc_value]['In_Design']}")
+    print(f"Action In Design after action: {at.core_dict['Inventory'][act['Change'][loc][0]]['In_Design']}")
