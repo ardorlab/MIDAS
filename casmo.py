@@ -7,6 +7,7 @@ from solution_types import Solution
 from solution_types import compare_substrings
 from solution_types import return_triangular_string
 from metrics import Plotter
+# this is a test line
 
 class Casmo_Lattice(Solution):
     """
