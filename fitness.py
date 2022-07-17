@@ -46,7 +46,7 @@ class Fitness(object):
         for solution in solution_list:
             solution.fitness = 0              #Fitness is probably set to none right now.
             for param in solution.parameters:
-                print(param)
+                #print(param)
                 if solution.parameters[param]['goal'] == 'meet_target':
                     temp = copy.deepcopy(solution.parameters[param]['target'])
                     temp -= copy.deepcopy(solution.parameters[param]['value'])
@@ -94,7 +94,7 @@ class Genetic_Algorithm_Weighted(object):
         for solution in solution_list:
             solution.fitness = 0              #Fitness is probably set to none right now.
             for param in solution.parameters:
-                print(param)
+                #print(param)
                 if solution.parameters[param]['goal'] == 'meet_target':
                     temp = copy.deepcopy(solution.parameters[param]['target'])
                     temp -= copy.deepcopy(solution.parameters[param]['value'])
