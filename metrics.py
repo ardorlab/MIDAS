@@ -3,7 +3,14 @@ import sys
 import yaml
 import numpy
 from matplotlib import pyplot
+import matplotlib as mpl
+import random
 from solution_types import return_triangular_string
+'''
+Addtional import for pareto front graph
+'''
+import glob
+from PIL import Image
 #from casmo import Casmo_Lattice
 
 class Optimization_Metric_Toolbox(object):
@@ -21,6 +28,7 @@ class Optimization_Metric_Toolbox(object):
         self.average_fitness_over_time = []
         self.average_value_over_time = {}
         self.best_fitness_over_time = []
+        self.all_param_over_time={}
 
     def check_best_worst_average(self,population):
         """
@@ -88,11 +96,83 @@ class Optimization_Metric_Toolbox(object):
                 self.worst_solution_over_time[param] = []
             foo = self.current_worst.parameters[param]["value"]
             self.worst_solution_over_time[param].append(foo)
+    
+    def record_all_param(self,population_class,generation_class,flag):
+        self.all_param_over_time[generation_class.current] = {}
+        for sol in population_class.parents:
+            param_list = [param for param in sol.parameters]
+            for param in sol.parameters:
+                self.all_param_over_time[generation_class.current][param]=[]
+            break 
+        # appending values
+        if flag:
+            for sol in population_class.parents:
+                if sol.name.find('initial') < 0:
+                    for param in sol.parameters:
+                        tmp = sol.parameters[param]['value']
+                        self.all_param_over_time[generation_class.current][param].append(tmp)
+        for sol in population_class.children:
+            if sol.name.find('initial') < 0:
+                for param in sol.parameters:
+                    tmp = sol.parameters[param]['value']
+                    self.all_param_over_time[generation_class.current][param].append(tmp)
+        return
+
+    def make_gif(self, frame_folder, inpstr):
+        frames = [Image.open(image) for image in sorted(glob.glob(f"{frame_folder}/*.jpg")\
+            ,key=lambda x: self.get_int(x))]
+        # extract first image from iterator
+        frame_one = frames[0]
+        frame_one.save("pareto_front_"+inpstr+".gif", format="GIF", \
+                        append_images=frames, save_all=True, duration=500, loop=0)
+
+    def get_int(self, str):
+        tmp = str.split('_')
+        tmp = tmp[-1].split('.')
+        num = int(tmp[0])
+        return num
+
+    def gen_plot(self, target, remain_param, c):
+        ''' Generate corvar plot 
+        target      : target parameter for covar plot
+        remain_param: remain list of param 
+        c           : color list           
+        '''
+
+        for param in remain_param:
+            os.makedirs('image_dir_'+target+'_'+param, exist_ok=True)
+            path = os.getcwd() + "/image_dir_"+target+"_"+param
+            for gen in range(len(self.all_param_over_time)): # loop generation 
+                fig,ax = pyplot.subplots(2,1, figsize=(5,5),  gridspec_kw={'height_ratios': [25,1]},  constrained_layout = True)
+                for t in range (gen+1):
+                    sc= ax[0].scatter(self.all_param_over_time[t][param],self.all_param_over_time[t][target] , s = 50, color=c[t])
+                ax[0].set_xlabel(str(param))
+                ax[0].set_ylabel(str(target))
+                cmap = mpl.colors.ListedColormap(c)
+                cmap.set_over('0.25')
+                cmap.set_under('0.75')
+                bounds = range(1,len(self.all_param_over_time)+2)
+                norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
+                cb2 = mpl.colorbar.ColorbarBase(ax[1], cmap=cmap,
+                                                norm=norm,
+                                                #boundaries=[0] + bounds + [13],
+                                                extend='both',
+                                                ticks=[bounds[0],max(bounds)],
+                                                spacing='proportional',
+                                                orientation='horizontal')
+                cb2.set_label('Generation')
+                name = path +'/image_'+str(gen+1)+'.jpg'
+                pyplot.savefig(name)
+                pyplot.close()
+            self.make_gif(path+'/', param+'_'+target )
 
     def plotter(self):
         """
         Plots the best, worst and average fitness and parameter values for
         the optimization.
+        Edit log:
+        - - - -- -: Brian created
+        26/06/2022: Khang - added pareto front graph (gif)
         """
         for param in self.best_solution_over_time:
             pyplot.figure()
@@ -111,8 +191,15 @@ class Optimization_Metric_Toolbox(object):
             pyplot.ylabel(param)
             pyplot.title("{} for Best, Worst, and Average Solution over Time".format(param))
             pyplot.legend()
-            pyplot.savefig("{}_over_time".format(param))            
-            
+            pyplot.savefig("{}_over_time".format(param)) 
+        list_param = [param for param in self.best_solution_over_time]
+        list_param.pop(list_param.index('fitness')) # no fitness pareto front graph
+        while list_param:
+            get_colors = lambda n: list(map(lambda i: "#" + "%06x" % random.randint(0, 0xFFFFFF),range(n)))
+            color = get_colors(len(self.all_param_over_time)) # sample return:  ['#8af5da', '#fbc08c', '#b741d0', '#e599f1', '#bbcb59', '#a2a6c0']
+            target = list_param.pop(0)
+            self.gen_plot(target, list_param, color)
+
     def write_track_file(self,population_class,generation_class):
         """
         Writes a file making it easier to track what is occuring in the optimization.
@@ -507,6 +594,7 @@ class Simulated_Annealing_Metric_Toolbox(object):
         self.best_solution_over_time['fitness'] = []
         self.other_solution_over_time['fitness'] = []
         self.temperature_over_time = []
+        self.all_param_over_time={}
         self.acceptance_probability_over_time = []
         self.generation = 0
 
@@ -542,6 +630,7 @@ class Simulated_Annealing_Metric_Toolbox(object):
             acceptance = 1.
         self.acceptance_probability_over_time.append(acceptance)
         self.temperature_over_time.append(cooling_schedule.temperature)
+        self.all_param_over_time[self.generation]={}
         track_file = open('optimization_track_file.txt','a')
         track_file.write(f"Current Generation {self.generation}\n")
         track_file.write(f"Temperature {cooling_schedule.temperature}\n")
@@ -552,9 +641,79 @@ class Simulated_Annealing_Metric_Toolbox(object):
         track_file.write(f"Fitness                {round(best.fitness,3)},            ,{round(other.fitness,3)}\n")
         for param in best.parameters:
             track_file.write(f"{param}, {best.parameters[param]['value']},            ,{other.parameters[param]['value']}   \n")
+            self.all_param_over_time[self.generation][param]=other.parameters[param]['value']
         track_file.write("\n\n\n")
         track_file.close()
-        self.generation += 1
+        self.generation += 1    
+
+    def record_all_param(self,population_class,generation_class,flag):
+        self.all_param_over_time[generation_class.current] = {}
+        for sol in population_class.parents:
+            param_list = [param for param in sol.parameters]
+            for param in sol.parameters:
+                self.all_param_over_time[generation_class.current][param]=[]
+            break 
+        # appending values
+        if flag:
+            for sol in population_class.parents:
+                if sol.name.find('initial') < 0:
+                    for param in sol.parameters:
+                        tmp = sol.parameters[param]['value']
+                        self.all_param_over_time[generation_class.current][param].append(tmp)
+        for sol in population_class.children:
+            if sol.name.find('initial') < 0:
+                for param in sol.parameters:
+                    tmp = sol.parameters[param]['value']
+                    self.all_param_over_time[generation_class.current][param].append(tmp)
+        return
+
+    def make_gif(self, frame_folder, inpstr):
+        frames = [Image.open(image) for image in sorted(glob.glob(f"{frame_folder}/*.jpg")\
+            ,key=lambda x: self.get_int(x))]
+        # extract first image from iterator
+        frame_one = frames[0]
+        frame_one.save("pareto_front_"+inpstr+".gif", format="GIF", \
+                        append_images=frames, save_all=True, duration=500, loop=1)
+
+    def get_int(self, str):
+        tmp = str.split('_')
+        tmp = tmp[-1].split('.')
+        num = int(tmp[0])
+        return num
+
+    def gen_plot(self, target, remain_param, c):
+        ''' Generate corvar plot 
+        target      : target parameter for covar plot
+        remain_param: remain list of param 
+        c           : color list           
+        '''
+
+        for param in remain_param:
+            os.makedirs('image_dir_'+target+'_'+param, exist_ok=True)
+            path = os.getcwd() + "/image_dir_"+target+"_"+param
+            for gen in range(len(self.all_param_over_time)): # loop generation 
+                fig,ax = pyplot.subplots(2,1, figsize=(5,5),  gridspec_kw={'height_ratios': [25,1]},  constrained_layout = True)
+                for t in range (gen+1):
+                    sc= ax[0].scatter(self.all_param_over_time[t][param],self.all_param_over_time[t][target] , s = 50, color=c[t])
+                ax[0].set_xlabel(str(param))
+                ax[0].set_ylabel(str(target))
+                cmap = mpl.colors.ListedColormap(c)
+                cmap.set_over('0.25')
+                cmap.set_under('0.75')
+                bounds = range(1,len(self.all_param_over_time)+2)
+                norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
+                cb2 = mpl.colorbar.ColorbarBase(ax[1], cmap=cmap,
+                                                norm=norm,
+                                                #boundaries=[0] + bounds + [13],
+                                                extend='both',
+                                                ticks=[bounds[0],max(bounds)],
+                                                spacing='proportional',
+                                                orientation='horizontal')
+                cb2.set_label('Generation')
+                name = path +'/image_'+str(gen+1)+'.jpg'
+                pyplot.savefig(name)
+                pyplot.close()
+            self.make_gif(path+'/', param+'_'+target )
 
     def plotter(self):
         """
@@ -590,6 +749,14 @@ class Simulated_Annealing_Metric_Toolbox(object):
             pyplot.legend()
             pyplot.savefig("{}_over_time".format(param))            
             pyplot.close()
+        # pareto front graph is not supported in SA
+        list_param = [param for param in self.best_solution_over_time]
+        list_param.pop(list_param.index('fitness')) # no fitness pareto front graph
+        while list_param:
+            get_colors = lambda n: list(map(lambda i: "#" + "%06x" % random.randint(0, 0xFFFFFF),range(n)))
+            color = get_colors(len(self.all_param_over_time)) # sample return:  ['#8af5da', '#fbc08c', '#b741d0', '#e599f1', '#bbcb59', '#a2a6c0']
+            target = list_param.pop(0)
+            self.gen_plot(target, list_param, color)
 
 class Lava_Metric_Toolbox(object):
     """
