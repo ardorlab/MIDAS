@@ -447,31 +447,32 @@ class Simulate_Loading_Pattern_Solution(Solution):
         if 'eoc_keff' in self.parameters:
             if not keff_list:
                 keff_list = Extractor.core_keff_list(file_lines)
-            self.parameters['eoc_keff']['value'] = keff_list[-1]
+                self.parameters['eoc_keff']['value'] = keff_list[-1]
         if "eoc_boron" in self.parameters:
             if not boron_list:
                 boron_list = Extractor.boron_list(file_lines)
-            self.parameters["eoc_boron"]['value'] = boron_list[-1]
+                self.parameters["eoc_boron"]['value'] = boron_list[-1]
         if "cycle_length" in self.parameters:
+            #if len(EFPD_list)<0: # this will cause Value error
             if not EFPD_list:
                 EFPD_list = Extractor.efpd_list(file_lines)
-            self.parameters['cycle_length']['value'] = EFPD_list[-1]
+                self.parameters['cycle_length']['value'] = EFPD_list[-1]
         if "FDeltaH" in self.parameters:
             if not FDH_list:
                 FDH_list = Extractor.FDH_list(file_lines)
-            self.parameters['FDeltaH']['value'] = max(FDH_list)
+                self.parameters['FDeltaH']['value'] = max(FDH_list)
         if "PinPowerPeaking" in self.parameters:
             if not peak_list:
                 peak_list = Extractor.pin_peaking_list(file_lines)
-            self.parameters['PinPowerPeaking']['value'] = max(peak_list)
+                self.parameters['PinPowerPeaking']['value'] = max(peak_list)
         if 'exposure' in self.parameters:
             if not exposure_list:
                 exposure_list = Extractor.burnup_list(file_lines)
-            self.parameters['exposure']['value'] = exposure_list[-1]
+                self.parameters['exposure']['value'] = exposure_list[-1]
         if "max_boron" in self.parameters:
             if not boron_list:
                 boron_list = Extractor.boron_list(file_lines)
-            self.parameters["max_boron"]['value'] = max(boron_list)
+                self.parameters["max_boron"]['value'] = max(boron_list)
         if 'assembly_power' in self.parameters:
             radial_peaking = Extractor.assembly_peaking_factors(file_lines)
             max_peaking = 0.0
@@ -1706,7 +1707,7 @@ class File_Writer(object):
         loading_pattern = ""
         for row in range(25):    #I doubt a problem will ever be larger than a 25 by 25 core
             if row in problem_map:                 #it will just work
-                loading_pattern += f"'FUE.TYP'  {row_count},"
+                loading_pattern += f"'FUE.TYP'  {row_count}," 
                 for col in range(25):#so I hard coded the value because if I did this algorithm right  
                     if col in problem_map[row]:
                         if not problem_map[row][col]:

@@ -25,7 +25,9 @@ required dependencies entering the following commands:
 
     conda install numpy
 
-    conda install matplotlib
+    conda install matplotlib 
+
+	conda install pillow
 	
 	conda install h5py
 

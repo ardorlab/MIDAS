@@ -1349,7 +1349,7 @@ class Genetic_Algorithm(object):
         self.population.children = pool.map(evaluate_function, self.population.children)
         all_values = open('all_value_tracker.txt','a')
         for sol in self.population.parents:
-            print(sol.name)
+            #print(sol.name)
             if not all_value_count:
                 for param in sol.parameters:
                     all_values.write(f"{param},    ")
@@ -1357,7 +1357,7 @@ class Genetic_Algorithm(object):
             all_values.write(f"{all_value_count},    {sol.name},    ")
             for param in sol.parameters:
                 all_values.write(f"{sol.parameters[param]['value']},    ")
-                print(f"{sol.parameters[param]['value']},    ")
+                #print(f"{sol.parameters[param]['value']},    ")
             all_values.write('\n')
             all_value_count += 1
         for sol in self.population.children:
@@ -1371,8 +1371,11 @@ class Genetic_Algorithm(object):
 
         #self.population.parents = pool.map(self.crud.evaluator,self.population.parents)
         #self.population.children = pool.map(self.crud.evaluator,self.population.children)
+        # save all param before selection perform
+        opt.record_all_param(self.population,self.generation, flag=True)
         self.population = self.selection.perform(self.population)
         opt.check_best_worst_average(self.population.parents)
+        
         opt.write_track_file(self.population, self.generation)
 
         scrambler = Fixed_Genome_Mutator(1,1,200,self.file_settings)
@@ -1391,13 +1394,15 @@ class Genetic_Algorithm(object):
             all_values = open('all_value_tracker.txt','a')
             for sol in self.population.children:
                 all_values.write(f"{all_value_count},   {sol.name},   ")
-                print(sol.name)
+                #print(sol.name)
                 for param in sol.parameters:
-                    print(f"{sol.parameters[param]['value']},    ")
+                    #print(f"{sol.parameters[param]['value']},    ")
                     all_values.write(f"{sol.parameters[param]['value']},    ")
                 all_values.write('\n')
                 all_value_count += 1
             all_values.close()
+            opt.record_all_param(self.population,self.generation, flag=False)
+
             #self.population.children = pool.map(self.crud.evaluator,self.population.children)
             self.cleanup()
             self.population = self.selection.perform(self.population)
@@ -1431,12 +1436,12 @@ class Genetic_Algorithm(object):
         loading_pattern_tracker.close()
 
         for i in range(self.population.size):
-            foo = self.generate_initial_solutions('initial_parent')
+            foo = self.generate_initial_solutions(f'initial_parent_{i}')
             foo.evaluate()
             self.population.parents.append(foo)
 
         for i in range(self.population.size):
-            foo = self.generate_initial_solutions('initial_child')
+            foo = self.generate_initial_solutions(f'initial_child_{i}')
             foo.evaluate()
             self.population.children.append(foo)
 
@@ -1663,7 +1668,7 @@ class Genetic_Algorithm(object):
         self.population.children = pool.map(test_evaluate_function, self.population.children)
         all_values = open('all_value_tracker.txt','a')
         for sol in self.population.parents:
-            print(sol.name)
+            #print(sol.name)
             if not all_value_count:
                 for param in sol.parameters:
                     all_values.write(f"{param},    ")
