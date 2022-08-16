@@ -1,15 +1,16 @@
 import os
 import sys
 import time
-from turtle import color, pd
 import numpy as np
 import pickle
 import random
 import matplotlib.pyplot as plt
-from sqlalchemy import false
+import shutil
 import copy
+from pathlib import Path
+from simulate import Extractor
 
-class Simulate3_Core_17_17():
+class Simulate3_Core_157():
     """
     Class for the Simulate3 core loading pattern solutions.
 
@@ -29,6 +30,8 @@ class Simulate3_Core_17_17():
         self.core_dict['core_map'], self.core_dict['core_id'] = self.generate_core()
         self.core_dict['Inventory'] = core_param['Inventory']
         self.core_dict['Inventory_Groups'] = core_param['Inventory_Groups']
+        self.core_dict['Parameters'] = core_param['Parameters']
+        self.core_dict['Objectives'] = core_param['Objectives']
         self.random_design()
 
     def generate_core(self):
@@ -45,23 +48,23 @@ class Simulate3_Core_17_17():
 
         Written by Gregory Delipei 7/12/2022
         """
-        core_map = ["R0000","R0001","R0002","R0003","R0004","R0005","R0006","R0007","R0008","R0009","R0010","R0011","R0012","R0013","R0014","R0015","R0016",
-                    "R0100","R0101","R0102","R0103","R0104", "A05" , "A06" , "A07" , "A08" , "A09" , "A10" , "A11" ,"R0112","R0113","R0114","R0115","R0116",
-                    "R0200","R0201","R0202", "B03" , "B04" , "B05" , "B06" , "B07" , "B08" , "B09" , "B10" , "B11" , "B12" , "B13" ,"R0214","R0215","R0216",
-                    "R0300","R0301", "C02" , "C03" , "C04" , "C05" , "C06" , "C07" , "C08" , "C09" , "C10" , "C11" , "C12" , "C13" , "C14" ,"R0315","R0316",
-                    "R0400","R0401", "D02" , "D03" , "D04" , "D05" , "D06" , "D07" , "D08" , "D09" , "D10" , "D11" , "D12" , "D13" , "D14" ,"R0415","R0416",
-                    "R0500", "E01" , "E02" , "E03" , "E04" , "E05" , "E06" , "E07" , "E08" , "E09" , "E10" , "E11" , "E12" , "E13" , "E14" , "E15" ,"R0516",
-                    "R0600", "F01" , "F02" , "F03" , "F04" , "F05" , "F06" , "F07" , "F08" , "F09" , "F10" , "F11" , "F12" , "F13" , "F14" , "F15" ,"R0616",
+        core_map = [  None ,  None ,  None ,  None ,  None ,  None ,"R0006","R0007","R0008","R0009","R0010",  None ,  None ,  None ,  None ,  None ,  None ,
+                      None ,  None ,  None ,  None ,"R0104","R0105","R0106", "A07" , "A08" , "A09" ,"R0110","R0111","R0112",  None ,  None ,  None ,  None ,
+                      None ,  None ,  None ,"R0203","R0204", "B05" , "B06" , "B07" , "B08" , "B09" , "B10" , "B11" ,"R0212","R0213",  None ,  None ,  None ,
+                      None ,  None ,"R0302","R0303", "C04" , "C05" , "C06" , "C07" , "C08" , "C09" , "C10" , "C11" , "C12" ,"R0313","R0314",  None ,  None ,
+                      None ,"R0401","R0402", "D03" , "D04" , "D05" , "D06" , "D07" , "D08" , "D09" , "D10" , "D11" , "D12" , "D13" ,"R0414","R0415",  None ,
+                      None ,"R0501", "E02" , "E03" , "E04" , "E05" , "E06" , "E07" , "E08" , "E09" , "E10" , "E11" , "E12" , "E13" , "E14" ,"R0515",  None ,
+                    "R0600","R0601", "F02" , "F03" , "F04" , "F05" , "F06" , "F07" , "F08" , "F09" , "F10" , "F11" , "F12" , "F13" , "F14" ,"R0615","R0616",
                     "R0700", "G01" , "G02" , "G03" , "G04" , "G05" , "G06" , "G07" , "G08" , "G09" , "G10" , "G11" , "G12" , "G13" , "G14" , "G15" ,"R0716",
                     "R0800", "H01" , "H02" , "H03" , "H04" , "H05" , "H06" , "H07" , "H08" , "H09" , "H10" , "H11" , "H12" , "H13" , "H14" , "H15" ,"R0816",
                     "R0900", "I01" , "I02" , "I03" , "I04" , "I05" , "I06" , "I07" , "I08" , "I09" , "I10" , "I11" , "I12" , "I13" , "I14" , "I15" ,"R0916",
-                    "R1000", "J01" , "J02" , "J03" , "J04" , "J05" , "J06" , "J07" , "J08" , "J09" , "J10" , "J11" , "J12" , "J13" , "J14" , "J15" ,"R1016",
-                    "R1100", "K01" , "K02" , "K03" , "K04" , "K05" , "K06" , "K07" , "K08" , "K09" , "K10" , "K11" , "K12" , "K13" , "K14" , "K15" ,"R1116",
-                    "R1200","R1201", "L02" , "L03" , "L04" , "L05" , "L06" , "L07" , "L08" , "L09" , "L10" , "L11" , "L12" , "L13" , "L14" ,"R1215","R1216",
-                    "R1300","R1301", "M02" , "M03" , "M04" , "M05" , "M06" , "M07" , "M08" , "M09" , "M10" , "M11" , "M12" , "M13" , "M14" ,"R1315","R1316",
-                    "R1400","R1401","R1402", "N03" , "N04" , "N05" , "N06" , "N07" , "N08" , "N09" , "N10" , "N11" , "N12" , "N13" ,"R1414","R1415","R1416",
-                    "R1500","R1501","R1502","R1503","R1504", "O05" , "O06" , "O07" , "O08" , "O09" , "O10" , "O11" ,"R1512","R1513","R1514","R1515","R1516",
-                    "R1600","R1601","R1602","R1603","R1604","R1605","R1606","R1607","R1608","R1609","R1610","R1611","R1612","R1613","R1614","R1615","R1616"]
+                    "R1000","R1001", "J02" , "J03" , "J04" , "J05" , "J06" , "J07" , "J08" , "J09" , "J10" , "J11" , "J12" , "J13" , "J14" ,"R1015","R1016",
+                      None ,"R1101", "K02" , "K03" , "K04" , "K05" , "K06" , "K07" , "K08" , "K09" , "K10" , "K11" , "K12" , "K13" , "K14" ,"R1115",  None ,
+                      None ,"R1201","R1202", "L03" , "L04" , "L05" , "L06" , "L07" , "L08" , "L09" , "L10" , "L11" , "L12" , "L13" ,"R1214","R1215",  None ,
+                      None ,  None ,"R1302","R1303", "M04" , "M05" , "M06" , "M07" , "M08" , "M09" , "M10" , "M11" , "M12" ,"R1313","R1314",  None ,  None ,
+                      None ,  None ,  None ,"R1403","R1404", "N05" , "N06" , "N07" , "N08" , "N09" , "N10" , "N11" ,"R1412","R1413",  None ,  None ,  None ,
+                      None ,  None ,  None ,  None ,"R1504","R1505","R1506", "O07" , "O08" , "O09" ,"R1510","R1511","R1512",  None ,  None ,  None ,  None ,
+                      None ,  None ,  None ,  None ,  None ,  None ,"R1606","R1607","R1608","R1609","R1610",  None ,  None ,  None ,  None ,  None ,  None ]
         core_map = np.array(core_map).reshape((self.nrow,self.ncol))
         core_id = []
         for i in range(self.nrow-1,-1,-1):
@@ -77,7 +80,22 @@ class Simulate3_Core_17_17():
                 f"The selected symmetry ({self.symmetry}) is not valid."
             )
         return(core_map, core_id)
-        
+
+    def get_full_core(self):
+        """
+        Generates the 17x17 full fuel core from symmetry.
+
+        Parameters: None
+    
+        Written by Gregory Delipei 7/24/2022
+        """
+        full_core  = {}
+        for key, value in self.core_dict['fuel'].items():
+            full_core[key]=value['Value']
+            for skey in value['Symmetric_Assemblies']:
+               full_core[skey]=value['Value'] 
+        return(full_core)
+
     def quarter_core(self,core_map,core_id):
         """
         Generates the quarter core symmetry map.
@@ -202,7 +220,9 @@ class Simulate3_Core_17_17():
         """
         fuel_dict={}
         for key, value in core_dict.items():
-            if key[0]=="R":
+            if key is None:
+                continue
+            elif key[0]=="R":
                 continue
             else:
                 fuel_dict[key]=value
@@ -382,12 +402,18 @@ class Simulate3_Core_17_17():
                         if loc_symmetry + iass_indesign <= iass_limit:
                             selected_choice = iass
                             avail_choices.append(selected_choice)
-                    elif loc_group_limit=='Max' and key_group_limit=='Max':
+                    elif loc_group_limit=='Max' and key_group_limit=='Max' and key_group!=loc_group:
                         iass_limit = self.core_dict['Inventory'][iass]['Max_Limit']
                         iass_indesign = self.core_dict['Inventory'][iass]['In_Design']
                         group_limit = value_group['Limit_Value']
                         group_indesign = self.get_group_indesign(key_group)
                         if (loc_symmetry + iass_indesign <= iass_limit) and (loc_symmetry + group_indesign <= group_limit):
+                            selected_choice = iass
+                            avail_choices.append(selected_choice)
+                    elif loc_group_limit=='Max' and key_group_limit=='Max' and key_group==loc_group:
+                        iass_limit = self.core_dict['Inventory'][iass]['Max_Limit']
+                        iass_indesign = self.core_dict['Inventory'][iass]['In_Design']
+                        if (loc_symmetry + iass_indesign <= iass_limit):
                             selected_choice = iass
                             avail_choices.append(selected_choice)
             change_act[key]=avail_choices
@@ -496,7 +522,9 @@ class Simulate3_Core_17_17():
         nrefl_sym = 0
         for key, value in self.core_dict['core'].items():
             symmetry_multiplier = len(self.core_dict['core'][key]['Symmetric_Assemblies'])+1
-            if key[0]=='R':
+            if key is None:
+                continue
+            elif key[0]=='R':
                 nrefl_sym+=1
                 nrefl+=symmetry_multiplier
             else:
@@ -505,6 +533,126 @@ class Simulate3_Core_17_17():
         return(nfuel,nfuel_sym,nrefl,nrefl_sym)
 
         return
+
+    def evaluate(self, ldir='./run', fname='solution'):
+        """
+        Creates the SIMULATE input deck, runs SIMULATE and retrieves the results and the cost.
+
+        Parameters: 
+        loc: String - Directory of execution
+        fname: String - File name
+
+        Written by Gregory Delipei 7/29/2022
+        """
+
+        full_core = self.get_full_core()
+
+        # Create SIMULATE INPUT DECK
+
+        pwd = Path(os.getcwd())
+        if not os.path.exists(ldir):
+            os.makedirs(ldir)
+        else:
+            shutil.rmtree(ldir, ignore_errors=True)
+            os.makedirs(ldir)
+        
+        shutil.copyfile(self.core_dict['Parameters']['Restart'], ldir +"/" + self.core_dict['Parameters']['Restart'])
+        shutil.copyfile(self.core_dict['Parameters']['CASMO_XS'], ldir +"/" + self.core_dict['Parameters']['CASMO_XS'])
+        os.chdir(ldir)
+        filename = fname+'.inp'
+        with open(filename, 'a') as ofile:
+            str_res = "\'RES\' " + "\'" + self.core_dict['Parameters']['Restart'] + "\' " +  "0.0/ \n"
+            ofile.write(str_res)
+            ofile.write("\n")
+            
+            irow = int(self.nrow/2)
+            icol = int(self.ncol/2)
+            for i in range(int(np.ceil(self.nrow/2))):
+                str_lp = "\'FUE.TYP\'  " + str(i+1) + ", " 
+                for j in range(int(np.ceil(self.nrow/2))):
+                    loc=self.core_dict['core_map'][irow+i,icol+j]
+                    if loc is None:
+                        tag = "0"
+                    elif loc[0]=="R":
+                        tag = "1"
+                    else:
+                        val = full_core[loc]
+                        tag = self.core_dict['Inventory'][val]['Tag']
+                    str_lp = str_lp + tag
+                    if(j==int(np.ceil(self.nrow/2)-1)):
+                         str_lp = str_lp + '/\n'
+                    else:
+                        str_lp = str_lp + " "
+                ofile.write(str_lp)
+
+            ofile.write("\n")
+            ofile.write("\n")
+            str_cope = f"\'COR.OPE\' " + str(self.core_dict['Parameters']['Thermal_Power']) + ", " + str(self.core_dict['Parameters']['Core_Flow'])+ ", "  + str(self.core_dict['Parameters']['Pressure']) + "/ \n" 
+            ofile.write(str_cope)
+            str_ctin = f"\'COR.TIN\' " + str(self.core_dict['Parameters']['Inlet_Temperature']) + "/ \n" 
+            ofile.write(str_ctin)
+            ofile.write("\n")
+
+            str_depsta = "\'DEP.STA\' \'AVE\' 0.0 0.5 1 2 -1 20 / \n"
+            ofile.write(str_depsta)
+            str_com = "\'COM\' The following performs an automated search on cycle length at a boron concentration of 10 ppm \n"
+            ofile.write(str_com)
+            str_itsrc= "\'ITE.SRC\' \'SET\' \'EOLEXP\' , , 0.02, , , , , , \'MINBOR\' 10., , , , , 4, 4, , , / \n"
+            ofile.write(str_itsrc)
+            str_sta = "\'STA\'/ \n"
+            ofile.write(str_sta)
+            str_end = "\'END\'/ \n"
+            ofile.write(str_end)
+
+        # Run SIMULATE INPUT DECK
+        sim3_maxruns = 100
+        s3cmd = "simulate3 " + filename
+        for i in range(sim3_maxruns):
+            try:
+                os.system(s3cmd)
+                break
+            except:
+                print(f"Failed SIMULATE3 run {i+1}")
+
+        
+        
+        # Get Results
+        ofile = fname + '.out'
+        res=self.get_sim3_results(ofile)
+        self.core_dict["Results"] = res
+        fit=self.get_fitness(self.core_dict["Results"])
+        self.core_dict["Results"]["Fitness"] = fit
+        os.chdir(pwd)
+
+    def get_sim3_results(self,ofile):
+        res = {}
+        file_ = open(ofile)
+        file_lines = file_.readlines()
+        file_.close()
+
+        EFPD_list = Extractor.efpd_list(file_lines)
+        res["Cycle_Length"] = EFPD_list[-1]
+        
+        FDH_list = Extractor.FDH_list(file_lines)
+        res["Fdh"] = max(FDH_list)
+           
+        peak_list = Extractor.pin_peaking_list(file_lines)
+        res["Fq"] = max(peak_list)
+            
+        boron_list = Extractor.boron_list(file_lines)
+        res["Max_Boron"] = max(boron_list)
+
+        return(res)
+    
+    def get_fitness(self,res):
+        
+        fit = 0 
+        fit += res["Cycle_Length"]*self.core_dict['Objectives']["Cycle_Length"]
+        fit += max(0,res["Max_Boron"]-1300)*self.core_dict['Objectives']["Max_Boron"]
+        fit += max(0,res["Fdh"]-1.48)*self.core_dict['Objectives']["Fdh"]
+        fit += max(0,res["Fq"]-2.10)*self.core_dict['Objectives']["Fq"]
+    
+        return(fit)
 
 
 if __name__ == "__main__":
@@ -539,37 +687,52 @@ if __name__ == "__main__":
     """
 
 
-    # core_inventory={'FE500': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'E500'},
-    #                 'FE450Gd8': {'Max_Limit':48, 'In_Design':0, 'Cost':0, 'Tag':'FE450Gd8'},
-    #                 'FE450Bp8': {'Max_Limit':48, 'In_Design':0, 'Cost':0, 'Tag':'FE450Bp8'},
-    #                 'FE340Bp4': {'Max_Limit':48, 'In_Design':0, 'Cost':0, 'Tag':'FE340Bp4'},
-    #                 'FE340Gd4': {'Max_Limit':48, 'In_Design':0, 'Cost':0, 'Tag':'FE340Gd4'},
-    #                 'RB1': {'Max_Limit':45, 'In_Design':0, 'Cost':0, 'Tag':'RB1'},
-    #                 'RB2': {'Max_Limit':45, 'In_Design':0, 'Cost':0, 'Tag':'RB2'},
-    #                 'RB3': {'Max_Limit':40, 'In_Design':0, 'Cost':0, 'Tag':'RB3'}
-    #                 }
-    # core_inventory_groups={'Fresh': {'Values':['FE500','FE450Gd8','FE450Bp8','FE340Bp4','FE340Gd4'], 'Limit': 'Exact', 'Limit_Value':84},
-    #                     'Reload': {'Values':['RB1','RB2','RB3'], 'Limit': 'Max', 'Limit_Value':200 }
-    #                     }
+    core_inventory={'FE200': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'2'},
+                    'FE250': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'3'},
+                    'FE250Bp': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'4'},
+                    'FE320': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'5'},
+                    'FE320Bp': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'6'},
+                    }
+    core_inventory_groups={'E200': {'Values':['FE200'], 'Limit': 'Max', 'Limit_Value':88},
+                           'E250': {'Values':['FE250','FE250Bp'], 'Limit': 'Max', 'Limit_Value':56},
+                           'E320': {'Values':['FE320','FE320Bp'], 'Limit': 'Max', 'Limit_Value':64} 
+                        }
+    pwr_param = {'Restart':'cycle1.res',
+                 'CASMO_XS':'cms.pwr-all.lib',
+                 'Thermal_Power': 100.0,
+                 'Core_Flow': 100.0,
+                 'Pressure': 2250.0,
+                 'Inlet_Temperature': 550.0 }
 
-    # core_param={'Symmetry': 'Octant',
-    #             'Symmetry_Axes': ((8,8),(16,16),(16,8)),
-    #             'Inventory': core_inventory,
-    #             'Inventory_Groups': core_inventory_groups}
+    objectives = {'Cycle_Length':1.0,
+                 'Fdh': -400,
+                 'Fq': -400,
+                 'Max_Boron': -1}
 
-    # at = Simulate3_Core_17_17(core_param)
+    core_param={'Symmetry': 'Octant',
+                'Symmetry_Axes': ((8,8),(16,16),(16,8)),
+                'Inventory': core_inventory,
+                'Inventory_Groups': core_inventory_groups,
+                'Parameters':pwr_param,
+                'Objectives': objectives}
+
+    at = Simulate3_Core_157(core_param)
     # at.plot_design('core_plot.png')
 
-    # sum_fresh=0
-    # for iass in core_inventory_groups['Fresh']['Values']:
-    #     sum_fresh+=at.core_dict["Inventory"][iass]['In_Design']
-    # sum_reload=0
-    # for iass in core_inventory_groups['Reload']['Values']:
-    #     sum_reload+=at.core_dict["Inventory"][iass]['In_Design']
-    # print(f"Sum of Fresh: {sum_fresh}")
-    # print(f"Sum of Reload: {sum_reload}")
+    # sum_e200=0
+    # for iass in core_inventory_groups['E200']['Values']:
+    #     sum_e200+=at.core_dict["Inventory"][iass]['In_Design']
+    # sum_e250=0
+    # for iass in core_inventory_groups['E250']['Values']:
+    #     sum_e250+=at.core_dict["Inventory"][iass]['In_Design']
+    # sum_e320=0
+    # for iass in core_inventory_groups['E320']['Values']:
+    #     sum_e320+=at.core_dict["Inventory"][iass]['In_Design']
+    # print(f"Sum of E200: {sum_e200}")
+    # print(f"Sum of E250: {sum_e250}")
+    # print(f"Sum of E320: {sum_e320}")
 
-    # loc = 'O11'
+    # loc = 'N11'
     # act=at.get_actions()
     # sum_act=len(act['Exchange'][loc]) + len(act['Change'][loc])
     # print(f"Sum of Actions for {loc}: {sum_act}")
@@ -586,24 +749,19 @@ if __name__ == "__main__":
     # at.plot_design('core_plot_act.png')
     # print(f"Location In Design after action: {at.core_dict['Inventory'][loc_value]['In_Design']}")
     # print(f"Action In Design after action: {at.core_dict['Inventory'][act['Change'][loc][0]]['In_Design']}")
+    # act=at.get_actions()
+    # sum_e200=0
+    # for iass in core_inventory_groups['E200']['Values']:
+    #     sum_e200+=at.core_dict["Inventory"][iass]['In_Design']
+    # sum_e250=0
+    # for iass in core_inventory_groups['E250']['Values']:
+    #     sum_e250+=at.core_dict["Inventory"][iass]['In_Design']
+    # sum_e320=0
+    # for iass in core_inventory_groups['E320']['Values']:
+    #     sum_e320+=at.core_dict["Inventory"][iass]['In_Design']
+    # print(f"Sum of E200: {sum_e200}")
+    # print(f"Sum of E250: {sum_e250}")
+    # print(f"Sum of E320: {sum_e320}")
 
-core_inventory={'FE500': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'E500'},
-                'FE450Gd8': {'Max_Limit':48, 'In_Design':0, 'Cost':0, 'Tag':'FE450Gd8'},
-                'FE450Bp8': {'Max_Limit':48, 'In_Design':0, 'Cost':0, 'Tag':'FE450Bp8'},
-                'FE340Bp4': {'Max_Limit':48, 'In_Design':0, 'Cost':0, 'Tag':'FE340Bp4'},
-                'FE340Gd4': {'Max_Limit':48, 'In_Design':0, 'Cost':0, 'Tag':'FE340Gd4'},
-                'RB1': {'Max_Limit':45, 'In_Design':0, 'Cost':0, 'Tag':'RB1'},
-                'RB2': {'Max_Limit':45, 'In_Design':0, 'Cost':0, 'Tag':'RB2'},
-                'RB3': {'Max_Limit':40, 'In_Design':0, 'Cost':0, 'Tag':'RB3'}
-                }
-core_inventory_groups={'Fresh': {'Values':['FE500','FE450Gd8','FE450Bp8','FE340Bp4','FE340Gd4'], 'Limit': 'Exact', 'Limit_Value':84},
-                    'Reload': {'Values':['RB1','RB2','RB3'], 'Limit': 'Max', 'Limit_Value':200 }
-                    }
-
-core_param={'Symmetry': 'Octant',
-            'Symmetry_Axes': ((8,8),(16,16),(16,8)),
-            'Inventory': core_inventory,
-            'Inventory_Groups': core_inventory_groups}
-
-at = Simulate3_Core_17_17(core_param)
-at.plot_design('core_plot.png')
+    at.evaluate()
+    print(at.core_dict['Results'])
