@@ -1,0 +1,115 @@
+'DIM.PWR' 15 /
+'DIM.CAL' 24, 2 /
+'DIM.DEP' 'EXP' 'SAM' 'HBOR' 'HTMO' 'PIN' 'EBP' 'HTF' /     
+
+'FUE.LAB',6/
+1   1                             L-13   K-14   G-02   N-08   J-02   F-14   E-13                               
+2   1               TYPE24 L-07   TYPE21 TYPE24 TYPE24 TYPE24 TYPE24 TYPE24 TYPE21 E-07   TYPE24               
+3   1        TYPE24 TYPE24 TYPE21 M-07   N-04   K-07   TYPE24 K-09   C-04   M-09   TYPE21 TYPE24 TYPE24        
+4   1        J-05   TYPE21 TYPE21 B-12   N-02   TYPE25 C-13   TYPE25 C-02   P-12   TYPE21 TYPE21 G-05          
+5   1 C-05   TYPE21 J-12   D-14   M-12   TYPE24 TYPE22 H-01   TYPE22 TYPE24 D-12   M-14   G-12   TYPE21 N-05   
+6   1 B-06   TYPE24 M-03   P-03   TYPE24 G-09   L-14   B-08   P-05   G-07   TYPE24 B-03   D-03   TYPE24 P-06   
+7   1 P-09   TYPE24 J-10   TYPE25 TYPE22 E-14   TYPE21 J-08   TYPE21 P-11   TYPE22 TYPE25 G-10   TYPE24 B-09   
+8   1 H-13   TYPE24 TYPE24 C-03   R-08   H-02   H-09   C-06   G-08   P-08   A-08   N-13   TYPE24 TYPE24 C-08   
+9   1 P-07   TYPE24 F-09   TYPE25 TYPE22 B-05   TYPE21 H-07   TYPE21 L-02   TYPE22 TYPE25 F-07   TYPE24 B-07   
+10  1 B-10   TYPE24 M-13   P-13   TYPE24 J-09   B-11   H-14   E-02   J-07   TYPE24 B-13   D-13   TYPE24 P-10   
+11  1 C-11   TYPE21 D-09   D-02   D-04   TYPE24 TYPE22 H-15   TYPE22 TYPE24 M-04   M-02   D-07   TYPE21 N-11   
+12  1        J-11   TYPE21 TYPE21 B-04   N-14   TYPE25 N-03   TYPE25 C-14   P-04   TYPE21 TYPE21 G-11          
+13  1        TYPE24 TYPE24 TYPE21 G-04   N-12   G-06   TYPE24 J-06   C-12   J-04   TYPE21 TYPE24 TYPE24        
+14  1               TYPE24 L-09   TYPE21 TYPE24 TYPE24 TYPE24 TYPE24 TYPE24 TYPE21 E-09   TYPE24               
+15  1                             L-03   K-02   G-14   H-03   J-14   F-02   E-03                               
+ 0  0
+
+'FUE.NEW', 'TYPE24', DD300, 32, 24,,,5/
+'FUE.NEW', 'TYPE21', AA300, 16, 21,,,5/
+'FUE.NEW', 'TYPE24', DDD300, 12, 24,,,5/
+'FUE.NEW', 'TYPE21', AAA300, 8, 21,,,5/
+'FUE.NEW', 'TYPE25', EE300, 8, 25,,,5/
+'FUE.NEW', 'TYPE22', BB300, 8, 22,,,5/
+
+
+'RES' '../s3.pwr.uo2.c02.depl.res' 20000. /
+
+'BAT.LAB' 5, 'BAT05' /
+
+'SEG.LIB' 19 'WB370I104R04' / 
+'SEG.DAT' 19 , , , 0, 4 /
+
+'SEG.LIB' 20 'WB370I104R08' / 
+'SEG.DAT' 20 , , , 0, 8 /
+
+'SEG.LIB' 21 'WB370I000R04' / 
+'SEG.DAT' 21 , , , 0, 4 /
+
+'SEG.LIB' 22 'WB370I000R08' / 
+'SEG.DAT' 22 , , , 0, 8 /
+
+'SEG.LIB' 23 'WB261C000' / 
+'SEG.DAT' 23 , , , 0, 0 /
+
+'SEG.LIB' 24 'WB380I000C00' / 
+'SEG.DAT' 24 , , , 0, 0 /
+
+'SEG.LIB' 25 'WB440I000C00' / 
+'SEG.DAT' 25 , , , 0, 0 /
+
+'SEG.LIB' 26 'WB380I104C00' / 
+'SEG.DAT' 26 , , , 0, 0 /
+
+'SEG.LIB' 27 'WB380I128W08' / 
+'SEG.DAT' 27 , , , 24, 24 /
+
+'SEG.LIB' 90 'WB380I000W08' / 
+'SEG.DAT' 90 , , , 24, 24 /
+
+'SEG.LIB' 28 'WB440I016C00' / 
+'SEG.DAT' 28 , , , 0, 0 /
+
+'SEG.LIB' 29 'WB440I128C00' / 
+'SEG.DAT' 29 , , , 0, 0 /
+
+'SEG.LIB' 30 'WB440I128W08' / 
+'SEG.DAT' 30 , , , 24, 24 /
+
+'SEG.LIB' 31 'WB440I000W08' / 
+'SEG.DAT' 31 , , , 24, 24 /
+
+'FUE.ZON' 21, 1, '5AI104C00' 03 0.00 23 15.24 24 30.48 26 335.28 24 350.52 23 365.76  02/ 
+'FUE.ZON' 22, 1, '5AI128W08' 03 0.00 23 15.24 90 30.48 27 335.28 90 350.52 23 365.76  02/ 
+'FUE.ZON' 23, 1, '5BI016C00' 03 0.00 23 15.24 25 30.48 28 335.28 25 350.52 23 365.76  02/ 
+'FUE.ZON' 24, 1, '5BI128C00' 03 0.00 23 15.24 25 30.48 29 335.28 25 350.52 23 365.76  02/ 
+'FUE.ZON' 25, 1, '5BI128W08' 03 0.00 23 15.24 31 30.48 30 335.28 31 350.52 23 365.76  02/ 
+
+'CRD.BNK' 230 7*230 /
+
+'ITE.BOR' 2000 /
+
+'COR.OPE' 100.0, 100.0, 2250.0/
+'COR.TIN' 557.0/ 
+
+'DEP.UNI' 'GWD/MT' /
+'DEP.STA' 'BOS' .000/
+'DEP.FPD' 2 .5 /
+'DEP.CYC' 'CYCLE03' 0.0 03/
+
+'STA'/
+
+'DEP.STA' 'AVE' 0.0 -0.5 2 -1.5 30 /
+
+'COM'             SRC PRMA   START VAL    EPS    GRP  PAS  TRGT  TRVAL  TREPS     TRG
+'COM'                         (STEPS)   (STEPS)
+'COM'                 v         v        v        v    v    v      v      v        v
+'COM' -----------+----------+--------+--------+------+----+-----+------+--------+------+
+'ITE.SRC'  'SET'    'EOLEXP' ,        ,   0.02 ,      ,    ,     ,      ,        , 'MINBOR'
+     10         ,          ,        ,        ,      , 4  ,  4  ,      ,        ,      /
+'COM' -----------+----------+--------+--------+------+----+-----+------+--------+------+
+'COM'                 ^         ^        ^        ^     ^    ^     ^
+'COM'              TRGVAL      SP1      SP2      SP3  SP4   SP5   SP6
+
+'FUE.INI' 'JILAB' /
+'PRI.STA' '2EXP' '2RPF' /
+
+'WRE' 's3.pwr.uo2.c03.depl.res' 0.0 8.0 20000. /
+
+'STA' /
+'END' /

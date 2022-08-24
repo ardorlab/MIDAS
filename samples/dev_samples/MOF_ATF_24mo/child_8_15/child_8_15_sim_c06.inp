@@ -1,0 +1,66 @@
+'DIM.PWR' 15 /
+'DIM.CAL' 24, 2 /
+'DIM.DEP' 'EXP' 'SAM' 'HBOR' 'HTMO' 'PIN' 'EBP' 'HTF' /     
+
+'FUE.LAB',6/
+1   1                             N-04   M-07   L-14   J-08   P-05   M-09   C-04                               
+2   1               TYPE21 C-06   G-02   TYPE24 TYPE21 TYPE21 TYPE21 TYPE24 J-02   N-06   TYPE21               
+3   1        TYPE21 TYPE21 TYPE21 K-14   TYPE21 B-12   TYPE21 P-12   TYPE21 F-14   TYPE21 TYPE21 TYPE21        
+4   1        K-13   TYPE21 N-08   K-07   N-02   L-13   TYPE21 E-13   C-02   K-09   H-13   TYPE21 F-13          
+5   1 M-03   P-09   B-06   J-10   TYPE21 TYPE25 TYPE22 C-13   TYPE22 TYPE25 TYPE21 G-10   P-06   B-09   D-03   
+6   1 J-12   TYPE24 TYPE21 P-03   TYPE25 H-01   TYPE21 M-12   TYPE21 R-08   TYPE25 B-03   TYPE21 TYPE24 G-12   
+7   1 E-14   TYPE21 D-14   C-05   TYPE22 TYPE21 L-07   B-08   E-07   TYPE21 TYPE22 N-05   M-14   TYPE21 P-11   
+8   1 H-09   TYPE21 TYPE21 TYPE21 C-03   D-12   H-02   G-09   P-08   D-04   N-13   TYPE21 TYPE21 TYPE21 G-08   
+9   1 B-05   TYPE21 D-02   C-11   TYPE22 TYPE21 J-05   H-14   G-05   TYPE21 TYPE22 N-11   M-02   TYPE21 L-02   
+10  1 D-09   TYPE24 TYPE21 P-13   TYPE25 A-08   TYPE21 M-04   TYPE21 H-15   TYPE25 B-13   TYPE21 TYPE24 D-07   
+11  1 M-13   P-07   B-10   F-09   TYPE21 TYPE25 TYPE22 N-03   TYPE22 TYPE25 TYPE21 F-07   P-10   B-07   D-13   
+12  1        K-03   TYPE21 C-08   G-06   N-14   L-03   TYPE21 E-03   C-14   J-06   H-03   TYPE21 F-03          
+13  1        TYPE21 TYPE21 TYPE21 K-02   TYPE21 B-04   TYPE21 P-04   TYPE21 F-02   TYPE21 TYPE21 TYPE21        
+14  1               TYPE21 C-10   G-14   TYPE24 TYPE21 TYPE21 TYPE21 TYPE24 J-14   N-10   TYPE21               
+15  1                             N-12   G-04   B-11   H-07   E-02   J-04   C-12                               
+ 0  0
+
+'FUE.NEW', 'TYPE21', AA300, 40, 21,,,5/
+'FUE.NEW', 'TYPE24', DD300, 8, 24,,,5/
+'FUE.NEW', 'TYPE21', AAA300, 20, 21,,,5/
+'FUE.NEW', 'TYPE25', EE300, 8, 25,,,5/
+'FUE.NEW', 'TYPE22', BB300, 8, 22,,,5/
+
+
+'RES'  's3.pwr.uo2.c05.depl.res' 20000. /
+
+'BAT.LAB' 8, 'BAT08' /
+
+'CRD.BNK' 230 7*230 /
+
+'ITE.BOR' 2000 /
+
+'COR.OPE' 100.0, 100.0, 2250.0/
+'COR.TIN' 557.0/ 
+
+'DEP.UNI' 'GWD/MT' /
+'DEP.STA' 'BOS' .000/
+'DEP.FPD' 2 .5 /
+'DEP.CYC' 'CYCLE06' 0.0 06/
+
+'STA'/
+
+'DEP.STA' 'AVE' 0.0 -0.5 2 -1.5 30 /
+
+'COM'             SRC PRMA   START VAL    EPS    GRP  PAS  TRGT  TRVAL  TREPS     TRG
+'COM'                         (STEPS)   (STEPS)
+'COM'                 v         v        v        v    v    v      v      v        v
+'COM' -----------+----------+--------+--------+------+----+-----+------+--------+------+
+'ITE.SRC'  'SET'    'EOLEXP' ,        ,   0.02 ,      ,    ,     ,      ,        , 'MINBOR'
+     10         ,          ,        ,        ,      , 4  ,  4  ,      ,        ,      /
+'COM' -----------+----------+--------+--------+------+----+-----+------+--------+------+
+'COM'                 ^         ^        ^        ^     ^    ^     ^
+'COM'              TRGVAL      SP1      SP2      SP3  SP4   SP5   SP6
+
+'FUE.INI' 'JILAB' /
+'PRI.STA' '2EXP' '2RPF' /
+
+'WRE' 's3.pwr.uo2.c06.depl.res' 0.0 8.0 20000. /
+
+'STA' /
+'END' /
