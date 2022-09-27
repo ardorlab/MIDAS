@@ -1,8 +1,13 @@
-This is the Modular Optimization Framework repository. It utilizes inheritance, object-oriented, and functional programming to
-create a simple, robust tool for solving optimization problems. It has been applied primarily to nuclear engineering design problems. 
 
 
 # MOF: Modular Optimization Framework
+
+
+![MOF logo](img/mof.JPG)
+
+Welcome to the Modular Optimization Framework repository. MOF utilizes inheritance, object-oriented, and functional programming to
+create a simple, robust tool for solving optimization problems. It has been applied primarily to nuclear engineering design problems.
+
 
 MOF is designed to provide users with a variety of optimization methodologies to solve opimization problems with a focus on nuclear engineering design problems. Containing multiple optimization methodologies in a single package allows for the reuse of code in multiple ways leading to a shorter, simpler, and more versatile optimization package.
 
@@ -29,7 +34,7 @@ required dependencies entering the following commands:
 	
 	conda install h5py
 
-    git clone https://github.com/gkdelipei/MOF.git
+    git clone https://github.com/ardorlab/MOF.git
 
 Congratulations. The code is now installed in your local machine.
   
@@ -231,8 +236,6 @@ The repository is structured in the following way:
   * sample_5: Third Cycle Core Loading Pattern Optimization with SIMULATE3. Simulated annealing is used with 20 iterations.
   * dev_samples: Sample cases under development and not fully functional yet.
 
-* rl_dev: Directory containing under development reinforcement learning optimization files. This is not functional yet. This folder will be deleted once reinforcement learning is integrated in the main MOF.
-
 * documentation: Directory including all additional documentation.
 
 * casmo.py: Python file that handles CASMO Lattice calculations evaluation and data extraction.
@@ -254,4 +257,10 @@ The repository is structured in the following way:
 * solution_types.py: Python file for storing the solutions of the optimization together with some usefull functions.
 
 * submission_script.sh: Bash file example for running MOF through SLURM on the RDFMG cluster.
+
+# Resources
+
+For theory and applications, refer to https://doi.org/10.48550/arXiv.2204.00141.
+
+
 
