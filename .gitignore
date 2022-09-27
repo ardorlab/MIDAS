@@ -1,11 +1,43 @@
-# ignore sample results
+# samples
+
 
 samples/sample_1/*
 !samples/sample_1/casmo_file_data
 !samples/sample_1/casmo_moogle_input.yaml
 !samples/sample_1/run.sh
-!samples/sample_1/output.txt
-# ignore rl_dev
-rl_dev
 
+samples/sample_2/*
+!samples/sample_2/cms.pwr-all.lib
+!samples/sample_2/cycle1.res
+!samples/sample_2/ga_ne_512_project.yaml
+!samples/sample_2/run.sh
+
+samples/sample_3/*
+!samples/sample_3/cms.pwr-all.lib
+!samples/sample_3/cycle1.res
+!samples/sample_3/sa_ne_512_project.yaml
+!samples/sample_3/run.sh
+
+samples/sample_4/*
+!samples/sample_4/pwr.nnnewpulledbp.lib
+!samples/sample_4/mof_cycle_3.res
+!samples/sample_4/cycle_3_crud.yaml
+!samples/sample_4/run.sh
+
+samples/sample_5/*
+!samples/sample_5/pwr.nnnewpulledbp.lib
+!samples/sample_5/mof_cycle_3.res
+!samples/sample_5/sa_cycle_3_crud.yaml
+!samples/sample_5/run.sh
+
+
+# rl_dev
+
+rl_dev/prelim_test/*
+rl_dev/test2/*
+rl_dev/test3/*
+rl_dev/cnp_framatome/*
+
+
+# else
 __pycache__/
