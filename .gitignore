@@ -34,6 +34,10 @@ samples/sample_5/*
 # rl_dev
 
 rl_dev/prelim_test/*
+!rl_dev/prelim_test/*.py
+!rl_dev/prelim_test/*.yml
+!rl_dev/prelim_test/*.yaml
+
 rl_dev/test2/*
 rl_dev/test3/*
 
