@@ -39,7 +39,14 @@ rl_dev/prelim_test/*
 !rl_dev/prelim_test/*.yaml
 
 rl_dev/test2/*
+!rl_dev/test2/*.py
+!rl_dev/test2/*.yml
+!rl_dev/test2/*.yaml
+
 rl_dev/test3/*
+!rl_dev/test3/*.py
+!rl_dev/test3/*.yml
+!rl_dev/test3/*.yaml
 
 
 # else
