@@ -1,3 +1,9 @@
-# ignore 
+# ignore sample results
 
-__pycache__/
+samples/sample_1/*
+!samples/sample_1/casmo_file_data
+!samples/sample_1/casmo_moogle_input.yaml
+!samples/sample_1/run.sh
+
+# ignore rl_dev
+rl_dev
