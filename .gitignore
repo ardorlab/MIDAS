@@ -7,3 +7,5 @@ samples/sample_1/*
 
 # ignore rl_dev
 rl_dev
+
+__pycache__/
