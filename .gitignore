@@ -4,7 +4,7 @@ samples/sample_1/*
 !samples/sample_1/casmo_file_data
 !samples/sample_1/casmo_moogle_input.yaml
 !samples/sample_1/run.sh
-
+!samples/sample_1/output.txt
 # ignore rl_dev
 rl_dev
 
