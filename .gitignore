@@ -33,27 +33,15 @@ samples/sample_5/*
 
 # rl_dev
 
-rl_dev/prelim_test/*
-!rl_dev/prelim_test/*.py
-!rl_dev/prelim_test/*.yml
-!rl_dev/prelim_test/*.yaml
-!rl_dev/prelim_test/cms.pwr-all.lib
-!rl_dev/prelim_test/cycle1.res
-
-rl_dev/test2/*
-!rl_dev/test2/*.py
-!rl_dev/test2/*.yml
-!rl_dev/test2/*.yaml
-!rl_dev/test2/cms.pwr-all.lib
-!rl_dev/test2/cycle1.res
-
-rl_dev/test3/*
-!rl_dev/test3/*.py
-!rl_dev/test3/*.yml
-!rl_dev/test3/*.yaml
-!rl_dev/test3/cms.pwr-all.lib
-!rl_dev/test3/cycle1.res
-
 
 # else
 __pycache__/
+run/
+*.png
+run1/
+run2/
+monitor*
+tensorboard*
+sac*
+ppo*
+a2c*
