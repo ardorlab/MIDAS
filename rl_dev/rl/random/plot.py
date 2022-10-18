@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 import seaborn as sns
 
-fitness=np.loadtxt("random.txt",skiprows=1)
+fitness=np.loadtxt("monitor_rnd/random.txt",skiprows=1)
 
 
 sns.set_style('whitegrid')
