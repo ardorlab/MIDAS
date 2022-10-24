@@ -11,7 +11,7 @@ from pathlib import Path
 sys.path.append('/home/gkdelipe/codes/mof/MOF/')
 
 from simulate import Extractor
-from rl_dev.cnp_framatome.games.pwr_157 import Simulate3_Core_157
+from rl_dev.games.pwr_157 import Simulate3_Core_157
 
 # Test basic game implementation, including available actions
 
@@ -66,10 +66,10 @@ act=at.get_actions()
 sum_act=len(act['Exchange'][loc]) + len(act['Change'][loc])
 print(f"Sum of Actions for {loc}: {sum_act}")
 
-loc = 'K10'
-sact={'Type': 'Change',
+loc2 = 'K10'
+sact={'Type': 'Exchange',
         'Location': loc,
-        'Value': act['Change'][loc][0]}
+        'Value': loc2}
 
 loc_value = at.core_dict['core'][loc]['Value']
 print(f"Location In Design before action: {at.core_dict['Inventory'][loc_value]['In_Design']}")

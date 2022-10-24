@@ -9,7 +9,7 @@ from pathlib import Path
 import yaml 
 sys.path.append('/home/gkdelipe/codes/mof/MOF/')
 
-from rl_dev.cnp_framatome.games.pwr_157 import Simulate3_Core_157
+from rl_dev.games.pwr_157 import Simulate3_Core_157
 
 # LCOE calculation for specific core loading pattern
 # Both Once-Through and Twice-Through cycles are supported.
