@@ -92,7 +92,7 @@ class Solution(object):
 
         Written by Brian Andersen. 1/7/2019
         """
-        casmo_keys = ['max_kinf','peak_kinf','eoc_kinf','peak_pin_power',
+        lattice_keys = ['max_kinf','peak_kinf','eoc_kinf','peak_pin_power',
                       'enrichment','input_enrichment']
         param_list = []
         for param in self.parameters:
@@ -107,8 +107,8 @@ class Solution(object):
         help_ += ".\n"
         help_ += "The most likely error is an incorrect key.\n"
         
-        help_ += "Supported parameter keys for casmo lattices are:\n"
-        for par in casmo_keys:
+        help_ += "Supported parameter keys for fuel assembly lattices are:\n"
+        for par in lattice_keys:
             help_ += "{}\n".format(par)
 
         raise ValueError(help_)
@@ -198,13 +198,13 @@ def return_triangular_string(list_):
         if type(item) is str:
             entry = item
         elif type(item) == list:
-            print_line = "Function casmo_simulate_functions.return_triangular_string does not accept lists as an indice in the triangle"
+            print_line = "The ncsu lattice simulator function does not accept lists as an indice in the triangle"
             raise TypeError(print_line)
         elif type(item) == set:
-            print_line = "Function casmo_simulate_functions.return_triangular_string does not accept sets as an indice in the triangle"
+            print_line = "The ncsu lattice simulator function does not accept sets as an indice in the triangle"
             raise TypeError(print_line)
         elif type(item) == dict:
-            print_line = "Function casmo_simulate_functions.return_triangular_string does not accept dictionaries as an indice in the triangle"
+            print_line = "The ncsu lattice simulator function does not accept dictionaries as an indice in the triangle"
             raise TypeError(print_line)
         else:             
             entry = str(item)

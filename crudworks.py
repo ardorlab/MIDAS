@@ -578,7 +578,7 @@ class CRUD_Predictor(object):
         """
         Predicts the crud distribution based on the differences in pin power, boron, and cycle exposures.
         Note nickel particulate concentration has to be provided by the user in the input file, as
-        it doesn't come from the SIMULATE output file. 
+        it doesn't come from the NCSU core simulator output file. 
         
         Written by Brian Andersen 11/2/2020.
         """
@@ -608,7 +608,7 @@ class CRUD_Predictor(object):
         """
         Predicts the boron distribution based on the differences on the CRUD distribution, boron, and cycle exposures.
         Note nickel particulate concentration has to be provided by the user in the input file, as
-        it doesn't come from the SIMULATE output file. 
+        it doesn't come from the NCSU core simulator output file. 
 
         Written by Brian Andersen 11/2/2020.
         """
@@ -1065,7 +1065,7 @@ class Predictor(object):
         """
         Predicts the crud distribution based on the differences in pin power, boron, and cycle exposures.
         Note nickel particulate concentration has to be provided by the user in the input file, as
-        it doesn't come from the SIMULATE output file. 
+        it doesn't come from the NCSU core simulator output file. 
         
         Written by Brian Andersen 11/2/2020.
         """ 
@@ -1097,7 +1097,7 @@ class Predictor(object):
         """
         Predicts the boron distribution based on the differences on the CRUD distribution, boron, and cycle exposures.
         Note nickel particulate concentration has to be provided by the user in the input file, as
-        it doesn't come from the SIMULATE output file. 
+        it doesn't come from the NCSU core simulator output file. 
 
         Written by Brian Andersen 11/2/2020.
         """

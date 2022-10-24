@@ -8,9 +8,9 @@ from solution_types import compare_substrings
 from solution_types import return_triangular_string
 from metrics import Plotter
 
-class Casmo_Lattice(Solution):
+class Simulate_Lattice(Solution):
     """
-    Class specific to Casmo Functions. Contains the information to generate an 
+    Class specific to NCSU lattice simulator functions. Contains the information to generate an 
     initial solution and evaluate it.
     
     Parameters: None
@@ -74,7 +74,7 @@ class Casmo_Lattice(Solution):
 
     def evaluate(self):
         """
-        Evaluates the given Casmo Solution.
+        Evaluates the given NCSU lattice solution.
 
         Parameters: None
 
@@ -92,7 +92,7 @@ class Casmo_Lattice(Solution):
 
         for gene in self.genome:                   #Decode the solution
             fuel_list.append(genome_key[gene]['fuel']) #genome into the info
-            pin_list.append(genome_key[gene]['pin'])   #needed by Casmo
+            pin_list.append(genome_key[gene]['pin'])   #needed by NCSU lattice
 
         fuel_str = return_triangular_string(fuel_list)
         pin_str  = return_triangular_string(pin_list)
@@ -114,7 +114,7 @@ class Casmo_Lattice(Solution):
                 kinf_list = Extractor.kinf(file_lines)
                 self.parameters['max_kinf']['value'] = max(kinf_list)
         #Because peak versus max kinf trips me up enough, they are both now
-        #valid keys to use in calculating the highest kinf value in the casmo
+        #valid keys to use in calculating the highest kinf value in the NCSU lattice 
         #analysis, but only one or the other may be used.
         elif 'peak_kinf' in self.parameters:
             if 'peak_kinf' in self.neural_network:
@@ -156,90 +156,90 @@ class Casmo_Lattice(Solution):
 
     def write_input_file(self,fuel_card_string,fuel_string,pin_string):
         """
-        Writes all of the information stored in the Casmo class instance 
-        into a valid Casmo Input File.
+        Writes all of the information stored in the NCSU lattice class instance 
+        into a valid NCSU lattice Input File.
 
         Parameters:
             fuel_card_string: str
-                The casmo fuel cards, in triangular format.
+                The NCSU lattice fuel cards, in triangular format.
             pin_card_string: str
-                The casmo pin cards, in triangular format.
+                The NCSU lattice pin cards, in triangular format.
 
         Written by Brian Andersen 1/8/2020
         """
         os.system("mkdir {}".format(self.name))
-        casmo_file = open("{}/{}.inp".format(self.name,self.name),'w')
+        lattice_file = open("{}/{}.inp".format(self.name,self.name),'w')
         if not self.title:                            #Write Title to input  
-            casmo_file.write("TTL * Casmo Analysis\n")      #File
+            lattice_file.write("TTL * NCSU lattice Analysis\n")      #File
         else:
-            casmo_file.write("TTL {}\n".format(self.title))
+            lattice_file.write("TTL {}\n".format(self.title))
 
-        casmo_file.write(fuel_card_string)           #Fuel Types
+        lattice_file.write(fuel_card_string)           #Fuel Types
 
         for card in self.pin_list:                   #Pin Types
-            casmo_file.write(card + '\n')
+            lattice_file.write(card + '\n')
 
-        casmo_file.write('LFU\n')
-        casmo_file.write(fuel_string)                #Write Fuel type Map
+        lattice_file.write('LFU\n')
+        lattice_file.write(fuel_string)                #Write Fuel type Map
 
-        casmo_file.write('LPI\n')
-        casmo_file.write(pin_string)                 #Write Pin Type Map
+        lattice_file.write('LPI\n')
+        lattice_file.write(pin_string)                 #Write Pin Type Map
 
-        casmo_file.write("PDE {} \n".format(self.power))   #Assembly Power
+        lattice_file.write("PDE {} \n".format(self.power))   #Assembly Power
 
         if not self.fuel_temperature: #Assembly
             pass                          #Temperature
         else:
-            casmo_file.write("TFU = {}\n".format(self.fuel_temperature))  
+            lattice_file.write("TFU = {}\n".format(self.fuel_temperature))  
                                                               
         if not self.moderator_temperature: #write
             pass                               #coolant temperature
         else:
-            casmo_file.write("TMO = {}\n".format(self.moderator_temperature)) 
+            lattice_file.write("TMO = {}\n".format(self.moderator_temperature)) 
 
         if not self.boron:
             pass
         else:
-            casmo_file.write("BOR = {}\n".format(self.boron))
+            lattice_file.write("BOR = {}\n".format(self.boron))
 
         if not self.void:
             pass
         else:
-            casmo_file.write("VOI = {}\n".format(self.void))
+            lattice_file.write("VOI = {}\n".format(self.void))
 
         if not self.reactor:
             pass
         else:
-            casmo_file.write("{}\n".format(self.reactor)) #initialize reactor type
+            lattice_file.write("{}\n".format(self.reactor)) #initialize reactor type
 
         if not self.spacer_grid_line:
             pass
         else:                      #Add spacer grid 
-            casmo_file.write("{}\n".format(self.spacer_grid_line)) #info to Casmo
+            lattice_file.write("{}\n".format(self.spacer_grid_line)) #info to NCSU lattice
 
         if not self.control_rod_line:  
             pass
         else:                    #Add spacer grid
-            casmo_file.write("{}\n".format(self.control_rod_line)) #info to casmo
+            lattice_file.write("{}\n".format(self.control_rod_line)) #info to NCSU lattice
 
         if not self.s3c:    
             pass
-        else:                  #Add S3C card to casmo
-            casmo_file.write("s3c \n") #file
+        else:                  #Add S3C card to NCSU lattice
+            lattice_file.write("s3c \n") #file
 
         if not self.depletion:
             pass
         else:                      #Adds specific 
-            casmo_file.write("DEP {}\n".format(self.depletion)) #depletion to Casmo
+            lattice_file.write("DEP {}\n".format(self.depletion)) #depletion to NCSU lattice
 
-        casmo_file.write("STA"+"\n")
-        casmo_file.write("END"+"\n")
-        casmo_file.close()
+        lattice_file.write("STA"+"\n")
+        lattice_file.write("END"+"\n")
+        lattice_file.close()
 
 
 class Extractor(object):
     """
-    Class for extracting the values from the output files of Casmo files. 
+    Class for extracting the values from the output files of NCSU lattice files. 
 
     Parameters: None
 
@@ -248,8 +248,8 @@ class Extractor(object):
     @staticmethod
     def max_pin_powers(file_lines):
         """
-        Accepts casmo file lines as the function argument and returns a list of
-        the maximum pin powers over the course of the casmo depletion.
+        Accepts NCSU lattice file lines as the function argument and returns a list of
+        the maximum pin powers over the course of the NCSU lattice depletion.
 
         Parameters:
             file_lines: str_list
@@ -273,7 +273,7 @@ class Extractor(object):
     @staticmethod
     def burnup(file_lines):
         """
-        Accepts casmo file lines as the function argument and returns the
+        Accepts NCSU lattice file lines as the function argument and returns the
         max kinf value over the course of the depletion
         
         Parameters:
@@ -296,7 +296,7 @@ class Extractor(object):
     @staticmethod
     def kinf(file_lines):
         """
-        Accepts casmo file lines as the function argument and returns the
+        Accepts NCSU lattice file lines as the function argument and returns the
         max kinf value over the course of the depletion
         
         Parameters:
@@ -319,7 +319,7 @@ class Extractor(object):
     @staticmethod
     def enrichment(file_lines):
         """
-        Returns the enrichment of the Casmo lattice based on the enrichment
+        Returns the enrichment of the NCSU lattice lattice based on the enrichment
         of the first depletion state.
         
         Parameters:
