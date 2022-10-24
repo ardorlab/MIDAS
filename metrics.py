@@ -11,7 +11,7 @@ Addtional import for pareto front graph
 '''
 import glob
 from PIL import Image
-#from casmo import Casmo_Lattice
+
 
 class Optimization_Metric_Toolbox(object):
     """
@@ -467,7 +467,7 @@ class Plotter(object):
     @staticmethod
     def lattice(name,genome,chromosomes):
         """
-        Plots the Casmo Lattice Solution. Assumes 1/2 or 1/8 diagonal symmetry.
+        Plots the NCSU simulator lattice Solution. Assumes 1/2 or 1/8 diagonal symmetry.
         Uses the xkcd color list for plotting genomes. This is a list of the 255 most 
         recognized colors by a public survey carried out by the xkcd webcomic. Google 
         it and it should be pretty obvious.

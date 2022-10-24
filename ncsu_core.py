@@ -12,7 +12,7 @@ from solution_types import Solution
 
 class Simulate_Assembly_Solution(Solution):
     """
-    Class for optimizing the lattice layers of an assembly in Simulate.
+    Class for optimizing the lattice layers of an assembly in using NCSU core simulator.
 
     Parameters: None
 
@@ -95,7 +95,7 @@ class Simulate_Assembly_Solution(Solution):
 
 class Simulate_Loading_Pattern_Solution(Solution):
     """
-    Solution class for designing loading patterns in Simulate.
+    Solution class for designing loading patterns in NCSU core simulator.
 
     Parameters: None
 
@@ -198,7 +198,7 @@ class Simulate_Loading_Pattern_Solution(Solution):
             self.fuel_segments = info['fuel_segments']
         else:
             if self.batch_number >= 2:
-                print("WARNING: No fuel segments provided to simulate. Simulate run may fail.")
+                print("WARNING: No fuel segments provided to simulator. NCSU simulator run may fail.")
         if 'neural_network' in settings:
             from crudworks import CRUDworks
             self.crud = CRUDworks(settings)
@@ -409,7 +409,7 @@ class Simulate_Loading_Pattern_Solution(Solution):
 
     def evaluate(self):
         """
-        Evaluates Simulate Loading Pattern Solutions to core optimization
+        Evaluates NCSU Simulator Loading Pattern Solutions to core optimization
 
         Parameters: None
 
@@ -600,7 +600,7 @@ class Unique_Assembly_Loading_Pattern_Solution(Simulate_Loading_Pattern_Solution
 
     def evaluate(self):
         """
-        Evaluates the Simulate Loading Pattern Solutions to the 
+        Evaluates the NCSU Simulator Loading Pattern Solutions to the 
         core optimization.
 
         Parameters: None
@@ -658,18 +658,18 @@ class Unique_Assembly_Loading_Pattern_Solution(Simulate_Loading_Pattern_Solution
 class Extractor(object):
     """
     Class for organizing the functions used to read the output files produced
-    by Simulate.
+    by NCSU core simulator.
 
     Written by Brian Andersen. 1/8/2020
     """
     @staticmethod
     def axial_mesh_extractor(file_lines):
         """
-        Extracts the axial mesh used in the SIMULATE input file from the provided file lines.
+        Extracts the axial mesh used in the NCSU core simulator input file from the provided file lines.
         
         Written by Brian Andersen 11/2/2020.
         """
-        reverse_axial_positions = [] #SIMULATE lists axial meshes from top to bottom. I want them bottom to top. Hence reverse
+        reverse_axial_positions = [] #NCSU core simulator lists axial meshes from top to bottom. I want them bottom to top. Hence reverse
         searching_heights = False
         for line in file_lines:
             if "** Studsvik CMS Steady-State 3-D Reactor Simulator **" in line:
@@ -698,7 +698,7 @@ class Extractor(object):
     @staticmethod
     def full_core_power_3D(file_lines,core_width,number_pins):
         """
-        Extracts the three-dimensional power shape from the output lines of the SIMULATE file.
+        Extracts the three-dimensional power shape from the output lines of the NCSU core simulator file.
         Returns the power shape in the form of a numpy matrix.
         """
         
@@ -768,7 +768,7 @@ class Extractor(object):
     @staticmethod
     def core_keff_list(file_lines):
         """
-        Extracts the core K-effective value from the provided simulate file lines.
+        Extracts the core K-effective value from the provided NCSU core simulator file lines.
 
         Written by Brian Andersen. 3/13/2020
         """
@@ -779,7 +779,7 @@ class Extractor(object):
                 keff_list.append(float(elems[-1]))
 
         if not keff_list:
-            return ValueError("No values returned. Check Simulate File executed correctly")
+            return ValueError("No values returned. Check NCSU core simulator File executed correctly")
         else:
             return keff_list
     
@@ -792,7 +792,7 @@ class Extractor(object):
         Parameters
         --------------
         file_lines: List
-            The lines of the Simulate output file being analyzed.
+            The lines of the NCSU core simulator output file being analyzed.
         tag: STR
             The tag being used to define the assembly.
 
@@ -852,19 +852,19 @@ class Extractor(object):
                             if pin_count == number_pins:
                                 searching_for_powers = False
         if not assembly_dictionary:
-            return ValueError("No values returned. Check Simulate File executed correctly")
+            return ValueError("No values returned. Check NCSU core simulator File executed correctly")
         else:
             return assembly_dictionary
 
     @staticmethod
     def powers2D(file_lines,number_pins):
         """
-        Extracts the radial power matrix from the simulate output file as
+        Extracts the radial power matrix from the NCSU core simulator output file as
         a dictionary with the assembly label and depletion as the keys.
 
         Parameters
             file_lines: list
-                All the output lines of the simulate file as a list.
+                All the output lines of the NCSU core simulator file as a list.
             number_pins: int
                 The number of fuel rods in each assembly.
         
@@ -937,7 +937,7 @@ class Extractor(object):
 
         Parameters
             file_lines: list
-                All the output lines of the simulate file as a list.
+                All the output lines of the NCSU core simulator file as a list.
 
         Written by Brian Andersen. 1/9/2020
         """
@@ -967,20 +967,20 @@ class Extractor(object):
                 searching_ = True
         
         if not radial_power_dictionary:
-            return ValueError("No values returned. Check Simulate File executed correctly")
+            return ValueError("No values returned. Check NCSU core simulator File executed correctly")
         else:
             return radial_power_dictionary
 
     @staticmethod
     def linear_power_rate(key_list,file_lines):
         """
-        Extracts the linear power rate from Simulate as a dictionary.
+        Extracts the linear power rate from NCSU core simulator as a dictionary.
 
         Parameters
             key_list: List of the assemblies in the reactor core, used as 
                 keys for the linear power rate dictionary.
             file_lines: list
-                All the output lines of the simulate file as a list.
+                All the output lines of the NCSU core simulator file as a list.
 
         Written by Brian Andersen. 1/9/2020
         """
@@ -1016,19 +1016,19 @@ class Extractor(object):
                     linear_power_dictionary[key][depl] = None
 
         if not linear_power_dictionary:
-            return ValueError("No values returned. Check Simulate File executed correctly")
+            return ValueError("No values returned. Check NCSU core simulator File executed correctly")
         else:
             return linear_power_dictionary
 
     @staticmethod
     def efpd_list(file_lines):
         """
-        Returns a list of EFPD values for each cycle exposure in the simulate
+        Returns a list of EFPD values for each cycle exposure in the NCSU core simulator
         file.
 
         Parameters:
         file_lines: list
-            All the output lines of the simulate file as a list.
+            All the output lines of the NCSU core simulator file as a list.
 
         Written by Brian Andersen 12/7/2019
         """
@@ -1041,19 +1041,19 @@ class Extractor(object):
                     list_.append(float(elems[spot-1]))
 
         if not list_:
-            return ValueError("No values returned. Check Simulate File executed correctly")
+            return ValueError("No values returned. Check NCSU core simulator File executed correctly")
         else:
             return list_
 
     @staticmethod
     def FDH_list(file_lines):
         """
-        Returns a list of F-delta-H values for each cycle exposure in the simulate
+        Returns a list of F-delta-H values for each cycle exposure in the NCSU core simulator
         file.
 
         Parameters:
         file_lines: list
-            All the output lines of the simulate file as a list.
+            All the output lines of the NCSU core simulator file as a list.
 
         Written by Brian Andersen 12/7/2019
         """
@@ -1065,19 +1065,19 @@ class Extractor(object):
                 list_.append(float(elems[spot+1]))
         
         if not list_:
-            return ValueError("No values returned. Check Simulate File executed correctly")
+            return ValueError("No values returned. Check NCSU core simulator File executed correctly")
         else:
             return list_
 
     @staticmethod
     def pin_peaking_list(file_lines):
         """
-        Returns a list of pin peaking values, Fq, for each cycle exposure in the simulate
+        Returns a list of pin peaking values, Fq, for each cycle exposure in the NCSU core simulator
         file.
 
         Parameters:
         file_lines: list
-            All the output lines of the simulate file as a list.
+            All the output lines of the NCSU core simulator file as a list.
 
         Written by Brian Andersen 12/7/2019
         """
@@ -1089,19 +1089,19 @@ class Extractor(object):
                 list_.append(float(elems[spot+1]))
         
         if not list_:
-            return ValueError("No values returned. Check Simulate File executed correctly")
+            return ValueError("No values returned. Check NCSU core simulator File executed correctly")
         else:
             return list_
 
     @staticmethod
     def radial_power_dictionary(file_lines):
         """
-        Extracts the radial power matrix from the simulate output file and 
+        Extracts the radial power matrix from the NCSU core simulator output file and 
         returns them as a dictionary.
 
         Parameters:
         file_lines: list
-            All the output lines of the simulate file as a list.
+            All the output lines of the NCSU core simulator file as a list.
 
         Written by Brian Andersen 12/7/2019
         """
@@ -1159,7 +1159,7 @@ class Extractor(object):
                 row_count = 0
 
         if not power_dictionary:
-            return ValueError("No values returned. Check Simulate File executed correctly")
+            return ValueError("No values returned. Check NCSU core simulator File executed correctly")
         else:
             return power_dictionary
 
@@ -1170,7 +1170,7 @@ class Extractor(object):
 
         Parameters:
         file_lines: list
-            All the output lines of the simulate file as a list.
+            All the output lines of the NCSU core simulator file as a list.
 
         Written by Brian Andersen 12/7/2019
         """
@@ -1182,7 +1182,7 @@ class Extractor(object):
              boron_list.append(float(elems[spot-1]))
  
         if not boron_list:
-           return ValueError("NO values returned. Check SIMULATE file executed correctly")
+           return ValueError("NO values returned. Check NCSU core simulator file executed correctly")
         else:
            return boron_list
 
@@ -1190,7 +1190,7 @@ class Extractor(object):
     @staticmethod
     def keff_list(file_lines,assembly_type):
         """
-        Returns a list of kinf values from Simulate3.
+        Returns a list of kinf values from NCSU core simulator.
         """
         kinf_list = []
         searching_for_kinf = False
@@ -1208,14 +1208,14 @@ class Extractor(object):
                         searching_for_kinf = True
         
         if not kinf_list:
-            return ValueError("No values returned. Check Simulate File executed correctly")
+            return ValueError("No values returned. Check NCSU core simulator File executed correctly")
         else:
             return kinf_list
 
     @staticmethod
     def relative_power(file_lines):
         """
-        Extracts the Relative Core Power from the provided simulate file lines.
+        Extracts the Relative Core Power from the provided NCSU core simulator file lines.
 
         Written by Brian Andersen. 3/13/2020
         """
@@ -1229,14 +1229,14 @@ class Extractor(object):
                 relative_powers.append(float(search_space))
 
         if not relative_powers:
-            return ValueError("No values returned. Check Simulate File executed correctly")
+            return ValueError("No values returned. Check NCSu core simulator File executed correctly")
         else:
             return relative_powers
 
     @staticmethod
     def relative_flow(file_lines):
         """
-        Extracts the Relative Core Flow rate from the provided simulate file lines.
+        Extracts the Relative Core Flow rate from the provided NCSu core simulator file lines.
 
         Written by Brian Andersen. 3/13/2020
         """
@@ -1250,14 +1250,14 @@ class Extractor(object):
                 relative_flows.append(float(search_space))
 
         if not relative_flows:
-            return ValueError("No values returned. Check Simulate File executed correctly")
+            return ValueError("No values returned. Check NCSu core simulator File executed correctly")
         else:
             return relative_flows
 
     @staticmethod
     def thermal_power(file_lines):
         """
-        Extracts the operating thermal power in MW from the provided simulate file lines.
+        Extracts the operating thermal power in MW from the provided NCSu core simulator file lines.
 
         Written by Brian Andersen. 3/13/2020
         """
@@ -1269,14 +1269,14 @@ class Extractor(object):
                 powers.append(float(elems[spot-1]))
 
         if not powers:
-            return ValueError("No values returned. Check Simulate File executed correctly")
+            return ValueError("No values returned. Check NCSu core simulator File executed correctly")
         else:
             return powers
 
     @staticmethod
     def core_flow(file_lines):
         """
-        Returns the core coolant flow in Mlb/hr from the provided simulate file lines.
+        Returns the core coolant flow in Mlb/hr from the provided NCSU core simulator file lines.
 
         Written by Brian Andersen. 3/13/2020
         """
@@ -1288,7 +1288,7 @@ class Extractor(object):
                 flows.append(float(elems[spot-1]))
 
         if not flows:
-            return ValueError("No values returned. Check Simulate File executed correctly")
+            return ValueError("No values returned. Check NCSU core simulator File executed correctly")
         else:
             return flows
 
@@ -1296,7 +1296,7 @@ class Extractor(object):
     def inlet_temperatures(file_lines):
         """
         Returns the core inlet temperatures in degrees Fahrenheit from the 
-        provided simulate file lines.
+        provided NCSU core simulator file lines.
 
         Written by Brian Andersen. 3/13/2020
         """
@@ -1310,7 +1310,7 @@ class Extractor(object):
                 temperatures.append(float(search_space))
 
         if not temperatures:
-            return ValueError("No values returned. Check Simulate File executed correctly")
+            return ValueError("No values returned. Check NCSU core simulator File executed correctly")
         else:
             return temperatures
 
@@ -1331,7 +1331,7 @@ class Extractor(object):
                 pressure.append(float(search_space))
 
         if not pressure:
-            return ValueError("No values returned. Check Simulate File executed correctly")
+            return ValueError("No values returned. Check NCSU core simulator File executed correctly")
         else:
             return pressure
 
@@ -1350,13 +1350,13 @@ class Extractor(object):
                 burnups.append(float(elems[spot-1]))
 
         if not burnups:
-            return ValueError("No values returned. Check Simulate File executed correctly")
+            return ValueError("No values returned. Check NCSU core simulator File executed correctly")
         else:
             return burnups
 
 class File_Writer(object):
     """
-    Class for writing and performing all tasks related to writing Simulate
+    Class for writing and performing all tasks related to writing NCSU core simulator
     Input Files. 
 
     Written by Brian Andersen. 1/8/2018
@@ -1405,8 +1405,8 @@ class File_Writer(object):
     @staticmethod
     def bwr_assembly(genome,solution_name):
         """
-        Writes single assembly Simulate Input File. Writes both the CMSLink
-        cross section file, then the simulate input file
+        Writes single assembly NCSU core simulator Input File. Writes both the CMSLink
+        cross section file, then the NCSU core simulator input file
 
         Parameters:
             genome: list
@@ -1420,7 +1420,7 @@ class File_Writer(object):
         """
         infile = open("simulate_data",'rb') #Information not carried by optimization 
         simulate_data = pickle.load(infile) #solutions that is needed to fully write a 
-        infile.close()                      #simulate input file.
+        infile.close()                      #NCSU core simulator input file.
 
         infile = open("genome_key",'rb') #The genome key is how the genome used by the
         genome_key = pickle.load(infile) #optimization algorithm is decoded into the 
@@ -1548,8 +1548,8 @@ class File_Writer(object):
     @staticmethod
     def pwr_assembly(genome,solution_name):
         """
-        Writes single assembly Simulate Input File. Writes both the CMSLink
-        cross section file, then the simulate input file.
+        Writes single assembly NCSU core simulator Input File. Writes both the CMSLink
+        cross section file, then the NCSU core simulator input file.
         """
         cms_file = open(solution_name+"_cms.inp",'w')
         cms_file.write("'COM' '{}' /\n".format(solution_name))
@@ -1777,7 +1777,7 @@ class File_Writer(object):
                                     value = genome_key[gene]['type'].pop()
                                     if len(value) < 4:
                                         print(f"WARNING: You probably left the zero out of the assembly position for {value}.")
-                                        print("Simulate Run May FAIL.")
+                                        print("NCSU core simulator Run May FAIL.")
                                 else:
                                     value = str(genome_key[gene]['type'])
                                     if len(value) == 1:
@@ -1798,7 +1798,7 @@ class File_Writer(object):
                                 value = genome_key[gene]['type'].pop()
                                 if len(value) < 4:
                                     print(f"WARNING: You probably left the zero out of the assembly position for {value}.")
-                                    print("Simulate Run May FAIL.")
+                                    print("NCSU core simulator Run May FAIL.")
                             else:
                                 value = str(genome_key[gene]['type'])
                                 if len(value) == 1:

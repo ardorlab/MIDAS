@@ -11,8 +11,8 @@ from matplotlib import pyplot
 from multiprocessing import Pool
 import geneticAlgorithm as GA
 import simulatedAnnealing as SA
-from casmo import Casmo_Lattice
-import simulate
+from ncsu_lattice import Simulate_Lattice
+import ncsu_core
 import fitness
 
 class Optimization_Factory(object):
@@ -116,23 +116,23 @@ class Optimization_Factory(object):
         data_type_string = self.file_settings['optimization']['data_type']
 
         if data_type_string.lower() == 'pin_lattice':
-            solution_type = Casmo_Lattice
-            casmo_data = self.file_settings['genome']['additional']
+            solution_type = Simulate_Lattice
+            lattice_data = self.file_settings['genome']['additional']
             infile = open("casmo_file_data",'wb') #Information not carried by optimization 
-            pickle.dump(casmo_data,infile)        #solutions that is needed to fully write a 
-            infile.close()                        #simulate input file.
+            pickle.dump(lattice_data,infile)        #solutions that is needed to fully write a 
+            infile.close()                        #NCSU core simulator input file.
 
         elif data_type_string.lower() == 'single_assembly_simulate':
-            solution_type = simulate.Simulate_Assembly_Solution
+            solution_type = ncsu_core.Simulate_Assembly_Solution
             simulate_data = self.file_settings['genome']['additional']
 
             infile = open("simulate_data",'wb') #Information not carried by optimization 
             pickle.dump(simulate_data,infile)      #solutions that is needed to fully write a 
-            infile.close()                      #simulate input file.
+            infile.close()                      #NCSU core simulator input file.
         elif data_type_string.lower() == "loading_pattern":
-            solution_type = simulate.Simulate_Loading_Pattern_Solution
+            solution_type = ncsu_core.Simulate_Loading_Pattern_Solution
         elif data_type_string.lower() == "fixed_loading_pattern":
-            solution_type = simulate.Unique_Assembly_Loading_Pattern_Solution
+            solution_type = ncsu_core.Unique_Assembly_Loading_Pattern_Solution
         else:
             raise TypeError("Unsupported Solution Type Implemented")
         
