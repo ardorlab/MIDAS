@@ -1,3 +1,7 @@
+
+# samples
+
+
 samples/sample_1/*
 !samples/sample_1/casmo_file_data
 !samples/sample_1/casmo_moogle_input.yaml
@@ -33,8 +37,16 @@ samples/sample_5/*
 
 # else
 __pycache__/
-rl_dev/
+
 run/
 *.png
+run1/
+run2/
+monitor*
+tensorboard*
+sac*
+ppo*
+a2c*
 error.txt
 output.txt
+
