@@ -10,8 +10,8 @@ import copy
 from pathlib import Path
 sys.path.append('/home/gkdelipe/codes/mof/MOF/')
 
-from simulate import Extractor
-
+from ncsu_core import Extractor
+from parcs import evaluate as evaluate_parcs
 class Simulate3_Core_157():
     """
     Class for the Simulate3 core loading pattern solutions.
@@ -630,9 +630,9 @@ class Simulate3_Core_157():
 
         return
 
-    def evaluate(self, ldir='./run', fname='solution'):
+    def evaluate_sim3(self, ldir='./run', fname='solution'):
         """
-        Creates the SIMULATE input deck, runs SIMULATE and retrieves the results and the cost.
+        Creates the input deck, runs the calculation and retrieves the results and the cost.
 
         Parameters: 
         loc: String - Directory of execution
@@ -718,6 +718,30 @@ class Simulate3_Core_157():
                 os.remove(ofile)
 
         os.chdir(pwd)
+
+    def evaluate(self, ldir='./run', fname='solution'):
+        copydir = self.core_dict['Parameters']['lib']
+        fcore = self.get_full_core()
+        loading_pattern = np.array([["H08" , "H09" , "H10" , "H11" , "H12" , "H13" , "H14" , "H15" ,"R0816"],
+                                    ["I08" , "I09" , "I10" , "I11" , "I12" , "I13" , "I14" , "I15" ,"R0916"],
+                                    ["J08" , "J09" , "J10" , "J11" , "J12" , "J13" , "J14" ,"R1015","R1016"],
+                                    ["K08" , "K09" , "K10" , "K11" , "K12" , "K13" , "K14" ,"R1115", "00" ],
+                                    ["L08" , "L09" , "L10" , "L11" , "L12" , "L13" ,"R1214","R1215",  "00"  ],
+                                    ["M08" , "M09" , "M10" , "M11" , "M12" ,"R1313","R1314",  "00" ,  "00"  ],
+                                    ["N08" , "N09" , "N10" , "N11" ,"R1412","R1413",  "00" ,  "00" ,  "00"  ],
+                                    ["O08" , "O09" ,"R1510","R1511","R1512",   "00" ,  "00" ,  "00" ,  "00"  ],
+                                    ["R1608","R1609","R1610",  "00" ,  "00" ,  "00" ,  "00" ,  "00" ,  "00" ]])
+        for x in range(loading_pattern.shape[0]):
+            for y in range(loading_pattern.shape[1]):
+                loc = loading_pattern[x,y]
+                if loc != "00" and loc[0] != "R":
+                    loading_pattern[x,y] = self.core_dict['Inventory'][fcore[loc]]['Tag']
+                elif loc[0] == "R":
+                    loading_pattern[x,y] = "10"
+        res=evaluate_parcs(fname,ldir,copydir,loading_pattern)
+        self.core_dict["Results"] = res
+        fit=self.get_fitness(self.core_dict["Results"])
+        self.core_dict["Results"]["Fitness"] = fit
 
     def get_sim3_results(self,ofile):
         res = {}
