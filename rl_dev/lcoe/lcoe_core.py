@@ -422,11 +422,11 @@ if __name__ == "__main__":
 
     #  LCOE calculation from loading pattern
 
-    core_inventory={'FE200': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'2'},
-                'FE250': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'3'},
-                'FE250Bp': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'4'},
-                'FE320': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'5'},
-                'FE320Bp': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'6'},
+    core_inventory={'FE200': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'20'},
+                'FE250': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'30'},
+                'FE250Bp': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'40'},
+                'FE320': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'50'},
+                'FE320Bp': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'60'},
                 }
 
     core_inventory_groups={'E200': {'Values':['FE200'], 'Limit': 'Max', 'Limit_Value':88},
@@ -453,7 +453,7 @@ if __name__ == "__main__":
                 'Parameters':pwr_param,
                 'Objectives': objectives}
 
-    state0_file = 'state1.yml'
+    state0_file = 'state0.yml'
     with open(state0_file) as f:
         state0 = yaml.safe_load(f)
 
