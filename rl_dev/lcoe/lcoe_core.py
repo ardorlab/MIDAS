@@ -422,12 +422,19 @@ if __name__ == "__main__":
 
     #  LCOE calculation from loading pattern
 
-    core_inventory={'FE200': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'20'},
-                'FE250': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'30'},
-                'FE250Bp': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'40'},
-                'FE320': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'50'},
-                'FE320Bp': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'60'},
-                }
+    # core_inventory={'FE200': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'20'},
+    #             'FE250': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'30'},
+    #             'FE250Bp': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'40'},
+    #             'FE320': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'50'},
+    #             'FE320Bp': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'60'},
+    #             }
+    
+    core_inventory={'FE200': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'2'},
+            'FE250': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'3'},
+            'FE250Bp': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'4'},
+            'FE320': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'5'},
+            'FE320Bp': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'6'},
+            }
 
     core_inventory_groups={'E200': {'Values':['FE200'], 'Limit': 'Max', 'Limit_Value':88},
                             'E250': {'Values':['FE250','FE250Bp'], 'Limit': 'Max', 'Limit_Value':56},
@@ -459,7 +466,7 @@ if __name__ == "__main__":
 
     S3Game = Simulate3_Core_157(core_param)
     S3Game.set_state(state0)
-    S3Game.evaluate()
+    S3Game.evaluate_sim3()
     efpd=S3Game.core_dict['Results']['Cycle_Length']
     inventory=np.fromiter(S3Game.core_dict['Inventory'].keys(), dtype='<U7')
     asb_count = np.zeros(len(inventory),dtype='int')
