@@ -11,10 +11,10 @@ from pathlib import Path
 sys.path.append('/home/gkdelipe/codes/mof/MOF/')
 
 from ncsu_core import Extractor
-from parcs import evaluate as evaluate_parcs
-class Simulate3_Core_157():
+from parcs_332 import evaluate as evaluate_parcs
+class Parcs_Core_193():
     """
-    Class for the Simulate3 core loading pattern solutions.
+    Class for the PARCS core loading pattern solutions.
 
     Parameters: Dictionary with the following structure
         'Symmetry': String specifying Quarter or Octant Symmetry
@@ -59,23 +59,23 @@ class Simulate3_Core_157():
 
         Written by Gregory Delipei 7/12/2022
         """
-        core_map = [  None ,  None ,  None ,  None ,  None ,  None ,"R0006","R0007","R0008","R0009","R0010",  None ,  None ,  None ,  None ,  None ,  None ,
-                      None ,  None ,  None ,  None ,"R0104","R0105","R0106", "A07" , "A08" , "A09" ,"R0110","R0111","R0112",  None ,  None ,  None ,  None ,
-                      None ,  None ,  None ,"R0203","R0204", "B05" , "B06" , "B07" , "B08" , "B09" , "B10" , "B11" ,"R0212","R0213",  None ,  None ,  None ,
-                      None ,  None ,"R0302","R0303", "C04" , "C05" , "C06" , "C07" , "C08" , "C09" , "C10" , "C11" , "C12" ,"R0313","R0314",  None ,  None ,
-                      None ,"R0401","R0402", "D03" , "D04" , "D05" , "D06" , "D07" , "D08" , "D09" , "D10" , "D11" , "D12" , "D13" ,"R0414","R0415",  None ,
-                      None ,"R0501", "E02" , "E03" , "E04" , "E05" , "E06" , "E07" , "E08" , "E09" , "E10" , "E11" , "E12" , "E13" , "E14" ,"R0515",  None ,
-                    "R0600","R0601", "F02" , "F03" , "F04" , "F05" , "F06" , "F07" , "F08" , "F09" , "F10" , "F11" , "F12" , "F13" , "F14" ,"R0615","R0616",
+        core_map = [  None ,  None ,  None ,  None ,"R0004","R0005","R0006","R0007","R0008","R0009","R0010","R0011","R0012",  None ,  None ,  None ,  None ,
+                      None ,  None ,"R0102","R0103","R0104", "A05" , "A06" , "A07" , "A08" , "A09" , "A10" , "A11" ,"R0112","R0113","R0114",  None ,  None ,
+                      None ,"R0201","R0202", "B03" , "B04" , "B05" , "B06" , "B07" , "B08" , "B09" , "B10" , "B11" , "B12" , "B13" ,"R0214","R0215",  None ,
+                      None ,"R0301", "C02" , "C03" , "C04" , "C05" , "C06" , "C07" , "C08" , "C09" , "C10" , "C11" , "C12" , "C13" , "C14" ,"R0315",  None ,
+                    "R0400","R0401", "D02" , "D03" , "D04" , "D05" , "D06" , "D07" , "D08" , "D09" , "D10" , "D11" , "D12" , "D13" , "D14" ,"R0415","R0416",
+                    "R0500", "E01" , "E02" , "E03" , "E04" , "E05" , "E06" , "E07" , "E08" , "E09" , "E10" , "E11" , "E12" , "E13" , "E14" , "E15" ,"R0516",
+                    "R0600", "F01" , "F02" , "F03" , "F04" , "F05" , "F06" , "F07" , "F08" , "F09" , "F10" , "F11" , "F12" , "F13" , "F14" , "F15" ,"R0616",
                     "R0700", "G01" , "G02" , "G03" , "G04" , "G05" , "G06" , "G07" , "G08" , "G09" , "G10" , "G11" , "G12" , "G13" , "G14" , "G15" ,"R0716",
                     "R0800", "H01" , "H02" , "H03" , "H04" , "H05" , "H06" , "H07" , "H08" , "H09" , "H10" , "H11" , "H12" , "H13" , "H14" , "H15" ,"R0816",
                     "R0900", "I01" , "I02" , "I03" , "I04" , "I05" , "I06" , "I07" , "I08" , "I09" , "I10" , "I11" , "I12" , "I13" , "I14" , "I15" ,"R0916",
-                    "R1000","R1001", "J02" , "J03" , "J04" , "J05" , "J06" , "J07" , "J08" , "J09" , "J10" , "J11" , "J12" , "J13" , "J14" ,"R1015","R1016",
-                      None ,"R1101", "K02" , "K03" , "K04" , "K05" , "K06" , "K07" , "K08" , "K09" , "K10" , "K11" , "K12" , "K13" , "K14" ,"R1115",  None ,
-                      None ,"R1201","R1202", "L03" , "L04" , "L05" , "L06" , "L07" , "L08" , "L09" , "L10" , "L11" , "L12" , "L13" ,"R1214","R1215",  None ,
-                      None ,  None ,"R1302","R1303", "M04" , "M05" , "M06" , "M07" , "M08" , "M09" , "M10" , "M11" , "M12" ,"R1313","R1314",  None ,  None ,
-                      None ,  None ,  None ,"R1403","R1404", "N05" , "N06" , "N07" , "N08" , "N09" , "N10" , "N11" ,"R1412","R1413",  None ,  None ,  None ,
-                      None ,  None ,  None ,  None ,"R1504","R1505","R1506", "O07" , "O08" , "O09" ,"R1510","R1511","R1512",  None ,  None ,  None ,  None ,
-                      None ,  None ,  None ,  None ,  None ,  None ,"R1606","R1607","R1608","R1609","R1610",  None ,  None ,  None ,  None ,  None ,  None ]
+                    "R1000", "J01" , "J02" , "J03" , "J04" , "J05" , "J06" , "J07" , "J08" , "J09" , "J10" , "J11" , "J12" , "J13" , "J14" , "J15" ,"R1016",
+                    "R1100", "K01" , "K02" , "K03" , "K04" , "K05" , "K06" , "K07" , "K08" , "K09" , "K10" , "K11" , "K12" , "K13" , "K14" , "K15" ,"R1116",
+                    "R1200","R1201", "L02" , "L03" , "L04" , "L05" , "L06" , "L07" , "L08" , "L09" , "L10" , "L11" , "L12" , "L13" , "L14" ,"R1215","R1216",
+                      None ,"R1301", "M02" , "M03" , "M04" , "M05" , "M06" , "M07" , "M08" , "M09" , "M10" , "M11" , "M12" , "M13" , "M14" ,"R1315",  None ,
+                      None ,"R1401","R1402", "N03" , "N04" , "N05" , "N06" , "N07" , "N08" , "N09" , "N10" , "N11" , "N12" , "N13" ,"R1414","R1415",  None ,
+                      None ,  None ,"R1502","R1503","R1504", "O05" , "O06" , "O07" , "O08" , "O09" , "O10" , "O11" ,"R1512","R1513","R1514",  None ,  None ,
+                      None ,  None ,  None ,  None ,"R1604","R1605","R1606","R1607","R1608","R1609","R1610","R1611","R1612",  None ,  None ,  None ,  None ]
         core_map = np.array(core_map).reshape((self.nrow,self.ncol))
         core_id = []
         for i in range(self.nrow-1,-1,-1):
@@ -630,115 +630,9 @@ class Simulate3_Core_157():
 
         return
 
-    def evaluate_sim3(self, ldir='./run', fname='solution'):
-        """
-        Creates the input deck, runs the calculation and retrieves the results and the cost.
-
-        Parameters: 
-        loc: String - Directory of execution
-        fname: String - File name
-
-        Written by Gregory Delipei 7/29/2022
-        """
-
-        full_core = self.get_full_core()
-
-        # Create SIMULATE INPUT DECK
-
-        pwd = Path(os.getcwd())
-        if not os.path.exists(ldir):
-            os.makedirs(ldir)
-        else:
-            shutil.rmtree(ldir, ignore_errors=True)
-            os.makedirs(ldir)
-        
-        shutil.copyfile(self.core_dict['Parameters']['lib'] + '/' + self.core_dict['Parameters']['Restart'], ldir +"/" + self.core_dict['Parameters']['Restart'])
-        shutil.copyfile(self.core_dict['Parameters']['lib'] + '/' + self.core_dict['Parameters']['CASMO_XS'], ldir +"/" + self.core_dict['Parameters']['CASMO_XS'])
-        os.chdir(ldir)
-        filename = fname+'.inp'
-        with open(filename, 'a') as ofile:
-            str_res = "\'RES\' " + "\'" + self.core_dict['Parameters']['Restart'] + "\' " +  "0.0/ \n"
-            ofile.write(str_res)
-            ofile.write("\n")
-            
-            irow = int(self.nrow/2)
-            icol = int(self.ncol/2)
-            for i in range(int(np.ceil(self.nrow/2))):
-                str_lp = "\'FUE.TYP\'  " + str(i+1) + ", " 
-                for j in range(int(np.ceil(self.nrow/2))):
-                    loc=self.core_dict['core_map'][irow+i,icol+j]
-                    if loc is None:
-                        tag = "0"
-                    elif loc[0]=="R":
-                        tag = "1"
-                    else:
-                        val = full_core[loc]
-                        tag = self.core_dict['Inventory'][val]['Tag']
-                    str_lp = str_lp + tag
-                    if(j==int(np.ceil(self.nrow/2)-1)):
-                         str_lp = str_lp + '/\n'
-                    else:
-                        str_lp = str_lp + " "
-                ofile.write(str_lp)
-
-            ofile.write("\n")
-            ofile.write("\n")
-            str_cope = f"\'COR.OPE\' " + str(self.core_dict['Parameters']['Thermal_Power']) + ", " + str(self.core_dict['Parameters']['Core_Flow'])+ ", "  + str(self.core_dict['Parameters']['Pressure']) + "/ \n" 
-            ofile.write(str_cope)
-            str_ctin = f"\'COR.TIN\' " + str(self.core_dict['Parameters']['Inlet_Temperature']) + "/ \n" 
-            ofile.write(str_ctin)
-            ofile.write("\n")
-
-            str_depsta = "\'DEP.STA\' \'AVE\' 0.0 0.5 1 2 -1 20 / \n"
-            ofile.write(str_depsta)
-            str_com = "\'COM\' The following performs an automated search on cycle length at a boron concentration of 10 ppm \n"
-            ofile.write(str_com)
-            str_itsrc= "\'ITE.SRC\' \'SET\' \'EOLEXP\' , , 0.02, , , , , , \'MINBOR\' 10., , , , , 4, 4, , , / \n"
-            ofile.write(str_itsrc)
-            str_sta = "\'STA\'/ \n"
-            ofile.write(str_sta)
-            str_end = "\'END\'/ \n"
-            ofile.write(str_end)
-
-        # Run SIMULATE INPUT DECK
-        sim3_maxruns = 1000
-        s3cmd = "simulate3 " + filename
-        for i in range(sim3_maxruns):
-            try:
-                os.system(s3cmd)
-                # Get Results
-                ofile = fname + '.out'
-                res=self.get_sim3_results(ofile)
-                self.core_dict["Results"] = res
-                fit=self.get_fitness(self.core_dict["Results"])
-                self.core_dict["Results"]["Fitness"] = fit
-                break
-            except:
-                print(f"Failed SIMULATE3 run {i+1}")
-                os.remove(ofile)
-
-        os.chdir(pwd)
-
     def evaluate(self, ldir='./run', fname='solution'):
-        copydir = self.core_dict['Parameters']['xslib']
         fcore = self.get_full_core()
-        loading_pattern = np.array([["H08" , "H09" , "H10" , "H11" , "H12" , "H13" , "H14" , "H15" ,"R0816"],
-                                    ["I08" , "I09" , "I10" , "I11" , "I12" , "I13" , "I14" , "I15" ,"R0916"],
-                                    ["J08" , "J09" , "J10" , "J11" , "J12" , "J13" , "J14" ,"R1015","R1016"],
-                                    ["K08" , "K09" , "K10" , "K11" , "K12" , "K13" , "K14" ,"R1115", "00" ],
-                                    ["L08" , "L09" , "L10" , "L11" , "L12" , "L13" ,"R1214","R1215",  "00"  ],
-                                    ["M08" , "M09" , "M10" , "M11" , "M12" ,"R1313","R1314",  "00" ,  "00"  ],
-                                    ["N08" , "N09" , "N10" , "N11" ,"R1412","R1413",  "00" ,  "00" ,  "00"  ],
-                                    ["O08" , "O09" ,"R1510","R1511","R1512",   "00" ,  "00" ,  "00" ,  "00"  ],
-                                    ["R1608","R1609","R1610",  "00" ,  "00" ,  "00" ,  "00" ,  "00" ,  "00" ]])
-        for x in range(loading_pattern.shape[0]):
-            for y in range(loading_pattern.shape[1]):
-                loc = loading_pattern[x,y]
-                if loc != "00" and loc[0] != "R":
-                    loading_pattern[x,y] = self.core_dict['Inventory'][fcore[loc]]['Tag']
-                elif loc[0] == "R":
-                    loading_pattern[x,y] = "10"
-        res=evaluate_parcs(fname,ldir,copydir,loading_pattern)
+        res=evaluate_parcs(fname,ldir,self.core_dict)
         self.core_dict["Results"] = res
         fit=self.get_fitness(self.core_dict["Results"])
         self.core_dict["Results"]["Fitness"] = fit

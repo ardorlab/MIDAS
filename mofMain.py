@@ -14,6 +14,7 @@ import simulatedAnnealing as SA
 from ncsu_lattice import Simulate_Lattice
 import ncsu_core
 import fitness
+import parcs_332
 
 class Optimization_Factory(object):
     """
@@ -131,6 +132,8 @@ class Optimization_Factory(object):
             infile.close()                      #NCSU core simulator input file.
         elif data_type_string.lower() == "loading_pattern":
             solution_type = ncsu_core.Simulate_Loading_Pattern_Solution
+        elif data_type_string.lower() == "loading_pattern_parcs332":
+            solution_type = parcs_332.Loading_Pattern_Solution
         elif data_type_string.lower() == "fixed_loading_pattern":
             solution_type = ncsu_core.Unique_Assembly_Loading_Pattern_Solution
         else:
