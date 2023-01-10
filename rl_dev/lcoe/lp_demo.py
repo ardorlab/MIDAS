@@ -8,11 +8,30 @@ import copy
 from pathlib import Path
 import yaml 
 sys.path.append('/home/gkdelipe/codes/mof/MOF/')
-from rl_dev.games.pwr_193 import Parcs_Core_193
+from parcs_332 import Loading_Pattern_Solution
 from lcoe import LCOE, LCOE2
 
 # LCOE calculation for specific core loading pattern
 # Both Once-Through and Twice-Through cycles are supported.
+
+parameters = {'cycle_length': {'value': 0.0, 'weight':1.0},
+                'PinPowerPeaking': {'value': 0.0, 'weight':400.0},
+                'FDeltaH': {'value': 0.0, 'weight':400.0},
+                'max_boron': {'value': 0.0, 'weight':-1.0}}
+
+core_param = {   'xs_library':'/home/gkdelipe/codes/mof/xslib',
+                'power': 3800.0,
+                'flow': 18231.89,
+                'inlet_temperature': 565.0,
+                'number_assemblies':193,
+                'symmetry': 'octant',
+                'map_size': "quarter",
+                'symmetry_axes': ((8,8),(16,16),(16,8))}
+
+parcs_lp = Loading_Pattern_Solution()
+settings={'optimization':{'reproducer':'test'},
+          'genome': {"parcs_data":core_param }}
+
 
 core_inventory={'FE200': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'200', 'Cross_Section':'xs_g200_gd_0_wt_0'},
                 'FE220': {'Max_Limit':np.inf, 'In_Design':0, 'Cost':0, 'Tag':'220', 'Cross_Section':'xs_g220_gd_0_wt_0'},
@@ -186,35 +205,23 @@ core_inventory_groups={'E200': {'Values':['FE200'], 'Limit': 'Max', 'Limit_Value
                                             'FE600GD4WT8','FE600GD8WT8','FE600GD12WT8','FE600GD16WT8','FE600GD20WT8','FE600GD24WT8'],
                                 'Limit': 'Max', 'Limit_Value':np.inf}}
 
-pwr_param = {   'xslib':'/home/gkdelipe/codes/mof/xslib',
-                'Thermal_Power': 3800.0,
-                'Core_Flow': 18231.89,
-                'Inlet_Temperature': 565.0 }
+settings['genome']['inventory']=core_inventory
+settings['genome']['inventory_groups']=core_inventory_groups
 
-objectives = {'Cycle_Length':1.0,
-                'Fdh': -400,
-                'Fq': -400,
-                'Max_Boron': -1}
-
-core_param={'Symmetry': 'Octant',
-            'Symmetry_Axes': ((8,8),(16,16),(16,8)),
-            'Inventory': core_inventory,
-            'Inventory_Groups': core_inventory_groups,
-            'Parameters':pwr_param,
-            'Objectives': objectives}
-
+parcs_lp.add_additional_information(settings)
+parcs_lp.name = 'run'
+parcs_lp.parameters=parameters
 state0_file = 'state0.yml'
 with open(state0_file) as f:
     state0 = yaml.safe_load(f)
 
-S3Game = Parcs_Core_193(core_param)
-S3Game.set_state(state0)
+parcs_lp.genome=list(state0.values())
 start = time.time()
-S3Game.evaluate()
+parcs_lp.evaluate()
 end = time.time()
 print('Total Parcs Evaluation and Processing Time: {} s'.format(end-start))
-lcoe = S3Game.core_dict['Results']['LCOE']
-bu = S3Game.core_dict['Results']['Discharge_Burnup']
+lcoe = parcs_lp.additional_parameters["LCOE"]
+bu = parcs_lp.additional_parameters['Discharge_Burnup']
 print(f"The LCOE once-through fuel cycle cost is: {lcoe} $/MWh")
 print(f"The discharge burnup is: {bu} MWd/kgU")
 

@@ -383,7 +383,7 @@ class Reproduction(object):
         while len(self.crossover_list) > 0:
             parent_one = random.choice(self.crossover_list)
 
-            partner_similarities = 0
+            partner_similarities = -1
             for suitor in self.crossover_list:
                 if suitor is parent_one:
                     pass
@@ -1346,7 +1346,9 @@ class Genetic_Algorithm(object):
 
         pool = Pool(processes=self.num_procs)
         self.population.parents = pool.map(evaluate_function, self.population.parents)
+        print('finished parents...')
         self.population.children = pool.map(evaluate_function, self.population.children)
+        print('finished children...')
         all_values = open('all_value_tracker.txt','a')
         for sol in self.population.parents:
             #print(sol.name)
@@ -1391,6 +1393,7 @@ class Genetic_Algorithm(object):
 
 
             self.population.children = pool.map(evaluate_function, self.population.children)
+            print('finished children...')
             all_values = open('all_value_tracker.txt','a')
             for sol in self.population.children:
                 all_values.write(f"{all_value_count},   {sol.name},   ")
@@ -1451,6 +1454,7 @@ class Genetic_Algorithm(object):
         opt.check_best_worst_average(self.population.parents)
         opt.write_track_file(self.population, self.generation)
 
+        scrambler = Fixed_Genome_Mutator(1,1,200,self.file_settings)
         uniqueness = Unique_Solution_Analyzer(scrambler)
         for self.generation.current in range(self.generation.total):
             self.population.children = self.repodroduction.reproduce(self.population.parents, 

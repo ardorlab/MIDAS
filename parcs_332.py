@@ -13,6 +13,8 @@ from pathlib import Path
 import shutil 
 from lcoe import LCOE
 from matplotlib import pyplot as plt
+import subprocess
+from subprocess import PIPE, STDOUT
 
 class Loading_Pattern_Solution(Solution):
     """
@@ -44,16 +46,19 @@ class Loading_Pattern_Solution(Solution):
         """
         self.symmetry=settings["genome"]["parcs_data"]["symmetry"]
         self.core_dict['core_map'], self.core_dict['core_id'] = self.generate_core()
-        inventory = {}
-        for key,value in settings["genome"]["chromosomes"].items():
-            inv_it = {}
-            inv_it['Max_Limit']=np.inf
-            inv_it['In_Design']=0
-            inv_it['Cost']=250
-            inv_it['Tag']=str(value['type'])
-            inv_it['Cross_Section']=value['serial']
-            inventory[key]=inv_it
-        self.core_dict['Inventory'] = inventory
+        if 'inventory' in list(settings["genome"].keys()):
+            self.core_dict['Inventory'] = settings["genome"]['inventory']
+        else:
+            inventory = {}
+            for key,value in settings["genome"]["chromosomes"].items():
+                inv_it = {}
+                inv_it['Max_Limit']=np.inf
+                inv_it['In_Design']=0
+                inv_it['Cost']=250
+                inv_it['Tag']=str(value['type'])
+                inv_it['Cross_Section']=value['serial']
+                inventory[key]=inv_it
+            self.core_dict['Inventory'] = inventory
        
         info = settings['genome']['parcs_data']
         if 'xs_library' in info:
@@ -878,7 +883,7 @@ class Loading_Pattern_Solution(Solution):
             if not bad_gene_list:
                 no_genome_found = False                
 
-    def get_clength(self,efpd,boron):
+    def get_clength(self,efpd,boron,keff):
         if boron[-1]==0.1:
             eoc1_ind = 0
             eco2_ind = len(efpd)
@@ -890,6 +895,18 @@ class Loading_Pattern_Solution(Solution):
             defpd = abs(efpd[eoc1_ind-1]-efpd[eoc1_ind])
             def_dbor = defpd/dbor
             eoc = efpd[eoc1_ind] + def_dbor*(boron[eoc1_ind]-0.1)
+        elif boron[-1]==boron[0]==1800.0:
+            drho_dcb=10 
+            drho1 = (keff[-2]-1.0)*10**5
+            dcb1 = drho1/drho_dcb
+            cb1= boron[-2] + dcb1
+            drho2 = (keff[-1]-1.0)*10**5
+            dcb2 = drho2/drho_dcb
+            cb2= boron[-1] + dcb2
+            dbor = abs(cb1-cb2)
+            defpd = abs(efpd[-2]-efpd[-1])
+            def_dbor = defpd/dbor
+            eoc = efpd[-1] + def_dbor*(cb2-0.1)
         else:
             dbor = abs(boron[-2]-boron[-1])
             defpd = abs(efpd[-2]-efpd[-1])
@@ -1031,6 +1048,7 @@ class Loading_Pattern_Solution(Solution):
         boron =[]
         fq=[]
         fdh=[]
+        keff = []
         read_bool  = False
         ofile = open(filepath + ".parcs_dpl", "r")
         filestr = ofile.read()
@@ -1042,13 +1060,20 @@ class Loading_Pattern_Solution(Solution):
             res_val=res_str[i].split()
             efpd.append(float(res_val[9]))
             boron.append(float(res_val[14]))
+            keff.append(float(res_val[2]))
             fq.append(float(res_val[7]))
             fdh.append(float(res_val[6]))
         res = {}
-        self.parameters["cycle_length"]['value'] = self.get_clength(efpd,boron)
+        self.parameters["cycle_length"]['value'] = self.get_clength(efpd,boron,keff)       
         self.parameters["PinPowerPeaking"]['value'] = max(fq)
         self.parameters["FDeltaH"]['value'] = max(fdh)
         self.parameters["max_boron"]['value'] = max(boron)
+        if self.parameters["max_boron"]['value'] == 1800.0:
+            drho_dcb=10 
+            drho = (keff[0]-1.0)*10**5
+            dcb = drho/drho_dcb
+            self.parameters["max_boron"]['value'] = 1800.0+dcb
+            self.parameters["cycle_length"]['value'] = 200.0
         lcoe, discharge_bu, asb_cost = self.get_lcoe()
         self.additional_parameters= {}
         self.additional_parameters["LCOE"] = lcoe
@@ -1169,6 +1194,7 @@ class Loading_Pattern_Solution(Solution):
  
             fuel_locations = list(self.core_dict['fuel'].keys())
             self.genome_dict = {}
+
             for i in range(len(self.genome)):
                 self.genome_dict[fuel_locations[i]]=self.genome[i]
                 self.core_dict['fuel'][fuel_locations[i]]['Value']=self.genome[i]
@@ -1246,7 +1272,8 @@ class Loading_Pattern_Solution(Solution):
                 ofile.write("     NLUPD_SS  5 5 1\n")
                 ofile.write("\n")
                 ofile.write("!******************************************************************************\n\n")
-                
+            
+
             with open(filename,"a") as ofile:             
                 ofile.write("GEOM\n")
                 ofile.write("     GEO_DIM 9 9 18 1 1\n")
@@ -1315,23 +1342,56 @@ class Loading_Pattern_Solution(Solution):
                 ofile.write("DEPL\n")
                 ofile.write("     TIME_STP  1 1 14*30\n")
                 ofile.write("     INP_HST   './boc_exp.dep' -2 1\n")
-                ofile.write("     PMAXS_F   1 '{}' 1\n".format(cdir+ '/' + 'xs_gbot'))
-                ofile.write("     PMAXS_F   2 '{}' 2\n".format(cdir+ '/' + 'xs_grad'))
-                ofile.write("     PMAXS_F   3 '{}' 3\n".format(cdir+ '/' + 'xs_gtop'))
-                ofile.write("     PMAXS_F   4 '{}' 4\n".format(cdir+ '/' + 'xs_g250_gd_0_wt_0'))
+                ofile.write("     PMAXS_F   1 '{}' 1\n".format(cdir + '/' + 'xs_gbot'))
+                ofile.write("     PMAXS_F   2 '{}' 2\n".format(cdir + '/' + 'xs_grad'))
+                ofile.write("     PMAXS_F   3 '{}' 3\n".format(cdir + '/' + 'xs_gtop'))
+                ofile.write("     PMAXS_F   4 '{}' 4\n".format(cdir + '/' + 'xs_g250_gd_0_wt_0'))
                 for i in range(xs_unique.shape[0]):
-                    ofile.write("     PMAXS_F   {} '{}' {}\n".format(5+i,cdir+ '/' + xs_unique[i],5+i))
+                    ofile.write("     PMAXS_F   {} '{}' {}\n".format(5+i,cdir + '/' + xs_unique[i],5+i))
                 ofile.write("\n")
                 ofile.write(".")
 
             # Run PARCS INPUT DECK
-            parcscmd = "/cm/shared/codes/TRACE51341_PARCS_332/PARCS-v332_Exe/Executables/Linux/parcs-v332-linux2-intel-x64-release.x " + filename
-            os.system(parcscmd)
-            # Get Results
-            ofile = fname + '.out'
-            self.get_results(fname,pin_power=True)
-            os.system('rm -f {}.parcs_pin*'.format(fname))
+            
+            parcscmd = "/cm/shared/codes/TRACE51341_PARCS_332/PARCS-v332_Exe/Executables/Linux/parcs-v332-linux2-intel-x64-release.x"
+          
+            print('Execute PARCS')
+            print('Running in process')
+            try:
+                output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=30)
+                # Get Results
+                if 'Finished' in str(output):
+                    ofile = fname + '.out'
+                    self.get_results(fname,pin_power=True)
+                else:
+                    self.parameters["cycle_length"]['value'] = np.random.uniform(0,10)
+                    self.parameters["PinPowerPeaking"]['value'] = np.random.uniform(10,20)
+                    self.parameters["FDeltaH"]['value'] = np.random.uniform(10,20)
+                    self.parameters["max_boron"]['value'] = np.random.uniform(2000,5000)
+                    self.additional_parameters= {}
+                    self.additional_parameters["LCOE"] = 0.0
+                    self.additional_parameters["Discharge_Burnup"]=0.0
+                    self.additional_parameters["Assemblies_Costs"] = 0.0
+        
+                os.system('rm -f {}.parcs_pin*'.format(fname))
+
+            except subprocess.TimeoutExpired:
+                print('Timed out - killing')
+            
+                os.system('rm -f {}.parcs_pin*'.format(fname))
+                self.parameters["cycle_length"]['value'] = np.random.uniform(0,10)
+                self.parameters["PinPowerPeaking"]['value'] = np.random.uniform(10,20)
+                self.parameters["FDeltaH"]['value'] = np.random.uniform(10,20)
+                self.parameters["max_boron"]['value'] = np.random.uniform(2000,5000)
+                self.additional_parameters= {}
+                self.additional_parameters["LCOE"] = 0.0
+                self.additional_parameters["Discharge_Burnup"]=0.0
+                self.additional_parameters["Assemblies_Costs"] = 0.0
+
+            print('{} calculation is done!'.format(self.name))
             os.chdir(pwd)
             gc.collect()  
+            print('finished collecting garbage...')
+            print('exiting evaluate...')
 
 
