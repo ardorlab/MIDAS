@@ -31,6 +31,10 @@ samples/sample_5/*
 !samples/sample_5/sa_cycle_3_crud.yaml
 !samples/sample_5/run.sh
 
+samples/sample_6/*
+!samples/sample_6/readme
+!samples/sample_6/cycle1.yaml
+!samples/sample_6/run.sh
 
 # rl_dev
 
@@ -38,6 +42,7 @@ samples/sample_5/*
 # else
 __pycache__/
 
+cases/
 run/
 *.png
 run1/
