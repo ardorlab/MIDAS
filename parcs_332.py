@@ -1358,7 +1358,7 @@ class Loading_Pattern_Solution(Solution):
             print('Execute PARCS')
             print('Running in process')
             try:
-                output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=30)
+                output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=50)
                 # Get Results
                 if 'Finished' in str(output):
                     ofile = fname + '.out'
