@@ -37,9 +37,9 @@ samples/sample_6/*
 !samples/sample_6/run.sh
 
 samples/sample_7/*
-!samples/sample_6/readme
-!samples/sample_6/cycle1.yaml
-!samples/sample_6/run.sh
+!samples/sample_7/readme
+!samples/sample_7/cycle1.yaml
+!samples/sample_7/run.sh
 
 
 # rl_dev
