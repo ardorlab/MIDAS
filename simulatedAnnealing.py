@@ -4,16 +4,19 @@ import copy
 import math
 import numpy
 import random
+import statistics
+import shutil
 from multiprocessing import Pool
 from solution_types import evaluate_function
 from metrics import Simulated_Annealing_Metric_Toolbox
+import multiprocessing
+import time
 
 """
 This file contains a few of the classes and methods involved with 
 performing an optimization via simulated aneealing.
 NOTE: This file does not include the means for reproduction, but is 
 written as imf the class is included. 
-
 Written by Johnny Klemes. 3/19/2020
 """
 
@@ -90,11 +93,8 @@ class Exponential_Decreasing_Cooling_Schedule(object):
    Logarithmic cooling schedule for simulated annealing. Implementing this because Johnny Klemes cooling schedules seem broken.
    His implementation that I pulled from Github is broken at the least, and there isn't sufficient documentation available to 
    understand how to fix it. 
-
    This cooling schedule is about as simple as it can get. 
-
    T = T0*alpha
-
    Where 0.9 < alpha < 1.0 and 1 < T0 < 10
    """
    def __init__(self,alpha,temperature):
@@ -109,7 +109,134 @@ class Exponential_Decreasing_Cooling_Schedule(object):
          self.temperature = 0.0001
       else:
          self.temperature *= self.alpha
-      
+
+def SA(x, k, active, Buffer, BufferCost, self, opt):
+
+   def UpdateActive(Buffer, BufferCost):
+      # finds the sum of the probability of each position in the Buffer
+      scalingfactor = 100
+      SumProb = 0
+      for i in range(len(BufferCost)):
+            # CurrProb = numpy.exp((-1 * BufferCost[i]) / temp)
+            CurrProb = numpy.exp((-1 * BufferCost[i]) / scalingfactor)
+
+            SumProb += CurrProb
+
+      # finds the probability that each position of the buffer will be selected
+      PositionProb = []
+      for i in range(len(BufferCost)):
+            # CurrProb = numpy.exp((-1 * BufferCost[i]) / temp)
+            CurrProb = numpy.exp((-1 * BufferCost[i]) / scalingfactor)
+
+            TotalProb = (CurrProb / SumProb)
+
+            PositionProb.append(TotalProb)
+
+      # uses the probabilities to select which lists to add to the buffer
+      SumProblist = []
+      for i in range(len(Buffer)):
+            if i >= 1:
+               SumProblist.append(SumProblist[i - 1] + PositionProb[i])
+            if i == 0:
+               SumProblist.append(PositionProb[i])
+
+      randomnum = random.uniform(0, 1)
+
+      for i in range(len(Buffer)):
+            if i == 0:
+               if randomnum < SumProblist[i]:
+                  acceptedlist = Buffer[i]
+                  acceptedlistCost = BufferCost[i]
+                  break
+            if i >= 1:
+               if randomnum < SumProblist[i] and randomnum >= SumProblist[i - 1]:
+                  acceptedlist = Buffer[i]
+                  acceptedlistCost = BufferCost[i]
+                  break
+
+      return acceptedlist, acceptedlistCost
+   
+   if x == 0:
+      active = active
+   else:
+      active, activeCost = UpdateActive(Buffer,BufferCost)
+
+   # activeindex = BufferCost.index(min(BufferCost))
+   # active = Buffer[activeindex]
+   # activeCost = BufferCost[activeindex]
+         
+   temp = self.cooling_schedule.temperature
+   # if x <= self.file_settings['optimization']['number_of_generations'] / 2 and temp < 90 and activeCost > -300 :
+   #    temp = 100
+
+   one = []
+   one.append(active)
+
+   one = self.fitness.calculate(one)
+
+   solutions = []
+   solutionsfitness = []
+   BestSolutionSA = active
+   BestSolutionCost = active.fitness 
+   for number in range(self.file_settings['optimization']['population_size']):
+      challenge = self.solution()
+      challenge.genome = self.mutation.reproduce(active.genome)
+      challenge.name = f"child_{x}_{k}_{number}"
+      challenge.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
+      challenge.add_additional_information(self.file_settings)
+      challenge.evaluate()
+
+      test = [challenge]
+      test = self.fitness.calculate(test)
+
+      #determining which solution makes the next generation 
+      # acceptance = numpy.exp(-1*(challenge.fitness-active.fitness)/self.cooling_schedule.temperature)
+      # if k % 2 == 0:
+      acceptance = numpy.exp(-1*(challenge.fitness-active.fitness)/temp)
+      if challenge.fitness < active.fitness:
+            active = copy.deepcopy(challenge)
+      elif random.uniform(0,1) < acceptance:
+            active = challenge
+      if active.fitness < BestSolutionCost:
+         BestSolutionSA = active
+         BestSolutionCost = active.fitness
+
+      if x <= self.file_settings['optimization']['number_of_generations'] / 2:
+         temp = temp * 0.9
+      solutions.append(active)
+      solutionsfitness.append(active.fitness)
+   return (solutions, solutionsfitness, BestSolutionCost, BestSolutionSA)
+
+def SetInitial(self):
+    # ---------------------------------------------------------------------------------------------------
+    Buffer = []
+    for w in range(self.file_settings['optimization']['buffer_length']):
+        active = self.solution()
+
+        active.name = f"start_solution_{w}"
+        active.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
+        active.add_additional_information(self.file_settings)
+
+        active.generate_initial(self.file_settings['genome']['chromosomes'])
+        active.evaluate()
+        Buffer.append(active)
+    Buffer = self.fitness.calculate(Buffer)
+    BufferCost = [Buffer[i].fitness for i in range(len(Buffer))]
+    # for j in range(len(Buffer)):
+    #     print(Buffer[j].fitness)
+
+    # a > 1.0 and a < 2.0
+    a = 1.5
+    deviation = statistics.stdev(BufferCost)
+    # find standard deviation of the costs and caluclate
+    # the initaial temp from the standard deviation
+    initialtemp = a * deviation
+    with open('tempinfo.txt', 'w') as f:
+        f.write(f"{initialtemp}\n")
+
+    # -----------------------------------------------------------------------------------------------------
+    return (Buffer,BufferCost,initialtemp)
+
 class SimulatedAnnealing(object):
    def __init__(self,solution,
                       population,
@@ -117,6 +244,7 @@ class SimulatedAnnealing(object):
                       cooling_schedule,
                       fitness,
                       mutation,
+                      num_procs,
                       file_settings
                 ):
 
@@ -126,6 +254,7 @@ class SimulatedAnnealing(object):
       self.cooling_schedule = cooling_schedule
       self.fitness = fitness
       self.mutation = mutation
+      self.num_procs = num_procs
       self.file_settings = file_settings
       self.number_generations_post_cleanup = 300 #Arbitrarily chosen default.
       if 'cleanup' in file_settings['optimization']:
@@ -163,6 +292,7 @@ class SimulatedAnnealing(object):
          one.append(active)
 
          one = self.fitness.calculate(one)
+         
          for self.generation.current in range(self.generation.total):
             for number in range(self.population.size):
                challenge = self.solution()
@@ -191,6 +321,340 @@ class SimulatedAnnealing(object):
          # plot the parameters over time
          opt.plotter()
          self.cleanup()
+
+   def main_in_parallel(self):
+      def UpdateBuffer(Buffer, BufferCost, TSolutions, TSolutionsfitness):
+
+         # BuffIndex = TSolutionsfitness.index(min(TSolutionsfitness))
+         # BufferCostUpdate = TSolutionsfitness[BuffIndex]
+         # BufferUpdate = TSolutions[BuffIndex]
+         #
+         # BufferremoveMax = BufferCost.index(max(BufferCost))
+         # Buffer.pop(BufferremoveMax)
+         # BufferCost.pop(BufferremoveMax)
+         # Buffer.append(BufferUpdate)
+         # BufferCost.append(BufferCostUpdate)
+         lenTSolutions = len(TSolutions)
+         NewBuffer = []
+         NewBuffCost = []
+         if len(TSolutions) >= self.file_settings['optimization']['buffer_length']:
+             for w in range(self.file_settings['optimization']['buffer_length']):
+                 minTSolutionfitness = min(TSolutionsfitness)
+                 minTSolutionfitnessindex = TSolutionsfitness.index(min(TSolutionsfitness))
+                 minBufferfitness = min(BufferCost)
+                 minBufferfitnessindex = BufferCost.index(min(BufferCost))
+                 if minTSolutionfitness <= minBufferfitness:
+                     NewBuffCost.append(minTSolutionfitness)
+                     NewBuffer.append(TSolutions[minTSolutionfitnessindex])
+                     TSolutionsfitness.pop(minTSolutionfitnessindex)
+                     TSolutions.pop(minTSolutionfitnessindex)
+                 if minTSolutionfitness > minBufferfitness:
+                     NewBuffCost.append(minBufferfitness)
+                     NewBuffer.append(Buffer[minBufferfitnessindex])
+                     BufferCost.pop(minBufferfitnessindex)
+                     Buffer.pop(minBufferfitnessindex)
+
+         if lenTSolutions < self.file_settings['optimization']['buffer_length']:
+             for w in range(len(TSolutions)):
+                 Buffer.pop(BufferCost.index(max(BufferCost)))
+                 BufferCost.pop(BufferCost.index(max(BufferCost)))
+             Buffer.extend(TSolutions)
+             BufferCost.extend(TSolutionsfitness)
+             NewBuffer = Buffer
+             NewBuffCost = BufferCost
+
+         with open('Bufferinfo.txt', 'a') as f:
+             f.write(f"{NewBuffer}\n")
+             f.write(f"{NewBuffCost}\n")
+
+         return NewBuffer, NewBuffCost
+
+      def UpdateActive(temp, Buffer, BufferCost):
+         # finds the sum of the probability of each position in the Buffer
+         scalingfactor = 100
+         SumProb = 0
+         for i in range(len(BufferCost)):
+               # CurrProb = numpy.exp((-1 * BufferCost[i]) / temp)
+               CurrProb = numpy.exp((-1 * BufferCost[i]) / scalingfactor)
+
+               SumProb += CurrProb
+
+         # finds the probability that each position of the buffer will be selected
+         PositionProb = []
+         for i in range(len(BufferCost)):
+               # CurrProb = numpy.exp((-1 * BufferCost[i]) / temp)
+               CurrProb = numpy.exp((-1 * BufferCost[i]) / scalingfactor)
+
+               TotalProb = (CurrProb / SumProb)
+
+               PositionProb.append(TotalProb)
+
+         # uses the probabilities to select which lists to add to the buffer
+         SumProblist = []
+         for i in range(len(Buffer)):
+               if i >= 1:
+                  SumProblist.append(SumProblist[i - 1] + PositionProb[i])
+               if i == 0:
+                  SumProblist.append(PositionProb[i])
+
+         randomnum = random.uniform(0, 1)
+
+         for i in range(len(Buffer)):
+               if i == 0:
+                  if randomnum < SumProblist[i]:
+                     acceptedlist = Buffer[i]
+                     acceptedlistCost = BufferCost[i]
+                     break
+               if i >= 1:
+                  if randomnum < SumProblist[i] and randomnum >= SumProblist[i - 1]:
+                     acceptedlist = Buffer[i]
+                     acceptedlistCost = BufferCost[i]
+                     break
+         with open('UpdateActiveinfo.txt', 'a') as f:
+               f.write(f"{SumProblist} \n")
+               f.write(f"{BufferCost}\n")
+               f.write(f"{randomnum}\n")
+               f.write(f"{acceptedlistCost}\n")
+
+
+         return acceptedlist, acceptedlistCost
+      def InitialSolution(temp, Buffer,BufferCost):
+         # finds the sum of the probability of each position in the Buffer
+         SumProb = 0
+         for i in range(len(Buffer)):
+               CurrProb = numpy.exp((-1 * BufferCost[i]) / temp)
+               SumProb += CurrProb
+
+         # finds the probability that each position of the buffer will be selected
+         PositionProb = []
+         for i in range(len(Buffer)):
+               CurrProb = numpy.exp((-1 * BufferCost[i]) / temp)
+               TotalProb = (CurrProb / SumProb)
+               PositionProb.append(TotalProb)
+
+         # uses the probabilities to select which lists to add to the buffer
+         SumProblist = []
+         for i in range(len(Buffer)):
+               if i >= 1:
+                  SumProblist.append(SumProblist[i - 1] + PositionProb[i])
+               if i == 0:
+                  SumProblist.append(PositionProb[i])
+         # print(SumProblist)
+         randomnum = numpy.random.rand()
+         for i in range(len(Buffer)):
+               if i == 0:
+                  if randomnum < SumProblist[i]:
+                     acceptedlist = Buffer[i]
+                     break
+               if i >= 1:
+                  if randomnum < SumProblist[i] and randomnum > SumProblist[i - 1]:
+                     acceptedlist = Buffer[i]
+                     break
+
+
+         return acceptedlist
+      def InitialTemp(self):
+
+         # calculates the initial temperature based on the standard deviations
+         # of costs when the probability is 100%
+         Buffer = []
+         # a > 1.0 and a < 2.0
+         a = 1.5
+
+         # creates a single initial solution
+         active = self.solution()
+         # active.genome = self.mutation.reproduce(active.genome)
+         active.name = f"initial_temp_calc_start"
+         active.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
+         # active.genome = self.mutation.reproduce(active.genome)
+         active.add_additional_information(self.file_settings)
+         if active.fixed_genome:
+               active.generate_initial_fixed(self.file_settings['genome']['chromosomes'],
+                                             self.file_settings['optimization']['fixed_groups'])
+         else:
+               active.generate_initial(self.file_settings['genome']['chromosomes'])
+         active.evaluate()
+
+         one = []
+         one.append(active)
+
+         one = self.fitness.calculate(one)
+
+         shutil.rmtree("initial_temp_calc_start")
+
+         costs = []
+
+         # creates multiple modifications of the initial solution and stores the fitness of each
+         for j in range(self.file_settings['optimization']['buffer_length']): #
+               challenge = self.solution()
+               challenge.genome = self.mutation.reproduce(active.genome)
+               challenge.name = f"initial_temp_calc_{j}"
+               challenge.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
+               challenge.add_additional_information(self.file_settings)
+               challenge.evaluate()
+               Buffer.append(challenge)
+               test = [challenge]
+               test = self.fitness.calculate(test)
+
+               costs.append(challenge.fitness)
+
+               shutil.rmtree(f"initial_temp_calc_{j}")
+
+
+         deviation = statistics.stdev(costs)
+
+         # find standard deviation of the costs and caluclate
+         # the initaial temp from the standard deviation
+         initialtemp = a * deviation
+
+         return (initialtemp,Buffer)
+      # Lam cooling schedule
+      def LAM(currtemp, deviation, activeCost, BestSolutionCost):
+         # quality > 1 and quality < 2
+         p = numpy.exp(-1 * (activeCost - BestSolutionCost) / currtemp)
+
+         # this needs to be figured out
+         if p == 1:
+               p = 0.9
+         qualityfactor = 1.1
+         # calculate Gp
+         G1 = (4 * p * ((1 - p) ** 2))
+         G2 = ((2 - p) ** 2)
+         Gp = G1 / G2
+         # calculate temperature
+         sk = (1 / currtemp)
+         sk1 = sk + (qualityfactor * (1 / deviation) * (1 / ((sk ** 2) * (deviation ** 2)))) * Gp
+         temp = 1 / sk1
+
+         with open('tempinfo.txt', 'a') as f:
+               f.write(f"{temp}\n")
+
+         return temp
+      # def LAMStats(temp, TSolutionsfitness):
+      def LAMStats(temp, BufferCostlist):
+            STDCostlist = BufferCostlist
+
+            # find standard deviation of cost at current temp
+            if not STDCostlist:
+                deviation = 1
+            else:
+                if len(STDCostlist) == 1:
+                    deviation = 1
+                else:
+                    if statistics.stdev(STDCostlist) == 0:
+                        deviation = 0.001
+                    else:
+                        deviation = statistics.stdev(STDCostlist)
+            return deviation
+
+
+      SetStart = 0
+      # SetStart determines if initial buffer will be set or completely random
+      # if SetStart is 0, then the buffer will be random
+      # if SetStart is 1, Buffer will be predetemined
+      if SetStart == 0:
+         initial_temp, Buffer = InitialTemp(self)
+         Buffer = self.fitness.calculate(Buffer)
+         BufferCost = [Buffer[i].fitness for i in range(len(Buffer))]
+
+      if SetStart == 1:
+         Buffer, BufferCost, initial_temp = SetInitial(self)
+         self.cooling_schedule.temperature = initial_temp
+      # initial_temp, Buffer = InitialTemp(self)
+      # Buffer = self.fitness.calculate(Buffer)
+      # BufferCost = [Buffer[i].fitness for i in range(len(Buffer))]
+
+      opt = Simulated_Annealing_Metric_Toolbox()
+
+      track_file = open('optimization_track_file.txt', 'w')
+      track_file.write("Beginning Optimization \n")
+      track_file.close()
+
+      active = InitialSolution(self.cooling_schedule.temperature,Buffer,BufferCost)
+      active.evaluate()
+      one = []
+      one.append(active)
+
+      one = self.fitness.calculate(one)
+
+      BestSolution = active
+      BestSolutionCost = active.fitness
+      # with open('activeinfo.txt', 'w') as f:
+      #    f.write(f"{active.fitness} \n")
+      with open('BestSolutioninfo.txt', 'w') as f:
+         f.write(f"{BestSolutionCost} \n")
+      with open('Solutionsinfo.txt', 'w') as f:
+         f.write("\n")
+      with open('Tempinfo.txt', 'w') as f:
+         f.write(f"{self.cooling_schedule.temperature}\n")
+      with open('Bufferinfo.txt', 'w') as f:
+         f.write("\n")
+      with open('SArunsinfo.txt', 'w') as f:
+         f.write("\n")
+
+      multiprocessing.set_start_method("spawn")
+      for x in range(self.file_settings['optimization']['number_of_generations']):
+         with multiprocessing.get_context('spawn').Pool(processes= self.num_procs, ) as p:
+            data = p.starmap(SA, [(x, k, active, Buffer, BufferCost, self, opt) for k in range(self.num_procs)])
+         
+
+         # data collection
+         # create list of the costs of the values from data
+         TSolutions = []
+         TSolutionsfitness = []
+         BSolutionsfitness = []
+         BSolutionsSA = []
+         for i in range(len(data)):
+               TSolutions.extend(data[i][0])
+               TSolutionsfitness.extend(data[i][1])
+               BSolutionsfitness.append(data[i][2])
+               BSolutionsSA.append(data[i][3])
+
+         # update Buffer
+         # Buffer, BufferCost = UpdateBuffer(Buffer, BufferCost, TSolutions, TSolutionsfitness)
+         Buffer, BufferCost = UpdateBuffer(Buffer, BufferCost, BSolutionsSA, BSolutionsfitness)
+         # update active solution
+         active, activeCost = UpdateActive(self.cooling_schedule.temperature, Buffer, BufferCost)
+         # activeindex = BufferCost.index(min(BufferCost))
+         # active = Buffer[activeindex]
+         # activeCost = BufferCost[activeindex]
+         
+         for i in range(len(BufferCost)):
+            if BestSolutionCost > BufferCost[i]:
+               BestSolution = Buffer[i]
+               BestSolutionCost = BufferCost[i]
+
+         opt.record_best_and_new_solution(BestSolution, active, self.cooling_schedule)
+
+         # tempdeviation = LAMStats(self.cooling_schedule.temperature, BufferCost)
+         
+         tempdeviation = LAMStats(self.cooling_schedule.temperature, TSolutionsfitness)
+         temp = LAM(self.cooling_schedule.temperature, tempdeviation, activeCost, BestSolutionCost)
+         self.cooling_schedule.temperature = temp
+         # with open('activeinfo.txt', 'a') as f:
+         #       f.write(f"{activeCost} \n")
+         with open('BestSolutioninfo.txt', 'a') as f:
+               f.write(f"{BestSolutionCost} \n")
+         with open('Tempinfo.txt', 'a') as f:
+               f.write(f"{self.cooling_schedule.temperature}\n")
+         with open('SArunsinfo.txt', 'a') as f:
+               f.write(f"{TSolutionsfitness}\n")
+               f.write(f"{BSolutionsfitness}\n")
+         with open('Bufferinfo.txt', 'w') as f:
+            f.write(f"{BufferCost}\n")
+
+         opt.record_best_and_new_solution(BestSolution, active, self.cooling_schedule)
+      track_file = open('optimization_track_file.txt', 'a')
+      track_file.write("End of Optimization \n")
+      track_file.close()
+
+      end = time.time()
+      with open('timeinfo.txt', 'w') as f:
+            f.write(f"{end - start} \n ")
+
+      # plot the parameters over time
+      opt.plotter()
+      self.cleanup()
 
    def cleanup(self):
       """

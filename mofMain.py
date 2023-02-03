@@ -94,6 +94,7 @@ class Optimization_Factory(object):
                                              population=population_,
                                              generation=generation_,
                                              mutation=mutation_,
+                                             num_procs = self.num_procs,
                                              cooling_schedule= cooling_schedule_,
                                              fitness=fitness_,
                                              file_settings=self.file_settings)
