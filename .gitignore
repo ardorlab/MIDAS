@@ -43,8 +43,9 @@ samples/sample_7/*
 
 samples/sample_8/*
 !samples/sample_8/readme
-!samples/sample_8/cycle1.yaml
+!samples/sample_8/cycle1.res
 !samples/sample_8/run.sh
+!samples/sample_8/sa_ne_512_project.yaml
 !samples/sample_8/cms.pwr-all.lib
 
 
