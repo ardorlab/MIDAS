@@ -1069,11 +1069,17 @@ class Loading_Pattern_Solution(Solution):
         self.parameters["FDeltaH"]['value'] = max(fdh)
         self.parameters["max_boron"]['value'] = max(boron)
         if self.parameters["max_boron"]['value'] == 1800.0:
-            drho_dcb=10 
-            drho = (keff[0]-1.0)*10**5
-            dcb = drho/drho_dcb
-            self.parameters["max_boron"]['value'] = 1800.0+dcb
-            self.parameters["cycle_length"]['value'] = 200.0
+            max_boron =0
+            for i in range(len(boron)):
+                if boron[i]== 1800.0:
+                    drho_dcb=10 
+                    drho = (keff[i]-1.0)*10**5
+                    dcb = drho/drho_dcb
+                    mboron = 1800.0+dcb
+                    if mboron > max_boron:
+                        max_boron = mboron
+            self.parameters["max_boron"]['value'] = max_boron
+            
         lcoe, discharge_bu, asb_cost = self.get_lcoe()
         self.additional_parameters= {}
         self.additional_parameters["LCOE"] = lcoe

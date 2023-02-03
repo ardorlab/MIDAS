@@ -120,6 +120,134 @@ class Genetic_Algorithm_Weighted(object):
 
         return solution_list
 
+class Genetic_Algorithm_Weighted_Positive(object):
+    """
+    Does the exact opposite of the regular fitness function. Since Simulated Annealing wants to minimize it
+    and genetic algorithm is supposed to maximize it. Positive values indicate designs that meet the constraints.
+    """
+    def __init__(self):
+        pass
+
+    def calculate(self,solution_list):
+        """
+        Calculates the generic fitness function, based on the listed fitness
+        function above. Returns the solution list with evaluated fitnesses.
+
+        Parameters:
+            solution_list: List
+                List of solutions whose fitness is to be calculated.
+
+        Written by Brian Andersen. 5/24/2020
+        """
+        for solution in solution_list:
+            solution.fitness = 0              #Fitness is probably set to none right now.
+            for param in solution.parameters:
+                #print(param)
+                if solution.parameters[param]['goal'] == 'meet_target':
+                    temp = copy.deepcopy(solution.parameters[param]['target'])
+                    temp -= copy.deepcopy(solution.parameters[param]['value'])
+                    temp = abs(temp)
+                elif solution.parameters[param]['goal'] == 'less_than_target':
+                    temp = copy.deepcopy(solution.parameters[param]['value'])
+                    temp -= solution.parameters[param]['target']
+                    if temp <= 0.0:
+                        temp = 0.0
+                elif solution.parameters[param]['goal'] == 'greater_than_target':
+                    temp = copy.deepcopy(solution.parameters[param]['target'])
+                    temp -= copy.deepcopy(solution.parameters[param]['value'])
+                    if temp <= 0.:
+                        temp = 0.0
+                elif solution.parameters[param]['goal'] == 'minimize':
+                    temp = copy.deepcopy(solution.parameters[param]['value'])
+                elif solution.parameters[param]['goal'] == 'maximize':
+                    temp = 0
+                    max_bool = True
+                    for param_ in solution.parameters:
+                        pgoal = solution.parameters[param_]['goal']
+                        if pgoal == 'less_than_target':
+                            ptarget = copy.deepcopy(solution.parameters[param_]['target'])
+                            pvalue = copy.deepcopy(solution.parameters[param_]['value'])
+                            if pvalue > ptarget:
+                                max_bool = False
+                        elif pgoal == 'greater_than_target':
+                            ptarget = copy.deepcopy(solution.parameters[param_]['target'])
+                            pvalue = copy.deepcopy(solution.parameters[param_]['value'])
+                            if pvalue < ptarget:
+                                max_bool = False
+                    if max_bool:
+                        temp -= copy.deepcopy(solution.parameters[param]['value'])
+                temp *= copy.deepcopy(solution.parameters[param]['weight'])
+
+                solution.fitness -= temp
+
+        return solution_list
+
+class Genetic_Algorithm_Adaptive(object):
+    """
+    Does the exact opposite of the regular fitness function. Since Simulated Annealing wants to minimize it
+    and genetic algorithm is supposed to maximize it. Adaptive weighting based on distance to target.
+    """
+    def __init__(self):
+        pass
+
+    def calculate(self,solution_list):
+        """
+        Calculates the generic fitness function, based on the listed fitness
+        function above. Returns the solution list with evaluated fitnesses.
+
+        Parameters:
+            solution_list: List
+                List of solutions whose fitness is to be calculated.
+
+        Written by Brian Andersen. 5/24/2020
+        """
+        for solution in solution_list:
+            solution.fitness = 0              #Fitness is probably set to none right now.
+            for param in solution.parameters:
+                #print(param)
+                if solution.parameters[param]['goal'] == 'meet_target':
+                    ptarget = copy.deepcopy(solution.parameters[param]['target'])
+                    pvalue = copy.deepcopy(solution.parameters[param]['value'])
+                    temp = abs(ptarget-pvalue)*10000/ptarget
+                elif solution.parameters[param]['goal'] == 'less_than_target':
+                    ptarget = copy.deepcopy(solution.parameters[param]['target'])
+                    pvalue = copy.deepcopy(solution.parameters[param]['value'])
+                    if pvalue <= ptarget:
+                        temp = 0.0
+                    else:
+                        temp = (pvalue-ptarget)*10000/ptarget
+                elif solution.parameters[param]['goal'] == 'greater_than_target':
+                    ptarget = copy.deepcopy(solution.parameters[param]['target'])
+                    pvalue = copy.deepcopy(solution.parameters[param]['value'])
+                    if pvalue >= ptarget:
+                        temp = 0.0
+                    else:
+                        temp = (ptarget-pvalue)*10000/ptarget
+                elif solution.parameters[param]['goal'] == 'minimize':
+                    temp = copy.deepcopy(solution.parameters[param]['value'])
+                    temp *= copy.deepcopy(solution.parameters[param]['weight'])
+                elif solution.parameters[param]['goal'] == 'maximize':
+                    temp = 0
+                    max_bool = True
+                    for param_ in solution.parameters:
+                        pgoal = solution.parameters[param_]['goal']
+                        if pgoal == 'less_than_target':
+                            ptarget = copy.deepcopy(solution.parameters[param_]['target'])
+                            pvalue = copy.deepcopy(solution.parameters[param_]['value'])
+                            if pvalue > ptarget:
+                                max_bool = False
+                        elif pgoal == 'greater_than_target':
+                            ptarget = copy.deepcopy(solution.parameters[param_]['target'])
+                            pvalue = copy.deepcopy(solution.parameters[param_]['value'])
+                            if pvalue < ptarget:
+                                max_bool = False
+                    if max_bool:
+                        temp -= copy.deepcopy(solution.parameters[param]['value'])
+                    temp *= copy.deepcopy(solution.parameters[param]['weight'])
+
+                solution.fitness -= temp
+
+        return solution_list
 
 class Ranked_Fitness(Fitness):
     """

@@ -378,6 +378,16 @@ class Optimization_Factory(object):
             fmethod_ = fitness.Binned_Fitness()
         elif fit_method.upper() == 'ACDPF':
             fmethod_ = fitness.ACDPF()
+        elif fit_method == 'weighted_positive':
+            if method =='genetic_algorithm':
+                return fitness.Genetic_Algorithm_Weighted_Positive()
+            else:
+                return fitness.Fitness()
+        elif fit_method == 'adaptive':
+            if method =='genetic_algorithm':
+                return fitness.Genetic_Algorithm_Adaptive()
+            else:
+                return fitness.Fitness()
         elif fit_method  == 'weighted':
             if method =='genetic_algorithm':
                 return fitness.Genetic_Algorithm_Weighted()
