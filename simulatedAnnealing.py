@@ -213,6 +213,7 @@ def SA(x, k, active, Buffer, BufferCost, self, opt):
 def SetInitial(self):
     """
     Created by Jake Mikouchi
+    2/10/23
     """
     # ---------------------------------------------------------------------------------------------------
     Buffer = []
