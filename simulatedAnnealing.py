@@ -208,6 +208,9 @@ def SA(x, k, active, Buffer, BufferCost, self, opt):
    return (solutions, solutionsfitness, BestSolutionCost, BestSolutionSA)
 
 def SetInitial(self):
+    """
+    Created by Jake Mikouchi
+    """
     # ---------------------------------------------------------------------------------------------------
     Buffer = []
     for w in range(self.file_settings['optimization']['buffer_length']):
