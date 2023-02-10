@@ -113,6 +113,7 @@ class Exponential_Decreasing_Cooling_Schedule(object):
 def SA(x, k, active, Buffer, BufferCost, self, opt):
  """
  Created by Jake Mikouchi
+ 2/10/23
  """
    def UpdateActive(Buffer, BufferCost):
       # finds the sum of the probability of each position in the Buffer
