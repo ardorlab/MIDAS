@@ -261,7 +261,7 @@ class Loading_Pattern_Solution(Solution):
         Extracts the unique fuel assemblies from the core in a dictionary.
 
         Parameters: 
-           - core_dict: a core dictionary.
+           - core_dict: a core dictionary including all the geometrical parameters.
 
         Written by Gregory Delipei 7/12/2022
         """
