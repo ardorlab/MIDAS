@@ -20,114 +20,120 @@ written as imf the class is included.
 Written by Johnny Klemes. 3/19/2020
 """
 
+
 class Cooling_Schedule(object):
     """
-    Class for Simulated Annealing cooling schedules. 
-    
-    THe cooling schedule sets the tolerance for accepting new solutions. 
-    A high initial temperature indicates accepting a more new designs even if 
-    they have a less favorable objective function. Thus the logarithmic cooling 
+    Class for Simulated Annealing cooling schedules.
+
+    THe cooling schedule sets the tolerance for accepting new solutions.
+    A high initial temperature indicates accepting a more new designs even if
+    they have a less favorable objective function. Thus the logarithmic cooling
     schedule is favorable for this problem.
-    
-    There are two cooling schedules defined below. In both the temperature is 
-    determined by the current era of a lifetime, represented by a piecewise 
+
+    There are two cooling schedules defined below. In both the temperature is
+    determined by the current era of a lifetime, represented by a piecewise
     function. THe second cooling schedule is identical to the first but with
     two cycles.
-   
+
     """
-    def __init__(self,generation):
+
+    def __init__(self, generation):
         self.generation = generation
 
     @staticmethod
-    def piecewise(gen,lifet):
-       if gen <= 3/12*lifet:
-          temp = gen
-          y = 2*numpy.log(temp/(4/12*lifet))
-       elif gen <= 4/12*lifet and gen > 3/12*lifet:
-          y = 1000
-       elif gen > 4/12*lifet and gen <= 6/12*lifet:
-          temp = gen - 4/12*lifet
-          y = numpy.log(0.8*temp/(3/12*lifet))
-       elif gen > 6/12*lifet and gen <= 7/12*lifet:
-          y = 1000
-       elif gen > 7/12*lifet and gen <= 10/12*lifet:
-          temp = gen - 7/12*lifet
-          y = 3*numpy.log(0.8*temp/(4/12*lifet))
-       else:
-          y = 1000
+    def piecewise(gen, lifet):
+        if gen <= 3 / 12 * lifet:
+            temp = gen
+            y = 2 * numpy.log(temp / (4 / 12 * lifet))
+        elif gen <= 4 / 12 * lifet and gen > 3 / 12 * lifet:
+            y = 1000
+        elif gen > 4 / 12 * lifet and gen <= 6 / 12 * lifet:
+            temp = gen - 4 / 12 * lifet
+            y = numpy.log(0.8 * temp / (3 / 12 * lifet))
+        elif gen > 6 / 12 * lifet and gen <= 7 / 12 * lifet:
+            y = 1000
+        elif gen > 7 / 12 * lifet and gen <= 10 / 12 * lifet:
+            temp = gen - 7 / 12 * lifet
+            y = 3 * numpy.log(0.8 * temp / (4 / 12 * lifet))
+        else:
+            y = 1000
 
-       return y
+        return y
 
     @staticmethod
-    def twicewise(gen,lifet):
-       if gen <= 3/24*lifet:
-          temp = gen
-          y = 2*numpy.log(temp/(4/24*lifet))
-       elif gen <= 4/24*lifet and gen > 3/24*lifet:
-          y = 1000
-       elif gen > 4/24*lifet and gen <= 6/24*lifet:
-          temp = gen - 4/24*total
-          y = numpy.log(0.8*temp/(3/24*lifet))
-       elif gen > 6/24*lifet and gen <= 7/24*lifet:
-          y = 1000
-       elif gen > 7/24*lifet and gen <= 10/24*lifet:
-          temp = gen - 7/24*lifet
-          y = 3*numpy.log(0.8*temp/(4/24*lifet))
-       elif gen > 10/24*lifet and gen <= 1/2*lifet:
-          y = 1000
-       elif gen > 1/2*lifet and gen <= 15/24*lifet:
-          temp = gen - 1/2*lifet
-          y = 2*numpy.log(temp/(4/24*lifet))
-       elif gen <= 16/24*lifet and gen > 15/24*lifet:
-          y = 1000
-       elif gen <= 19/24*lifet and gen > 16/24*lifet:
-          temp = gen - 16/24*lifet
-          y = 3*numpy.log(0.8*temp/(4/24*lifet))
-       else:
-          y = 1000
+    def twicewise(gen, lifet):
+        if gen <= 3 / 24 * lifet:
+            temp = gen
+            y = 2 * numpy.log(temp / (4 / 24 * lifet))
+        elif gen <= 4 / 24 * lifet and gen > 3 / 24 * lifet:
+            y = 1000
+        elif gen > 4 / 24 * lifet and gen <= 6 / 24 * lifet:
+            temp = gen - 4 / 24 * total
+            y = numpy.log(0.8 * temp / (3 / 24 * lifet))
+        elif gen > 6 / 24 * lifet and gen <= 7 / 24 * lifet:
+            y = 1000
+        elif gen > 7 / 24 * lifet and gen <= 10 / 24 * lifet:
+            temp = gen - 7 / 24 * lifet
+            y = 3 * numpy.log(0.8 * temp / (4 / 24 * lifet))
+        elif gen > 10 / 24 * lifet and gen <= 1 / 2 * lifet:
+            y = 1000
+        elif gen > 1 / 2 * lifet and gen <= 15 / 24 * lifet:
+            temp = gen - 1 / 2 * lifet
+            y = 2 * numpy.log(temp / (4 / 24 * lifet))
+        elif gen <= 16 / 24 * lifet and gen > 15 / 24 * lifet:
+            y = 1000
+        elif gen <= 19 / 24 * lifet and gen > 16 / 24 * lifet:
+            temp = gen - 16 / 24 * lifet
+            y = 3 * numpy.log(0.8 * temp / (4 / 24 * lifet))
+        else:
+            y = 1000
 
-       return y
+        return y
+
 
 class Exponential_Decreasing_Cooling_Schedule(object):
-   """
-   Logarithmic cooling schedule for simulated annealing. Implementing this because Johnny Klemes cooling schedules seem broken.
-   His implementation that I pulled from Github is broken at the least, and there isn't sufficient documentation available to 
-   understand how to fix it. 
-   This cooling schedule is about as simple as it can get. 
-   T = T0*alpha
-   Where 0.9 < alpha < 1.0 and 1 < T0 < 10
-   """
-   def __init__(self,alpha,temperature):
-      self.alpha = 1. - alpha
-      self.temperature = temperature
+    """
+    Logarithmic cooling schedule for simulated annealing. Implementing this because Johnny Klemes cooling schedules seem broken.
+    His implementation that I pulled from Github is broken at the least, and there isn't sufficient documentation available to
+    understand how to fix it.
+    This cooling schedule is about as simple as it can get.
+    T = T0*alpha
+    Where 0.9 < alpha < 1.0 and 1 < T0 < 10
+    """
 
-   def update(self):
-      """
-      Updates the temperature of the cooling schedule.
-      """
-      if self.temperature <= 0.0001:
-         self.temperature = 0.0001
-      else:
-         self.temperature *= self.alpha
+    def __init__(self, alpha, temperature):
+        self.alpha = 1. - alpha
+        self.temperature = temperature
+
+    def update(self):
+        """
+        Updates the temperature of the cooling schedule.
+        """
+        if self.temperature <= 0.0001:
+            self.temperature = 0.0001
+        else:
+            self.temperature *= self.alpha
+
 
 def SA(x, k, active, Buffer, BufferCost, self, opt):
- """
- Created by Jake Mikouchi
- 2/10/23
- """
-   def UpdateActive(Buffer, BufferCost):
-      # finds the sum of the probability of each position in the Buffer
-      scalingfactor = 100
-      SumProb = 0
-      for i in range(len(BufferCost)):
+    """
+    Created by Jake Mikouchi
+    2/10/23
+    """
+
+    def UpdateActive(Buffer, BufferCost):
+        # finds the sum of the probability of each position in the Buffer
+        scalingfactor = 100
+        SumProb = 0
+        for i in range(len(BufferCost)):
             # CurrProb = numpy.exp((-1 * BufferCost[i]) / temp)
             CurrProb = numpy.exp((-1 * BufferCost[i]) / scalingfactor)
 
             SumProb += CurrProb
 
-      # finds the probability that each position of the buffer will be selected
-      PositionProb = []
-      for i in range(len(BufferCost)):
+        # finds the probability that each position of the buffer will be selected
+        PositionProb = []
+        for i in range(len(BufferCost)):
             # CurrProb = numpy.exp((-1 * BufferCost[i]) / temp)
             CurrProb = numpy.exp((-1 * BufferCost[i]) / scalingfactor)
 
@@ -135,75 +141,81 @@ def SA(x, k, active, Buffer, BufferCost, self, opt):
 
             PositionProb.append(TotalProb)
 
-      # uses the probabilities to select which lists to add to the buffer
-      SumProblist = []
-      for i in range(len(Buffer)):
+        # uses the probabilities to select which lists to add to the buffer
+        SumProblist = []
+        for i in range(len(Buffer)):
             if i >= 1:
-               SumProblist.append(SumProblist[i - 1] + PositionProb[i])
+                SumProblist.append(SumProblist[i - 1] + PositionProb[i])
             if i == 0:
-               SumProblist.append(PositionProb[i])
+                SumProblist.append(PositionProb[i])
 
-      randomnum = random.uniform(0, 1)
+        randomnum = random.uniform(0, 1)
 
-      for i in range(len(Buffer)):
+        for i in range(len(Buffer)):
             if i == 0:
-               if randomnum < SumProblist[i]:
-                  acceptedlist = Buffer[i]
-                  acceptedlistCost = BufferCost[i]
-                  break
+                if randomnum < SumProblist[i]:
+                    acceptedlist = Buffer[i]
+                    acceptedlistCost = BufferCost[i]
+                    break
             if i >= 1:
-               if randomnum < SumProblist[i] and randomnum >= SumProblist[i - 1]:
-                  acceptedlist = Buffer[i]
-                  acceptedlistCost = BufferCost[i]
-                  break
+                if randomnum < SumProblist[i] and randomnum >= SumProblist[i - 1]:
+                    acceptedlist = Buffer[i]
+                    acceptedlistCost = BufferCost[i]
+                    break
 
-      return acceptedlist, acceptedlistCost
-   
-   if x == 0:
-      active = active
-   else:
-      active, activeCost = UpdateActive(Buffer,BufferCost)
+        return acceptedlist, acceptedlistCost
 
-         
-   temp = self.cooling_schedule.temperature
-   # if x <= self.file_settings['optimization']['number_of_generations'] / 2 and temp < 90 and activeCost > -300 :
-   #    temp = 100
+    if x == 0:
+        active = active
+    else:
+        active, activeCost = UpdateActive(Buffer, BufferCost)
 
-   one = []
-   one.append(active)
+    # activeindex = BufferCost.index(min(BufferCost))
+    # active = Buffer[activeindex]
+    # activeCost = BufferCost[activeindex]
 
-   one = self.fitness.calculate(one)
+    temp = self.cooling_schedule.temperature
+    # if x <= self.file_settings['optimization']['number_of_generations'] / 2 and temp < 90 and activeCost > -300 :
+    #    temp = 100
 
-   solutions = []
-   solutionsfitness = []
-   BestSolutionSA = active
-   BestSolutionCost = active.fitness 
-   for number in range(self.file_settings['optimization']['population_size']):
-      challenge = self.solution()
-      challenge.genome = self.mutation.reproduce(active.genome)
-      challenge.name = f"child_{x}_{k}_{number}"
-      challenge.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
-      challenge.add_additional_information(self.file_settings)
-      challenge.evaluate()
+    one = []
+    one.append(active)
 
-      test = [challenge]
-      test = self.fitness.calculate(test)
+    one = self.fitness.calculate(one)
 
-      #determining which solution makes the next generation
-      acceptance = numpy.exp(-1*(challenge.fitness-active.fitness)/temp)
-      if challenge.fitness < active.fitness:
+    solutions = []
+    solutionsfitness = []
+    BestSolutionSA = active
+    BestSolutionCost = active.fitness
+    for number in range(self.file_settings['optimization']['population_size']):
+        challenge = self.solution()
+        challenge.genome = self.mutation.reproduce(active.genome)
+        challenge.name = f"child_{x}_{k}_{number}"
+        challenge.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
+        challenge.add_additional_information(self.file_settings)
+        challenge.evaluate()
+
+        test = [challenge]
+        test = self.fitness.calculate(test)
+
+        # determining which solution makes the next generation
+        # acceptance = numpy.exp(-1*(challenge.fitness-active.fitness)/self.cooling_schedule.temperature)
+        # if k % 2 == 0:
+        acceptance = numpy.exp(-1 * (challenge.fitness - active.fitness) / temp)
+        if challenge.fitness < active.fitness:
             active = copy.deepcopy(challenge)
-      elif random.uniform(0,1) < acceptance:
+        elif random.uniform(0, 1) < acceptance:
             active = challenge
-      if active.fitness < BestSolutionCost:
-         BestSolutionSA = active
-         BestSolutionCost = active.fitness
+        if active.fitness < BestSolutionCost:
+            BestSolutionSA = active
+            BestSolutionCost = active.fitness
 
-      if x <= self.file_settings['optimization']['number_of_generations'] / 2:
-         temp = temp * 0.9
-      solutions.append(active)
-      solutionsfitness.append(active.fitness)
-   return (solutions, solutionsfitness, BestSolutionCost, BestSolutionSA)
+        if x <= self.file_settings['optimization']['number_of_generations'] / 2:
+            temp = temp * 0.9
+        solutions.append(active)
+        solutionsfitness.append(active.fitness)
+    return (solutions, solutionsfitness, BestSolutionCost, BestSolutionSA)
+
 
 def SetInitial(self):
     """
@@ -224,6 +236,9 @@ def SetInitial(self):
         Buffer.append(active)
     Buffer = self.fitness.calculate(Buffer)
     BufferCost = [Buffer[i].fitness for i in range(len(Buffer))]
+    # for j in range(len(Buffer)):
+    #     print(Buffer[j].fitness)
+
     # a > 1.0 and a < 2.0
     a = 1.5
     deviation = statistics.stdev(BufferCost)
@@ -234,286 +249,281 @@ def SetInitial(self):
         f.write(f"{initialtemp}\n")
 
     # -----------------------------------------------------------------------------------------------------
-    return (Buffer,BufferCost,initialtemp)
+    return (Buffer, BufferCost, initialtemp)
+
 
 class SimulatedAnnealing(object):
-   def __init__(self,solution,
-                      population,
-                      generation,
-                      cooling_schedule,
-                      fitness,
-                      mutation,
-                      num_procs,
-                      file_settings
-                ):
+    def __init__(self, solution,
+                 population,
+                 generation,
+                 cooling_schedule,
+                 fitness,
+                 mutation,
+                 num_procs,
+                 file_settings
+                 ):
 
-      self.solution = solution
-      self.population = population
-      self.generation = generation
-      self.cooling_schedule = cooling_schedule
-      self.fitness = fitness
-      self.mutation = mutation
-      self.num_procs = num_procs
-      self.file_settings = file_settings
-      self.number_generations_post_cleanup = 300 #Arbitrarily chosen default.
-      if 'cleanup' in file_settings['optimization']:
-          if file_settings['optimization']['cleanup']['perform']:
-              self.perform_cleanup = True
-          else: 
-              self.perform_cleanup = False
-      else:
-          self.perform_cleanup = False
+        self.solution = solution
+        self.population = population
+        self.generation = generation
+        self.cooling_schedule = cooling_schedule
+        self.fitness = fitness
+        self.mutation = mutation
+        self.num_procs = num_procs
+        self.file_settings = file_settings
+        self.number_generations_post_cleanup = 300  # Arbitrarily chosen default.
+        if 'cleanup' in file_settings['optimization']:
+            if file_settings['optimization']['cleanup']['perform']:
+                self.perform_cleanup = True
+            else:
+                self.perform_cleanup = False
+        else:
+            self.perform_cleanup = False
 
-   def main_in_serial(self):
-         """
-         Performs optimization using simulated annealing for a population size of one
-         """
-         opt = Simulated_Annealing_Metric_Toolbox()
+    def main_in_serial(self):
+        """
+        Performs optimization using simulated annealing for a population size of one
+        """
+        opt = Simulated_Annealing_Metric_Toolbox()
 
-         track_file = open('optimization_track_file.txt','w')
-         track_file.write("Beginning Optimization \n")
-         track_file.close()
+        track_file = open('optimization_track_file.txt', 'w')
+        track_file.write("Beginning Optimization \n")
+        track_file.close()
 
-         # defining the active solution 
-         active = self.solution()
-         active.name = "initial_solution"
-         active.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
-         active.add_additional_information(self.file_settings)
-         if active.fixed_genome:
+        # defining the active solution
+        active = self.solution()
+        active.name = "initial_solution"
+        active.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
+        active.add_additional_information(self.file_settings)
+        if active.fixed_genome:
             active.generate_initial_fixed(self.file_settings['genome']['chromosomes'],
                                           self.file_settings['optimization']['fixed_groups'])
-         else:
+        else:
             active.generate_initial(self.file_settings['genome']['chromosomes'])
-         #print(active.genome)
-         active.evaluate()
-         # will store the fit for active solution
-         one = []
-         one.append(active)
+        # print(active.genome)
+        active.evaluate()
+        # will store the fit for active solution
+        one = []
+        one.append(active)
 
-         one = self.fitness.calculate(one)
-         
-         for self.generation.current in range(self.generation.total):
+        one = self.fitness.calculate(one)
+
+        for self.generation.current in range(self.generation.total):
             for number in range(self.population.size):
-               challenge = self.solution()
-               challenge.genome = self.mutation.reproduce(active.genome)
-               challenge.name = "solution_{}_{}".format(self.generation.current,number)
-               challenge.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
-               challenge.add_additional_information(self.file_settings)
-               challenge.evaluate()
+                challenge = self.solution()
+                challenge.genome = self.mutation.reproduce(active.genome)
+                challenge.name = "solution_{}_{}".format(self.generation.current, number)
+                challenge.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
+                challenge.add_additional_information(self.file_settings)
+                challenge.evaluate()
 
-               test = [challenge]
-               test = self.fitness.calculate(test)
-   
-               #determining which solution makes the next generation 
-               opt.record_best_and_new_solution(active,challenge,self.cooling_schedule)
-               acceptance = numpy.exp(-1*(challenge.fitness-active.fitness)/self.cooling_schedule.temperature)
-               if challenge.fitness < active.fitness:
-                   active = copy.deepcopy(challenge)
-               elif random.uniform(0,1) < acceptance:
-                   active = challenge
+                test = [challenge]
+                test = self.fitness.calculate(test)
+
+                # determining which solution makes the next generation
+                opt.record_best_and_new_solution(active, challenge, self.cooling_schedule)
+                acceptance = numpy.exp(-1 * (challenge.fitness - active.fitness) / self.cooling_schedule.temperature)
+                if challenge.fitness < active.fitness:
+                    active = copy.deepcopy(challenge)
+                elif random.uniform(0, 1) < acceptance:
+                    active = challenge
             self.cooling_schedule.update()
-   
-         track_file = open('optimization_track_file.txt','a')
-         track_file.write("End of Optimization \n")
-         track_file.close()
 
-         # plot the parameters over time
-         opt.plotter()
-         self.cleanup()
+        track_file = open('optimization_track_file.txt', 'a')
+        track_file.write("End of Optimization \n")
+        track_file.close()
 
-   def main_in_parallel(self):
-      """
-      Created by Jake Mikouchi
-      2/16/2023
-      """
-      def UpdateBuffer(Buffer, BufferCost, TSolutions, TSolutionsfitness):
+        # plot the parameters over time
+        opt.plotter()
+        self.cleanup()
 
-         lenTSolutions = len(TSolutions)
-         NewBuffer = []
-         NewBuffCost = []
-         if len(TSolutions) >= self.file_settings['optimization']['buffer_length']:
-             for w in range(self.file_settings['optimization']['buffer_length']):
-                 minTSolutionfitness = min(TSolutionsfitness)
-                 minTSolutionfitnessindex = TSolutionsfitness.index(min(TSolutionsfitness))
-                 minBufferfitness = min(BufferCost)
-                 minBufferfitnessindex = BufferCost.index(min(BufferCost))
-                 if minTSolutionfitness <= minBufferfitness:
-                     NewBuffCost.append(minTSolutionfitness)
-                     NewBuffer.append(TSolutions[minTSolutionfitnessindex])
-                     TSolutionsfitness.pop(minTSolutionfitnessindex)
-                     TSolutions.pop(minTSolutionfitnessindex)
-                 if minTSolutionfitness > minBufferfitness:
-                     NewBuffCost.append(minBufferfitness)
-                     NewBuffer.append(Buffer[minBufferfitnessindex])
-                     BufferCost.pop(minBufferfitnessindex)
-                     Buffer.pop(minBufferfitnessindex)
+    def main_in_parallel(self):
+        def UpdateBuffer(Buffer, BufferCost, TSolutions, TSolutionsfitness):
 
-         if lenTSolutions < self.file_settings['optimization']['buffer_length']:
-             for w in range(len(TSolutions)):
-                 Buffer.pop(BufferCost.index(max(BufferCost)))
-                 BufferCost.pop(BufferCost.index(max(BufferCost)))
-             Buffer.extend(TSolutions)
-             BufferCost.extend(TSolutionsfitness)
-             NewBuffer = Buffer
-             NewBuffCost = BufferCost
+            lenTSolutions = len(TSolutions)
+            NewBuffer = []
+            NewBuffCost = []
+            if len(TSolutions) >= self.file_settings['optimization']['buffer_length']:
+                for w in range(self.file_settings['optimization']['buffer_length']):
+                    minTSolutionfitness = min(TSolutionsfitness)
+                    minTSolutionfitnessindex = TSolutionsfitness.index(min(TSolutionsfitness))
+                    minBufferfitness = min(BufferCost)
+                    minBufferfitnessindex = BufferCost.index(min(BufferCost))
+                    if minTSolutionfitness <= minBufferfitness:
+                        NewBuffCost.append(minTSolutionfitness)
+                        NewBuffer.append(TSolutions[minTSolutionfitnessindex])
+                        TSolutionsfitness.pop(minTSolutionfitnessindex)
+                        TSolutions.pop(minTSolutionfitnessindex)
+                    if minTSolutionfitness > minBufferfitness:
+                        NewBuffCost.append(minBufferfitness)
+                        NewBuffer.append(Buffer[minBufferfitnessindex])
+                        BufferCost.pop(minBufferfitnessindex)
+                        Buffer.pop(minBufferfitnessindex)
 
-         with open('Bufferinfo.txt', 'a') as f:
-             f.write(f"{NewBuffer}\n")
-             f.write(f"{NewBuffCost}\n")
+            if lenTSolutions < self.file_settings['optimization']['buffer_length']:
+                for w in range(len(TSolutions)):
+                    Buffer.pop(BufferCost.index(max(BufferCost)))
+                    BufferCost.pop(BufferCost.index(max(BufferCost)))
+                Buffer.extend(TSolutions)
+                BufferCost.extend(TSolutionsfitness)
+                NewBuffer = Buffer
+                NewBuffCost = BufferCost
 
-         return NewBuffer, NewBuffCost
-      def UpdateActive(temp, Buffer, BufferCost):
-         # finds the sum of the probability of each position in the Buffer
-         scalingfactor = 100
-         SumProb = 0
-         for i in range(len(BufferCost)):
-               CurrProb = numpy.exp((-1 * BufferCost[i]) / scalingfactor)
-               SumProb += CurrProb
+            return NewBuffer, NewBuffCost
 
-         # finds the probability that each position of the buffer will be selected
-         PositionProb = []
-         for i in range(len(BufferCost)):
-               CurrProb = numpy.exp((-1 * BufferCost[i]) / scalingfactor)
-               TotalProb = (CurrProb / SumProb)
-               PositionProb.append(TotalProb)
+        def UpdateActive(temp, Buffer, BufferCost):
+            # finds the sum of the probability of each position in the Buffer
+            scalingfactor = 100
+            SumProb = 0
+            for i in range(len(BufferCost)):
+                CurrProb = numpy.exp((-1 * BufferCost[i]) / scalingfactor)
+                SumProb += CurrProb
 
-         # uses the probabilities to select which lists to add to the buffer
-         SumProblist = []
-         for i in range(len(Buffer)):
-               if i >= 1:
-                  SumProblist.append(SumProblist[i - 1] + PositionProb[i])
-               if i == 0:
-                  SumProblist.append(PositionProb[i])
+            # finds the probability that each position of the buffer will be selected
+            PositionProb = []
+            for i in range(len(BufferCost)):
+                CurrProb = numpy.exp((-1 * BufferCost[i]) / scalingfactor)
+                TotalProb = (CurrProb / SumProb)
+                PositionProb.append(TotalProb)
 
-         randomnum = random.uniform(0, 1)
+            # uses the probabilities to select which lists to add to the buffer
+            SumProblist = []
+            for i in range(len(Buffer)):
+                if i >= 1:
+                    SumProblist.append(SumProblist[i - 1] + PositionProb[i])
+                if i == 0:
+                    SumProblist.append(PositionProb[i])
 
-         for i in range(len(Buffer)):
-               if i == 0:
-                  if randomnum < SumProblist[i]:
-                     acceptedlist = Buffer[i]
-                     acceptedlistCost = BufferCost[i]
-                     break
-               if i >= 1:
-                  if randomnum < SumProblist[i] and randomnum >= SumProblist[i - 1]:
-                     acceptedlist = Buffer[i]
-                     acceptedlistCost = BufferCost[i]
-                     break
+            randomnum = random.uniform(0, 1)
 
-         return acceptedlist, acceptedlistCost
-      def InitialSolution(temp, Buffer,BufferCost):
-         # finds the sum of the probability of each position in the Buffer
-         SumProb = 0
-         for i in range(len(Buffer)):
-               CurrProb = numpy.exp((-1 * BufferCost[i]) / temp)
-               SumProb += CurrProb
+            for i in range(len(Buffer)):
+                if i == 0:
+                    if randomnum < SumProblist[i]:
+                        acceptedlist = Buffer[i]
+                        acceptedlistCost = BufferCost[i]
+                        break
+                if i >= 1:
+                    if randomnum < SumProblist[i] and randomnum >= SumProblist[i - 1]:
+                        acceptedlist = Buffer[i]
+                        acceptedlistCost = BufferCost[i]
+                        break
 
-         # finds the probability that each position of the buffer will be selected
-         PositionProb = []
-         for i in range(len(Buffer)):
-               CurrProb = numpy.exp((-1 * BufferCost[i]) / temp)
-               TotalProb = (CurrProb / SumProb)
-               PositionProb.append(TotalProb)
+            return acceptedlist, acceptedlistCost
 
-         # uses the probabilities to select which lists to add to the buffer
-         SumProblist = []
-         for i in range(len(Buffer)):
-               if i >= 1:
-                  SumProblist.append(SumProblist[i - 1] + PositionProb[i])
-               if i == 0:
-                  SumProblist.append(PositionProb[i])
-         randomnum = numpy.random.rand()
-         for i in range(len(Buffer)):
-               if i == 0:
-                  if randomnum < SumProblist[i]:
-                     acceptedlist = Buffer[i]
-                     break
-               if i >= 1:
-                  if randomnum < SumProblist[i] and randomnum > SumProblist[i - 1]:
-                     acceptedlist = Buffer[i]
-                     break
+        def InitialSolution(temp, Buffer, BufferCost):
+            # finds the sum of the probability of each position in the Buffer
+            SumProb = 0
+            for i in range(len(Buffer)):
+                CurrProb = numpy.exp((-1 * BufferCost[i]) / temp)
+                SumProb += CurrProb
 
+            # finds the probability that each position of the buffer will be selected
+            PositionProb = []
+            for i in range(len(Buffer)):
+                CurrProb = numpy.exp((-1 * BufferCost[i]) / temp)
+                TotalProb = (CurrProb / SumProb)
+                PositionProb.append(TotalProb)
 
-         return acceptedlist
-      def InitialTemp(self):
+            # uses the probabilities to select which lists to add to the buffer
+            SumProblist = []
+            for i in range(len(Buffer)):
+                if i >= 1:
+                    SumProblist.append(SumProblist[i - 1] + PositionProb[i])
+                if i == 0:
+                    SumProblist.append(PositionProb[i])
+            randomnum = numpy.random.rand()
+            for i in range(len(Buffer)):
+                if i == 0:
+                    if randomnum < SumProblist[i]:
+                        acceptedlist = Buffer[i]
+                        break
+                if i >= 1:
+                    if randomnum < SumProblist[i] and randomnum > SumProblist[i - 1]:
+                        acceptedlist = Buffer[i]
+                        break
 
-         # calculates the initial temperature based on the standard deviations
-         # of costs when the probability is 100%
-         Buffer = []
-         # a > 1.0 and a < 2.0
-         a = 1.5
+            return acceptedlist
 
-         # creates a single initial solution
-         active = self.solution()
-         # active.genome = self.mutation.reproduce(active.genome)
-         active.name = f"initial_temp_calc_start"
-         active.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
-         # active.genome = self.mutation.reproduce(active.genome)
-         active.add_additional_information(self.file_settings)
-         if active.fixed_genome:
-               active.generate_initial_fixed(self.file_settings['genome']['chromosomes'],
-                                             self.file_settings['optimization']['fixed_groups'])
-         else:
-               active.generate_initial(self.file_settings['genome']['chromosomes'])
-         active.evaluate()
+        def InitialTemp(self):
 
-         one = []
-         one.append(active)
+            # calculates the initial temperature based on the standard deviations
+            # of costs when the probability is 100%
+            Buffer = []
+            # a > 1.0 and a < 2.0
+            a = 1.5
 
-         one = self.fitness.calculate(one)
+            # creates a single initial solution
+            active = self.solution()
+            # active.genome = self.mutation.reproduce(active.genome)
+            active.name = f"initial_temp_calc_start"
+            active.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
+            # active.genome = self.mutation.reproduce(active.genome)
+            active.add_additional_information(self.file_settings)
+            if active.fixed_genome:
+                active.generate_initial_fixed(self.file_settings['genome']['chromosomes'],
+                                              self.file_settings['optimization']['fixed_groups'])
+            else:
+                active.generate_initial(self.file_settings['genome']['chromosomes'])
+            active.evaluate()
 
-         shutil.rmtree("initial_temp_calc_start")
+            one = []
+            one.append(active)
 
-         costs = []
+            one = self.fitness.calculate(one)
 
-         # creates multiple modifications of the initial solution and stores the fitness of each
-         for j in range(self.file_settings['optimization']['buffer_length']): #
-               challenge = self.solution()
-               challenge.genome = self.mutation.reproduce(active.genome)
-               challenge.name = f"initial_temp_calc_{j}"
-               challenge.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
-               challenge.add_additional_information(self.file_settings)
-               challenge.evaluate()
-               Buffer.append(challenge)
-               test = [challenge]
-               test = self.fitness.calculate(test)
+            shutil.rmtree("initial_temp_calc_start")
 
-               costs.append(challenge.fitness)
+            costs = []
 
-               shutil.rmtree(f"initial_temp_calc_{j}")
+            # creates multiple modifications of the initial solution and stores the fitness of each
+            for j in range(self.file_settings['optimization']['buffer_length']):  #
+                challenge = self.solution()
+                challenge.genome = self.mutation.reproduce(active.genome)
+                challenge.name = f"initial_temp_calc_{j}"
+                challenge.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
+                challenge.add_additional_information(self.file_settings)
+                challenge.evaluate()
+                Buffer.append(challenge)
+                test = [challenge]
+                test = self.fitness.calculate(test)
 
+                costs.append(challenge.fitness)
 
-         deviation = statistics.stdev(costs)
+                shutil.rmtree(f"initial_temp_calc_{j}")
 
-         # find standard deviation of the costs and caluclate
-         # the initaial temp from the standard deviation
-         initialtemp = a * deviation
+            deviation = statistics.stdev(costs)
 
-         return (initialtemp,Buffer)
-      # Lam cooling schedule
-      def LAM(currtemp, deviation, activeCost, BestSolutionCost):
-         # quality > 1 and quality < 2
-         p = numpy.exp(-1 * (activeCost - BestSolutionCost) / currtemp)
+            # find standard deviation of the costs and caluclate
+            # the initaial temp from the standard deviation
+            initialtemp = a * deviation
 
-         # this needs to be figured out
-         if p == 1:
-               p = 0.9
-         qualityfactor = 1.1
-         # calculate Gp
-         G1 = (4 * p * ((1 - p) ** 2))
-         G2 = ((2 - p) ** 2)
-         Gp = G1 / G2
-         # calculate temperature
-         sk = (1 / currtemp)
-         sk1 = sk + (qualityfactor * (1 / deviation) * (1 / ((sk ** 2) * (deviation ** 2)))) * Gp
-         temp = 1 / sk1
+            return (initialtemp, Buffer)
 
-         with open('tempinfo.txt', 'a') as f:
-               f.write(f"{temp}\n")
+        # Lam cooling schedule
+        def LAM(currtemp, deviation, activeCost, BestSolutionCost):
+            # quality > 1 and quality < 2
+            p = numpy.exp(-1 * (activeCost - BestSolutionCost) / currtemp)
+            if p == 1:
+                p = 0.9
+            qualityfactor = 1.1
+            # calculate Gp
+            G1 = (4 * p * ((1 - p) ** 2))
+            G2 = ((2 - p) ** 2)
+            Gp = G1 / G2
+            # calculate temperature
+            sk = (1 / currtemp)
+            sk1 = sk + (qualityfactor * (1 / deviation) * (1 / ((sk ** 2) * (deviation ** 2)))) * Gp
+            temp = 1 / sk1
 
-         return temp
-      # def LAMStats(temp, TSolutionsfitness):
-      def LAMStats(temp, BufferCostlist):
+            with open('tempinfo.txt', 'a') as f:
+                f.write(f"{temp}\n")
+
+            return temp
+
+        # def LAMStats(temp, TSolutionsfitness):
+        def LAMStats(temp, BufferCostlist):
             STDCostlist = BufferCostlist
+
             # find standard deviation of cost at current temp
             if not STDCostlist:
                 deviation = 1
@@ -527,115 +537,116 @@ class SimulatedAnnealing(object):
                         deviation = statistics.stdev(STDCostlist)
             return deviation
 
-      SetStart = 0
-      # SetStart determines if initial buffer will be set or completely random
-      # if SetStart is 0, then the buffer will be random
-      # if SetStart is 1, Buffer will be predetemined
-      if SetStart == 0:
-         initial_temp, Buffer = InitialTemp(self)
-         Buffer = self.fitness.calculate(Buffer)
-         BufferCost = [Buffer[i].fitness for i in range(len(Buffer))]
+        SetStart = 0
+        # SetStart determines if initial buffer will be set or completely random
+        # if SetStart is 0, then the buffer will be random
+        # if SetStart is 1, Buffer will be predetemined
+        if SetStart == 0:
+            initial_temp, Buffer = InitialTemp(self)
+            Buffer = self.fitness.calculate(Buffer)
+            BufferCost = [Buffer[i].fitness for i in range(len(Buffer))]
 
-      if SetStart == 1:
-         Buffer, BufferCost, initial_temp = SetInitial(self)
-         self.cooling_schedule.temperature = initial_temp
+        if SetStart == 1:
+            Buffer, BufferCost, initial_temp = SetInitial(self)
+            self.cooling_schedule.temperature = initial_temp
 
-      opt = Simulated_Annealing_Metric_Toolbox()
+        opt = Simulated_Annealing_Metric_Toolbox()
 
-      track_file = open('optimization_track_file.txt', 'w')
-      track_file.write("Beginning Optimization \n")
-      track_file.close()
+        track_file = open('optimization_track_file.txt', 'w')
+        track_file.write("Beginning Optimization \n")
+        track_file.close()
 
-      active = InitialSolution(self.cooling_schedule.temperature,Buffer,BufferCost)
-      active.evaluate()
-      one = []
-      one.append(active)
+        active = InitialSolution(self.cooling_schedule.temperature, Buffer, BufferCost)
+        active.evaluate()
+        one = []
+        one.append(active)
 
-      one = self.fitness.calculate(one)
+        one = self.fitness.calculate(one)
 
-      BestSolution = active
-      BestSolutionCost = active.fitness
+        BestSolution = active
+        BestSolutionCost = active.fitness
 
-      multiprocessing.set_start_method("spawn")
-      for x in range(self.file_settings['optimization']['number_of_generations']):
-         with multiprocessing.get_context('spawn').Pool(processes= self.num_procs, ) as p:
-            data = p.starmap(SA, [(x, k, active, Buffer, BufferCost, self, opt) for k in range(self.num_procs)])
-         
+        multiprocessing.set_start_method("spawn")
+        for x in range(self.file_settings['optimization']['number_of_generations']):
+            with multiprocessing.get_context('spawn').Pool(processes=self.num_procs, ) as p:
+                data = p.starmap(SA, [(x, k, active, Buffer, BufferCost, self, opt) for k in range(self.num_procs)])
 
-         # data collection
-         # create list of the costs of the values from data
-         TSolutions = []
-         TSolutionsfitness = []
-         BSolutionsfitness = []
-         BSolutionsSA = []
-         for i in range(len(data)):
-               TSolutions.extend(data[i][0])
-               TSolutionsfitness.extend(data[i][1])
-               BSolutionsfitness.append(data[i][2])
-               BSolutionsSA.append(data[i][3])
+            # data collection
+            # create list of the costs of the values from data
+            TSolutions = []
+            TSolutionsfitness = []
+            BSolutionsfitness = []
+            BSolutionsSA = []
+            for i in range(len(data)):
+                TSolutions.extend(data[i][0])
+                TSolutionsfitness.extend(data[i][1])
+                BSolutionsfitness.append(data[i][2])
+                BSolutionsSA.append(data[i][3])
 
-         # update Buffer
-         Buffer, BufferCost = UpdateBuffer(Buffer, BufferCost, BSolutionsSA, BSolutionsfitness)
-         # update active solution
-         active, activeCost = UpdateActive(self.cooling_schedule.temperature, Buffer, BufferCost)
+            # update Buffer
+            Buffer, BufferCost = UpdateBuffer(Buffer, BufferCost, BSolutionsSA, BSolutionsfitness)
+            # update active solution
+            active, activeCost = UpdateActive(self.cooling_schedule.temperature, Buffer, BufferCost)
 
-         for i in range(len(BufferCost)):
-            if BestSolutionCost > BufferCost[i]:
-               BestSolution = Buffer[i]
-               BestSolutionCost = BufferCost[i]
 
-         opt.record_best_and_new_solution(BestSolution, active, self.cooling_schedule)
+            for i in range(len(BufferCost)):
+                if BestSolutionCost > BufferCost[i]:
+                    BestSolution = Buffer[i]
+                    BestSolutionCost = BufferCost[i]
 
-         tempdeviation = LAMStats(self.cooling_schedule.temperature, TSolutionsfitness)
-         temp = LAM(self.cooling_schedule.temperature, tempdeviation, activeCost, BestSolutionCost)
-         self.cooling_schedule.temperature = temp
+            opt.record_best_and_new_solution(BestSolution, active, self.cooling_schedule)
 
-         opt.record_best_and_new_solution(BestSolution, active, self.cooling_schedule)
-      track_file = open('optimization_track_file.txt', 'a')
-      track_file.write("End of Optimization \n")
-      track_file.close()
+            # tempdeviation = LAMStats(self.cooling_schedule.temperature, BufferCost)
 
-      end = time.time()
-      with open('timeinfo.txt', 'w') as f:
+            tempdeviation = LAMStats(self.cooling_schedule.temperature, TSolutionsfitness)
+            temp = LAM(self.cooling_schedule.temperature, tempdeviation, activeCost, BestSolutionCost)
+            self.cooling_schedule.temperature = temp
+
+            opt.record_best_and_new_solution(BestSolution, active, self.cooling_schedule)
+        track_file = open('optimization_track_file.txt', 'a')
+        track_file.write("End of Optimization \n")
+        track_file.close()
+
+        end = time.time()
+        with open('timeinfo.txt', 'w') as f:
             f.write(f"{end - start} \n ")
 
-      # plot the parameters over time
-      opt.plotter()
-      self.cleanup()
+        # plot the parameters over time
+        opt.plotter()
+        self.cleanup()
 
-   def cleanup(self):
-      """
-      Deletes solution results that are no longer relevant to the optimization.
-
-      Written by Brian Andersen 10/28/2020.
-      """
-      if self.perform_cleanup:
+    def cleanup(self):
+        """
+        Deletes solution results that are no longer relevant to the optimization.
+        Written by Brian Andersen 10/28/2020.
+        """
+        if self.perform_cleanup:
             if self.generation.current <= self.number_generations_post_cleanup:
                 pass
             else:
-               file_name = f'initial_solution'
-               if os.path.isdir(file_name):
-                   delete_file = True
-                   for parent,child in zip(self.population.parents,self.population.children):
-                       if parent.name == file_name:
-                           delete_file = False
-                           break
-                       elif child.name == file_name:
-                           delete_file = False
-                           break
-                   if delete_file:
-                       os.rmdir(file_name)
-               for clgen in range(self.generation.current):
-                   for clpop in range(self.population.size):
-                       file_name = f"solution_{clgen}_{clpop}"
-                       if os.path.isdir(file_name):
-                           delete_file = True
-                           for parent,child in zip(self.population.parents,self.population.children):
-                               if parent.name == file_name:
-                                   delete_file = False
-                                   break
-                               elif child.name == file_name:
-                                   delete_file = False
-                                   break
-                           if delete_file:
-                               os.rmdir(file_name)   
+                file_name = f'initial_solution'
+                if os.path.isdir(file_name):
+                    delete_file = True
+                    for parent, child in zip(self.population.parents, self.population.children):
+                        if parent.name == file_name:
+                            delete_file = False
+                            break
+                        elif child.name == file_name:
+                            delete_file = False
+                            break
+                    if delete_file:
+                        os.rmdir(file_name)
+                for clgen in range(self.generation.current):
+                    for clpop in range(self.population.size):
+                        file_name = f"solution_{clgen}_{clpop}"
+                        if os.path.isdir(file_name):
+                            delete_file = True
+                            for parent, child in zip(self.population.parents, self.population.children):
+                                if parent.name == file_name:
+                                    delete_file = False
+                                    break
+                                elif child.name == file_name:
+                                    delete_file = False
+                                    break
+                            if delete_file:
+                                os.rmdir(file_name)
