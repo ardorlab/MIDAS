@@ -164,9 +164,6 @@ def SA(x, k, active, Buffer, BufferCost, self, opt):
    else:
       active, activeCost = UpdateActive(Buffer,BufferCost)
 
-   # activeindex = BufferCost.index(min(BufferCost))
-   # active = Buffer[activeindex]
-   # activeCost = BufferCost[activeindex]
          
    temp = self.cooling_schedule.temperature
    # if x <= self.file_settings['optimization']['number_of_generations'] / 2 and temp < 90 and activeCost > -300 :
@@ -192,9 +189,7 @@ def SA(x, k, active, Buffer, BufferCost, self, opt):
       test = [challenge]
       test = self.fitness.calculate(test)
 
-      #determining which solution makes the next generation 
-      # acceptance = numpy.exp(-1*(challenge.fitness-active.fitness)/self.cooling_schedule.temperature)
-      # if k % 2 == 0:
+      #determining which solution makes the next generation
       acceptance = numpy.exp(-1*(challenge.fitness-active.fitness)/temp)
       if challenge.fitness < active.fitness:
             active = copy.deepcopy(challenge)
@@ -229,9 +224,6 @@ def SetInitial(self):
         Buffer.append(active)
     Buffer = self.fitness.calculate(Buffer)
     BufferCost = [Buffer[i].fitness for i in range(len(Buffer))]
-    # for j in range(len(Buffer)):
-    #     print(Buffer[j].fitness)
-
     # a > 1.0 and a < 2.0
     a = 1.5
     deviation = statistics.stdev(BufferCost)
@@ -330,17 +322,12 @@ class SimulatedAnnealing(object):
          self.cleanup()
 
    def main_in_parallel(self):
+      """
+      Created by Jake Mikouchi
+      2/16/2023
+      """
       def UpdateBuffer(Buffer, BufferCost, TSolutions, TSolutionsfitness):
 
-         # BuffIndex = TSolutionsfitness.index(min(TSolutionsfitness))
-         # BufferCostUpdate = TSolutionsfitness[BuffIndex]
-         # BufferUpdate = TSolutions[BuffIndex]
-         #
-         # BufferremoveMax = BufferCost.index(max(BufferCost))
-         # Buffer.pop(BufferremoveMax)
-         # BufferCost.pop(BufferremoveMax)
-         # Buffer.append(BufferUpdate)
-         # BufferCost.append(BufferCostUpdate)
          lenTSolutions = len(TSolutions)
          NewBuffer = []
          NewBuffCost = []
@@ -375,25 +362,19 @@ class SimulatedAnnealing(object):
              f.write(f"{NewBuffCost}\n")
 
          return NewBuffer, NewBuffCost
-
       def UpdateActive(temp, Buffer, BufferCost):
          # finds the sum of the probability of each position in the Buffer
          scalingfactor = 100
          SumProb = 0
          for i in range(len(BufferCost)):
-               # CurrProb = numpy.exp((-1 * BufferCost[i]) / temp)
                CurrProb = numpy.exp((-1 * BufferCost[i]) / scalingfactor)
-
                SumProb += CurrProb
 
          # finds the probability that each position of the buffer will be selected
          PositionProb = []
          for i in range(len(BufferCost)):
-               # CurrProb = numpy.exp((-1 * BufferCost[i]) / temp)
                CurrProb = numpy.exp((-1 * BufferCost[i]) / scalingfactor)
-
                TotalProb = (CurrProb / SumProb)
-
                PositionProb.append(TotalProb)
 
          # uses the probabilities to select which lists to add to the buffer
@@ -417,12 +398,6 @@ class SimulatedAnnealing(object):
                      acceptedlist = Buffer[i]
                      acceptedlistCost = BufferCost[i]
                      break
-         with open('UpdateActiveinfo.txt', 'a') as f:
-               f.write(f"{SumProblist} \n")
-               f.write(f"{BufferCost}\n")
-               f.write(f"{randomnum}\n")
-               f.write(f"{acceptedlistCost}\n")
-
 
          return acceptedlist, acceptedlistCost
       def InitialSolution(temp, Buffer,BufferCost):
@@ -446,7 +421,6 @@ class SimulatedAnnealing(object):
                   SumProblist.append(SumProblist[i - 1] + PositionProb[i])
                if i == 0:
                   SumProblist.append(PositionProb[i])
-         # print(SumProblist)
          randomnum = numpy.random.rand()
          for i in range(len(Buffer)):
                if i == 0:
@@ -540,7 +514,6 @@ class SimulatedAnnealing(object):
       # def LAMStats(temp, TSolutionsfitness):
       def LAMStats(temp, BufferCostlist):
             STDCostlist = BufferCostlist
-
             # find standard deviation of cost at current temp
             if not STDCostlist:
                 deviation = 1
@@ -554,7 +527,6 @@ class SimulatedAnnealing(object):
                         deviation = statistics.stdev(STDCostlist)
             return deviation
 
-
       SetStart = 0
       # SetStart determines if initial buffer will be set or completely random
       # if SetStart is 0, then the buffer will be random
@@ -567,9 +539,6 @@ class SimulatedAnnealing(object):
       if SetStart == 1:
          Buffer, BufferCost, initial_temp = SetInitial(self)
          self.cooling_schedule.temperature = initial_temp
-      # initial_temp, Buffer = InitialTemp(self)
-      # Buffer = self.fitness.calculate(Buffer)
-      # BufferCost = [Buffer[i].fitness for i in range(len(Buffer))]
 
       opt = Simulated_Annealing_Metric_Toolbox()
 
@@ -586,18 +555,6 @@ class SimulatedAnnealing(object):
 
       BestSolution = active
       BestSolutionCost = active.fitness
-      # with open('activeinfo.txt', 'w') as f:
-      #    f.write(f"{active.fitness} \n")
-      with open('BestSolutioninfo.txt', 'w') as f:
-         f.write(f"{BestSolutionCost} \n")
-      with open('Solutionsinfo.txt', 'w') as f:
-         f.write("\n")
-      with open('Tempinfo.txt', 'w') as f:
-         f.write(f"{self.cooling_schedule.temperature}\n")
-      with open('Bufferinfo.txt', 'w') as f:
-         f.write("\n")
-      with open('SArunsinfo.txt', 'w') as f:
-         f.write("\n")
 
       multiprocessing.set_start_method("spawn")
       for x in range(self.file_settings['optimization']['number_of_generations']):
@@ -618,14 +575,10 @@ class SimulatedAnnealing(object):
                BSolutionsSA.append(data[i][3])
 
          # update Buffer
-         # Buffer, BufferCost = UpdateBuffer(Buffer, BufferCost, TSolutions, TSolutionsfitness)
          Buffer, BufferCost = UpdateBuffer(Buffer, BufferCost, BSolutionsSA, BSolutionsfitness)
          # update active solution
          active, activeCost = UpdateActive(self.cooling_schedule.temperature, Buffer, BufferCost)
-         # activeindex = BufferCost.index(min(BufferCost))
-         # active = Buffer[activeindex]
-         # activeCost = BufferCost[activeindex]
-         
+
          for i in range(len(BufferCost)):
             if BestSolutionCost > BufferCost[i]:
                BestSolution = Buffer[i]
@@ -633,22 +586,9 @@ class SimulatedAnnealing(object):
 
          opt.record_best_and_new_solution(BestSolution, active, self.cooling_schedule)
 
-         # tempdeviation = LAMStats(self.cooling_schedule.temperature, BufferCost)
-         
          tempdeviation = LAMStats(self.cooling_schedule.temperature, TSolutionsfitness)
          temp = LAM(self.cooling_schedule.temperature, tempdeviation, activeCost, BestSolutionCost)
          self.cooling_schedule.temperature = temp
-         # with open('activeinfo.txt', 'a') as f:
-         #       f.write(f"{activeCost} \n")
-         with open('BestSolutioninfo.txt', 'a') as f:
-               f.write(f"{BestSolutionCost} \n")
-         with open('Tempinfo.txt', 'a') as f:
-               f.write(f"{self.cooling_schedule.temperature}\n")
-         with open('SArunsinfo.txt', 'a') as f:
-               f.write(f"{TSolutionsfitness}\n")
-               f.write(f"{BSolutionsfitness}\n")
-         with open('Bufferinfo.txt', 'w') as f:
-            f.write(f"{BufferCost}\n")
 
          opt.record_best_and_new_solution(BestSolution, active, self.cooling_schedule)
       track_file = open('optimization_track_file.txt', 'a')
