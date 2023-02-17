@@ -594,10 +594,6 @@ class SimulatedAnnealing(object):
                     BestSolution = Buffer[i]
                     BestSolutionCost = BufferCost[i]
 
-            opt.record_best_and_new_solution(BestSolution, active, self.cooling_schedule)
-
-            # tempdeviation = LAMStats(self.cooling_schedule.temperature, BufferCost)
-
             tempdeviation = LAMStats(self.cooling_schedule.temperature, TSolutionsfitness)
             temp = LAM(self.cooling_schedule.temperature, tempdeviation, activeCost, BestSolutionCost)
             self.cooling_schedule.temperature = temp
