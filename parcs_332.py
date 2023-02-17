@@ -42,7 +42,8 @@ class Loading_Pattern_Solution(Solution):
 
         Parameters
             settings: The settings dictionary for the parameters.
-
+        
+        Written by Gregory Delipei. 01/08/2022
         """
         self.symmetry=settings["genome"]["parcs_data"]["symmetry"]
         self.core_dict['core_map'], self.core_dict['core_id'] = self.generate_core()
