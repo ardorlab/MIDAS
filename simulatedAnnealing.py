@@ -10,7 +10,6 @@ from multiprocessing import Pool
 from solution_types import evaluate_function
 from metrics import Simulated_Annealing_Metric_Toolbox
 import multiprocessing
-import time
 
 """
 This file contains a few of the classes and methods involved with 
@@ -236,8 +235,6 @@ def SetInitial(self):
         Buffer.append(active)
     Buffer = self.fitness.calculate(Buffer)
     BufferCost = [Buffer[i].fitness for i in range(len(Buffer))]
-    # for j in range(len(Buffer)):
-    #     print(Buffer[j].fitness)
 
     # a > 1.0 and a < 2.0
     a = 1.5
@@ -245,9 +242,6 @@ def SetInitial(self):
     # find standard deviation of the costs and caluclate
     # the initaial temp from the standard deviation
     initialtemp = a * deviation
-    with open('tempinfo.txt', 'w') as f:
-        f.write(f"{initialtemp}\n")
-
     # -----------------------------------------------------------------------------------------------------
     return (Buffer, BufferCost, initialtemp)
 
@@ -515,9 +509,6 @@ class SimulatedAnnealing(object):
             sk1 = sk + (qualityfactor * (1 / deviation) * (1 / ((sk ** 2) * (deviation ** 2)))) * Gp
             temp = 1 / sk1
 
-            with open('tempinfo.txt', 'a') as f:
-                f.write(f"{temp}\n")
-
             return temp
 
         # def LAMStats(temp, TSolutionsfitness):
@@ -602,10 +593,6 @@ class SimulatedAnnealing(object):
         track_file = open('optimization_track_file.txt', 'a')
         track_file.write("End of Optimization \n")
         track_file.close()
-
-        end = time.time()
-        with open('timeinfo.txt', 'w') as f:
-            f.write(f"{end - start} \n ")
 
         # plot the parameters over time
         opt.plotter()
