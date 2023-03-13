@@ -11,6 +11,8 @@ from solution_types import evaluate_function
 from metrics import Simulated_Annealing_Metric_Toolbox
 import multiprocessing
 
+
+
 """
 This file contains a few of the classes and methods involved with 
 performing an optimization via simulated aneealing.
@@ -174,8 +176,8 @@ def SA(x, k, active, Buffer, BufferCost, self, opt):
     # activeCost = BufferCost[activeindex]
 
     temp = self.cooling_schedule.temperature
-    # if x <= self.file_settings['optimization']['number_of_generations'] / 2 and temp < 90 and activeCost > -300 :
-    #    temp = 100
+    PAR = 0
+    PAR2 = 0
 
     one = []
     one.append(active)
@@ -184,8 +186,8 @@ def SA(x, k, active, Buffer, BufferCost, self, opt):
 
     solutions = []
     solutionsfitness = []
-    BestSolutionSA = active
-    BestSolutionCost = active.fitness
+    NewSolutionSA = [active]
+    NewSolutionCost = [active.fitness]
     for number in range(self.file_settings['optimization']['population_size']):
         challenge = self.solution()
         challenge.genome = self.mutation.reproduce(active.genome)
@@ -198,22 +200,26 @@ def SA(x, k, active, Buffer, BufferCost, self, opt):
         test = self.fitness.calculate(test)
 
         # determining which solution makes the next generation
-        # acceptance = numpy.exp(-1*(challenge.fitness-active.fitness)/self.cooling_schedule.temperature)
-        # if k % 2 == 0:
         acceptance = numpy.exp(-1 * (challenge.fitness - active.fitness) / temp)
         if challenge.fitness < active.fitness:
+            PAR += 1
+            PAR2 += 1
             active = copy.deepcopy(challenge)
+
         elif random.uniform(0, 1) < acceptance:
+            PAR += 1
+            PAR2 += acceptance
             active = challenge
-        if active.fitness < BestSolutionCost:
-            BestSolutionSA = active
-            BestSolutionCost = active.fitness
 
         if x <= self.file_settings['optimization']['number_of_generations'] / 2:
             temp = temp * 0.9
+
+        NewSolutionSA.append(challenge)
+        NewSolutionCost.append(challenge.fitness)
         solutions.append(active)
         solutionsfitness.append(active.fitness)
-    return (solutions, solutionsfitness, BestSolutionCost, BestSolutionSA)
+
+    return (solutions, solutionsfitness, NewSolutionCost, NewSolutionSA, PAR, PAR2)
 
 
 def SetInitial(self):
@@ -337,17 +343,49 @@ class SimulatedAnnealing(object):
             lenTSolutions = len(TSolutions)
             NewBuffer = []
             NewBuffCost = []
+
+            #-----Gets rid of duplicates in Tsolutions and Buffer -------------------------------------------------
+            DummyTSolutionsCost = []
+            DummyTSolutions = []
+            for x in TSolutionsfitness:
+                minTSolutionfitnessindex = TSolutionsfitness.index(x)
+                if x not in DummyTSolutionsCost:
+                    DummyTSolutionsCost.append(x)
+                    DummyTSolutions.append(TSolutions[minTSolutionfitnessindex])
+            # replaces TSolutions with a new list with same contents except no duplicates
+            TSolutions = DummyTSolutions
+            TSolutionsfitness = DummyTSolutionsCost
+
+            DummyBufferCost = []
+            DummyBuffer = []
+            for x in BufferCost:
+                minBufferfitnessindex = BufferCost.index(x)
+                if x not in DummyBufferCost:
+                    DummyBufferCost.append(x)
+                    DummyBuffer.append(Buffer[minBufferfitnessindex])
+            if len(DummyBuffer) < self.file_settings['optimization']['buffer_length']:
+                while len(DummyBuffer) < self.file_settings['optimization']['buffer_length']:
+                    # this solution may be crude but it saves me a lot of coding
+                    DummyBuffer.append(100000)
+                    DummyBufferCost.append(100000)
+            # replaces Buffer with a new list with same contents except no duplicates 
+            Buffer = DummyBuffer
+            BufferCost = DummyBufferCost
+            # --------------------------------------------------------------------------------------------------
+
             if len(TSolutions) >= self.file_settings['optimization']['buffer_length']:
                 for w in range(self.file_settings['optimization']['buffer_length']):
                     minTSolutionfitness = min(TSolutionsfitness)
                     minTSolutionfitnessindex = TSolutionsfitness.index(min(TSolutionsfitness))
                     minBufferfitness = min(BufferCost)
                     minBufferfitnessindex = BufferCost.index(min(BufferCost))
+
                     if minTSolutionfitness <= minBufferfitness:
                         NewBuffCost.append(minTSolutionfitness)
                         NewBuffer.append(TSolutions[minTSolutionfitnessindex])
                         TSolutionsfitness.pop(minTSolutionfitnessindex)
                         TSolutions.pop(minTSolutionfitnessindex)
+
                     if minTSolutionfitness > minBufferfitness:
                         NewBuffCost.append(minBufferfitness)
                         NewBuffer.append(Buffer[minBufferfitnessindex])
@@ -443,47 +481,32 @@ class SimulatedAnnealing(object):
             # calculates the initial temperature based on the standard deviations
             # of costs when the probability is 100%
             Buffer = []
+            costs = []
             # a > 1.0 and a < 2.0
             a = 1.5
+            for j in range(self.file_settings['optimization']['buffer_length']):
+                # creates a single initial solution
+                active = self.solution()
+                # active.genome = self.mutation.reproduce(active.genome)
+                active.name = f"initial_temp_calc"
+                active.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
+                # active.genome = self.mutation.reproduce(active.genome)
+                active.add_additional_information(self.file_settings)
+                if active.fixed_genome:
+                    active.generate_initial_fixed(self.file_settings['genome']['chromosomes'],
+                                                  self.file_settings['optimization']['fixed_groups'])
+                else:
+                    active.generate_initial(self.file_settings['genome']['chromosomes'])
+                active.evaluate()
 
-            # creates a single initial solution
-            active = self.solution()
-            # active.genome = self.mutation.reproduce(active.genome)
-            active.name = f"initial_temp_calc_start"
-            active.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
-            # active.genome = self.mutation.reproduce(active.genome)
-            active.add_additional_information(self.file_settings)
-            if active.fixed_genome:
-                active.generate_initial_fixed(self.file_settings['genome']['chromosomes'],
-                                              self.file_settings['optimization']['fixed_groups'])
-            else:
-                active.generate_initial(self.file_settings['genome']['chromosomes'])
-            active.evaluate()
+                one = []
+                one.append(active)
 
-            one = []
-            one.append(active)
+                one = self.fitness.calculate(one)
+                costs.append(active.fitness)
+                Buffer.append(active)
 
-            one = self.fitness.calculate(one)
-
-            shutil.rmtree("initial_temp_calc_start")
-
-            costs = []
-
-            # creates multiple modifications of the initial solution and stores the fitness of each
-            for j in range(self.file_settings['optimization']['buffer_length']):  #
-                challenge = self.solution()
-                challenge.genome = self.mutation.reproduce(active.genome)
-                challenge.name = f"initial_temp_calc_{j}"
-                challenge.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
-                challenge.add_additional_information(self.file_settings)
-                challenge.evaluate()
-                Buffer.append(challenge)
-                test = [challenge]
-                test = self.fitness.calculate(test)
-
-                costs.append(challenge.fitness)
-
-                shutil.rmtree(f"initial_temp_calc_{j}")
+                shutil.rmtree("initial_temp_calc")
 
             deviation = statistics.stdev(costs)
 
@@ -494,9 +517,9 @@ class SimulatedAnnealing(object):
             return (initialtemp, Buffer)
 
         # Lam cooling schedule
-        def LAM(currtemp, deviation, activeCost, BestSolutionCost):
+        def LAM(currtemp, deviation, MoveAcceptanceRatio):
             # quality > 1 and quality < 2
-            p = numpy.exp(-1 * (activeCost - BestSolutionCost) / currtemp)
+            p = MoveAcceptanceRatio
             if p == 1:
                 p = 0.9
             qualityfactor = 1.1
@@ -511,7 +534,6 @@ class SimulatedAnnealing(object):
 
             return temp
 
-        # def LAMStats(temp, TSolutionsfitness):
         def LAMStats(temp, BufferCostlist):
             STDCostlist = BufferCostlist
 
@@ -523,7 +545,7 @@ class SimulatedAnnealing(object):
                     deviation = 1
                 else:
                     if statistics.stdev(STDCostlist) == 0:
-                        deviation = 0.001
+                        deviation = 0.01
                     else:
                         deviation = statistics.stdev(STDCostlist)
             return deviation
@@ -566,16 +588,29 @@ class SimulatedAnnealing(object):
             # create list of the costs of the values from data
             TSolutions = []
             TSolutionsfitness = []
-            BSolutionsfitness = []
-            BSolutionsSA = []
+            NewSolutionsfitness = []
+            NewSolutions = []
+
+            TotalMoves = 0
+            TotalAcceptanceProbability = 0
             for i in range(len(data)):
                 TSolutions.extend(data[i][0])
                 TSolutionsfitness.extend(data[i][1])
-                BSolutionsfitness.append(data[i][2])
-                BSolutionsSA.append(data[i][3])
+                NewSolutions.extend(data[i][3])
+                NewSolutionsfitness.extend(data[i][2])
+                TotalMoves += data[i][4]
+                TotalAcceptanceProbability += data[i][5]
 
+            # determines move Move Acceptance Method
+            # if 0 move acceptance is determined by total number of times a move is made by probability
+            # if 1 move acceptance is determined by the sum of all probabilities
+            MoveAcceptanceMethod = self.file_settings['optimization']['Move_Acceptance_Method']
+            if MoveAcceptanceMethod == 0:
+                MoveAcceptanceRatio = TotalMoves / (self.num_procs * self.file_settings['optimization']['population_size'])
+            else:
+                MoveAcceptanceRatio = TotalAcceptanceProbability / (self.num_procs * self.file_settings['optimization']['population_size'])
             # update Buffer
-            Buffer, BufferCost = UpdateBuffer(Buffer, BufferCost, BSolutionsSA, BSolutionsfitness)
+            Buffer, BufferCost = UpdateBuffer(Buffer, BufferCost, NewSolutions, NewSolutionsfitness)
             # update active solution
             active, activeCost = UpdateActive(self.cooling_schedule.temperature, Buffer, BufferCost)
 
@@ -586,7 +621,7 @@ class SimulatedAnnealing(object):
                     BestSolutionCost = BufferCost[i]
 
             tempdeviation = LAMStats(self.cooling_schedule.temperature, TSolutionsfitness)
-            temp = LAM(self.cooling_schedule.temperature, tempdeviation, activeCost, BestSolutionCost)
+            temp = LAM(self.cooling_schedule.temperature, tempdeviation, MoveAcceptanceRatio)
             self.cooling_schedule.temperature = temp
 
             opt.record_best_and_new_solution(BestSolution, active, self.cooling_schedule)
