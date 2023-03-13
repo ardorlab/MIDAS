@@ -7,6 +7,7 @@ optimization:
   number_of_generations: 2
   reproducer: unique_genes
   buffer_length: 5
+  Move_Acceptance_Method: 0
   mutation:
     method: [mutate_by_type,mutate_fixed]
     common_chromosomes:
