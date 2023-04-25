@@ -11,6 +11,7 @@ from matplotlib import pyplot
 from multiprocessing import Pool
 import geneticAlgorithm as GA
 import simulatedAnnealing as SA
+import reinforcement_learning as RL
 from ncsu_lattice import Simulate_Lattice
 import ncsu_core
 import fitness
@@ -46,6 +47,8 @@ class Optimization_Factory(object):
             self.build_genetic_algorithm()
         elif methodology == 'simulated_annealing':
             self.build_simulated_annealing()
+        elif methodology == 'reinforcement_learning':
+            self.build_reinforcement_learning()
         elif methodology == 'lava':
             self.build_volcano()
         else:
@@ -77,8 +80,7 @@ class Optimization_Factory(object):
     
     def build_simulated_annealing(self):
         """
-        Assigns all of the parts of the genetic algorithm such as mutation,
-        generation, and selection.
+        Assigns all of the parts of the simulated annealing such as mutation.
 
         Parameters: None
 
@@ -97,6 +99,25 @@ class Optimization_Factory(object):
                                              num_procs = self.num_procs,
                                              cooling_schedule= cooling_schedule_,
                                              fitness=fitness_,
+                                             file_settings=self.file_settings)
+
+    def build_reinforcement_learning(self):
+        """
+        Assigns all of the parts of the reinforcement learnig such as the policy network.
+
+        Parameters: None
+
+        Written by G. K. Delipe. 03/24/2023
+        """
+        solution_type_ = self.build_solution()
+        population_    = self.build_population()
+        generation_    = self.build_generation()
+        fitness_ = self.build_fitness('genetic_algorithm')
+        self.optimization = RL.Reinforcement_Learning(solution=solution_type_,
+                                             population=population_,
+                                             generation=generation_,  
+                                             fitness=fitness_,                     
+                                             num_procs = self.num_procs,
                                              file_settings=self.file_settings)
 
     def build_volcano(self):
@@ -135,6 +156,8 @@ class Optimization_Factory(object):
             solution_type = ncsu_core.Simulate_Loading_Pattern_Solution
         elif data_type_string.lower() == "loading_pattern_parcs332":
             solution_type = parcs_332.Loading_Pattern_Solution
+        elif data_type_string.lower() == "loading_patternsimple_parcs332":
+            solution_type = parcs_332.Loading_PatternSimple_Solution
         elif data_type_string.lower() == "fixed_loading_pattern":
             solution_type = ncsu_core.Unique_Assembly_Loading_Pattern_Solution
         else:
