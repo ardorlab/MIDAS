@@ -11,7 +11,7 @@ from matplotlib import pyplot
 from multiprocessing import Pool
 import geneticAlgorithm as GA
 import simulatedAnnealing as SA
-import reinforcement_learning as RL
+import randomSolutions as RS
 from ncsu_lattice import Simulate_Lattice
 import ncsu_core
 import fitness
@@ -48,7 +48,10 @@ class Optimization_Factory(object):
         elif methodology == 'simulated_annealing':
             self.build_simulated_annealing()
         elif methodology == 'reinforcement_learning':
+            import reinforcement_learning as RL
             self.build_reinforcement_learning()
+        elif methodology == 'random_solutions':
+            self.build_random_solutions()
         elif methodology == 'lava':
             self.build_volcano()
         else:
@@ -118,6 +121,20 @@ class Optimization_Factory(object):
                                              generation=generation_,  
                                              fitness=fitness_,                     
                                              num_procs = self.num_procs,
+                                             file_settings=self.file_settings)
+
+    def build_random_solutions(self):
+        """
+        Assigns all of the parts of the random solution generator
+        Parameters: None
+        """
+        solution_type_ = self.build_solution()
+        population_    = self.build_population()
+        fitness_ = self.build_fitness('genetic_algorithm')
+        self.optimization = RS.Random_Solution(solution=solution_type_,
+                                             population=population_,
+                                             fitness=fitness_,
+                                             num_procs= self.num_procs,
                                              file_settings=self.file_settings)
 
     def build_volcano(self):

@@ -17,7 +17,7 @@ from fileinput import filename
 import gym
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common.monitor import Monitor
-from stable_baselines3 import SAC, PPO, A2C
+from stable_baselines3 import SAC, PPO, A2C, DQN
 import torch as th
 
 class Gym_Env(gym.Env):
@@ -45,6 +45,7 @@ class Gym_Env(gym.Env):
         self.core_dict['Inventory'] = solution.core_dict['Inventory']
         self.order = file_settings['optimization']['order']
         self.restart = file_settings['optimization']['restart']
+        self.fitness_const = file_settings['optimization']['selection']['fitness_constraint']
         state0_file = file_settings['optimization']['start']
         
       #  self.random_design()
@@ -56,12 +57,14 @@ class Gym_Env(gym.Env):
         with open(state0_file) as f:
             self.start = yaml.safe_load(f)
         self.solution.set_state(self.start)
-        if file_settings['optimization']['stable_baselines3_options']['action_space']=='discrete':
+        self.action_type= file_settings['optimization']['stable_baselines3_options']['action_space']
+        self.observation_type = file_settings['optimization']['stable_baselines3_options']['observation_space']
+        if self.action_type=='discrete':
             self.cmap={}
-            cmap_range=np.linspace(-1,1,nass)
+            cmap_range=np.arange(0,nass)
             for i in range(nass):
                 self.cmap[invent[i]]=cmap_range[i]
-            self.action_space = spaces.Discrete(nass,start=-int(nass/2))
+            self.action_space = spaces.Discrete(nass)
         else:
             self.cmap={}
             cmap_range=np.linspace(-1,1,nass)
@@ -70,8 +73,13 @@ class Gym_Env(gym.Env):
             self.action_space = spaces.Box(low=-1, high=1,
                                             shape=(1,), dtype=np.float32)
         
-        if file_settings['optimization']['stable_baselines3_options']['observation_space']=='multi_discrete':
-            self.action_space = spaces.Discrete(nass,start=-int(nass/2))
+        if self.observation_type=='multi_discrete':
+            self.observation_space = spaces.MultiDiscrete([nass,nass,nass,nass,nass,nass,
+                                                      nass,nass,nass,nass,nass,nass,
+                                                      nass,nass,nass,nass,nass,nass,
+                                                      nass,nass,nass,nass,nass,nass,
+                                                      nass,nass,nass,nass,nass,nass,
+                                                      nass,31])
         else:
             self.observation_space = spaces.Box(low=-1.0, high=1.0, shape=(2,len(self.start)), dtype=np.float32)
         
@@ -95,17 +103,25 @@ class Gym_Env(gym.Env):
             self.solution.set_state(new_state)
         else:
             self.solution.set_state(self.start)
-        cstate = self.solution.get_mapstate(self.cmap)
-        loc_state = np.zeros(cstate.shape[0])
-        loc_state[self.counter]=1
-        rstate=np.r_[[cstate],[loc_state]]
+        
+        if self.observation_type=="continuous":
+            cstate = self.solution.get_mapstate(self.cmap,self.observation_type)
+            loc_state = np.zeros(cstate.shape[0])
+            loc_state[self.counter]=1
+            rstate=np.r_[[cstate],[loc_state]]
+        elif self.observation_type=="multi_discrete":
+            cstate = self.solution.get_mapstate(self.cmap,self.observation_type)
+            cstate[-1] = self.counter
+            rstate=cstate
         return(rstate)
 
     def step(self, action):
         loc = self.order[self.counter]
         act=self.solution.get_actions()
         sact={'Location': loc,
-                'Value': action}
+                'Value': action,
+                'Space':self.action_type,
+                'Action_Map':self.cmap}
         self.solution.mapaction(sact)
 
         if self.counter==len(self.start)-1:
@@ -115,12 +131,14 @@ class Gym_Env(gym.Env):
             self.solution.evaluate()
             solList = self.fitness.calculate([self.solution])
             self.solution=solList[0]
+            if self.fitness_const:
+                self.solution.fitness=self.solution.get_fitness()
             reward = self.solution.fitness
             info={'cycle_length':self.solution.parameters["cycle_length"]['value'],
                   'max_boron':self.solution.parameters["max_boron"]['value'],
                   'FDeltaH':self.solution.parameters["FDeltaH"]['value'],
                   'PinPowerPeaking':self.solution.parameters["PinPowerPeaking"]['value'],
-                  'State': self.solution.get_mapstate(self.cmap)}
+                  'State': self.solution.get_mapstate(self.cmap,self.observation_type)}
             all_values = open('all_value_tracker.txt','a')
             all_values.write(f"{self.total_run},   {self.solution.name},   ")
             for param in self.solution.parameters:
@@ -140,10 +158,15 @@ class Gym_Env(gym.Env):
         self.counter+=1
         done = bool(self.counter==len(self.order))
         
-        cstate = self.solution.get_mapstate(self.cmap)
-        loc_state = np.zeros(cstate.shape[0])
-        loc_state[mid]=1
-        rstate=np.r_[[cstate],[loc_state]]
+        if self.observation_type=="continuous":
+            cstate = self.solution.get_mapstate(self.cmap,self.observation_type)
+            loc_state = np.zeros(cstate.shape[0])
+            loc_state[mid]=1
+            rstate=np.r_[[cstate],[loc_state]]
+        elif self.observation_type=="multi_discrete":
+            cstate = self.solution.get_mapstate(self.cmap,self.observation_type)
+            cstate[-1] = mid
+            rstate=cstate
         return((rstate, reward, done, info))
     
     def render(self, mode='console'):
@@ -175,8 +198,6 @@ class Reinforcement_Learning(object):
             The settings file read into the optimization. Carried through because
             some information needed to be carried along, but pickling all of the
             information didn't seem like a good way to carrty it thorugh the optimization.
-
-    Written by Brian Andersen. 1/9/2020
     """
 
     def __init__(self, solution,
@@ -240,14 +261,52 @@ class Reinforcement_Learning(object):
         gam = self.file_settings['optimization']['stable_baselines3_options']['gamma']
         sb_algo = self.file_settings['optimization']['stable_baselines3_options']['algorithm']
         if sb_algo == 'SAC':
-            policy_kwargs = dict(net_arch=dict(pi=net1, qf=net2))
-            model=SAC('MlpPolicy', env, verbose=1, gamma=gam, tensorboard_log=tens_log,policy_kwargs=policy_kwargs)
+            policy_kwargs = dict(net_arch=dict(pi=net1, qf=net2)) # pi is the actor network, while qf is the critic network
+            model=SAC('MlpPolicy', env, verbose=1, 
+            learning_rate=self.file_settings['optimization']['stable_baselines3_options']['learning_rate'], 
+            buffer_size=self.file_settings['optimization']['stable_baselines3_options']['buffer_size'], 
+            learning_starts=self.file_settings['optimization']['stable_baselines3_options']['learning_starts'], 
+            batch_size=self.file_settings['optimization']['stable_baselines3_options']['batch_size'], 
+            tau=self.file_settings['optimization']['stable_baselines3_options']['tau'], 
+            gamma=self.file_settings['optimization']['stable_baselines3_options']['gamma'], 
+            train_freq=self.file_settings['optimization']['stable_baselines3_options']['train_freq'], 
+            gradient_steps=self.file_settings['optimization']['stable_baselines3_options']['gradient_steps'],
+            tensorboard_log=tens_log,policy_kwargs=policy_kwargs)
         elif sb_algo == 'PPO':
             policy_kwargs = dict(net_arch=[dict(pi=net1, vf=net2)])
-            model=PPO('MlpPolicy', env, verbose=1, gamma=gam, tensorboard_log=tens_log,policy_kwargs=policy_kwargs)
+            model=PPO('MlpPolicy', env, verbose=1, 
+            learning_rate=self.file_settings['optimization']['stable_baselines3_options']['learning_rate'], 
+            n_steps=self.file_settings['optimization']['stable_baselines3_options']['n_steps'], 
+            batch_size=self.file_settings['optimization']['stable_baselines3_options']['batch_size'], 
+            n_epochs=self.file_settings['optimization']['stable_baselines3_options']['n_epochs'], 
+            gamma=self.file_settings['optimization']['stable_baselines3_options']['gamma'], 
+            gae_lambda=self.file_settings['optimization']['stable_baselines3_options']['gae_lambda'], 
+            clip_range=self.file_settings['optimization']['stable_baselines3_options']['clip_range'],
+            tensorboard_log=tens_log,policy_kwargs=policy_kwargs)
         elif sb_algo == 'A2C':
             policy_kwargs = dict(net_arch=[dict(pi=net1, vf=net2)])
-            model=A2C('MlpPolicy', env, verbose=1, gamma=gam, tensorboard_log=tens_log,policy_kwargs=policy_kwargs)
+            model=A2C('MlpPolicy', env, verbose=1, 
+            learning_rate=self.file_settings['optimization']['stable_baselines3_options']['learning_rate'], 
+            n_steps=self.file_settings['optimization']['stable_baselines3_options']['n_steps'], 
+            gamma=self.file_settings['optimization']['stable_baselines3_options']['gamma'], 
+            gae_lambda=self.file_settings['optimization']['stable_baselines3_options']['gae_lambda'], 
+            ent_coef=self.file_settings['optimization']['stable_baselines3_options']['ent_coef'], 
+            vf_coef=self.file_settings['optimization']['stable_baselines3_options']['vf_coef'],
+            tensorboard_log=tens_log,policy_kwargs=policy_kwargs)
+        elif sb_algo == 'DQN':
+            policy_kwargs = dict(net_arch=net2)
+            model = DQN("MlpPolicy", env, verbose=1,
+                    train_freq=self.file_settings['optimization']['stable_baselines3_options']['train_freq'],
+                    gradient_steps=self.file_settings['optimization']['stable_baselines3_options']['gradient_steps'],
+                    gamma=self.file_settings['optimization']['stable_baselines3_options']['gamma'],
+                    exploration_fraction=self.file_settings['optimization']['stable_baselines3_options']['exploration_fraction'],
+                    exploration_final_eps=self.file_settings['optimization']['stable_baselines3_options']['exploration_final_eps'],
+                    target_update_interval=self.file_settings['optimization']['stable_baselines3_options']['target_update_interval'],
+                    learning_starts=self.file_settings['optimization']['stable_baselines3_options']['learning_starts'],
+                    buffer_size=self.file_settings['optimization']['stable_baselines3_options']['buffer_size'],
+                    batch_size=self.file_settings['optimization']['stable_baselines3_options']['batch_size'],
+                    learning_rate=self.file_settings['optimization']['stable_baselines3_options']['learning_rate'],
+                    tensorboard_log=tens_log,policy_kwargs=policy_kwargs)
 
         games_numbers = self.generation.total
         model.learn(total_timesteps=31*games_numbers)
