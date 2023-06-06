@@ -4,7 +4,7 @@ optimization:
     temperature: 20.0
     alpha: 0.001
   population_size: 1 
-  number_of_generations: 2000
+  number_of_generations: 20
   reproducer: standard
   mutation:
     method: mutate_by_genome
