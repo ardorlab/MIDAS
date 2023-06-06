@@ -23,7 +23,7 @@ optimization:
   start: state0.yml
   restart: False
   population_size: 1 
-  number_of_generations: 1
+  number_of_generations: 20
   reproducer: standard
   mutation:
     method: mutate_by_genome
