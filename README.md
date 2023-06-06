@@ -12,6 +12,8 @@ Current optimization methodologies supported by the MOF are:
 
 * Genetic Algorithm
 * Simulated Annealing
+* Parallel Simulated Annealing
+* Reinforcement Learning
   
 
 # Code Installation
@@ -35,8 +37,15 @@ required dependencies entering the following commands:
 
     git clone https://github.com/ardorlab/MOF.git
 
+If you want to use the newly added reinforcement learning algorithms, some additional dependencies will need to be installed:
+
+    conda install pytorch torchvision torchaudio cpuonly -c pytorch
+
+    pip install stable-baselines3[extra] 
+
 Congratulations. The code is now installed in your local machine.
-  
+
+
 # Running the Code 
 
 Enter your local MOF directory and navigate to one of the sample problems. Type:
