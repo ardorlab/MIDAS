@@ -1818,15 +1818,22 @@ class Loading_PatternSimple_Solution(Solution):
         action_mvalue = mact['Value']
         action_location = mact['Location']
         loc_actions=avail_actions['Map'][action_location]
+        action_space = mact['Space']
+        cmap = mact['Action_Map']
         for key,value in loc_actions.items():
-            bounds = value['Bounds']
-            if bounds[0]<=action_mvalue<bounds[1]:
-                action_type = value['Type']
-                action = value['Value']
-            if action_mvalue==bounds[1]==1:
-                action_type = value['Type']
-                action = value['Value']
-        
+            if action_space=="continuous":
+                bounds = value['Bounds']
+                if bounds[0]<=action_mvalue<bounds[1]:
+                    action_type = value['Type']
+                    action = value['Value']
+                if action_mvalue==bounds[1]==1:
+                    action_type = value['Type']
+                    action = value['Value']
+            elif action_space == "discrete":
+                if cmap[value['Value']]==action_mvalue:
+                    action_type = value['Type']
+                    action = value['Value']
+                    
         if action in avail_actions[action_type][action_location]:
             if action_type =='Exchange':
                 loc_value = self.core_dict['core'][action_location]['Value']
@@ -1940,7 +1947,7 @@ class Loading_PatternSimple_Solution(Solution):
                   'Map': map_act}
         return(act_dict)
 
-    def get_mapstate(self,cmap):
+    def get_mapstate(self,cmap,observation_type):
         """
         Gets the current state in a normalized format.
 
@@ -1948,7 +1955,10 @@ class Loading_PatternSimple_Solution(Solution):
 
         Written by Gregory Delipei 7/14/2022
         """
-        mstate=np.zeros(len(self.core_dict['fuel'].keys()),dtype=np.int8)
+        if observation_type=='continuous':
+            mstate=np.zeros(len(self.core_dict['fuel'].keys()),dtype=np.int8)
+        elif observation_type=='multi_discrete':
+            mstate=np.zeros(len(self.core_dict['fuel'].keys())+1,dtype=np.int8)
         it=0
         for key, value in self.core_dict['fuel'].items():
             mstate[it]=cmap[value['Value']]
@@ -2447,6 +2457,18 @@ class Loading_PatternSimple_Solution(Solution):
             asb_cost_dict[unique_fa[i]]=asb_cost[i]
 
         return((lcoe, bu, asb_cost_dict))
+
+    def get_fitness(self):
+        
+        fit = 0 
+        if self.parameters["max_boron"]['value'] <= self.parameters["max_boron"]['target'] and self.parameters["FDeltaH"]['value'] <= self.parameters["FDeltaH"]['target'] and self.parameters["PinPowerPeaking"]['value'] <= self.parameters["PinPowerPeaking"]['target']:
+             fit += self.parameters['cycle_length']['value']*self.parameters['cycle_length']['weight']
+        else:
+            fit -= max(0,self.parameters["max_boron"]['value']-self.parameters["max_boron"]['target'])*self.parameters['max_boron']['weight']
+            fit -= max(0,self.parameters["FDeltaH"]['value']-self.parameters["FDeltaH"]['target'])*self.parameters['FDeltaH']['weight']
+            fit -= max(0,self.parameters["PinPowerPeaking"]['value']-self.parameters["PinPowerPeaking"]['target'])*self.parameters['PinPowerPeaking']['weight']
+    
+        return(fit)
 
     def get_results(self,filepath,pin_power=False):
         efpd=[]
