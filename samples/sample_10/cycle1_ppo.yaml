@@ -6,9 +6,9 @@ optimization:
     policy_net: [252, 252]
     qvalue_net: [252, 252]
     learning_rate: 0.0003 
-    n_steps: 310
-    batch_size: 64
-    n_epochs: 100
+    n_steps: 5
+    batch_size: 16
+    n_epochs: 5
     gae_lambda: 0.95
     clip_range: 0.2
     gamma: 0.99
@@ -24,7 +24,7 @@ optimization:
   start: state0.yml
   restart: False
   population_size: 1 
-  number_of_generations: 2000
+  number_of_generations: 20
   reproducer: standard
   mutation:
     method: mutate_by_genome

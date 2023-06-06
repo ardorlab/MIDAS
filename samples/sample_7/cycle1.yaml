@@ -72,5 +72,5 @@ genome:
     inlet_temperature: 565.0
     map_size: quarter
     symmetry: octant
-    xs_library: /home/gkdelipe/codes/mof/xslib
+    xs_library: ../../xslib
     number_assemblies: 193
