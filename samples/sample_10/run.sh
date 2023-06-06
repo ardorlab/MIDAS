@@ -2,7 +2,7 @@
 
 #SBATCH -t 200:00:00                    # Walltime
 #SBATCH -N 1                           # Number of nodes
-#SBATCH -n 2                          # Number of processor cores (i.e. tasks)
+#SBATCH -n 3                          # Number of processor cores (i.e. tasks)
 #SBATCH -J "parcs_lpo"               # Job name
 #SBATCH -p newq                      # Partition name
 #SBATCH -o output.txt                  # Output file name it will be printed in the $HOME directory by default
@@ -14,7 +14,10 @@ cd $SLURM_SUBMIT_DIR
 # Main -------------------------------------------------------------------------------------------------------------
 
 rm -rf solution_*
-python ../../mofMain.py --input cycle1.yaml --cpus 1
+rm -rf monitor_*
+rm -rf tensorboard_*
+
+python ../../mofMain.py --input cycle1_ppo.yaml --cpus 1
 
 
 ##stress-ng --cpu $SLURM_CPUS_ON_NODE --timeout 60s --metrics-brief
