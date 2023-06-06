@@ -2,7 +2,7 @@
 
 #SBATCH -t 200:00:00                    # Walltime
 #SBATCH -N 1                           # Number of nodes
-#SBATCH -n 4                          # Number of processor cores (i.e. tasks)
+#SBATCH -n 5                          # Number of processor cores (i.e. tasks)
 #SBATCH -J "parcs_lpo"               # Job name
 #SBATCH -p newq                      # Partition name
 #SBATCH -o output.txt                  # Output file name it will be printed in the $HOME directory by default

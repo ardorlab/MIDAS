@@ -1,8 +1,31 @@
 optimization: 
-  methodology: simulated_annealing
-  cooling_schedule:
-    temperature: 20.0
-    alpha: 0.001
+  methodology: reinforcement_learning
+  stable_baselines3_options:
+    algorithm: DQN
+    policy: MlpPolicy
+    policy_net: [64, 64]
+    qvalue_net: [64, 64]
+    train_freq: 4
+    gradient_steps: 1
+    exploration_fraction: 0.5
+    exploration_final_eps: 0.02
+    target_update_interval: 310
+    learning_starts: 620
+    buffer_size: 3000
+    batch_size: 64
+    learning_rate: 0.0005
+    gamma: 0.99
+    logdir: monitor_dqn_64_64
+    tensorboard_log: False
+    model_save: dqn_mlp_64_64
+    action_space: discrete
+    observation_space: continuous
+  order: [O08,O09,O10,O11,N13,M13,N12,M12,L12,N11,
+          N10,N09,N08,M08,M09,M10,M11,L11,L10,L09,
+          L08,K08,K09,K10,K11,J10,J09,J08,I08,I09,
+          H08]
+  start: state0.yml
+  restart: False
   population_size: 1 
   number_of_generations: 2000
   reproducer: standard
@@ -13,8 +36,9 @@ optimization:
   fixed_problem: False
   selection:
     fitness: weighted
+    fitness_constraint: False
     method: tournament
-  data_type: loading_pattern_parcs332
+  data_type: loading_patternsimple_parcs332
   objectives:
     max_boron:
       goal: less_than_target
@@ -22,12 +46,12 @@ optimization:
       weight: 1.0
     PinPowerPeaking:
       goal: less_than_target
-      weight: 400.0  #500.0
+      weight: 400.0 
       target: 2.1
     FDeltaH:
       goal: less_than_target
       target: 1.48
-      weight: 400.0       # 500.0
+      weight: 600.0      
     cycle_length:
       goal: maximize
       weight: 1.00
@@ -35,7 +59,7 @@ genome:
   chromosomes:
     FE200: 
       type: 200
-      serial: xs_g200_gd_0_wt_0
+      serial: xs_g200_gd_0_bp_0
       name: FE200
       map: &ID001
         [1,
@@ -46,25 +70,25 @@ genome:
          1, 1, 1, 1, 1, 1,
          1, 1, 1, 1, 1, 1,                        
          1, 1, 1, 1]
-    FE220:
-      type: 220
-      serial: xs_g220_gd_0_wt_0
-      name: FE220
-      map: *ID001
     FE250:
       type: 250
-      serial: xs_g250_gd_0_wt_0
+      serial: xs_g250_gd_0_bp_0
       name: FE250
       map: *ID001
-    FE280:
-      type: 280
-      serial: xs_g280_gd_0_wt_0
+    FE251:
+      type: 251
+      serial: xs_g250_gd_16_bp_0
+      name: FE251
+      map: *ID001
+    FE320:
+      type: 320
+      serial: xs_g320_gd_0_bp_0
       name: FE280
       map: *ID001
-    FE300:
-      type: 300
-      serial: xs_g300_gd_0_wt_0
-      name: FE300
+    FE321:
+      type: 321
+      serial: xs_g320_gd_16_bp_0
+      name: FE321
       map: *ID001
   parcs_data:
     power: 3800.
@@ -72,5 +96,5 @@ genome:
     inlet_temperature: 565.0
     map_size: quarter
     symmetry: octant
-    xs_library: /home/gkdelipe/codes/mof/xslib
+    xs_library: ../../xslib
     number_assemblies: 193
