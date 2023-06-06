@@ -1,7 +1,7 @@
 optimization: 
   methodology: genetic_algorithm
-  population_size: 50 
-  number_of_generations: 40
+  population_size: 10 
+  number_of_generations: 2
   reproducer: standard
   mutation:
     method: mutate_by_genome
