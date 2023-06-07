@@ -237,11 +237,17 @@ Here, the markers in the example input file are explained:
 The repository is structured in the following way:
 
 * samples: Directory including various sample cases for users to get familiarized with MOF framework. Users just need to navigate to the sample folder and run MOF from there with the corresponding input file or use the run.sh bash file on the RDFMG cluster. The samples consist of examples of genetic algorithm and simulated annealing optimization problems for a reduced number of code calculations. All the samples should finish within 10 minutes. Users are encourage to change the number of code evaluations (e.g. generations number) to experiment with optimization algorithms. Parallel execution is implemented only for genetic algorithm and the user could increase the number of allocated processors to evaluate the impact on the execution time.
+  * sample_0: First Cycle Core Loading Pattern Optimization with PARCS. Random selection is used. 
   * sample_1: Fuel Lattice Optimization with NCSU lattice simulator. Genetic algorithm is used with 2 generations and 10 population per generation. 
   * sample_2: First Cycle Core Loading Pattern Optimization with NCSU core simulator. Genetic algorithm is used with 2 generations and 10 population per generation. 
   * sample_3: First Cycle Core Loading Pattern Optimization with NCSU core simulator. Simulated annealing is used with 20 iterations. 
   * sample_4: Third Cycle Core Loading Pattern Optimization with NCSU core simulator. Genetic algorithm is used with 2 generations and 10 population per generation. 
   * sample_5: Third Cycle Core Loading Pattern Optimization with NCSU core simulator. Simulated annealing is used with 20 iterations.
+  * sample_6: First Cycle Core Loading Pattern Optimization with PARCS. Genetic Algorithm is used. 
+  * sample_7: First Cycle Core Loading Pattern Optimization with PARCS. Simulate Annealing is used. 
+  * sample_8: First Cycle Core Loading Pattern Optimization with NCSU core simulator. Parallel Simulate Annealing is used. 
+  * sample_9: First Cycle Core Loading Pattern Optimization with PARCS. Parallel Simulate Annealing is used.
+  * sample_10: First Cycle Core Loading Pattern Optimization with PARCS. Reinforcement Learning is used. 
   * dev_samples: Sample cases under development and not fully functional yet.
 
 * documentation: Directory including all additional documentation.
@@ -260,7 +266,17 @@ The repository is structured in the following way:
 
 * ncsu_core.py: Python file that handles NCSU core simulator calculations evaluation and data extraction.
 
+* parcs.py: Python file that handles PARCS calculations evaluation and data extraction.
+
+* parcs_332.py: Python file that handles PARCS_332 calculations evaluation and data extraction.
+
+* randomSolutions.py: Python file that stores all classes and functions for performing optimization with random solutions.
+
+* lcoe.py: computation of levelized cost of electricity.
+
 * simulateAnnealing.py: Python file that stores all classes and functions for performing Simulate Annealing optimization.
+
+* reinforcement_learning.py: Python file that stores all classes and functions for performing Reinforcement Learning optimization.
 
 * solution_types.py: Python file for storing the solutions of the optimization together with some usefull functions.
 
