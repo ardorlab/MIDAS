@@ -1196,7 +1196,7 @@ class Loading_Pattern_Solution(Solution):
                 os.makedirs(self.name)
             
             cdir = self.library
-            shutil.copyfile(cdir + '/' + 'boc_exp_quart193.dep', self.name +"/" + 'boc_exp.dep')
+            shutil.copyfile(cdir + '/' + 'boc_exp_quart193_18.dep', self.name +"/" + 'boc_exp.dep')
             os.chdir(self.name)
  
             fuel_locations = list(self.core_dict['fuel'].keys())
