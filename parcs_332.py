@@ -1261,7 +1261,7 @@ class Loading_Pattern_Solution(Solution):
                 ofile.write("     XE_SM      1 1 1 1\n")
                 ofile.write("     SEARCH     PPM\n")
                 ofile.write("     XS_EXTRAP  1.0 0.3\n")
-                ofile.write("     PIN_POWER  F\n")
+                ofile.write("     PIN_POWER  T\n")
                 ofile.write("     PLOT_OPTS 0 0 0 0 0 2\n")
                 ofile.write("\n")
                 ofile.write("!******************************************************************************\n\n")
@@ -1308,18 +1308,18 @@ class Loading_Pattern_Solution(Solution):
                 ofile.write("     boun_cond   0 2 0 2 2 2\n")
                 ofile.write("     SYMMETRY 4\n")
 
-                # ofile.write("     PINCAL_LOC\n")
-                # for x in range(pincal_loc.shape[0]):
-                #     ofile.write("      ")
-                #     for y in range(pincal_loc.shape[1]):
-                #         val = pincal_loc[x,y]
-                #         if np.isnan(val):
-                #             pass
-                #         else:
-                #             ofile.write(str(int(pincal_loc[x,y])))
-                #             ofile.write("  ")
-                #     ofile.write("\n")
-                # ofile.write("\n")
+                ofile.write("     PINCAL_LOC\n")
+                for x in range(pincal_loc.shape[0]):
+                    ofile.write("      ")
+                    for y in range(pincal_loc.shape[1]):
+                        val = pincal_loc[x,y]
+                        if np.isnan(val):
+                            pass
+                        else:
+                            ofile.write(str(int(pincal_loc[x,y])))
+                            ofile.write("  ")
+                    ofile.write("\n")
+                ofile.write("\n")
                 ofile.write("!******************************************************************************\n\n")
             
             with open(filename,"a") as ofile:             
