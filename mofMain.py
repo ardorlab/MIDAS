@@ -48,7 +48,6 @@ class Optimization_Factory(object):
         elif methodology == 'simulated_annealing':
             self.build_simulated_annealing()
         elif methodology == 'reinforcement_learning':
-            import reinforcement_learning as RL
             self.build_reinforcement_learning()
         elif methodology == 'random_solutions':
             self.build_random_solutions()
@@ -112,6 +111,7 @@ class Optimization_Factory(object):
 
         Written by G. K. Delipe. 03/24/2023
         """
+        import reinforcement_learning as RL
         solution_type_ = self.build_solution()
         population_    = self.build_population()
         generation_    = self.build_generation()
