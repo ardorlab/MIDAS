@@ -1,6 +1,10 @@
 
 # samples
 
+samples/sample_0/*
+!samples/sample_0/readme
+!samples/sample_0/cycle1.yaml
+!samples/sample_0/run.sh
 
 samples/sample_1/*
 !samples/sample_1/casmo_file_data
@@ -48,6 +52,19 @@ samples/sample_8/*
 !samples/sample_8/sa_ne_512_project.yaml
 !samples/sample_8/cms.pwr-all.lib
 
+samples/sample_9/*
+!samples/sample_9/readme
+!samples/sample_9/cycle1.yaml
+!samples/sample_9/run.sh
+
+samples/sample_10/*
+!samples/sample_10/readme
+!samples/sample_10/state0.yaml
+!samples/sample_10/cycle_ppo.yaml
+!samples/sample_10/cycle_sac.yaml
+!samples/sample_10/cycle_dqn.yaml
+!samples/sample_10/cycle_a2c.yaml
+!samples/sample_10/run.sh
 
 # rl_dev
 
