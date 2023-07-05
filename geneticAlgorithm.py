@@ -1101,6 +1101,7 @@ class Mutate_By_Genome(Mutation):
                 if new_gene == old_gene:
                     pass
                 else:
+                    import pdb; pdb.set_trace()
                     if self.genome_map[new_gene][mutate] == 1:
                         child_genome[mutate] = new_gene
 

@@ -213,6 +213,59 @@ def LCOE(core_param, lcoe_param, asb_param):
     lcoe = fuel_cost_npv/qener_npv
     return(lcoe,discharge_bu,asb_cost)
 
+def LCOE_MCYC(core_param, lcoe_param, asb_param):
+    """
+    Calculation of the levelized cost of electricity (LCOE) for the core
+    in a Once-Through cycle. Adaptation for multi-cycle calculation.
+    This LCOE does not include capital and O&M costs.
+
+    Parameters:
+        core_param: Dictionary - Dictionary with core related information.
+        lcoe_param: Dictionary - Dictionary with costs related information.
+        asb_param: Dictionary - Dictionary with assembly related information.
+    """
+
+    efpd = core_param['EFPD']
+    nbatches = core_param['Batches']
+    tpower = core_param['Thermal_Power']  # MWth
+    efficiency = core_param['Efficiency'] 
+    nass = core_param['Fuel_Assemblies'] # int
+    epower = tpower*efficiency
+    
+    discount_rate = lcoe_param['Discount_Rate']# fraction
+    comp_discount_rate = np.log(1+discount_rate)
+
+    nasb = 0
+    asb_cost = []
+    asb_mass = []
+    asb_mult =  []
+    for key, value in asb_param.items():
+        nasb+=value['Number']
+        asb_mult.append(value['Number'])
+        mass = get_asb_mass(value)
+        asb_mass.append(mass)
+        cost = get_asb_cost(mass,value,lcoe_param,efpd,nbatches)
+        asb_cost.append(cost)
+
+    if nasb ==nass:
+        pass
+    else:
+        raise ValueError("Wrong number of assemblies")
+
+    asb_mult = np.array(asb_mult)
+    asb_mass = np.array(asb_mass)
+    asb_cost = np.array(asb_cost)
+   
+    fuel_mass = np.dot(asb_mass,asb_mult)
+    fuel_cost_npv = np.dot(asb_cost,asb_mult)
+
+    discharge_bu = tpower*efpd*nbatches/fuel_mass
+
+    qener_npv = epower*8766*(1-np.exp(-comp_discount_rate*efpd*nbatches/365.25))/comp_discount_rate
+    lcoe = fuel_cost_npv/qener_npv
+    return(lcoe,discharge_bu,asb_cost)
+
+
 def LCOE2(core_param, lcoe_param, asb_param):
     """
     Calculation of the levelized cost of electricity (LCOE) for the core

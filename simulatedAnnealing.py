@@ -311,7 +311,10 @@ class SimulatedAnnealing(object):
         for self.generation.current in range(self.generation.total):
             for number in range(self.population.size):
                 challenge = self.solution()
-                challenge.genome = self.mutation.reproduce(active.genome)
+                if str(self.solution == "<class 'parcs_332.MCycle_Loading_Pattern_Solution'>"):
+                    challenge.genome = active.reproduce()
+                else:
+                    challenge.genome = self.mutation.reproduce(active.genome)
                 challenge.name = "solution_{}_{}".format(self.generation.current, number)
                 challenge.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
                 challenge.add_additional_information(self.file_settings)
