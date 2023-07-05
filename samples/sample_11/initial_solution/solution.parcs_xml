@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<statistics>
+       <stat name="Time" value="0.0000E+00"/>
+       <stat name="Reactivity" value="-0.1094E+00"/>
+       <stat name="beta" value="0.4584E+03"/>
+       <stat name="Boron" value="0.1000E+00"/>
+       <stat name="Power Level" value="0.1000E+01"/>
+       <stat name="fxy box" value="0.1481E+01"/>
+       <stat name="fq box" value="0.0000E+00"/>
+       <stat name="Tm max" value="0.1725E+01"/>
+       <stat name="Tm avg" value="0.6152E+03"/>
+       <stat name="Tf max" value="0.5839E+03"/>
+       <stat name="Tf avg" value="0.0000E+00"/>
+       <stat name="Tfdop max" value="0.0000E+00"/>
+       <stat name="Tfdop avg" value="0.9099E+03"/>
+       <stat name="ModDen" value="0.7011E+00"/>
+</statistics>
