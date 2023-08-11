@@ -22,7 +22,7 @@
 
                                           NRC - v3.3.2 Release                                                           
 
- Execution began at 05:58:24 on July  5, 2023                                  
+ Execution began at 17:16:31 on Aug. 10, 2023                                  
  Echo of Input Deck: solution.inp
 -------------------------------------------------------------------------------
 CASEID solution
@@ -141,34 +141,34 @@ MCYCLE
      O-08  O-09  O-10  O-11  0     0     0
      0     0     0     0     0
   SHUF_MAP  1  1
-     J-14  I-14  -566  L-11  -462  J-15  -461  -462  0
-     K-14  M-09  -586  N-13  H-13  -586  -501  -526  0
-     H-08  I-08  L-08  H-14  O-08  H-12  -526  H-10  0
-     J-08  -461  I-12  -566  -502  -462  -501  N-09  0
-     M-13  -566  -461  -586  J-09  O-10  -526  0     0
-     N-08  -501  J-11  M-14  -502  L-09  -461  0
-     K-12  M-08  M-11  -526  -462  I-09  0     0
-     -501  -586  N-12  -461  0     0     0
+     H-13  N-12  -566  -566  O-08  L-09  -526  I-11  0
+     -501  -462  L-11  -462  H-15  H-14  J-09  -501  0
+     -586  I-14  J-10  M-13  H-11  -462  L-14  K-13  0
+     L-13  -586  N-10  -462  -462  -461  O-11  J-14  0
+     J-12  -566  -501  I-10  -526  K-11  I-09  0     0
+     N-11  -462  -586  -461  O-10  -502  M-10  0
+     -586  -462  -502  K-09  I-13  J-08  0     0
+     L-12  -566  H-12  -566  0     0     0
      0     0     0     0     0
   SHUF_MAP  2  1
-     -586  -501  L-08  -502  -502  H-12  -526  J-14  0
-     N-13  N-11  I-14  L-14  -566  L-13  -462  -502  0
-     -502  -501  K-11  -462  I-09  J-08  K-10  -502  0
-     -566  -502  M-14  -526  -526  L-11  -461  J-15  0
-     I-10  -501  M-09  -501  -461  -586  -461  0     0
-     K-09  I-13  -526  -566  -502  -502  -462  0
-     -461  -586  -462  -502  -586  L-12  0     0
-     H-15  -462  -526  -586  0     0     0
+     -502  -462  -586  O-10  K-13  -566  -501  -461  0
+     N-09  -461  H-12  -566  -501  J-09  I-08  -462  0
+     -502  -501  I-11  I-13  -462  K-14  M-13  -586  0
+     H-14  K-08  -461  -461  -501  H-15  -566  -526  0
+     K-15  N-12  J-10  -502  -501  M-10  H-10  0     0
+     -462  -586  -586  K-10  H-09  I-10  -501  0
+     -461  -526  N-10  -461  L-09  -501  0     0
+     N-13  -526  O-08  -461  0     0     0
      0     0     0     0     0
   SHUF_MAP  3  1
-     O-10  N-12  I-15  -526  H-11  -586  -502  I-14  0
-     O-09  -566  -586  -462  M-12  -526  M-08  N-09  0
-     -462  -501  J-08  -501  -461  J-12  M-13  L-10  0
-     O-08  L-14  -566  I-13  -501  J-10  I-08  -462  0
-     I-11  M-11  -502  L-09  -501  -461  K-13  0     0
-     -501  -586  -501  -502  -566  -526  -502  0
-     -566  -566  J-09  M-09  -566  N-13  0     0
-     I-09  K-15  -526  K-11  0     0     0
+     K-10  H-11  -586  H-14  K-12  -502  K-08  -501  0
+     I-15  -461  -526  -461  L-12  I-12  -462  -586  0
+     -461  -462  K-15  I-14  -526  -502  K-13  -502  0
+     I-10  M-12  -566  I-09  N-09  -526  -566  I-13  0
+     -586  -501  J-13  -502  N-12  -586  O-10  0     0
+     L-11  -586  L-10  -502  -502  -566  J-14  0
+     O-11  -461  J-11  -586  -586  M-13  0     0
+     M-08  -502  M-10  N-11  0     0     0
      0     0     0     0     0
   CYCLE_IND    1  0  1
   CYCLE_IND    2  1  2
@@ -180,62 +180,62 @@ MCYCLE
  Checking PMAXS files please wait...                                           
  Checked PMAXS files                                                           
  MCYCLE SHUFFLE MAPPING 
- Assembly:     1 Shuffles:  ---    23   27 -566
- Assembly:     2 Shuffles:  ---    15 -462
+ Assembly:     1 Shuffles:  ---     6 -566
+ Assembly:     2 Shuffles:  ---    51   34 -501
  Assembly:     3 Shuffles:  ---  -566
- Assembly:     4 Shuffles:  ---    36 -501
- Assembly:     5 Shuffles:  ---  -462
- Assembly:     6 Shuffles:  ---    24 -502
- Assembly:     7 Shuffles:  ---  -461
- Assembly:     8 Shuffles:  ---  -462
- Assembly:     9 Shuffles:  ---    31 -461
- Assembly:    10 Shuffles:  ---    41   14 -526
- Assembly:    11 Shuffles:  ---  -586
- Assembly:    12 Shuffles:  ---    52   37 -501
- Assembly:    13 Shuffles:  ---     6    5    4
- Assembly:    14 Shuffles:  ---  -586
- Assembly:    15 Shuffles:  ---  -501
- Assembly:    16 Shuffles:  ---  -526
- Assembly:    17 Shuffles:  ---     1 -586
- Assembly:    18 Shuffles:  ---     9   52   52
- Assembly:    19 Shuffles:  ---    33   11 -586
- Assembly:    20 Shuffles:  ---     7 -526
- Assembly:    21 Shuffles:  ---    53    8   15
- Assembly:    22 Shuffles:  ---     5 -502
- Assembly:    23 Shuffles:  ---  -526
- Assembly:    24 Shuffles:  ---     3   33   12
- Assembly:    25 Shuffles:  ---    17 -502
- Assembly:    26 Shuffles:  ---  -461
- Assembly:    27 Shuffles:  ---    13 -566
- Assembly:    28 Shuffles:  ---  -566
- Assembly:    29 Shuffles:  ---  -502
- Assembly:    30 Shuffles:  ---  -462
- Assembly:    31 Shuffles:  ---  -501
- Assembly:    32 Shuffles:  ---    48 -586
- Assembly:    33 Shuffles:  ---    45 -502
+ Assembly:     4 Shuffles:  ---  -566
+ Assembly:     5 Shuffles:  ---    53   52   45
+ Assembly:     6 Shuffles:  ---    34   51 -586
+ Assembly:     7 Shuffles:  ---  -526
+ Assembly:     8 Shuffles:  ---    12 -566
+ Assembly:     9 Shuffles:  ---  -501
+ Assembly:    10 Shuffles:  ---  -462
+ Assembly:    11 Shuffles:  ---    36 -502
+ Assembly:    12 Shuffles:  ---  -462
+ Assembly:    13 Shuffles:  ---     8 -461
+ Assembly:    14 Shuffles:  ---     7 -501
+ Assembly:    15 Shuffles:  ---    18 -501
+ Assembly:    16 Shuffles:  ---  -501
+ Assembly:    17 Shuffles:  ---  -586
+ Assembly:    18 Shuffles:  ---    15    9   16
+ Assembly:    19 Shuffles:  ---    19
+ Assembly:    20 Shuffles:  ---    45   11 -526
+ Assembly:    21 Shuffles:  ---     4   55   42
+ Assembly:    22 Shuffles:  ---  -462
+ Assembly:    23 Shuffles:  ---    39    3 -586
+ Assembly:    24 Shuffles:  ---    30    8 -501
+ Assembly:    25 Shuffles:  ---    38   42   35
+ Assembly:    26 Shuffles:  ---  -586
+ Assembly:    27 Shuffles:  ---    49   49
+ Assembly:    28 Shuffles:  ---  -462
+ Assembly:    29 Shuffles:  ---  -462
+ Assembly:    30 Shuffles:  ---  -461
+ Assembly:    31 Shuffles:  ---    56 -461
+ Assembly:    32 Shuffles:  ---    23   45 -566
+ Assembly:    33 Shuffles:  ---    21 -462
  Assembly:    34 Shuffles:  ---  -566
- Assembly:    35 Shuffles:  ---  -461
- Assembly:    36 Shuffles:  ---  -586
- Assembly:    37 Shuffles:  ---    18 -501
- Assembly:    38 Shuffles:  ---    55 -526
- Assembly:    39 Shuffles:  ---  -526
- Assembly:    40 Shuffles:  ---    47 -461
- Assembly:    41 Shuffles:  ---  -501
- Assembly:    42 Shuffles:  ---    20 -462
- Assembly:    43 Shuffles:  ---    46 -462
- Assembly:    44 Shuffles:  ---  -502
- Assembly:    45 Shuffles:  ---    34 -501
- Assembly:    46 Shuffles:  ---  -461
- Assembly:    47 Shuffles:  ---    29 -526
- Assembly:    48 Shuffles:  ---    40   26   39
- Assembly:    49 Shuffles:  ---    43 -566
- Assembly:    50 Shuffles:  ---  -526
- Assembly:    51 Shuffles:  ---  -462
- Assembly:    52 Shuffles:  ---    10   50   41
- Assembly:    53 Shuffles:  ---  -501
- Assembly:    54 Shuffles:  ---  -586
- Assembly:    55 Shuffles:  ---    51 -586
- Assembly:    56 Shuffles:  ---  -461
+ Assembly:    35 Shuffles:  ---  -501
+ Assembly:    36 Shuffles:  ---    11    5   29
+ Assembly:    37 Shuffles:  ---  -526
+ Assembly:    38 Shuffles:  ---    28 -461
+ Assembly:    39 Shuffles:  ---    10 -461
+ Assembly:    40 Shuffles:  ---    50 -461
+ Assembly:    41 Shuffles:  ---  -462
+ Assembly:    42 Shuffles:  ---  -586
+ Assembly:    43 Shuffles:  ---  -461
+ Assembly:    44 Shuffles:  ---    55   53   40
+ Assembly:    45 Shuffles:  ---  -502
+ Assembly:    46 Shuffles:  ---    42 -586
+ Assembly:    47 Shuffles:  ---  -586
+ Assembly:    48 Shuffles:  ---  -462
+ Assembly:    49 Shuffles:  ---  -502
+ Assembly:    50 Shuffles:  ---    26   25   11
+ Assembly:    51 Shuffles:  ---    14   18 -462
+ Assembly:    52 Shuffles:  ---    17 -502
+ Assembly:    53 Shuffles:  ---    37 -501
+ Assembly:    54 Shuffles:  ---  -566
+ Assembly:    55 Shuffles:  ---     5   30 -526
+ Assembly:    56 Shuffles:  ---  -566
  Input Processing Completed.
  Xenon & Samarium Calculation is Active                                        
  Scanning PMAXS files, please wait...                                          
@@ -335,236 +335,236 @@ MCYCLE
  Fuel Shuffle: Individual Reload                                               
  Starting Cycle:    2                                                          
  Executing Point:    1                                                         
- Leakage from Fuel:   2.6937%, Absorption In Reflector:   2.5596%, Leakage From System:   0.1342%
+ Leakage from Fuel:   2.0692%, Absorption In Reflector:   1.9684%, Leakage From System:   0.1008%
  Corner Point Balance ...
  Executing Point:    2                                                         
- Leakage from Fuel:   2.7070%, Absorption In Reflector:   2.5719%, Leakage From System:   0.1351%
+ Leakage from Fuel:   2.0894%, Absorption In Reflector:   1.9872%, Leakage From System:   0.1022%
  Corner Point Balance ...
  Executing Point:    3                                                         
- Leakage from Fuel:   2.7098%, Absorption In Reflector:   2.5746%, Leakage From System:   0.1352%
+ Leakage from Fuel:   2.0952%, Absorption In Reflector:   1.9927%, Leakage From System:   0.1025%
  Corner Point Balance ...
  Executing Point:    4                                                         
- Leakage from Fuel:   2.7623%, Absorption In Reflector:   2.6228%, Leakage From System:   0.1394%
+ Leakage from Fuel:   2.1360%, Absorption In Reflector:   2.0291%, Leakage From System:   0.1069%
  Corner Point Balance ...
  Executing Point:    5                                                         
- Leakage from Fuel:   2.8341%, Absorption In Reflector:   2.6895%, Leakage From System:   0.1447%
+ Leakage from Fuel:   2.1864%, Absorption In Reflector:   2.0750%, Leakage From System:   0.1115%
  Corner Point Balance ...
  Executing Point:    6                                                         
- Leakage from Fuel:   2.8779%, Absorption In Reflector:   2.7302%, Leakage From System:   0.1477%
+ Leakage from Fuel:   2.1936%, Absorption In Reflector:   2.0810%, Leakage From System:   0.1127%
  Corner Point Balance ...
  Executing Point:    7                                                         
- Leakage from Fuel:   2.8726%, Absorption In Reflector:   2.7252%, Leakage From System:   0.1474%
+ Leakage from Fuel:   2.1422%, Absorption In Reflector:   2.0324%, Leakage From System:   0.1097%
  Corner Point Balance ...
  Executing Point:    8                                                         
- Leakage from Fuel:   2.8179%, Absorption In Reflector:   2.6736%, Leakage From System:   0.1443%
+ Leakage from Fuel:   2.0796%, Absorption In Reflector:   1.9725%, Leakage From System:   0.1070%
  Corner Point Balance ...
  Executing Point:    9                                                         
- Leakage from Fuel:   2.7438%, Absorption In Reflector:   2.6032%, Leakage From System:   0.1406%
+ Leakage from Fuel:   2.0472%, Absorption In Reflector:   1.9420%, Leakage From System:   0.1051%
  Corner Point Balance ...
  Executing Point:   10                                                         
- Leakage from Fuel:   2.6793%, Absorption In Reflector:   2.5745%, Leakage From System:   0.1048%
+ Leakage from Fuel:   2.0424%, Absorption In Reflector:   1.9301%, Leakage From System:   0.1123%
  Corner Point Balance ...
  Executing Point:   11                                                         
- Leakage from Fuel:   2.7045%, Absorption In Reflector:   2.6066%, Leakage From System:   0.0979%
+ Leakage from Fuel:   2.0750%, Absorption In Reflector:   1.9605%, Leakage From System:   0.1145%
  Corner Point Balance ...
  Executing Point:   12                                                         
- Leakage from Fuel:   2.7948%, Absorption In Reflector:   2.6864%, Leakage From System:   0.1085%
+ Leakage from Fuel:   2.1528%, Absorption In Reflector:   2.0431%, Leakage From System:   0.1097%
  Corner Point Balance ...
  Executing Point:   13                                                         
- Leakage from Fuel:   2.9815%, Absorption In Reflector:   2.8067%, Leakage From System:   0.1748%
+ Leakage from Fuel:   2.2906%, Absorption In Reflector:   2.1648%, Leakage From System:   0.1258%
  Corner Point Balance ...
  Executing Point:   14                                                         
- Leakage from Fuel:   3.1266%, Absorption In Reflector:   2.9559%, Leakage From System:   0.1707%
+ Leakage from Fuel:   2.4343%, Absorption In Reflector:   2.3031%, Leakage From System:   0.1312%
  Corner Point Balance ...
  Executing Point:   15                                                         
- Leakage from Fuel:   3.3027%, Absorption In Reflector:   3.1222%, Leakage From System:   0.1805%
+ Leakage from Fuel:   2.5725%, Absorption In Reflector:   2.4311%, Leakage From System:   0.1414%
  Corner Point Balance ...
  Executing Point:   16                                                         
- Leakage from Fuel:   4.4438%, Absorption In Reflector:   5.7689%, Leakage From System:   0.0000%
+ Leakage from Fuel:   2.6901%, Absorption In Reflector:   2.5425%, Leakage From System:   0.1477%
  Corner Point Balance ...
  Executing Point:   17                                                         
- Leakage from Fuel:   5.3608%, Absorption In Reflector:   6.7221%, Leakage From System:   0.0000%
+ Leakage from Fuel:   2.7997%, Absorption In Reflector:   2.6461%, Leakage From System:   0.1536%
  Corner Point Balance ...
  Executing Point:   18                                                         
- Leakage from Fuel:   5.4093%, Absorption In Reflector:   6.8621%, Leakage From System:   0.0000%
+ Leakage from Fuel:   2.9022%, Absorption In Reflector:   2.7427%, Leakage From System:   0.1595%
  Corner Point Balance ...
  Executing Point:   19                                                         
- Leakage from Fuel:   5.1248%, Absorption In Reflector:   6.6807%, Leakage From System:   0.0000%
+ Leakage from Fuel:   2.9968%, Absorption In Reflector:   2.8319%, Leakage From System:   0.1649%
  Corner Point Balance ...
  Executing Point:   20                                                         
- Leakage from Fuel:   5.9050%, Absorption In Reflector:   7.3672%, Leakage From System:   0.0000%
+ Leakage from Fuel:   3.0827%, Absorption In Reflector:   2.9130%, Leakage From System:   0.1697%
  Corner Point Balance ...
  Executing Point:   21                                                         
- Leakage from Fuel:   5.8894%, Absorption In Reflector:   7.4056%, Leakage From System:   0.0000%
+ Leakage from Fuel:   3.1656%, Absorption In Reflector:   2.9914%, Leakage From System:   0.1742%
  Corner Point Balance ...
  Fuel Shuffle: Individual Reload                                               
  Starting Cycle:    3                                                          
  Executing Point:    1                                                         
- Leakage from Fuel:   2.9537%, Absorption In Reflector:   4.0208%, Leakage From System:   0.0000%
+ Leakage from Fuel:   2.5773%, Absorption In Reflector:   2.4487%, Leakage From System:   0.1286%
  Corner Point Balance ...
  Executing Point:    2                                                         
- Leakage from Fuel:   3.0862%, Absorption In Reflector:   4.2311%, Leakage From System:   0.0000%
+ Leakage from Fuel:   2.6038%, Absorption In Reflector:   2.4737%, Leakage From System:   0.1302%
  Corner Point Balance ...
  Executing Point:    3                                                         
- Leakage from Fuel:   3.1770%, Absorption In Reflector:   4.3767%, Leakage From System:   0.0000%
+ Leakage from Fuel:   2.6121%, Absorption In Reflector:   2.4817%, Leakage From System:   0.1304%
  Corner Point Balance ...
  Executing Point:    4                                                         
- Leakage from Fuel:   3.0050%, Absorption In Reflector:   3.9839%, Leakage From System:   0.0000%
+ Leakage from Fuel:   2.6211%, Absorption In Reflector:   2.4883%, Leakage From System:   0.1328%
  Corner Point Balance ...
  Executing Point:    5                                                         
- Leakage from Fuel:   3.0585%, Absorption In Reflector:   3.9478%, Leakage From System:   0.0000%
+ Leakage from Fuel:   2.6590%, Absorption In Reflector:   2.5225%, Leakage From System:   0.1365%
  Corner Point Balance ...
  Executing Point:    6                                                         
- Leakage from Fuel:   3.4305%, Absorption In Reflector:   4.4635%, Leakage From System:   0.0000%
+ Leakage from Fuel:   2.6404%, Absorption In Reflector:   2.5046%, Leakage From System:   0.1357%
  Corner Point Balance ...
  Executing Point:    7                                                         
- Leakage from Fuel:   3.7323%, Absorption In Reflector:   4.8099%, Leakage From System:   0.0000%
+ Leakage from Fuel:   2.5256%, Absorption In Reflector:   2.3969%, Leakage From System:   0.1287%
  Corner Point Balance ...
  Executing Point:    8                                                         
- Leakage from Fuel:   3.6975%, Absorption In Reflector:   4.7329%, Leakage From System:   0.0000%
+ Leakage from Fuel:   2.4070%, Absorption In Reflector:   2.2831%, Leakage From System:   0.1239%
  Corner Point Balance ...
  Executing Point:    9                                                         
- Leakage from Fuel:   3.6873%, Absorption In Reflector:   4.7122%, Leakage From System:   0.0000%
+ Leakage from Fuel:   2.3341%, Absorption In Reflector:   2.2141%, Leakage From System:   0.1200%
  Corner Point Balance ...
  Executing Point:   10                                                         
- Leakage from Fuel:   3.6600%, Absorption In Reflector:   4.6643%, Leakage From System:   0.0000%
+ Leakage from Fuel:   2.3117%, Absorption In Reflector:   2.2014%, Leakage From System:   0.1104%
  Corner Point Balance ...
  Executing Point:   11                                                         
- Leakage from Fuel:   4.0109%, Absorption In Reflector:   5.0743%, Leakage From System:   0.0000%
+ Leakage from Fuel:   2.3298%, Absorption In Reflector:   2.3509%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   12                                                         
- Leakage from Fuel:   4.0963%, Absorption In Reflector:   5.1653%, Leakage From System:   0.0000%
+ Leakage from Fuel:   3.3048%, Absorption In Reflector:   4.3211%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   13                                                         
- Leakage from Fuel:   4.7146%, Absorption In Reflector:   5.7817%, Leakage From System:   0.0000%
+ Leakage from Fuel:   4.4651%, Absorption In Reflector:   5.5389%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   14                                                         
- Leakage from Fuel:   4.4703%, Absorption In Reflector:   5.5637%, Leakage From System:   0.0000%
+ Leakage from Fuel:   3.7813%, Absorption In Reflector:   4.8576%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   15                                                         
- Leakage from Fuel:   4.4733%, Absorption In Reflector:   5.5889%, Leakage From System:   0.0000%
+ Leakage from Fuel:   4.4420%, Absorption In Reflector:   5.5368%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   16                                                         
- Leakage from Fuel:   4.5588%, Absorption In Reflector:   5.7311%, Leakage From System:   0.0000%
+ Leakage from Fuel:   4.3516%, Absorption In Reflector:   5.4911%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   17                                                         
- Leakage from Fuel:   4.6219%, Absorption In Reflector:   5.9011%, Leakage From System:   0.0000%
+ Leakage from Fuel:   4.6638%, Absorption In Reflector:   5.8788%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   18                                                         
- Leakage from Fuel:   4.6207%, Absorption In Reflector:   6.0667%, Leakage From System:   0.0000%
+ Leakage from Fuel:   4.6265%, Absorption In Reflector:   5.8512%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   19                                                         
- Leakage from Fuel:   5.0249%, Absorption In Reflector:   6.7133%, Leakage From System:   0.0000%
+ Leakage from Fuel:   4.6661%, Absorption In Reflector:   5.8896%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   20                                                         
- Leakage from Fuel:   5.4882%, Absorption In Reflector:   7.1885%, Leakage From System:   0.0000%
+ Leakage from Fuel:   5.1974%, Absorption In Reflector:   6.5082%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   21                                                         
- Leakage from Fuel:   5.3428%, Absorption In Reflector:   7.1351%, Leakage From System:   0.0000%
+ Leakage from Fuel:   5.5190%, Absorption In Reflector:   6.8317%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   22                                                         
- Leakage from Fuel:   5.5207%, Absorption In Reflector:   7.2702%, Leakage From System:   0.0000%
+ Leakage from Fuel:   5.7961%, Absorption In Reflector:   7.0934%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   23                                                         
- Leakage from Fuel:   5.5110%, Absorption In Reflector:   7.2604%, Leakage From System:   0.0000%
+ Leakage from Fuel:   5.4378%, Absorption In Reflector:   6.7772%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   24                                                         
- Leakage from Fuel:   5.5296%, Absorption In Reflector:   7.2621%, Leakage From System:   0.0000%
+ Leakage from Fuel:   5.6310%, Absorption In Reflector:   6.9699%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   25                                                         
- Leakage from Fuel:   5.4937%, Absorption In Reflector:   7.2228%, Leakage From System:   0.0000%
+ Leakage from Fuel:   6.4670%, Absorption In Reflector:   7.6066%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   26                                                         
- Leakage from Fuel:   5.5434%, Absorption In Reflector:   7.2404%, Leakage From System:   0.0000%
+ Leakage from Fuel:   5.5164%, Absorption In Reflector:   6.8746%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   27                                                         
- Leakage from Fuel:   5.5634%, Absorption In Reflector:   7.2359%, Leakage From System:   0.0000%
+ Leakage from Fuel:   6.2797%, Absorption In Reflector:   7.4733%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Fuel Shuffle: Individual Reload                                               
  Starting Cycle:    4                                                          
  Executing Point:    1                                                         
- Leakage from Fuel:   2.5461%, Absorption In Reflector:   3.2620%, Leakage From System:   0.0000%
+ Leakage from Fuel:   3.3108%, Absorption In Reflector:   4.1660%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:    2                                                         
- Leakage from Fuel:   2.7769%, Absorption In Reflector:   3.6009%, Leakage From System:   0.0000%
+ Leakage from Fuel:   3.4530%, Absorption In Reflector:   4.4614%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:    3                                                         
- Leakage from Fuel:   2.9159%, Absorption In Reflector:   3.7956%, Leakage From System:   0.0000%
+ Leakage from Fuel:   3.5951%, Absorption In Reflector:   4.7042%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:    4                                                         
- Leakage from Fuel:   3.3397%, Absorption In Reflector:   4.3866%, Leakage From System:   0.0000%
+ Leakage from Fuel:   4.0000%, Absorption In Reflector:   5.4270%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:    5                                                         
- Leakage from Fuel:   3.3932%, Absorption In Reflector:   4.4312%, Leakage From System:   0.0000%
+ Leakage from Fuel:   4.2007%, Absorption In Reflector:   5.7226%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:    6                                                         
- Leakage from Fuel:   3.3833%, Absorption In Reflector:   4.3958%, Leakage From System:   0.0000%
+ Leakage from Fuel:   4.4635%, Absorption In Reflector:   5.9700%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:    7                                                         
- Leakage from Fuel:   3.4792%, Absorption In Reflector:   4.4684%, Leakage From System:   0.0000%
+ Leakage from Fuel:   4.2341%, Absorption In Reflector:   5.6229%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:    8                                                         
- Leakage from Fuel:   3.2344%, Absorption In Reflector:   4.1454%, Leakage From System:   0.0000%
+ Leakage from Fuel:   3.9195%, Absorption In Reflector:   5.0883%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:    9                                                         
- Leakage from Fuel:   3.3092%, Absorption In Reflector:   4.3032%, Leakage From System:   0.0000%
+ Leakage from Fuel:   3.8601%, Absorption In Reflector:   4.9850%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   10                                                         
- Leakage from Fuel:   2.9573%, Absorption In Reflector:   3.9676%, Leakage From System:   0.0000%
+ Leakage from Fuel:   3.5167%, Absorption In Reflector:   4.7414%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   11                                                         
- Leakage from Fuel:   2.9520%, Absorption In Reflector:   3.9962%, Leakage From System:   0.0000%
+ Leakage from Fuel:   4.0010%, Absorption In Reflector:   5.3812%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   12                                                         
- Leakage from Fuel:   3.0050%, Absorption In Reflector:   4.1089%, Leakage From System:   0.0000%
+ Leakage from Fuel:   3.9213%, Absorption In Reflector:   5.4272%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   13                                                         
- Leakage from Fuel:   2.8634%, Absorption In Reflector:   3.9067%, Leakage From System:   0.0000%
+ Leakage from Fuel:   3.7684%, Absorption In Reflector:   5.3553%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   14                                                         
- Leakage from Fuel:   3.8252%, Absorption In Reflector:   5.2491%, Leakage From System:   0.0000%
+ Leakage from Fuel:   4.0827%, Absorption In Reflector:   5.7584%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   15                                                         
- Leakage from Fuel:   4.0493%, Absorption In Reflector:   5.6449%, Leakage From System:   0.0000%
+ Leakage from Fuel:   4.1714%, Absorption In Reflector:   5.8915%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   16                                                         
- Leakage from Fuel:   4.0430%, Absorption In Reflector:   5.6352%, Leakage From System:   0.0000%
+ Leakage from Fuel:   4.4859%, Absorption In Reflector:   6.2706%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   17                                                         
- Leakage from Fuel:   4.6064%, Absorption In Reflector:   6.3065%, Leakage From System:   0.0000%
+ Leakage from Fuel:   5.1145%, Absorption In Reflector:   6.9051%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   18                                                         
- Leakage from Fuel:   4.2681%, Absorption In Reflector:   5.8700%, Leakage From System:   0.0000%
+ Leakage from Fuel:   4.9184%, Absorption In Reflector:   6.8399%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   19                                                         
- Leakage from Fuel:   4.9691%, Absorption In Reflector:   6.6343%, Leakage From System:   0.0000%
+ Leakage from Fuel:   5.2737%, Absorption In Reflector:   7.1920%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   20                                                         
- Leakage from Fuel:   5.7013%, Absorption In Reflector:   7.2355%, Leakage From System:   0.0000%
+ Leakage from Fuel:   4.9901%, Absorption In Reflector:   6.9935%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   21                                                         
- Leakage from Fuel:   4.5210%, Absorption In Reflector:   6.0330%, Leakage From System:   0.0000%
+ Leakage from Fuel:   4.9477%, Absorption In Reflector:   6.9542%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   22                                                         
- Leakage from Fuel:   5.3390%, Absorption In Reflector:   6.8306%, Leakage From System:   0.0000%
+ Leakage from Fuel:   4.9016%, Absorption In Reflector:   6.8967%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   23                                                         
- Leakage from Fuel:   4.9051%, Absorption In Reflector:   6.3751%, Leakage From System:   0.0000%
+ Leakage from Fuel:   5.9161%, Absorption In Reflector:   7.6393%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   24                                                         
- Leakage from Fuel:   4.5379%, Absorption In Reflector:   5.9532%, Leakage From System:   0.0000%
+ Leakage from Fuel:   4.9853%, Absorption In Reflector:   6.9492%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   25                                                         
- Leakage from Fuel:   5.3376%, Absorption In Reflector:   6.7175%, Leakage From System:   0.0000%
+ Leakage from Fuel:   6.0485%, Absorption In Reflector:   7.6859%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   26                                                         
- Leakage from Fuel:   6.3460%, Absorption In Reflector:   7.4885%, Leakage From System:   0.0000%
+ Leakage from Fuel:   5.1140%, Absorption In Reflector:   7.0345%, Leakage From System:   0.0000%
  Corner Point Balance ...
  Executing Point:   27                                                         
- Leakage from Fuel:   5.5525%, Absorption In Reflector:   6.8563%, Leakage From System:   0.0000%
+ Leakage from Fuel:   6.2479%, Absorption In Reflector:   7.7718%, Leakage From System:   0.0000%
  Corner Point Balance ...
  
-   K-Effective:     0.901351
+   K-Effective:     0.892190
    Boron Conc:       0.10
    Core Power Level: 1.000000E+00
  
@@ -575,85 +575,85 @@ MCYCLE
      #.####     Peak Nodal Power
  
             1       2       3       4       5       6       7       8
-      1   0.9131  0.9720  1.0397  1.2443  1.0382  1.4807  1.2216  0.7852
+      1   0.7676  0.6126  1.1852  0.9003  0.8521  1.1994  0.9441  1.1639
              NaN     NaN     NaN     NaN     NaN     NaN     NaN     NaN
-          0.9999  1.0780  1.1418  1.3725  1.1448  1.7247  1.4243  0.8306
+          0.8690  0.7195  1.3469  1.0296  0.9513  1.3238  1.0257  1.2464
  
-      2   0.9389  1.1872  1.2492  1.2003  0.9850  1.2918  0.6761  0.7813
+      2   0.8647  1.0590  1.1600  1.0964  0.9055  0.9464  1.2314  1.2821
              NaN     NaN     NaN     NaN     NaN     NaN     NaN     NaN
-          1.0209  1.3038  1.3762  1.3178  1.0749  1.4819  0.7276  0.8982
+          0.9963  1.2014  1.3125  1.2314  1.0110  1.0497  1.3701  1.3818
  
-      3   1.1003  1.1440  0.9264  1.2012  1.1806  0.6091  0.7819  0.5740
+      3   1.0367  1.0679  0.9802  0.7519  1.2184  1.2727  0.7337  1.1258
              NaN     NaN     NaN     NaN     NaN     NaN     NaN     NaN
-          1.2000  1.2520  1.0256  1.3249  1.3042  0.6506  0.8578  0.6649
+          1.1729  1.2040  1.1084  0.8673  1.3732  1.4253  0.7851  1.2054
  
-      4   0.7815  0.9212  1.1986  0.7363  1.2185  0.6891  0.5419  0.8682
+      4   0.5725  0.6426  1.1928  0.8155  0.9375  1.3202  1.2485  0.5888
              NaN     NaN     NaN     NaN     NaN     NaN     NaN     NaN
-          0.8821  1.0184  1.3307  0.8420  1.3580  0.7873  0.6068  0.9468
+          0.6860  0.7499  1.3251  0.9144  1.0680  1.4775  1.3489  0.6802
  
-      5   0.8103  0.8987  1.2129  0.9850  1.3546  1.2224  0.6931
+      5   1.2235  1.1192  0.6325  1.1517  0.9017  1.3035  0.6585
              NaN     NaN     NaN     NaN     NaN     NaN     NaN
-          0.9369  1.0503  1.3621  1.1026  1.5174  1.3533  0.7852
+          1.3835  1.2618  0.7396  1.3092  1.0370  1.4443  0.7218
  
-      6   1.2607  1.3291  1.2525  1.2843  1.4399  1.2541  1.0015
+      6   0.9826  1.2453  0.5886  1.2156  1.2800  1.2411  0.7467
              NaN     NaN     NaN     NaN     NaN     NaN     NaN
-          1.4261  1.5066  1.4145  1.4468  1.6066  1.4239  1.0729
+          1.1045  1.3945  0.6904  1.3775  1.4488  1.3498  0.8516
  
-      7   1.2611  1.2342  0.8486  0.7012  1.1405  0.5906
+      7   1.0097  1.1096  0.6658  1.2665  1.2600  0.6406
              NaN     NaN     NaN     NaN     NaN     NaN
-          1.4265  1.3919  0.9473  0.8190  1.2337  0.6335
+          1.1191  1.2145  0.7556  1.3836  1.3720  0.6993
  
-      8   0.6881  0.5662  1.0253  0.7139
+      8   0.7551  1.1081  0.8652  0.8294
              NaN     NaN     NaN     NaN
-          0.7640  0.6202  1.1030  0.8189
+          0.8370  1.1870  0.9867  0.9029
  
         Maximum Pos.   Maximum Value 
-         (  6,  1 )   1.4807
+         (  6,  4 )   1.3202
          (  1,  1 )   0.0000
-         (  6,  1 )   1.7247
+         (  6,  4 )   1.4775
  
  Axial Power Distribution
  
  Distance(cm)  Power       Plane     Mesh
  from Bottom               Number    (cm)
-    388.62  0.6189         17      15.24
-    375.92  0.7104         16      10.16
-    368.30  1.0134         15       5.08
-    350.52  1.0813         14      30.48
-    320.04  1.0940         13      30.48
-    289.56  1.0579         12      30.48
-    259.08  1.0410         11      30.48
-    228.60  1.0363         10      30.48
-    198.12  1.0348          9      30.48
-    167.64  1.0341          8      30.48
-    137.16  1.0403          7      30.48
-    106.68  1.0703          6      30.48
-     76.20  1.0779          5      30.48
-     58.42  1.0193          4       5.08
-     50.80  0.7267          3      10.16
-     38.10  0.6097          2      15.24
+    388.62  0.6837         17      15.24
+    375.92  0.7265         16      10.16
+    368.30  1.0583         15       5.08
+    350.52  1.0916         14      30.48
+    320.04  1.1018         13      30.48
+    289.56  1.0660         12      30.48
+    259.08  1.0444         11      30.48
+    228.60  1.0340         10      30.48
+    198.12  1.0276          9      30.48
+    167.64  1.0231          8      30.48
+    137.16  1.0252          7      30.48
+    106.68  1.0458          6      30.48
+     76.20  1.0432          5      30.48
+     58.42  1.0098          4       5.08
+     50.80  0.7059          3      10.16
+     38.10  0.6666          2      15.24
  
   Maximum Pos.    Maximum Value 
-      13              1.0940
+      13              1.1018
  
 
-  Fq (Pin)   1.7247
+  Fq (Pin)   1.4775
 
 
  Number of CMFD Iterations:            0                                       
- Number of Nodal Iterations:         9225                                      
- Number of TH Iterations:         9226                                         
- Number of Inners Iterations:        82038                                     
- Number of Sweeps Iterations:        27675                                     
+ Number of Nodal Iterations:         6659                                      
+ Number of TH Iterations:         6660                                         
+ Number of Inners Iterations:       112324                                     
+ Number of Sweeps Iterations:        19977                                     
 
-  Time for Init.          0.035
-           CMFD          65.945
-           Nodal         35.474
-           T/H           13.475
-           Xsec         204.380
-           Pin Power     27.453
+  Time for Init.          0.023
+           CMFD          33.192
+           Nodal         12.396
+           T/H            6.329
+           Xsec          98.457
+           Pin Power     12.990
                           -----
-           Total        346.726
+           Total        163.365
 
 
-Job Finished at 06:04:21.                                                      
+Job Finished at 17:19:23.                                                      

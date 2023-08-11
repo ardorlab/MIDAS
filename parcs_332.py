@@ -2886,6 +2886,7 @@ class MCycle_Loading_Pattern_Solution(Solution):
             self.fixed_genome = True
         elif 'unique_genes' == settings['optimization']['reproducer']:
             self.fixed_genome = True
+        self.settings = settings
 
     def generate_core(self):
         """
@@ -3751,7 +3752,10 @@ class MCycle_Loading_Pattern_Solution(Solution):
                     eco2_ind = i+1
             dbor = abs(boron[eoc1_ind-1]-boron[eoc1_ind])
             defpd = abs(efpd[eoc1_ind-1]-efpd[eoc1_ind])
-            def_dbor = defpd/dbor
+            if dbor == 0 or eoc1_ind==0:
+                def_dbor = 0.0
+            else:
+                def_dbor = defpd/dbor
             eoc = efpd[eoc1_ind] + def_dbor*(boron[eoc1_ind]-0.1)
         elif boron[-1]==boron[0]==1800.0:
             drho_dcb=10 
@@ -3770,6 +3774,8 @@ class MCycle_Loading_Pattern_Solution(Solution):
             defpd = abs(efpd[-2]-efpd[-1])
             def_dbor = defpd/dbor
             eoc = efpd[-1] + def_dbor*(boron[-1]-0.1)
+        if eoc == 0.0:
+            eoc += 0.1
         return(eoc)
 
     def get_max_boron(self,boron,keff):
@@ -4218,9 +4224,10 @@ class MCycle_Loading_Pattern_Solution(Solution):
         if new_gene in burnt_fuel_list and new_gene in cyc_genome:
             cgen_id = np.where(np.array(cyc_genome)==new_gene)[0][0] + (cyc_id-1)*nfuel
             new_genome[pos_id] = new_gene
-            new_genome[cgen_id] = old_genome
+            new_genome[cgen_id] = old_gene
         else:
             new_genome[pos_id] = new_gene
+        return(new_genome)
         
     def evaluate(self):
             """
@@ -4551,9 +4558,8 @@ class MCycle_Loading_Pattern_Solution(Solution):
             print('Execute PARCS')
             print('Running in process')
             try:
-                #output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=600)
-                os.system('cp -r ../test_solution/* ./')
-                output = 'Finished'
+                #
+                output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=240)
                 # Get Results
                 if 'Finished' in str(output):
                     ofile = fname + '.out'
@@ -4564,7 +4570,7 @@ class MCycle_Loading_Pattern_Solution(Solution):
                     self.parameters["cycle3_length"]['value'] = np.random.uniform(0,10)
                     self.parameters["PinPowerPeaking"]['value'] = np.random.uniform(10,20)
                     self.parameters["FDeltaH"]['value'] = np.random.uniform(10,20)
-                    self.parameters["max_boron"]['value'] = np.random.uniform(2000,5000)
+                    self.parameters["max_boron"]['value'] = np.random.uniform(5000,10000)
                     self.parameters["lcoe"]['value'] = np.random.uniform(100,200)
         
                 os.system('rm -f {}.parcs_pin*'.format(fname))
@@ -4578,9 +4584,13 @@ class MCycle_Loading_Pattern_Solution(Solution):
                 self.parameters["cycle3_length"]['value'] = np.random.uniform(0,10)
                 self.parameters["PinPowerPeaking"]['value'] = np.random.uniform(10,20)
                 self.parameters["FDeltaH"]['value'] = np.random.uniform(10,20)
-                self.parameters["max_boron"]['value'] = np.random.uniform(2000,5000)
+                self.parameters["max_boron"]['value'] = np.random.uniform(5000,10000)
                 self.parameters["lcoe"]['value'] = np.random.uniform(100,200)
 
+            if 'initial' in self.name and self.parameters["max_boron"]['value'] > 5000:
+                print('Re-run initial case due to non-convergence')
+                self.generate_initial(self.settings['genome']['chromosomes'])
+                self.evaluate()
             print('{} calculation is done!'.format(self.name))
             os.chdir(pwd)
             gc.collect()  
