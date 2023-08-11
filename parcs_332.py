@@ -3757,6 +3757,7 @@ class MCycle_Loading_Pattern_Solution(Solution):
             else:
                 def_dbor = defpd/dbor
             eoc = efpd[eoc1_ind] + def_dbor*(boron[eoc1_ind]-0.1)
+            eoc = min(eoc, efpd[eco2_ind])
         elif boron[-1]==boron[0]==1800.0:
             drho_dcb=10 
             drho1 = (keff[-2]-1.0)*10**5
@@ -4237,7 +4238,7 @@ class MCycle_Loading_Pattern_Solution(Solution):
             loc: String - Directory of execution
             fname: String - File name
 
-            Written by Gregory Delipei 7/29/2022
+            Written by Gregory Delipei 7/29/2023
             """
 
             # Create PARCS INPUT DECK
