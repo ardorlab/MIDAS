@@ -66,6 +66,12 @@ samples/sample_10/*
 !samples/sample_10/cycle_a2c.yaml
 !samples/sample_10/run.sh
 
+samples/sample_11/*
+!samples/sample_11/readme
+!samples/sample_11/mcycle.yaml
+!samples/sample_11/run.sh
+
+
 # rl_dev
 
 
