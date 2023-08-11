@@ -3743,9 +3743,9 @@ class MCycle_Loading_Pattern_Solution(Solution):
                 no_genome_found = False                
 
     def get_clength(self,efpd,boron,keff):
-        if boron[-1]==0.1:
+        if 0.1 in boron:
             eoc1_ind = 0
-            eco2_ind = len(efpd)
+            eco2_ind = 0
             for i in range(len(efpd)):
                 if boron[i] > 0.1 and boron[i+1] == 0.1:
                     eoc1_ind = i
@@ -3757,7 +3757,7 @@ class MCycle_Loading_Pattern_Solution(Solution):
             else:
                 def_dbor = defpd/dbor
             eoc = efpd[eoc1_ind] + def_dbor*(boron[eoc1_ind]-0.1)
-            eoc = min(eoc, efpd[eco2_ind])
+            eoc = min(eoc, efpd[eoc1_ind+1])
         elif boron[-1]==boron[0]==1800.0:
             drho_dcb=10 
             drho1 = (keff[-2]-1.0)*10**5
@@ -3773,7 +3773,10 @@ class MCycle_Loading_Pattern_Solution(Solution):
         else:
             dbor = abs(boron[-2]-boron[-1])
             defpd = abs(efpd[-2]-efpd[-1])
-            def_dbor = defpd/dbor
+            if dbor == 0:
+                def_dbor = 0
+            else:
+                def_dbor = defpd/dbor
             eoc = efpd[-1] + def_dbor*(boron[-1]-0.1)
         if eoc == 0.0:
             eoc += 0.1
