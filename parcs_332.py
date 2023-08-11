@@ -3746,10 +3746,12 @@ class MCycle_Loading_Pattern_Solution(Solution):
         if 0.1 in boron:
             eoc1_ind = 0
             eco2_ind = 0
+            first_appear = False # bolean to identify boron=0.1 first appearance
             for i in range(len(efpd)):
-                if boron[i] > 0.1 and boron[i+1] == 0.1:
+                if boron[i] > 0.1 and boron[i+1] == 0.1 and first_appear == False:
                     eoc1_ind = i
                     eco2_ind = i+1
+                    first_appear = True
             dbor = abs(boron[eoc1_ind-1]-boron[eoc1_ind])
             defpd = abs(efpd[eoc1_ind-1]-efpd[eoc1_ind])
             if dbor == 0 or eoc1_ind==0:
