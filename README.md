@@ -284,7 +284,8 @@ The repository is structured in the following way:
 
 # Resources
 
-For theory and applications, refer to https://doi.org/10.48550/arXiv.2204.00141.
+For framework structure, theory and applications, refer to https://doi.org/10.48550/arXiv.2204.00141.
+MOF also has been used to control the Crud deposition in nuclear reactors (https://www.mdpi.com/2673-4117/3/4/36). 
 
 
 
