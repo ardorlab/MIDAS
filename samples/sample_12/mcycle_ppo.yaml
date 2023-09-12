@@ -1,6 +1,6 @@
 optimization: 
   methodology: reinforcement_learning
-  environment: Cycle1_Gym_Env
+  environment: MCycle_Gym_Env
   stable_baselines3_options:
     algorithm: PPO
     policy: MlpPolicy
