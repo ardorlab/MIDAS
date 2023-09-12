@@ -3226,9 +3226,9 @@ class MCycle_Loading_Pattern_Solution(Solution):
         Written by Gregory Delipei 7/14/2022
         """
         avail_actions = self.get_actions()
-        action_type = act['Type']
         action_location = act['Location']
         action = act['Value']
+        act_bounds = np.linspace(self.action_lower,self.action_upper,nact+1)
 
         if action in avail_actions[action_type][action_location]:
             if action_type =='Exchange':
@@ -3261,33 +3261,62 @@ class MCycle_Loading_Pattern_Solution(Solution):
         Written by Gregory Delipei 7/14/2022
         """
         avail_actions = self.get_actions()
+        state = {}
+        for key_cycle, values_cycle in self.core_dict["fuel"].items():
+            state_values = []
+            for key, value in values_cycle.items():
+                avail_choices = []
+                loc_value = self.core_dict['fuel'][key_cycle][key]['Value']
+                state_values.append(loc_value)
+            state[key_cycle] = state_values
         action_mvalue = mact['Value']
-        action_location = mact['Location']
-        loc_actions=avail_actions['Map'][action_location]
+        action_cycle, action_location = mact['Location']
+        action_cycle = 'C' + str(action_cycle)
+        loc_actions=avail_actions['Map'][action_cycle][action_location]
+        action_space = mact['Space']
+        cmap = mact['Action_Map']
         for key,value in loc_actions.items():
-            bounds = value['Bounds']
-            if bounds[0]<=action_mvalue<bounds[1]:
-                action_type = value['Type']
-                action = value['Value']
-            if action_mvalue==bounds[1]==1:
-                action_type = value['Type']
-                action = value['Value']
-        
-        if action in avail_actions[action_type][action_location]:
+            if action_space=="continuous":
+                bounds = value['Bounds']
+                if bounds[0]<=action_mvalue<bounds[1]:
+                    action_type = value['Type']
+                    action = value['Value']
+                if action_mvalue==bounds[1]==1:
+                    action_type = value['Type']
+                    action = value['Value']
+            elif action_space == "discrete":
+                if cmap[value['Value']]==action_mvalue:
+                    action = value['Value']
+                    if action in state[action_cycle] and action != self.core_dict['fuel'][action_cycle][action_location]['Value'] and action[0:2] !="FE":
+                        action_type = 'Exchange'
+                        for key_loc, value_loc in self.core_dict["fuel"][action_cycle].items():
+                            if value_loc['Value'] == action:
+                                action_exchange_loc = key_loc
+                    else:
+                        action_type = 'Change'
+                    
+        if action in avail_actions['Actions'][action_cycle][action_location]:
             if action_type =='Exchange':
-                loc_value = self.core_dict['core'][action_location]['Value']
-                action_value = self.core_dict['core'][action]['Value']
-                self.core_dict['core'][action_location]['Value'] = action_value
-                self.core_dict['fuel'][action_location]['Value'] = action_value
-                self.core_dict['core'][action]['Value'] = loc_value
-                self.core_dict['fuel'][action]['Value'] = loc_value
+                loc_value = self.core_dict['core'][action_cycle][action_location]['Value']
+                action_value = self.core_dict['core'][action_cycle][action_exchange_loc]['Value']
+                self.core_dict['core'][action_cycle][action_location]['Value'] = action_value
+                self.core_dict['fuel'][action_cycle][action_location]['Value'] = action_value
+                self.core_dict['core'][action_cycle][action_exchange_loc]['Value'] = loc_value
+                self.core_dict['fuel'][action_cycle][action_exchange_loc]['Value'] = loc_value
             elif action_type=='Change':
-                loc_value = self.core_dict['core'][action_location]['Value']
-                loc_symmetry=len(self.core_dict['fuel'][action_location]['Symmetric_Assemblies'])+1
-                self.core_dict['core'][action_location]['Value'] = action
-                self.core_dict['fuel'][action_location]['Value'] = action
+                loc_value = self.core_dict['core'][action_cycle][action_location]['Value']
+                loc_symmetry=len(self.core_dict['fuel'][action_cycle][action_location]['Symmetric_Assemblies'])+1
+                self.core_dict['core'][action_cycle][action_location]['Value'] = action
+                self.core_dict['fuel'][action_cycle][action_location]['Value'] = action
                 self.core_dict['Inventory'][loc_value]['In_Design']-=loc_symmetry
                 self.core_dict['Inventory'][action]['In_Design']+=loc_symmetry
+            new_state = {}
+            for key_cycle, values_cycle in self.core_dict['fuel'].items():
+                new_state_cycle = {}
+                for key, value in values_cycle.items():
+                    new_state_cycle[key]=value['Value']
+                new_state[key_cycle] = new_state_cycle
+            self.set_state(new_state)
         else:
             raise ValueError(
                 f"The selected action is not valid."
@@ -3303,82 +3332,50 @@ class MCycle_Loading_Pattern_Solution(Solution):
         Written by Gregory Delipei 7/14/2022
         """
 
-        # Compute exchange type of actions
-        exchange_act = {}
-        for key, value in self.core_dict["fuel"].items():
-            avail_choices=[]
-            key_symmetry = len(self.core_dict['fuel'][key]['Symmetric_Assemblies'])+1
-            for key_ex,value_ex in  self.core_dict["fuel"].items():
-                key_ex_symmetry = len(self.core_dict['fuel'][key_ex]['Symmetric_Assemblies'])+1
-                if key_symmetry == key_ex_symmetry:
-                    selected_choice=key_ex
-                    avail_choices.append(selected_choice)
-            exchange_act[key]=avail_choices
+        # Available actions for every cycle are all assemblies in the inventory
+        act = {}
+        state = {}
+        nact=len(self.core_dict['Inventory'].keys())
+        for key_cycle, values_cycle in self.core_dict["fuel"].items():
+            act_val = {}
+            state_values = []
+            for key, value in values_cycle.items():
+                avail_choices = []
+                loc_value = self.core_dict['fuel'][key_cycle][key]['Value']
+                state_values.append(loc_value)
+                for key_inv,value_inv in  self.core_dict['Inventory'].items(): 
+                    avail_choices.append(key_inv)
+                act_val[key] = avail_choices
+            state[key_cycle] = state_values
+            act[key_cycle]=act_val
 
-        # Compute change type of actions
-        change_act = {}
-        for key, value in self.core_dict["fuel"].items():
-            avail_choices=[]
-            loc_symmetry = len(self.core_dict['fuel'][key]['Symmetric_Assemblies'])+1
-            loc_value = self.core_dict['fuel'][key]['Value']
-            loc_group = self.get_inventory_group(loc_value)
-            loc_group_limit = self.core_dict['Inventory_Groups'][loc_group]['Limit']
-            for key_group,value_group in  self.core_dict['Inventory_Groups'].items(): 
-                key_group_limit = self.core_dict['Inventory_Groups'][key_group]['Limit']
-                for iass in value_group["Values"]:
-                    if loc_group_limit=='Exact' and key_group==loc_group:
-                        iass_limit = self.core_dict['Inventory'][iass]['Max_Limit']
-                        iass_indesign = self.core_dict['Inventory'][iass]['In_Design']
-                        if loc_symmetry + iass_indesign <= iass_limit:
-                            selected_choice = iass
-                            avail_choices.append(selected_choice)
-                    elif loc_group_limit=='Max' and key_group_limit=='Max' and key_group!=loc_group:
-                        iass_limit = self.core_dict['Inventory'][iass]['Max_Limit']
-                        iass_indesign = self.core_dict['Inventory'][iass]['In_Design']
-                        group_limit = value_group['Limit_Value']
-                        group_indesign = self.get_group_indesign(key_group)
-                        if (loc_symmetry + iass_indesign <= iass_limit) and (loc_symmetry + group_indesign <= group_limit):
-                            selected_choice = iass
-                            avail_choices.append(selected_choice)
-                    elif loc_group_limit=='Max' and key_group_limit=='Max' and key_group==loc_group:
-                        iass_limit = self.core_dict['Inventory'][iass]['Max_Limit']
-                        iass_indesign = self.core_dict['Inventory'][iass]['In_Design']
-                        if (loc_symmetry + iass_indesign <= iass_limit):
-                            selected_choice = iass
-                            avail_choices.append(selected_choice)
-            change_act[key]=avail_choices
-
-        # Create mapping from [0,1] to action
+        # Create mapping from [0,1] to action and type of action
         map_act = {}
-        for key, value in self.core_dict["fuel"].items():
-            nex_act = len(exchange_act[key])
-            nch_act = len(change_act[key])
-            nact = nex_act + nch_act
-            act_bounds = np.linspace(self.action_lower,self.action_upper,nact+1)
-            mdict={}
-            it=0
-            for i in range(nch_act):
-                it+=1
-                adict={}
-                adict['Bounds'] = np.array([act_bounds[it-1],act_bounds[it]])
-                adict['Type'] = 'Change'
-                adict['Value'] = change_act[key][i]
-                mdict['Act'+str(it)] = adict
-            for i in range(nex_act):
-                it+=1
-                adict={}
-                adict['Bounds'] = np.array([act_bounds[it-1],act_bounds[it]])
-                adict['Type'] = 'Exchange'
-                adict['Value'] = exchange_act[key][i]
-                mdict['Act'+str(it)] = adict
-            map_act[key]=mdict
+        for key_cycle, values_cycle in self.core_dict["fuel"].items():
+            map_act_cycle = {}
+            for key, value in values_cycle.items():
+                act_bounds = np.linspace(self.action_lower,self.action_upper,nact+1)
+                it = 0
+                mdict={}
+                for i in range(len(act[key_cycle][key])):
+                    it+=1
+                    adict={}
+                    adict['Bounds'] = np.array([act_bounds[it-1],act_bounds[it]])
+                    val_act = act[key_cycle][key][i]
+                    if val_act[0:2] != 'FE' and val_act in state[key_cycle]:
+                        adict['Type'] = 'Exchange'
+                    else:
+                        adict['Type'] = 'Change'
+                    adict['Value'] = val_act
+                    mdict['Act'+str(it)] = adict
+                map_act_cycle[key]=mdict
+            map_act[key_cycle]=map_act_cycle
                 
-        act_dict={'Exchange': exchange_act,
-                  'Change': change_act,
+        act_dict={'Actions': act,
                   'Map': map_act}
         return(act_dict)
 
-    def get_mapstate(self):
+    def get_mapstate(self,cmap,observation_type):
         """
         Gets the current state in a normalized format.
 
@@ -3386,11 +3383,18 @@ class MCycle_Loading_Pattern_Solution(Solution):
 
         Written by Gregory Delipei 7/14/2022
         """
-        mstate=np.zeros(len(self.core_dict['fuel'].keys()),dtype=np.int8)
+        ncycles = len(self.core_dict['fuel'].keys())
+        ncass =  len(self.core_dict['fuel']['C1'].keys())
+        nass = ncycles*ncass
+        if observation_type=='continuous':
+            mstate=np.zeros(nass,dtype=np.int8)
+        elif observation_type=='multi_discrete':
+            mstate=np.zeros(nass+1,dtype=np.int8)
         it=0
-        for key, value in self.core_dict['fuel'].items():
-            mstate[it]=self.cmap[value['Value']]
-            it+=1
+        for key_cycle, value_cycle in self.core_dict['fuel'].items():
+            for key, value in value_cycle.items():
+                mstate[it]=cmap[value['Value']]
+                it+=1
         return(mstate)
 
     def get_inventory_group(self,iass):
@@ -3511,11 +3515,12 @@ class MCycle_Loading_Pattern_Solution(Solution):
             nvalue = value['In_Design']=0
             self.core_dict['Inventory'][key] = value
 
-        for key, value in state.items():
-            symmetry_multiplier = len(self.core_dict['fuel'][key]['Symmetric_Assemblies'])+1
-            self.core_dict['fuel'][key]['Value']=value
-            self.core_dict['core'][key]['Value']=value
-            self.core_dict['Inventory'][value]['In_Design']+=symmetry_multiplier
+        for key_cycle, values_cycle in state.items():
+            for key, value in values_cycle.items():
+                symmetry_multiplier = len(self.core_dict['fuel'][key_cycle][key]['Symmetric_Assemblies'])+1
+                self.core_dict['fuel'][key_cycle][key]['Value']=value
+                self.core_dict['core'][key_cycle][key]['Value']=value
+                self.core_dict['Inventory'][value]['In_Design']+=symmetry_multiplier
         return
 
     def get_state(self):
@@ -3747,7 +3752,7 @@ class MCycle_Loading_Pattern_Solution(Solution):
             eoc1_ind = 0
             eco2_ind = 0
             first_appear = False # bolean to identify boron=0.1 first appearance
-            for i in range(len(efpd)):
+            for i in range(len(efpd)-1):
                 if boron[i] > 0.1 and boron[i+1] == 0.1 and first_appear == False:
                     eoc1_ind = i
                     eco2_ind = i+1
@@ -4363,6 +4368,11 @@ class MCycle_Loading_Pattern_Solution(Solution):
             xs_unique_c3 = np.delete(xs_unique_c3, np.argwhere(xs_unique_c3 == 'None'))
             xs_unique = np.append(xs_unique_c1,xs_unique_c2)
             xs_unique = np.append(xs_unique,xs_unique_c3)
+            xs_forced = np.array([self.core_dict['Inventory']['FE461']['Cross_Section'],
+                        self.core_dict['Inventory']['FE462']['Cross_Section'],
+                        self.core_dict['Inventory']['FE501']['Cross_Section'],
+                        self.core_dict['Inventory']['FE502']['Cross_Section']])
+            xs_unique = np.append(xs_unique,xs_forced)
             xs_unique = np.unique(xs_unique)
 
             tag_unique = copy.deepcopy(xs_unique)
@@ -4570,6 +4580,21 @@ class MCycle_Loading_Pattern_Solution(Solution):
                 if 'Finished' in str(output):
                     ofile = fname + '.out'
                     self.get_results(fname,pin_power=False)
+                    os.system('rm -f {}.parcs_pin*'.format(fname))
+                   # os.system('rm -f {}.inp'.format(fname))
+                    os.system('rm -f {}.inp_parcs_err'.format(fname))
+                    os.system('rm -f {}.inp_paths_err'.format(fname))
+                    os.system('rm -f {}.parcs_cyc-01'.format(fname))
+                    os.system('rm -f {}.parcs_cyc-02'.format(fname))
+                    os.system('rm -f {}.parcs_cyc-03'.format(fname))
+                    os.system('rm -f {}.parcs_cyc-04'.format(fname))
+                    os.system('rm -f {}.parcs_dep'.format(fname))
+                    os.system('rm -f {}.parcs_itr'.format(fname))
+                    os.system('rm -f {}.parcs_msg'.format(fname))
+                    os.system('rm -f {}.parcs_out'.format(fname))
+                    os.system('rm -f {}.parcs_sum'.format(fname))
+                    os.system('rm -f {}.parcs_xml'.format(fname))
+                    os.system('rm -f mcyc_exp.dep')
                 else:
                     self.parameters["cycle1_length"]['value'] = np.random.uniform(0,10)
                     self.parameters["cycle2_length"]['value'] = np.random.uniform(0,10)
@@ -4577,9 +4602,8 @@ class MCycle_Loading_Pattern_Solution(Solution):
                     self.parameters["PinPowerPeaking"]['value'] = np.random.uniform(10,20)
                     self.parameters["FDeltaH"]['value'] = np.random.uniform(10,20)
                     self.parameters["max_boron"]['value'] = np.random.uniform(5000,10000)
-                    self.parameters["lcoe"]['value'] = np.random.uniform(100,200)
-        
-                os.system('rm -f {}.parcs_pin*'.format(fname))
+                    self.parameters["lcoe"]['value'] = np.random.uniform(100,200)  
+                    os.system('rm -f ./*')
 
             except subprocess.TimeoutExpired:
                 print('Timed out - killing')
@@ -4592,6 +4616,7 @@ class MCycle_Loading_Pattern_Solution(Solution):
                 self.parameters["FDeltaH"]['value'] = np.random.uniform(10,20)
                 self.parameters["max_boron"]['value'] = np.random.uniform(5000,10000)
                 self.parameters["lcoe"]['value'] = np.random.uniform(100,200)
+                os.system('rm -f ./*')
 
             if 'initial' in self.name and self.parameters["max_boron"]['value'] > 5000:
                 print('Re-run initial case due to non-convergence')

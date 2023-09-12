@@ -17,6 +17,7 @@ from fileinput import filename
 import gym
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common.monitor import Monitor
+from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3 import SAC, PPO, A2C, DQN
 import torch as th
 
@@ -24,13 +25,13 @@ class Cycle1_Gym_Env(gym.Env):
     """
     Class for wrapper adapted for Gym environment
 
-    Written by Gregory Delipei 7/12/2022
+    Written by Gregory Delipei 8/12/2023
     """
     metadata = {'render.modes': ['console']}
     # Define constants for clearer code
 
     def __init__(self,solution,file_settings,fitness):
-        super(Gym_Env, self).__init__()
+        super(Cycle1_Gym_Env, self).__init__()
         self.solution = solution
         self.best_solution = solution
         self.nrow=solution.nrow
@@ -179,7 +180,7 @@ class Cycle1_Gym_Env(gym.Env):
     def close(self):
         pass
 
-class Mcycle_Gym_Env(gym.Env):
+class MCycle_Gym_Env(gym.Env):
     """
     Class for wrapper adapted for Gym environment
 
@@ -189,9 +190,10 @@ class Mcycle_Gym_Env(gym.Env):
     # Define constants for clearer code
 
     def __init__(self,solution,file_settings,fitness):
-        super(Gym_Env, self).__init__()
+        super(MCycle_Gym_Env, self).__init__()
         self.solution = solution
         self.best_solution = solution
+        self.action_list = []
         self.nrow=solution.nrow
         self.fitness= fitness
         self.ncol=solution.ncol
@@ -207,7 +209,6 @@ class Mcycle_Gym_Env(gym.Env):
         self.fitness_const = file_settings['optimization']['selection']['fitness_constraint']
         state0_file = file_settings['optimization']['start']
         
-      #  self.random_design()
         invent=list(self.core_dict['Inventory'].keys())
         nass = len(invent)
         self.counter=0
@@ -215,6 +216,7 @@ class Mcycle_Gym_Env(gym.Env):
         self.maxcounter = len(self.order)
         with open(state0_file) as f:
             self.start = yaml.safe_load(f)
+
         self.solution.set_state(self.start)
         self.action_type= file_settings['optimization']['stable_baselines3_options']['action_space']
         self.observation_type = file_settings['optimization']['stable_baselines3_options']['observation_space']
@@ -240,7 +242,7 @@ class Mcycle_Gym_Env(gym.Env):
                                                       nass,nass,nass,nass,nass,nass,
                                                       nass,31])
         else:
-            self.observation_space = spaces.Box(low=-1.0, high=1.0, shape=(2,len(self.start)), dtype=np.float32)
+            self.observation_space = spaces.Box(low=-1.0, high=1.0, shape=(2,len(self.start['C1'])*3), dtype=np.float32)
         
 
         self.trackfile='trackfile.txt'
@@ -276,14 +278,14 @@ class Mcycle_Gym_Env(gym.Env):
 
     def step(self, action):
         loc = self.order[self.counter]
-        act=self.solution.get_actions()
-        sact={'Location': loc,
+        lcycle = int((self.counter)/56)+1
+        sact={  'Location': (lcycle, loc),
                 'Value': action,
                 'Space':self.action_type,
                 'Action_Map':self.cmap}
         self.solution.mapaction(sact)
 
-        if self.counter==len(self.start)-1:
+        if self.counter==len(self.start['C1'])*3-1:
             mid = 0
             self.total_run +=1
             self.solution.name = "solution_{}".format(self.total_run)
@@ -293,10 +295,13 @@ class Mcycle_Gym_Env(gym.Env):
             if self.fitness_const:
                 self.solution.fitness=self.solution.get_fitness()
             reward = self.solution.fitness
-            info={'cycle_length':self.solution.parameters["cycle_length"]['value'],
+            info={'cycle1_length':self.solution.parameters["cycle1_length"]['value'],
+                  'cycle2_length':self.solution.parameters["cycle2_length"]['value'],
+                  'cycle3_length':self.solution.parameters["cycle3_length"]['value'],
                   'max_boron':self.solution.parameters["max_boron"]['value'],
                   'FDeltaH':self.solution.parameters["FDeltaH"]['value'],
                   'PinPowerPeaking':self.solution.parameters["PinPowerPeaking"]['value'],
+                  'lcoe':self.solution.parameters["lcoe"]['value'],
                   'State': self.solution.get_mapstate(self.cmap,self.observation_type)}
             all_values = open('all_value_tracker.txt','a')
             all_values.write(f"{self.total_run},   {self.solution.name},   ")
@@ -467,6 +472,94 @@ class Reinforcement_Learning(object):
                     batch_size=self.file_settings['optimization']['stable_baselines3_options']['batch_size'],
                     learning_rate=self.file_settings['optimization']['stable_baselines3_options']['learning_rate'],
                     tensorboard_log=tens_log,policy_kwargs=policy_kwargs)
+
+        games_numbers = self.generation.total
+        steps_per_game = len(self.file_settings['optimization']['order'])
+        model.learn(total_timesteps=steps_per_game*games_numbers)
+        model.save(model_save)
+        obs = env.reset()
+
+
+        track_file = open('optimization_track_file.txt','a')
+        track_file.write("End of Optimization \n")
+        track_file.close()
+
+        opt.plotter()
+
+    def main_in_parallel(self):
+        """
+        Performs optimization using a reinforcement learning in serial.
+        Done because for some reason the neural network stuff seems to be
+        breaking with parallel.
+
+        Parameters: None
+
+        Written by Brian Andersen 1/9/2020
+        """
+        myEnv_id = 'mcycle/PARCS-v0' # It is best practice to have a space name and version number.
+        gym.envs.registration.register(
+            id=myEnv_id,
+            entry_point=MCycle_Gym_Env,
+            max_episode_steps=1000000, # Customize to your needs.
+            reward_threshold=10000 # Customize to your needs.
+        )
+        opt = Optimization_Metric_Toolbox()
+
+        track_file = open('optimization_track_file.txt', 'w')
+        track_file.write("Beginning Optimization \n")
+        track_file.close()
+
+        all_values = open('all_value_tracker.txt','w')
+        all_values.close()
+
+
+        loading_pattern_tracker = open("loading patterns.txt", 'w')
+        loading_pattern_tracker.close()
+
+        log_dir = self.file_settings['optimization']['stable_baselines3_options']['logdir']
+        os.makedirs(log_dir, exist_ok=True)
+
+        objectves = self.file_settings['optimization']['objectives']
+        
+        info_kwd=list(objectves.keys())
+        info_kwd.append('State')
+        info_kwd = tuple(info_kwd)
+        foo = self.solution()
+        foo.name = "solution"
+        foo.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
+        foo.add_additional_information(self.file_settings)
+        vec_env = make_vec_env(myEnv_id, n_envs=self.num_procs, env_kwargs={"solution": foo, "file_settings": self.file_settings, "fitness": self.fitness})
+        net1 = self.file_settings['optimization']['stable_baselines3_options']['policy_net']
+        net2 = self.file_settings['optimization']['stable_baselines3_options']['qvalue_net']
+        tens_log = self.file_settings['optimization']['stable_baselines3_options']['tensorboard_log']
+        if tens_log is False:
+            tens_log = None
+        model_save = self.file_settings['optimization']['stable_baselines3_options']['model_save']
+        gam = self.file_settings['optimization']['stable_baselines3_options']['gamma']
+        sb_algo = self.file_settings['optimization']['stable_baselines3_options']['algorithm']
+        if sb_algo == 'SAC':
+            policy_kwargs = dict(net_arch=dict(pi=net1, qf=net2)) # pi is the actor network, while qf is the critic network
+            model=SAC('MlpPolicy', vec_env, verbose=1, 
+            learning_rate=self.file_settings['optimization']['stable_baselines3_options']['learning_rate'], 
+            buffer_size=self.file_settings['optimization']['stable_baselines3_options']['buffer_size'], 
+            learning_starts=self.file_settings['optimization']['stable_baselines3_options']['learning_starts'], 
+            batch_size=self.file_settings['optimization']['stable_baselines3_options']['batch_size'], 
+            tau=self.file_settings['optimization']['stable_baselines3_options']['tau'], 
+            gamma=self.file_settings['optimization']['stable_baselines3_options']['gamma'], 
+            train_freq=self.file_settings['optimization']['stable_baselines3_options']['train_freq'], 
+            gradient_steps=self.file_settings['optimization']['stable_baselines3_options']['gradient_steps'],
+            tensorboard_log=tens_log,policy_kwargs=policy_kwargs)
+        elif sb_algo == 'PPO':
+            policy_kwargs = dict(net_arch=[dict(pi=net1, vf=net2)])
+            model=PPO('MlpPolicy', vec_env, verbose=1, 
+            learning_rate=self.file_settings['optimization']['stable_baselines3_options']['learning_rate'], 
+            n_steps=self.file_settings['optimization']['stable_baselines3_options']['n_steps'], 
+            batch_size=self.file_settings['optimization']['stable_baselines3_options']['batch_size'], 
+            n_epochs=self.file_settings['optimization']['stable_baselines3_options']['n_epochs'], 
+            gamma=self.file_settings['optimization']['stable_baselines3_options']['gamma'], 
+            gae_lambda=self.file_settings['optimization']['stable_baselines3_options']['gae_lambda'], 
+            clip_range=self.file_settings['optimization']['stable_baselines3_options']['clip_range'],
+            tensorboard_log=tens_log,policy_kwargs=policy_kwargs)
 
         games_numbers = self.generation.total
         steps_per_game = len(self.file_settings['optimization']['order'])
