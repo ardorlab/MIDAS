@@ -2,11 +2,17 @@
 
 # MIDAS: Modularly Integrated Design Assistance Suite
 
+<p align="center">
+  <img src="https://github.com/ardorlab/MIDAS/assets/61293473/8114a773-988b-493a-9831-8d3f7b80408b" width="300" height="300">
+</p>
+
+
 Welcome to the Modularly Integrated Design Assistance Suite (MIDAS) repository. MIDAS utilizes inheritance, object-oriented, and functional programming to
 create a simple, robust tool for solving optimization problems. It has been applied primarily to nuclear engineering design problems.
 
 
 MIDAS is designed to provide users with a variety of optimization methodologies to solve opimization problems with a focus on nuclear engineering design problems. Containing multiple optimization methodologies in a single package allows for the reuse of code in multiple ways leading to a shorter, simpler, and more versatile optimization package.
+
 
 Current optimization methodologies supported in MIDAS are:
 
