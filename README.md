@@ -1,14 +1,14 @@
 
 
-# MOF: Modular Optimization Framework
+# MIDAS: Modularly Integrated Design Assistance Suite
 
-Welcome to the Modular Optimization Framework repository. MOF utilizes inheritance, object-oriented, and functional programming to
+Welcome to the Modularly Integrated Design Assistance Suite (MIDAS) repository. MIDAS utilizes inheritance, object-oriented, and functional programming to
 create a simple, robust tool for solving optimization problems. It has been applied primarily to nuclear engineering design problems.
 
 
-MOF is designed to provide users with a variety of optimization methodologies to solve opimization problems with a focus on nuclear engineering design problems. Containing multiple optimization methodologies in a single package allows for the reuse of code in multiple ways leading to a shorter, simpler, and more versatile optimization package.
+MIDAS is designed to provide users with a variety of optimization methodologies to solve opimization problems with a focus on nuclear engineering design problems. Containing multiple optimization methodologies in a single package allows for the reuse of code in multiple ways leading to a shorter, simpler, and more versatile optimization package.
 
-Current optimization methodologies supported by the MOF are:
+Current optimization methodologies supported in MIDAS are:
 
 * Genetic Algorithm
 * Simulated Annealing
@@ -35,7 +35,7 @@ required dependencies entering the following commands:
 	
 	conda install h5py
 
-    git clone https://github.com/ardorlab/MOF.git
+    git clone https://github.com/ardorlab/MIDAS.git
 
 If you want to use the newly added reinforcement learning algorithms, the python verion in the environment should be 3.9 and some additional dependencies will need to be installed:
 
@@ -48,7 +48,7 @@ Congratulations. The code is now installed in your local machine.
 
 # Running the Code 
 
-Enter your local MOF directory and navigate to one of the sample problems. Type:
+Enter your local MIDAS directory and navigate to one of the sample problems. Type:
 
     python mofMain.py --input sample_problem_input.yaml --cpus 4 
 
@@ -236,7 +236,7 @@ Here, the markers in the example input file are explained:
 
 The repository is structured in the following way:
 
-* samples: Directory including various sample cases for users to get familiarized with MOF framework. Users just need to navigate to the sample folder and run MOF from there with the corresponding input file or use the run.sh bash file on the RDFMG cluster. The samples consist of examples of genetic algorithm and simulated annealing optimization problems for a reduced number of code calculations. All the samples should finish within 10 minutes. Users are encourage to change the number of code evaluations (e.g. generations number) to experiment with optimization algorithms. Parallel execution is implemented only for genetic algorithm and the user could increase the number of allocated processors to evaluate the impact on the execution time.
+* samples: Directory including various sample cases for users to get familiarized with MIDAS framework. Users just need to navigate to the sample folder and run MIDAS from there with the corresponding input file or use the run.sh bash file on the RDFMG cluster. The samples consist of examples of genetic algorithm and simulated annealing optimization problems for a reduced number of code calculations. All the samples should finish within 10 minutes. Users are encourage to change the number of code evaluations (e.g. generations number) to experiment with optimization algorithms. Parallel execution is implemented only for genetic algorithm and the user could increase the number of allocated processors to evaluate the impact on the execution time.
   * sample_0: First Cycle Core Loading Pattern Optimization with PARCS. Random selection is used. 
   * sample_1: Fuel Lattice Optimization with NCSU lattice simulator. Genetic algorithm is used with 2 generations and 10 population per generation. 
   * sample_2: First Cycle Core Loading Pattern Optimization with NCSU core simulator. Genetic algorithm is used with 2 generations and 10 population per generation. 
@@ -262,7 +262,7 @@ The repository is structured in the following way:
 
 * metrics.py: Python file including tools for tracking solutions and storing the generated optimization data.
 
-* mofMain.py: Python file that is the main body of MOF. In this file the interface between the input file and the optimization is performed by selecting the specified options and initializing all the necessary components.
+* mofMain.py: Python file that is the main body of MIDAS. In this file the interface between the input file and the optimization is performed by selecting the specified options and initializing all the necessary components.
 
 * ncsu_core.py: Python file that handles NCSU core simulator calculations evaluation and data extraction.
 
@@ -280,12 +280,11 @@ The repository is structured in the following way:
 
 * solution_types.py: Python file for storing the solutions of the optimization together with some usefull functions.
 
-* submission_script.sh: Bash file example for running MOF through SLURM on the RDFMG cluster.
+* submission_script.sh: Bash file example for running MIDAS through SLURM on the RDFMG cluster.
 
 # Resources
-
-For framework structure, theory and applications, refer to https://doi.org/10.48550/arXiv.2204.00141.
-MOF also has been used to control the Crud deposition in nuclear reactors (https://www.mdpi.com/2673-4117/3/4/36). 
+MIDAS is an updated version of the MOF (Modular Optimization Framework) for which you can find more information about the framework structure, theory and applications in https://doi.org/10.48550/arXiv.2204.00141.
+MIDAS previous version MOF has been used to control the Crud deposition in nuclear reactors (https://www.mdpi.com/2673-4117/3/4/36). 
 
 
 
