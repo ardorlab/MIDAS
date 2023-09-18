@@ -49,7 +49,7 @@ If you want to use the newly added reinforcement learning algorithms, the python
 
     pip install stable-baselines3[extra] 
 
-An alternative way to configure the environment is to use the requirement files provided in the repository for pip and conda tools. This files are the "requirements_pip.txt" and "requirements_conda.txt"
+An alternative way to configure the environment is to use the requirement files provided in the repository for pip and conda tools. This files are the "requirements_pip.txt" and "requirements_conda.txt".
 
 Congratulations. The code is now installed in your local machine.
 
