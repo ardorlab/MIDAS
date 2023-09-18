@@ -43,11 +43,13 @@ required dependencies entering the following commands:
 
     git clone https://github.com/ardorlab/MIDAS.git
 
-If you want to use the newly added reinforcement learning algorithms, the python verion in the environment should be 3.9 and some additional dependencies will need to be installed:
+If you want to use the newly added reinforcement learning algorithms, the python version in the environment should be 3.9 and some additional dependencies will need to be installed:
 
     pip3 install torch torchvision torchaudio
 
     pip install stable-baselines3[extra] 
+
+An alternative way to configure the environment is to use the requirement files provided in the repository for pip and conda tools.
 
 Congratulations. The code is now installed in your local machine.
 
