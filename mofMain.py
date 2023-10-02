@@ -9,6 +9,7 @@ import pickle
 import argparse
 from matplotlib import pyplot
 from multiprocessing import Pool
+from midas import logo
 from midas.algorithms import genetic_algorithm as GA
 from midas.algorithms import simulated_annealing as SA
 from midas.algorithms import random_solutions as RS
@@ -520,6 +521,11 @@ class No_Solution_Front(object):
         return None
 
 if __name__ == "__main__":
+
+    f = open("midas.out", 'w')
+    sys.stdout = f
+    print(logo.__logo__)
+
     input_help_message = 'Input file containing all the information'
     input_help_message += 'needed to perform the optimization routine.'  
     input_help_message += '\n Input file extension needs to be a '
@@ -563,6 +569,8 @@ if __name__ == "__main__":
     else:
         print("Executing in Serial")
         optimization.main_in_serial()
+    
+    f.close()
 
 
 

@@ -20,7 +20,7 @@ cd $SLURM_SUBMIT_DIR
 export CMSBIN=/cm/shared/apps/ncsu/CasmoSimulate/bin
 rm -rf initial_*
 rm -rf solution_*
-python ../../mofMain.py --input sa_ne_512_project.yaml --cpus 1
+python ../../mofMain.py --input sa_ne_512_project.yaml --cpus 1 > screen.txt
 
 
 

@@ -17,4 +17,4 @@ rm -rf solution_*
 rm -rf monitor_*
 rm -rf tensorboard_*
 
-python ../../mofMain.py --input mcycle_ppo.yaml --cpus 1
+python ../../mofMain.py --input mcycle_ppo.yaml --cpus 1 
