@@ -5,45 +5,54 @@ samples/sample_0/*
 !samples/sample_0/readme
 !samples/sample_0/cycle1.yaml
 !samples/sample_0/run.sh
+!samples/sample_0/clean.sh
 
 samples/sample_1/*
 !samples/sample_1/casmo_file_data
 !samples/sample_1/casmo_moogle_input.yaml
 !samples/sample_1/run.sh
+!samples/sample_1/clean.sh
 
 samples/sample_2/*
 !samples/sample_2/cms.pwr-all.lib
 !samples/sample_2/cycle1.res
 !samples/sample_2/ga_ne_512_project.yaml
 !samples/sample_2/run.sh
+!samples/sample_2/clean.sh
 
 samples/sample_3/*
 !samples/sample_3/cms.pwr-all.lib
 !samples/sample_3/cycle1.res
 !samples/sample_3/sa_ne_512_project.yaml
 !samples/sample_3/run.sh
+!samples/sample_3/clean.sh
 
 samples/sample_4/*
 !samples/sample_4/pwr.nnnewpulledbp.lib
 !samples/sample_4/mof_cycle_3.res
 !samples/sample_4/cycle_3_crud.yaml
 !samples/sample_4/run.sh
+!samples/sample_4/clean.sh
+
 
 samples/sample_5/*
 !samples/sample_5/pwr.nnnewpulledbp.lib
 !samples/sample_5/mof_cycle_3.res
 !samples/sample_5/sa_cycle_3_crud.yaml
 !samples/sample_5/run.sh
+!samples/sample_5/clean.sh
 
 samples/sample_6/*
 !samples/sample_6/readme
 !samples/sample_6/cycle1.yaml
 !samples/sample_6/run.sh
+!samples/sample_6/clean.sh
 
 samples/sample_7/*
 !samples/sample_7/readme
 !samples/sample_7/cycle1.yaml
 !samples/sample_7/run.sh
+!samples/sample_7/clean.sh
 
 samples/sample_8/*
 !samples/sample_8/readme
@@ -51,11 +60,13 @@ samples/sample_8/*
 !samples/sample_8/run.sh
 !samples/sample_8/sa_ne_512_project.yaml
 !samples/sample_8/cms.pwr-all.lib
+!samples/sample_8/clean.sh
 
 samples/sample_9/*
 !samples/sample_9/readme
 !samples/sample_9/cycle1.yaml
 !samples/sample_9/run.sh
+!samples/sample_9/clean.sh
 
 samples/sample_10/*
 !samples/sample_10/readme
@@ -65,17 +76,20 @@ samples/sample_10/*
 !samples/sample_10/cycle_dqn.yaml
 !samples/sample_10/cycle_a2c.yaml
 !samples/sample_10/run.sh
+!samples/sample_10/clean.sh
 
 samples/sample_11/*
 !samples/sample_11/readme
 !samples/sample_11/mcycle.yaml
 !samples/sample_11/run.sh
+!samples/sample_11/clean.sh
 
 samples/sample_12/*
 !samples/sample_12/readme
 !samples/sample_12/state0.yaml
 !samples/sample_12/mcycle_ppo.yaml
 !samples/sample_12/run.sh
+!samples/sample_12/clean.sh
 
 
 # rl_dev
