@@ -377,5 +377,5 @@ genome:
     map_size: quarter
     symmetry: quarter
     ncycles: 3
-    xs_library: /home/gkdelipe/codes/mof/MOF/xslib
+    xs_library: /home/gkdelipe/codes/midas/MIDAS/xslib
     number_assemblies: 193

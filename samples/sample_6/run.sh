@@ -15,7 +15,7 @@ cd $SLURM_SUBMIT_DIR
 
 rm -rf initial_*
 rm -rf child_*
-python ../../mofMain.py --input cycle1.yaml --cpus 41
+python ../../mofMain.py --input cycle1.yaml --cpus 4
 
 
 ##stress-ng --cpu $SLURM_CPUS_ON_NODE --timeout 60s --metrics-brief

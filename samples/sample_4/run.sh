@@ -20,7 +20,7 @@ cd $SLURM_SUBMIT_DIR
 export CMSBIN=/cm/shared/apps/ncsu/CasmoSimulate/bin
 rm -rf initial_*
 rm -rf child_*
-python ../../mofMain.py --input cycle_3_crud.yaml --cpus 16
+python ../../mofMain.py --input cycle_3_crud.yaml --cpus 4
 
 
 

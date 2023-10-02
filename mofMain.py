@@ -9,13 +9,13 @@ import pickle
 import argparse
 from matplotlib import pyplot
 from multiprocessing import Pool
-import geneticAlgorithm as GA
-import simulatedAnnealing as SA
-import randomSolutions as RS
-from ncsu_lattice import Simulate_Lattice
-import ncsu_core
-import fitness
-import parcs_332
+from midas.algorithms import genetic_algorithm as GA
+from midas.algorithms import simulated_annealing as SA
+from midas.algorithms import random_solutions as RS
+from midas.applications.ncsu_lattice import Simulate_Lattice
+from midas.applications import ncsu_core
+from midas.utils import fitness
+from midas.applications import parcs_332
 
 class Optimization_Factory(object):
     """
@@ -111,7 +111,7 @@ class Optimization_Factory(object):
 
         Written by G. K. Delipe. 03/24/2023
         """
-        import reinforcement_learning as RL
+        from midas.algorithms import reinforcement_learning as RL
         solution_type_ = self.build_solution()
         population_    = self.build_population()
         generation_    = self.build_generation()
