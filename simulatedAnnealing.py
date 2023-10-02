@@ -10,8 +10,9 @@ from multiprocessing import Pool
 from solution_types import evaluate_function
 from metrics import Simulated_Annealing_Metric_Toolbox
 import multiprocessing
+import uuid
 
-
+SA_INIT_ID=0
 
 """
 This file contains a few of the classes and methods involved with 
@@ -224,6 +225,31 @@ def SA(x, k, active, Buffer, BufferCost, self, opt):
 
     return (solutions, solutionsfitness, NewSolutionCost, NewSolutionSA, PAR, PAR2)
 
+def SA_prun(k, self):
+    # creates a single initial solution
+    active = self.solution()
+    # active.genome = self.mutation.reproduce(active.genome)
+    
+
+    active.name = f"initial_temp_calc" + str(k)
+    active.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
+    # active.genome = self.mutation.reproduce(active.genome)
+    active.add_additional_information(self.file_settings)
+    if active.fixed_genome:
+        active.generate_initial_fixed(self.file_settings['genome']['chromosomes'],
+                                        self.file_settings['optimization']['fixed_groups'])
+    else:
+        active.generate_initial(self.file_settings['genome']['chromosomes'])
+
+    active.evaluate()
+    
+    one = []
+    one.append(active)
+    one = self.fitness.calculate(one)
+    print('calculation {}, fitness = {}'.format(k,active.fitness))
+
+
+    return (active)
 
 def SetInitial(self):
     """
@@ -482,7 +508,8 @@ class SimulatedAnnealing(object):
 
             return acceptedlist
 
-        def InitialTemp(self):
+
+        def InitialTemp(self,ctx):
 
             # calculates the initial temperature based on the standard deviations
             # of costs when the probability is 100%
@@ -490,29 +517,13 @@ class SimulatedAnnealing(object):
             costs = []
             # a > 1.0 and a < 2.0
             a = 1.5
-            for j in range(self.file_settings['optimization']['buffer_length']):
-                # creates a single initial solution
-                active = self.solution()
-                # active.genome = self.mutation.reproduce(active.genome)
-                active.name = f"initial_temp_calc"
-                active.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
-                # active.genome = self.mutation.reproduce(active.genome)
-                active.add_additional_information(self.file_settings)
-                if active.fixed_genome:
-                    active.generate_initial_fixed(self.file_settings['genome']['chromosomes'],
-                                                  self.file_settings['optimization']['fixed_groups'])
-                else:
-                    active.generate_initial(self.file_settings['genome']['chromosomes'])
-                active.evaluate()
+            ninit = self.file_settings['optimization']['buffer_length']
+            with ctx.Pool(processes=self.num_procs, ) as p:
+                data = p.starmap(SA_prun, [(k, self) for k in range(ninit)])
 
-                one = []
-                one.append(active)
-
-                one = self.fitness.calculate(one)
+            for active in data:
                 costs.append(active.fitness)
                 Buffer.append(active)
-
-                shutil.rmtree("initial_temp_calc")
 
             deviation = statistics.stdev(costs)
 
@@ -560,8 +571,12 @@ class SimulatedAnnealing(object):
         # SetStart determines if initial buffer will be set or completely random
         # if SetStart is 0, then the buffer will be random
         # if SetStart is 1, Buffer will be predetemined
+
+        multiprocessing.set_start_method("spawn")
+        ctx = multiprocessing.get_context('spawn')
+
         if SetStart == 0:
-            initial_temp, Buffer = InitialTemp(self)
+            initial_temp, Buffer = InitialTemp(self,ctx)
             Buffer = self.fitness.calculate(Buffer)
             BufferCost = [Buffer[i].fitness for i in range(len(Buffer))]
 
@@ -576,18 +591,12 @@ class SimulatedAnnealing(object):
         track_file.close()
 
         active = InitialSolution(self.cooling_schedule.temperature, Buffer, BufferCost)
-        active.evaluate()
-        one = []
-        one.append(active)
-
-        one = self.fitness.calculate(one)
-
         BestSolution = active
         BestSolutionCost = active.fitness
 
-        multiprocessing.set_start_method("spawn")
+        
         for x in range(self.file_settings['optimization']['number_of_generations']):
-            with multiprocessing.get_context('spawn').Pool(processes=self.num_procs, ) as p:
+            with ctx.Pool(processes=self.num_procs, ) as p:
                 data = p.starmap(SA, [(x, k, active, Buffer, BufferCost, self, opt) for k in range(self.num_procs)])
 
             # data collection
