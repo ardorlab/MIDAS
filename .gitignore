@@ -91,6 +91,12 @@ samples/sample_12/*
 !samples/sample_12/run.sh
 !samples/sample_12/clean.sh
 
+samples/sample_13/*
+!samples/sample_13/readme
+!samples/sample_13/mcycle.yaml
+!samples/sample_13/run.sh
+!samples/sample_13/clean.sh
+
 
 # rl_dev
 

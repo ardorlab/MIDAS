@@ -330,7 +330,8 @@ class Optimization_Factory(object):
             mutator_ = GA.Mutate_By_Type(temp1,temp2,temp3,self.file_settings)
         elif MUTE_SETTING['method'].lower() == 'mutate_by_genome':
             mutator_ = GA.Mutate_By_Genome(temp1,temp2,temp3,self.file_settings)
-
+        elif MUTE_SETTING['method'].lower() == 'mutate_by_unique':
+            mutator_ = GA.Mutate_By_Unique(temp1,temp2,temp3,self.file_settings)
         elif MUTE_SETTING['method'].lower() == 'mutate_by_common':
             print("Original file settings")  
             print(self.file_settings)
@@ -382,6 +383,8 @@ class Optimization_Factory(object):
             reproducer_ = GA.Fixed_Gene_Reproducer(mute)    
         elif 'unique_genes' == method: 
             reproducer_ = GA.Unique_Genome_Reproducer(mute,self.file_settings)
+        elif 'mcycle' == method: 
+            reproducer_ = GA.Mcycle_Reproducer(mute,self.file_settings)
         else:
             reproducer_ = GA.Reproduction(mute,self.file_settings)
 
@@ -523,8 +526,7 @@ class No_Solution_Front(object):
 if __name__ == "__main__":
 
     f = open("midas.out", 'w')
-    sys.stdout = f
-    print(logo.__logo__)
+    f.write(logo.__logo__)
 
     input_help_message = 'Input file containing all the information'
     input_help_message += 'needed to perform the optimization routine.'  

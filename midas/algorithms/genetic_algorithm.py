@@ -10,6 +10,7 @@ import numpy
 import pickle
 import shutil
 import random
+import numpy as np
 from multiprocessing import Pool
 from midas.utils import fitness
 from midas.utils.solution_types import evaluate_function,Unique_Solution_Analyzer,test_evaluate_function
@@ -336,7 +337,7 @@ class MOOGLE(GA_Selection):
 class Reproduction(object):
     """
     Class for choosing which solutions undergo crossover and mutation, as well
-    as performing crossover. Class has been updated as of 1/20/2010 to allow for
+    as performing crossover. Class has been updated as of 1/20/2020 to allow for
     fixed genome groups, e.g. the three assembly enrichments that must be
     maintained for the NE 412/512 class project. The entire class was modified,
     rather than creating a new class that inherits because the main crossover
@@ -890,6 +891,181 @@ class Unique_Genome_Reproducer(Reproduction):
 
         return child_one,child_two    
 
+class Mcycle_Reproducer(Reproduction):
+    """
+    Class for reproducing genomes relevant to multicycle problems in the presence of both
+    fresh and burned fuel.
+    Written by G. K. Delipei 10/17/2023
+    """
+    def __init__(self, mutator_, settings):
+        super().__init__(mutator_, settings)
+        self.unique_gene_list = []
+        self.nonunique_gene_list = []
+        self._fill_unique_list(settings)
+        self.gene_list =  self.unique_gene_list + self.nonunique_gene_list
+        self.ncycles = int(settings['genome']['parcs_data']['ncycles'])
+    
+    def _fill_unique_list(self,settings):
+        """
+        This is an idea for genes of a unique type, meaning that only one is allowed in the optimization solution.
+        It is thought of as a way to include burnt fuel assemblies. Right now, each burnt fuel assembly is its own 
+        group. But I was thinking what if I put them into a group. Then, in case you inclue a bad assembly, such as low 
+        fuel enrichment or whatever, it could be easily selected out.
+        """
+        GENES = settings['genome']['chromosomes']
+        for key in GENES:
+            if 'unique' in GENES[key]:
+                if GENES[key]['unique']:
+                    self.unique_gene_list.append(key)
+                else:
+                    self.nonunique_gene_list.append(key)
+            else:
+                self.nonunique_gene_list.append(key)
+
+
+    def crossover(self,genome_one,genome_two,mutation_rate):
+        """
+        Function for performing crossover of the mated solutions when unique genes are 
+        present in the optimization. Crossover is performed normally, however, if one of 
+        the genes being swapped is a unique gene already present in the genome, these positions
+        are swapped.
+        """
+        file_ = open("genome_key",'rb')
+        genome_key = pickle.load(file_)
+        file_.close()
+
+        set_all_genes = set(self.gene_list)
+       
+        child_one = []
+        child_two = []
+        for one,two in zip(genome_one,genome_two):
+            if one == two:
+                child_one.append(one)
+                child_two.append(two)
+            else:
+                if one in self.nonunique_gene_list and two in self.nonunique_gene_list:
+                    if random.random() < 0.5:
+                        child_one.append(two)
+                        child_two.append(one)
+                    else:
+                        child_one.append(one)
+                        child_two.append(two)
+                elif one in self.unique_gene_list and two in self.nonunique_gene_list:
+                    if random.random() < 0.5:
+                        child_one.append(two)
+                        if one not in child_two:
+                            child_two.append(one)
+                        else:
+                            non_unique_child_two =[]
+                            non_unique_child_two.append(two)
+                            for gene in child_two:
+                                if gene in self.nonunique_gene_list:
+                                    non_unique_child_two.append(gene)
+                            set_avail_genes= set_all_genes-set(non_unique_child_two)
+                            avail_genes = list(set_avail_genes)
+                            one_new = random.choice(avail_genes)
+                            child_two.append(one_new)
+                    else:
+                        child_one.append(one)
+                        child_two.append(two)      
+                elif one in self.nonunique_gene_list and two in self.unique_gene_list:
+                    if random.random() < 0.5:
+                        child_two.append(one)
+                        if two not in child_one:
+                            child_one.append(two)
+                        else:
+                            non_unique_child_one =[]
+                            non_unique_child_one.append(one)
+                            for gene in child_two:
+                                if gene in self.nonunique_gene_list:
+                                    non_unique_child_one.append(gene)
+                            set_avail_genes= set_all_genes-set(non_unique_child_one)
+                            avail_genes = list(set_avail_genes)
+                            two_new = random.choice(avail_genes)
+                            child_one.append(two_new)
+                    else:
+                        child_one.append(one)
+                        child_two.append(two)  
+                elif one in self.unique_gene_list and two in self.unique_gene_list:
+                    if random.random() < 0.5:
+                        if one not in child_two:
+                            child_two.append(one)
+                        else:
+                            non_unique_child_two =[]
+                            non_unique_child_two.append(two)
+                            for gene in child_two:
+                                if gene in self.nonunique_gene_list:
+                                    non_unique_child_two.append(gene)
+                            set_avail_genes= set_all_genes-set(non_unique_child_two)
+                            avail_genes = list(set_avail_genes)
+                            one_new = random.choice(avail_genes)
+                            child_two.append(one_new)
+                        if two not in child_one:
+                            child_one.append(two)
+                        else:
+                            non_unique_child_one =[]
+                            non_unique_child_one.append(one)
+                            for gene in child_two:
+                                if gene in self.nonunique_gene_list:
+                                    non_unique_child_one.append(gene)
+                            set_avail_genes= set_all_genes-set(non_unique_child_one)
+                            avail_genes = list(set_avail_genes)
+                            two_new = random.choice(avail_genes)
+                            child_one.append(two_new)
+                    else:
+                        child_one.append(one)
+                        child_two.append(two)  
+
+        return child_one, child_two
+
+    def reproduce(self, solution_list, solution_class):
+        """
+        Performs all functions related to repodroduction of the solution.
+        """
+        ngen=len(solution_list[0].genome)
+        cycle_genes = int(ngen/self.ncycles)
+        start_cycle_id = []
+        end_cycle_id = []
+        for i in range(self.ncycles):
+            istart = i*cycle_genes
+            iend = i*cycle_genes + cycle_genes
+            start_cycle_id.append(istart)
+            end_cycle_id.append(iend)
+    
+        self.select_reproduction_method(solution_list)
+
+        first_mate_list, second_mate_list = self.mate_crossover_solutions()
+
+        child_genome_list = []
+        for mate_one, mate_two in zip(first_mate_list, second_mate_list):
+            child_one = []
+            child_two = []
+            for i in range(self.ncycles):
+                ci_mate_one = mate_one[start_cycle_id[i]:end_cycle_id[i]]
+                ci_mate_two = mate_two[start_cycle_id[i]:end_cycle_id[i]]
+                ci_child_one, ci_child_two = self.crossover(ci_mate_one, ci_mate_two, self.mutation.rate)
+                child_one = child_one + ci_child_one
+                child_two = child_two + ci_child_two
+            child_genome_list.extend([child_one, child_two])
+
+        for genome in self.mutation_list:
+            child = []
+            for i in range(self.ncycles):
+                cigenome = genome[start_cycle_id[i]:end_cycle_id[i]]
+                cichild = self.mutation.reproduce(cigenome)
+                child = child + cichild
+            child_genome_list.append(child)
+
+        new_solution_list = []
+        for child in child_genome_list:
+
+            foo = solution_class()
+            foo.genome = child
+
+            new_solution_list.append(foo)
+
+        return new_solution_list
+
 class Mutation(object):
     """
     Class for Genetic Algorithm Mutation.
@@ -1077,7 +1253,100 @@ class Mutate_By_Type(Mutation):
                 if GENES[key]['unique']:
                     self.unique_gene_list.append(key)
 
+class Mutate_By_Unique(Mutation):
+    """
+    Performs mutation preserving genes uniqueness. 
+    Inherents from class Mutation.
+    """
+    def __init__(self, rate, final_rate, number, settings=None):
+        Mutation.__init__(self, rate, final_rate, number, settings)
+
+        self.unique_gene_list = []
+        self.nonunique_gene_list = []
+        self._fill_unique_list(settings)
+        self.gene_list =  self.unique_gene_list + self.nonunique_gene_list
+
+    def reproduce(self, genome):
+        """
+        Mutates solution in the optimization.
+        """
+        child_genome = copy.deepcopy(genome)
+        iteration = 0
+        SWAP = False
+        while child_genome == genome:
+            for i in range(self.number):
+                mutate = random.randint(0,len(child_genome)-1)
+                old_gene = child_genome[mutate]
+                new_gene = None
+                temp = random.choice(self.gene_list)
+                if new_gene in self.nonunique_gene_list:
+                    new_gene = temp
+                else:
+                    if temp not in child_genome:
+                        new_gene = temp
+                    else:
+                        SWAP = True
+                        mutate1 = mutate
+                        gene1 = copy.deepcopy(old_gene)
+                        mutate2 = np.where(np.array(child_genome)==temp)[0][0]
+                        new_gene = temp
+                        gene2 = copy.deepcopy(temp)  
+                if self.genome_map[new_gene][mutate] == 1:
+                    if SWAP:
+                        child_genome[mutate1] = gene2
+                        child_genome[mutate2] = gene1
+                    else:
+                        child_genome[mutate] = new_gene
+            iteration += 1
+
+        return child_genome
+    
+    def _fill_unique_list(self,settings):
+        """
+        This is an idea for genes of a unique type, meaning that only one is allowed in the optimization solution.
+        It is thought of as a way to include burnt fuel assemblies. Right now, each burnt fuel assembly is its own 
+        group. But I was thinking what if I put them into a group. Then, in case you inclue a bad assembly, such as low 
+        fuel enrichment or whatever, it could be easily selected out.
+        """
+        GENES = settings['genome']['chromosomes']
+        for key in GENES:
+            if 'unique' in GENES[key]:
+                if GENES[key]['unique']:
+                    self.unique_gene_list.append(key)
+                else:
+                    self.nonunique_gene_list.append(key)
+            else:
+                self.nonunique_gene_list.append(key)
+
 class Mutate_By_Genome(Mutation):
+    """
+    Mutates Genomes based upon the solution space of the genomes.
+    """
+    def __init__(self, rate, final_rate, number, settings):
+        Mutation.__init__(self, rate, final_rate, number, settings)
+
+    def reproduce(self, genome):
+        """
+        Generates new solution through mutation in the optimization.
+        """
+
+        child_genome = copy.deepcopy(genome)
+
+        while child_genome == genome:
+            for i in range(self.number):
+                mutate = random.randint(0, len(child_genome)-1)
+                old_gene = child_genome[mutate]
+
+                key_list = list(self.genome_map.keys())
+                new_gene = random.choice(key_list)
+                if new_gene == old_gene:
+                    pass
+                else:
+                    if self.genome_map[new_gene][mutate] == 1:
+                        child_genome[mutate] = new_gene
+
+        return child_genome
+
     """
     Mutates Genomes based upon the solution space of the genomes.
     """
