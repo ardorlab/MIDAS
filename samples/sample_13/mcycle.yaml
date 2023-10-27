@@ -1,7 +1,7 @@
 optimization: 
   methodology: genetic_algorithm
-  population_size: 10 
-  number_of_generations: 2
+  population_size: 30 
+  number_of_generations: 20
   reproducer: mcycle
   mutation:
     method: mutate_by_unique
