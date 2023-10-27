@@ -4621,6 +4621,7 @@ class MCycle_Loading_Pattern_Solution(Solution):
             if 'initial' in self.name and self.parameters["max_boron"]['value'] > 5000:
                 print('Re-run initial case due to non-convergence')
                 self.generate_initial(self.settings['genome']['chromosomes'])
+                os.chdir(pwd)
                 self.evaluate()
             print('{} calculation is done!'.format(self.name))
             os.chdir(pwd)
