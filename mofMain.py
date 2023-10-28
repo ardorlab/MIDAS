@@ -18,6 +18,7 @@ from midas.applications import ncsu_core
 from midas.utils import fitness
 from midas.applications import parcs_332
 
+
 class Optimization_Factory(object):
     """
     Class for assembling the different optimizations.
@@ -172,6 +173,10 @@ class Optimization_Factory(object):
             infile.close()                      #NCSU core simulator input file.
         elif data_type_string.lower() == "loading_pattern":
             solution_type = ncsu_core.Simulate_Loading_Pattern_Solution
+        elif data_type_string.lower() == "loading_pattern_cnn":
+            solution_type = ncsu_core.CNN_Loading_Pattern_Solution
+            global KERAS 
+            KERAS = True
         elif data_type_string.lower() == "loading_pattern_parcs332":
             solution_type = parcs_332.Loading_Pattern_Solution
         elif data_type_string.lower() == "mcycle_loading_pattern_parcs332":

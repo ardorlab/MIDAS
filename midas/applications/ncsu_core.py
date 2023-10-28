@@ -9,6 +9,7 @@ import numpy
 import pickle
 import random
 from midas.utils.solution_types import Solution
+    
 
 class Simulate_Assembly_Solution(Solution):
     """
@@ -557,6 +558,434 @@ class Simulate_Loading_Pattern_Solution(Solution):
             else:
                 self.parameters["new_assemblies"]['value'] = burn_count
                   
+        gc.collect()    
+
+class CNN_Loading_Pattern_Solution(Solution):
+    """
+    Solution class for designing loading patterns in NCSU core simulator using CNN.
+
+    Parameters: None
+
+    Written by Gregory Delipei and Kingsley Ogujiuba . 11/8/2023
+    """
+    def __init__(self):
+        Solution.__init__(self)
+        self.type        = None
+        self.number_pins = None
+        self.model       = None
+        self.symmetry    = None
+        self.core_width  = 15
+        self.axial_nodes = 25
+        self.batch_number = 0
+        self.core_edits = None
+        self.load_point = 0.
+        self.depletion = 20.
+        self.burned_assembly_list = []
+        
+        self.location_map = [  "H-08", "G-08", "F-08", "E-08", "D-08", "C-08", "B-08", "A-08",
+                               "H-09", "G-09", "F-09", "E-09", "D-09", "C-09", "B-09", "A-09",
+                               "H-10", "G-10", "F-10", "E-10", "D-10", "C-10", "B-10",
+                               "H-11", "G-11", "F-11", "E-11", "D-11", "C-11", "B-11",
+                               "H-12", "G-12", "F-12", "E-12", "D-12", "C-12",
+                               "H-13", "G-13", "F-13", "E-13", "D-13",
+                               "H-14", "G-14", "F-14", "E-14",
+                               "H-15", "G-15"]
+        self.position_map = [[0,0],  [0,1],  [0,2],  [0,3],  [0,4],  [0,5],  [0,6],  [0,7],
+                             [1,0],  [1,1],  [1,2],  [1,3],  [1,4],  [1,5],  [1,6],  [1,7],
+                             [2,0],  [2,1],  [2,2],  [2,3],  [2,4],  [2,5],  [2,6],
+                             [3,0],  [3,1],  [3,2],  [3,3],  [3,4],  [3,5],  [3,6],
+                             [4,0],  [4,1],  [4,2],  [4,3],  [4,4],  [4,5],
+                             [5,0],  [5,1],  [5,2],  [5,3],  [5,4], 
+                             [6,0],  [6,1],  [6,2],  [6,3],  
+                             [7,0],  [7,1]]
+
+    def add_additional_information(self,settings):
+        """
+        Adds information on assembly type, the number of pins in the assembly,
+        and the model type to the class instance.
+
+        Parameters
+            settings: The settings dictionary for the parameters.
+
+        WRitten by Brian Andersen. 1/9/2020
+        """
+        self.model_name = settings['optimization']['model']
+        self.model_scaler = settings['optimization']['model_scaler']
+        self.data_base = settings['optimization']['data_base']
+
+        info = settings['genome']['assembly_data']
+        if 'type' in info:
+            self.type = info['type']
+        if 'pins' in info:
+            self.number_pins = info['pins']
+        if 'boron' in info:
+            self.boron = info['boron']
+        if 'model' in info:
+            self.model = info['model']
+        if 'core_width' in info:
+            self.core_width = info['core_width']
+        if 'symmetry' in info:
+            self.symmetry = info['symmetry']
+        if 'depletion_arguments' in info:
+            self.depletion_arguments = info['depletion_arguments']
+        if 'axial_nodes' in info:
+            self.axial_nodes = info['axial_nodes']
+        if 'batch_number' in info:
+            self.batch_number = info['batch_number']
+        if 'depletion' in info:
+            self.depletion = info['depletion']
+        if 'cs_library' in info:
+            self.library = info['cs_library']
+        if 'restart_file' in info:
+            self.restart_file = info['restart_file']
+        if 'BURNED_ASSEMBLY' in settings['genome']['chromosomes']: 
+            foo = settings['genome']['chromosomes']['BURNED_ASSEMBLY']
+            self.center_burned_assembly = foo['center_assembly']
+        if 'state_list' in info:
+            self.state_list = info['state_list']
+        if 'load_point' in info:
+            self.load_point = info['load_point']
+        if 'power' in info:
+            self.power = info['power']
+        if 'flow' in info:
+            self.flow = info['flow']
+        if 'pressure' in info:
+            self.pressure = info['pressure']
+        if 'inlet_temperature' in info:
+            self.inlet_temperature = info['inlet_temperature']
+        if 'fixed_problem' == settings['optimization']['reproducer']:
+            self.fixed_genome = True
+        elif 'unique_genes' == settings['optimization']['reproducer']:
+            self.fixed_genome = True
+        if 'map_size' in info:
+            self.map_size= info['map_size']
+        if 'reflector' in info:
+            self.reflector_present = info['reflector']
+        if 'number_assemblies' in info:
+            self.number_assemblies = info['number_assemblies']
+        if 'core_edits' in info:
+            self.core_edits = info['core_edits']
+        if 'fuel_segments' in info:
+            self.fuel_segments = info['fuel_segments']
+        else:
+            if self.batch_number >= 2:
+                print("WARNING: No fuel segments provided to simulator. NCSU simulator run may fail.")
+        if 'neural_network' in settings:
+            from crudworks import CRUDworks
+            self.crud = CRUDworks(settings)
+            if 'nickel_concentration' in settings['neural_network']:
+                self.nickel_concentration = settings['neural_network']['nickel_concentration']
+            if 'crud_mass_list' in settings['neural_network']:
+                self.expected_crud_mass_list = settings['neural_network']['crud_mass_list']
+
+    def genes_in_group(self,chromosome_map,group_name):
+        """
+        Returns a list of the genes in the chosen group
+        """
+        gene_list = []
+        for gene in chromosome_map:
+            if gene == 'symmetry_list':
+                pass
+            else:
+                if group_name == chromosome_map[gene]['gene_group']:
+                    gene_list.append(gene)
+
+        return gene_list
+
+    def is_gene_ok(self,chromosome_map,gene,space):
+        """
+        Checks if the gene is allowed in the desired location
+        """
+        gene_is_ok = True
+        if not chromosome_map[gene]['map'][space]:
+            gene_is_ok = False
+        if space in chromosome_map['symmetry_list']:
+            if self.my_group[chromosome_map[gene]['gene_group']] <= 1:
+                gene_is_ok = False
+        else:
+            if not self.my_group[chromosome_map[gene]['gene_group']]:
+                gene_is_ok = False
+        if 'unique' in chromosome_map[gene]:
+            if gene in self.genome:
+                gene_is_ok = False
+
+        return gene_is_ok
+
+    def generate_initial(self,chromosome_map):
+        """
+        Generates the initial solutions to the optimization problem.
+
+        Parameters: 
+            chromosome_map: Dictionary
+                The genome portion of the dictionary settings file. 
+
+        Written by Brian Andersen. 1/9/2020
+        """
+        chromosome_length = None
+        chromosome_list = list(chromosome_map.keys())
+        if 'symmetry_list' in chromosome_list:
+            chromosome_list.remove('symmetry_list')
+
+        for chromosome in chromosome_list:
+            if chromosome_length is None:
+                chromosome_length = len(chromosome_map[chromosome]['map'])
+            elif len(chromosome_map[chromosome]['map']) == chromosome_length:
+                pass
+            else:
+                raise ValueError("Chromosome Maps are of unequal length")
+
+        self.genome = []                                #Unburnt assemblies
+        for i in range(chromosome_length):              #better off just being implemented
+            no_gene_found = True                        #as a single gene.
+            while no_gene_found:
+                gene = random.choice(chromosome_list)
+                if chromosome_map[gene]['map'][i]:
+                    self.genome.append(gene)
+                    no_gene_found = False
+
+    def generate_initial_fixed(self,chromosome_map,gene_groups):
+        """
+        Generates initial solution when only specific number of assemblies
+        may be used.
+
+        Written by Brian Andersen 3/15/2020
+        """
+        chromosome_length = None
+        chromosome_list = list(chromosome_map.keys())
+        if 'symmetry_list' in chromosome_list:
+            chromosome_list.remove('symmetry_list')
+
+        for chromosome in chromosome_list:
+            if chromosome_length is None:
+                chromosome_length = len(chromosome_map[chromosome]['map'])
+            elif len(chromosome_map[chromosome]['map']) == chromosome_length:
+                pass
+            else:
+                raise ValueError("Chromosome Maps are of unequal length")
+
+        no_valid_solution = True
+        while no_valid_solution:
+            no_valid_solution = False
+            my_group = copy.deepcopy(gene_groups)
+            self.genome = [None]*chromosome_length
+            for i in range(chromosome_length):
+                no_gene_found = True
+                attempt_counter = 0
+                while no_gene_found:
+                    gene = random.choice(chromosome_list)
+                    if 'unique' in chromosome_map[gene]:
+                        if chromosome_map[gene]['unique']:
+                            if gene in self.genome:
+                                pass
+                            else:
+                                #This else loop activates if the gene is labeled unique but is not used. 
+                                if chromosome_map[gene]['map'][i] == 1:
+                                    if i in chromosome_map['symmetry_list']:
+                                        if my_group[chromosome_map[gene]['gene_group']] > 1:
+                                            self.genome[i] = gene
+                                            no_gene_found = False
+                                            my_group[chromosome_map[gene]['gene_group']] -= 2
+                                    else:
+                                        if my_group[chromosome_map[gene]['gene_group']] > 0:
+                                            self.genome[i] = gene
+                                            no_gene_found = False
+                                            my_group[chromosome_map[gene]['gene_group']] -= 1            
+                        else:
+                            #adding unique loop above this code
+                            if chromosome_map[gene]['map'][i] == 1:
+                                if i in chromosome_map['symmetry_list']:
+                                    if my_group[chromosome_map[gene]['gene_group']] > 1:
+                                        self.genome[i] = gene
+                                        no_gene_found = False
+                                        my_group[chromosome_map[gene]['gene_group']] -= 2
+                                else:
+                                    if my_group[chromosome_map[gene]['gene_group']] > 0:
+                                        self.genome[i] = gene
+                                        no_gene_found = False
+                                        my_group[chromosome_map[gene]['gene_group']] -= 1
+                    else:
+                        #adding unique loop above this code
+                        if chromosome_map[gene]['map'][i] == 1:
+                            if i in chromosome_map['symmetry_list']:
+                                if my_group[chromosome_map[gene]['gene_group']] > 1:
+                                    self.genome[i] = gene
+                                    no_gene_found = False
+                                    my_group[chromosome_map[gene]['gene_group']] -= 2
+                            else:
+                                if my_group[chromosome_map[gene]['gene_group']] > 0:
+                                    self.genome[i] = gene
+                                    no_gene_found = False
+                                    my_group[chromosome_map[gene]['gene_group']] -= 1
+                    attempt_counter += 1
+                    if attempt_counter == 100:
+                        no_gene_found = False
+                        no_valid_solution = True
+
+    def new_generate_initial_fixed(self,chromosome_map,gene_groups):
+        """
+        Generates initial solution when only speciific number of assemblies may be used.
+
+        Written by Brian Andersen 3/15/2020. Last edited 11/20/2020
+        """
+        #above here is the old code
+        chromosome_length = None
+        chromosome_list = list(chromosome_map.keys())
+        if 'symmetry_list' in chromosome_list:
+            chromosome_list.remove('symmetry_list')
+
+        for chromosome in chromosome_list:
+            if chromosome_length is None:
+                chromosome_length = len(chromosome_map[chromosome]['map'])
+            elif len(chromosome_map[chromosome]['map']) == chromosome_length:
+                pass
+            else:
+                raise ValueError("Chromosome Maps are of unequal length")
+
+        no_genome_found = True
+        while no_genome_found:
+            attempts = 0
+            self.my_group = copy.deepcopy(gene_groups)
+            self.genome = [None]*chromosome_length
+            unfilled_spaces = list(range(chromosome_length))
+            while unfilled_spaces:  
+                space_number = random.randint(0,len(unfilled_spaces)-1)
+                group_name = None
+                while not group_name:
+                    random_group = random.choice(list(self.my_group.keys()))
+                    if self.my_group[random_group] > 0:
+                        group_name = random_group
+                available_gene_list = self.genes_in_group(chromosome_map,group_name)
+                space = unfilled_spaces[space_number]
+                gene = random.choice(available_gene_list)
+                gene_is_ok = self.is_gene_ok(chromosome_map,gene,space)
+                if gene_is_ok:
+                    self.genome[space] = gene
+                    unfilled_spaces.remove(space)
+                    if space in chromosome_map['symmetry_list']:
+                        self.my_group[chromosome_map[gene]['gene_group']] -= 2
+                    else:
+                        self.my_group[chromosome_map[gene]['gene_group']] -= 1             
+                else:
+                    attempts += 1
+                if attempts == 100:
+                    break
+
+            bad_gene_list = []
+            for i,gene in enumerate(self.genome):
+                if not gene:
+                    bad_gene_list.append(i)
+
+            if not bad_gene_list:
+                no_genome_found = False                
+    
+    def loading_pattern_array(self,filpath_):
+        """
+        Loads the loading pattern into the 
+        prediction model.
+
+        Parameters: None
+
+        Written by Kingsley Ogujiuba. 09/27/2023
+        """
+
+        # Opening the input file
+        file_ = open(filpath_, 'r')
+        file_lines = file_.readlines()
+        file_.close()
+
+        # creates an array containing the fuel assembly for storage
+        FAdata = []
+        FAsearch = "FUE.TYP"
+        FAstart = ', '
+        FAend = '/'
+        for line in file_lines:
+            if FAsearch in line:
+                LineData = (line.split(FAstart)[1].split(FAend)[0])
+                FAdata.append(LineData.split(" "))
+
+        FAdata = numpy.asarray(FAdata)
+        return FAdata 
+
+
+    def prediction_input(self,scaler_path,data_path, filpath_):
+        
+        # Assigning assembly values to the keff coefficient
+        dts_keff = pickle.load(open(data_path, "rb"))
+        keff_dict = dts_keff['keff']
+        powpeak_dict = dts_keff['PinPower']
+
+        # Loading Pattern Input
+        # # creates an array containing the fuel assembly for storage
+        lp_mat = self.loading_pattern_array(filpath_)
+        xinp = numpy.zeros((1,9,9,4))
+
+        for i in range(9):
+            for j in range(9):
+                xs_tag=str(lp_mat[i,j])
+                cind = keff_dict[xs_tag]
+                xinp[0,i,j,0] = cind[0]
+                xinp[0,i,j,1] = cind[1]
+                xinp[0,i,j,2] = cind[2]
+                xinp[0,i,j,3] = powpeak_dict[xs_tag]
+        xinp=numpy.lib.pad(xinp,((0,0),(xinp.shape[1]-1,0),(xinp.shape[1]-1,0),(0,0)),'reflect')
+
+        #print ("Input Loading Successful")
+        res = pickle.load(open(scaler_path, "rb"))
+        xsinp = numpy.zeros(xinp.shape)
+        xmean = res['input_mean']
+        xstd  = res['input_std']
+
+
+        #Standardizing the input
+        for j in range(xinp.shape[1]):
+            for k in range(xinp.shape[2]):
+                xsinp[0,j,k,:] = (xinp[0,j,k,:]-xmean[j,k,:])/xstd[j,k,:]
+        xsinp = numpy.nan_to_num(xsinp)
+
+        #print ("Input Normalization Successful")
+        return xsinp
+
+
+    def ML_pred(self,model_name,scaler_path,data_path,file_path_):
+        from tensorflow.keras.models import load_model
+        #Load Model
+        model = load_model(model_name)
+        # Summarize Model
+        model.summary
+
+        # Load dataset
+        dataset = self.prediction_input(scaler_path,data_path,file_path_)
+        res = pickle.load(open(scaler_path, "rb"))
+        ymean = res['output_mean']
+        ystd  = res['output_std']
+        yspred = model.predict(dataset)
+        ypred = numpy.zeros(yspred.shape)
+        for i in range(yspred.shape[0]):
+            ypred[i,:] = yspred[i,:]*ystd + ymean
+
+        return (ypred[0][0],ypred[0][1],ypred[0][2],ypred[0][3])
+
+
+    def evaluate(self):
+        """
+        Evaluates NCSU CNN Simulator Loading Pattern Solutions to core optimization
+
+        Parameters: None
+
+        Written by Gregory Delipei and Kingsley Ogujiuba . 11/8/2023
+        """
+        pwd = os.getcwd()
+        File_Writer.write_input_file(self)
+        os.chdir(self.name)
+        filepath_ = "{}_sim.inp".format(self.name)
+
+        max_boron,fq, fdh, efpd = self.ML_pred(self.model_name,self.model_scaler,self.data_base,filepath_)
+        os.chdir(pwd)
+        self.parameters['cycle_length']['value'] = efpd
+        self.parameters['PinPowerPeaking']['value'] = fq
+        self.parameters['FDeltaH']['value'] = fdh
+        self.parameters['max_boron']['value'] = max_boron
+
         gc.collect()    
         
 class Unique_Assembly_Loading_Pattern_Solution(Simulate_Loading_Pattern_Solution):

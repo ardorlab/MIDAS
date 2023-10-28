@@ -97,6 +97,15 @@ samples/sample_13/*
 !samples/sample_13/run.sh
 !samples/sample_13/clean.sh
 
+samples/sample_14/*
+!samples/sample_14/readme
+!samples/sample_14/cycle1.res
+!samples/sample_14/cms.pwr-all.lib
+!samples/sample_14/cycle.yaml
+!samples/sample_14/run.sh
+!samples/sample_14/clean.sh
+
+
 
 # rl_dev
 
