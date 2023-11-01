@@ -197,6 +197,12 @@ def SA(x, k, active, Buffer, BufferCost, self, opt):
         challenge.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
         challenge.add_additional_information(self.file_settings)
         challenge.evaluate()
+        all_values = open('all_value_tracker.txt','a')
+        all_values.write(f"{challenge.name},    ")
+        for param in challenge.parameters:
+            all_values.write(f"{challenge.parameters[param]['value']},    ")
+        all_values.write('\n')
+        all_values.close()
 
         test = [challenge]
         test = self.fitness.calculate(test)
@@ -240,6 +246,12 @@ def SA_prun(k, self):
         active.generate_initial(self.file_settings['genome']['chromosomes'])
 
     active.evaluate()
+    all_values = open('all_value_tracker.txt','a')
+    all_values.write(f"{active.name},    ")
+    for param in active.parameters:
+        all_values.write(f"{active.parameters[param]['value']},    ")
+    all_values.write('\n')
+    all_values.close()
     
     one = []
     one.append(active)
@@ -572,6 +584,10 @@ class SimulatedAnnealing(object):
 
         multiprocessing.set_start_method("spawn")
         ctx = multiprocessing.get_context('spawn')
+
+        all_value_count = 0
+        all_values = open('all_value_tracker.txt','w')
+        all_values.close()
 
         if SetStart == 0:
             initial_temp, Buffer = InitialTemp(self,ctx)
