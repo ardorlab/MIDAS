@@ -105,6 +105,11 @@ samples/sample_14/*
 !samples/sample_14/run.sh
 !samples/sample_14/clean.sh
 
+samples/sample_15/*
+!samples/sample_15/readme
+!samples/sample_15/mcycle.yaml
+!samples/sample_15/run.sh
+!samples/sample_15/clean.sh
 
 
 # rl_dev
