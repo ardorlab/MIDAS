@@ -5703,6 +5703,15 @@ class MCycle_Grouped_Loading_Pattern_Solution(Solution):
 
     def get_lcoe(self):
         
+        enr_map = {}
+        enr_map['FE461']=4.60
+        enr_map['FE462']=4.60
+        enr_map['FE501']=4.95
+        enr_map['FE502']=4.95
+        enr_map['FE526']=5.25
+        enr_map['FE566']=5.65
+        enr_map['FE586']=5.85
+
         cycle1_param={'EFPD': self.parameters['cycle1_length']['value'],
                     'Batches': 3,
                     'Thermal_Power': self.power,
@@ -5750,7 +5759,8 @@ class MCycle_Grouped_Loading_Pattern_Solution(Solution):
                             'Fabrication_Price': 0.0
                             }
             else:
-                enr = float(unique_fa[i][2:5])/10000
+                asb=unique_fa[i]
+                enr = enr_map[asb]/100
                 asb_dict = {'Number': nfa,
                             'Fuel_Rods': 264,
                             'Fuel_Radius': 0.41,
@@ -5810,7 +5820,8 @@ class MCycle_Grouped_Loading_Pattern_Solution(Solution):
                             'Fabrication_Price': 0.0
                             }
             else:
-                enr = float(unique_fa[i][2:5])/10000
+                asb=unique_fa[i]
+                enr = enr_map[asb]/100
                 asb_dict = {'Number': nfa,
                             'Fuel_Rods': 264,
                             'Fuel_Radius': 0.41,
@@ -5870,7 +5881,8 @@ class MCycle_Grouped_Loading_Pattern_Solution(Solution):
                             'Fabrication_Price': 0.0
                             }
             else:
-                enr = float(unique_fa[i][2:5])/10000
+                asb=unique_fa[i]
+                enr = enr_map[asb]/100
                 asb_dict = {'Number': nfa,
                             'Fuel_Rods': 264,
                             'Fuel_Radius': 0.41,
@@ -5882,68 +5894,50 @@ class MCycle_Grouped_Loading_Pattern_Solution(Solution):
             asb3_param[unique_fa[i]]=asb_dict
 
         lcoe_c3, bu, asb_cost = LCOE(cycle3_param,lcoe3_param, asb3_param)
-        return((lcoe_c1, lcoe_c2, lcoe_c3))
+        lcoe = (lcoe_c1 + lcoe_c2 + lcoe_c3)/3
+        self.parameters["lcoe"]['value'] = lcoe
+        return()
 
-    def get_results(self,filepath,pin_power=False):
-        efpd_c1=[]
-        efpd_c2=[]
-        efpd_c3=[]
-        boron_c1 =[]
-        boron_c2 =[]
-        boron_c3 =[]
+    def get_cycle_results(self,filepath,ncyc=1,pin_power=False):
+        efpd=[]
+        boron =[]
         fq=[]
         fdh=[]
-        keff_c1 = []
-        keff_c2 = []
-        keff_c3 = []
+        keff = []
         read_bool  = False
         ofile = open(filepath + ".parcs_dpl", "r")
         filestr = ofile.read()
         ofile.close()
         res_str = filestr.split('===============================================================================')
-        
-        res_str1 = res_str[2].split('-------------------------------------------------------------------------------')
-        res_str1 = res_str1[0].split('\n')
-        for i in range(2, len(res_str1)-1):
-            res_val=res_str1[i].split()
-            efpd_c1.append(float(res_val[9]))
-            boron_c1.append(float(res_val[14]))
-            keff_c1.append(float(res_val[2]))
-            fq.append(float(res_val[7]))
-            fdh.append(float(res_val[6]))
-
-        res_str2 = res_str[3].split('-------------------------------------------------------------------------------')
-        res_str2 = res_str2[0].split('\n')
-        for i in range(2, len(res_str2)-1):
-            res_val=res_str2[i].split()
-            efpd_c2.append(float(res_val[9]))
-            boron_c2.append(float(res_val[14]))
-            keff_c2.append(float(res_val[2]))
-            fq.append(float(res_val[7]))
-            fdh.append(float(res_val[6]))
-        res_str3 = res_str[4].split('-------------------------------------------------------------------------------')
-        res_str3 = res_str3[0].split('\n')
-        for i in range(2, len(res_str3)-1):
-            res_val=res_str3[i].split()
-            efpd_c3.append(float(res_val[9]))
-            boron_c3.append(float(res_val[14]))
-            keff_c3.append(float(res_val[2]))
+        res_str = res_str[2].split('-------------------------------------------------------------------------------')
+        res_str = res_str[0].split('\n')
+        for i in range(2, len(res_str)-1):
+            res_val=res_str[i].split()
+            efpd.append(float(res_val[9]))
+            boron.append(float(res_val[14]))
+            keff.append(float(res_val[2]))
             fq.append(float(res_val[7]))
             fdh.append(float(res_val[6]))
         res = {}
-        self.parameters["cycle1_length"]['value'] = self.get_clength(efpd_c1,boron_c1,keff_c1)
-        self.parameters["cycle2_length"]['value'] = self.get_clength(efpd_c2,boron_c2,keff_c2)
-        self.parameters["cycle3_length"]['value'] = self.get_clength(efpd_c3,boron_c3,keff_c3)       
-        self.parameters["PinPowerPeaking"]['value'] = max(fq)
-        self.parameters["FDeltaH"]['value'] = max(fdh)
-        mbor_c1 = self.get_max_boron(boron_c1,keff_c1)
-        mbor_c2 = self.get_max_boron(boron_c2,keff_c2)
-        mbor_c3 = self.get_max_boron(boron_c3,keff_c3)
-        self.parameters["max_boron"]['value'] = max([mbor_c1,mbor_c2,mbor_c3])    
-        lcoe1, lcoe2, lcoe3 = self.get_lcoe()
-        lcoe = (lcoe1 + lcoe2 + lcoe3)/3
-        self.parameters["lcoe"]['value'] = lcoe
-
+        if ncyc==1:
+            self.cycle_parameters = {}
+        self.cycle_parameters['C'+str(ncyc)] = {}
+        self.cycle_parameters['C'+str(ncyc)]["cycle_length"]= self.get_clength(efpd,boron,keff)       
+        self.cycle_parameters['C'+str(ncyc)]["PinPowerPeaking"] = max(fq)
+        self.cycle_parameters['C'+str(ncyc)]["FDeltaH"] = max(fdh)
+        self.cycle_parameters['C'+str(ncyc)]["max_boron"]= max(boron)
+        if self.cycle_parameters['C'+str(ncyc)]["max_boron"] == 1800.0:
+            max_boron =0
+            for i in range(len(boron)):
+                if boron[i]== 1800.0:
+                    drho_dcb=10 
+                    drho = (keff[i]-1.0)*10**5
+                    dcb = drho/drho_dcb
+                    mboron = 1800.0+dcb
+                    if mboron > max_boron:
+                        max_boron = mboron
+            self.cycle_parameters['C'+str(ncyc)]["max_boron"] = max_boron
+    
         if pin_power:
             zh = np.array([15.24, 10.16, 5.08, 30.48, 30.48, 30.48, 30.48, 30.48,
                         30.48, 30.48, 30.48, 30.48, 30.48, 5.08, 10.16, 15.24])
@@ -5976,8 +5970,8 @@ class MCycle_Grouped_Loading_Pattern_Solution(Solution):
                             fdh_pp = fdh_i
                             fdh_id[0]=ibu 
                             fdh_id[1]=iasb
-            self.parameters["PinPowerPeaking"]['value'] = fq_pp
-            self.parameters["FDeltaH"]['value'] = fdh_pp
+            self.cycle_parameters['C'+str(ncyc)]["PinPowerPeaking"] = fq_pp
+            self.cycle_parameters['C'+str(ncyc)]["FDeltaH"] = fdh_pp
 
     def get_quarter_lattice(self):
             """
@@ -6041,17 +6035,20 @@ class MCycle_Grouped_Loading_Pattern_Solution(Solution):
         cyc_genome = old_genome[(cyc_id-1)*56:(cyc_id)*56]
         inv = list(self.core_dict['Inventory'].keys())
         old_gene = old_genome[pos_id]
-        inv.remove(old_gene)
         burnt_fuel_list = []
         fresh_fuel_list = []
         for i in range(len(inv)):
-            if inv[i] in self.core_dict['fuel']['C1'].keys():
-                burnt_fuel_list.append(inv[i]) 
-            else:
+            if 'FE' in inv[i]:
                 fresh_fuel_list.append(inv[i])
+            else:
+                burnt_fuel_list.append(inv[i]) 
+
+        nfa_reload = int(56/len(burnt_fuel_list))        
+        inv.remove(old_gene)
         new_gene = random.choice(inv)
-        if new_gene in burnt_fuel_list and new_gene in cyc_genome:
-            cgen_id = np.where(np.array(cyc_genome)==new_gene)[0][0] + (cyc_id-1)*nfuel
+        nfa=cyc_genome.count(new_gene)
+        if new_gene in burnt_fuel_list and nfa == nfa_reload:
+            cgen_id = random.choice(np.where(np.array(cyc_genome)==new_gene)[0]) + (cyc_id-1)*nfuel
             new_genome[pos_id] = new_gene
             new_genome[cgen_id] = old_gene
         else:
@@ -6159,6 +6156,288 @@ class MCycle_Grouped_Loading_Pattern_Solution(Solution):
                 cycle_lp.append(gene)
         return(cycle_lp)
 
+    def run_cycle(self,fuel_loc,c0_assb,cycle_lp,exp_file,rdir,ncyc=1):
+        pwd = Path(os.getcwd())
+        run_directory = pwd / rdir
+        if not os.path.exists(run_directory):
+            os.makedirs(run_directory)
+        else:
+            shutil.rmtree(run_directory, ignore_errors=True)
+            os.makedirs(run_directory)
+        
+        cdir = self.library
+        src_file = exp_file 
+        dist_file = run_directory / 'mcyc_exp.dep'
+        shutil.copyfile(src_file,dist_file)
+        os.chdir(run_directory)
+
+        core_cycle_lattice = copy.deepcopy(self.core_lattice)
+        xs_array_cycle = np.zeros((core_cycle_lattice.shape[0],core_cycle_lattice.shape[1]), dtype='<U20')
+        pincal_loc = np.zeros((core_cycle_lattice.shape[0],core_cycle_lattice.shape[1]))
+        for x in range(core_cycle_lattice.shape[0]):
+            for y in range(core_cycle_lattice.shape[1]):
+                loc = core_cycle_lattice[x,y]
+                if loc != "00" and loc[0] != "R":
+                    sel_ass=self.full_core['C'+str(ncyc)][loc]
+                    if sel_ass in fuel_loc:
+                        ass_id = fuel_loc.index(self.full_core['C'+str(ncyc)][loc])
+                        fresh_ass = 'FE'+str(c0_assb[ass_id])
+                        core_cycle_lattice[x,y] = sel_ass[0]+'-' + sel_ass[1:]
+                        xs_val = None
+                    else:
+                        fresh_ass = sel_ass
+                        core_cycle_lattice[x,y] = self.core_dict['Inventory'][fresh_ass]['Tag']
+                        core_cycle_lattice[x,y] = '-'+core_cycle_lattice[x,y]
+                        xs_val = self.core_dict['Inventory'][fresh_ass]['Cross_Section']
+                    xs_array_cycle[x,y] = xs_val
+                    pincal_loc[x,y]=1
+                elif loc[0] == "R":
+                    core_cycle_lattice[x,y] = "0   "
+                    xs_array_cycle[x,y] = None
+                    pincal_loc[x,y]=0
+                elif loc == "00":
+                    core_cycle_lattice[x,y] = "    "
+                    xs_array_cycle[x,y] = None
+                    pincal_loc[x,y]=np.nan
+
+        xs_unique_cycle = np.unique(xs_array_cycle)
+        xs_unique_cycle = np.delete(xs_unique_cycle, np.argwhere(xs_unique_cycle == 'None'))
+        xs_forced_cycle = np.array([self.core_dict['Inventory']['FE461']['Cross_Section'],
+                        self.core_dict['Inventory']['FE462']['Cross_Section'],
+                        self.core_dict['Inventory']['FE501']['Cross_Section'],
+                        self.core_dict['Inventory']['FE502']['Cross_Section']])
+        xs_unique_cycle = np.append(xs_unique_cycle,xs_forced_cycle)
+        xs_unique_cycle = np.unique(xs_unique_cycle)
+
+        tag_unique_cycle = copy.deepcopy(xs_unique_cycle)
+        xs_ref = np.arange(5,5+len(xs_unique_cycle)) # 1-3 for reflectors and 4 for blankets
+        for key,value in self.core_dict["Inventory"].items():
+            for i in range(xs_unique_cycle.shape[0]):
+                if value['Cross_Section']==xs_unique_cycle[i]:
+                    tag_unique_cycle[i]=value['Tag']
+        fname = 'solution'
+        filename = fname + '.inp'
+        with open(filename,"w") as ofile:             
+            ofile.write("!******************************************************************************\n")
+            ofile.write('CASEID {}  \n'.format(fname))
+            ofile.write("!******************************************************************************\n\n")
+
+        with open(filename,"a") as ofile:             
+            ofile.write("CNTL\n")
+            ofile.write("     RUN_OPTS F T F F\n")
+            ofile.write("     TH_FDBK    T\n")
+            ofile.write("     INT_TH     T -1\n")
+            ofile.write("     CORE_POWER 100.0\n")
+            ofile.write("     CORE_TYPE  PWR\n")
+            ofile.write("     PPM        1000\n")
+            ofile.write("     DEPLETION  T  1.0E-5 T\n")
+            ofile.write("     TREE_XS    T  {} T  T  F  F  T  F  T  F  T  F  T  T  T  F \n".format(int(len(xs_unique_cycle)+4)))
+            ofile.write("     BANK_POS   100 100 100 100 100 100\n")
+            ofile.write("     XE_SM      1 1 1 1\n")
+            ofile.write("     SEARCH     PPM 1.0 1800.0 10.0\n")
+            ofile.write("     MULT_CYC   T\n")
+            ofile.write("     XS_EXTRAP  1.0 0.3\n")
+            ofile.write("     PIN_POWER  T\n")
+            ofile.write("     PLOT_OPTS 0 0 0 0 0 2\n")
+            ofile.write("\n")
+            ofile.write("!******************************************************************************\n\n")
+            
+        with open(filename,"a") as ofile:             
+            ofile.write("PARAM\n")
+            ofile.write("     LSOLVER  1 1 20\n")
+            ofile.write("     NODAL_KERN     NEMMG\n")
+            ofile.write("     CMFD     2\n")
+            ofile.write("     DECUSP   2\n")
+            ofile.write("     INIT_GUESS 0\n")
+            ofile.write("     CONV_SS   1.e-6 5.e-5 1.e-3 0.001\n")
+            ofile.write("     EPS_ERF   0.010\n")
+            ofile.write("     EPS_ANM   0.000001\n")
+            ofile.write("     NLUPD_SS  5 5 1\n")
+            ofile.write("\n")
+            ofile.write("!******************************************************************************\n\n")
+        
+
+        with open(filename,"a") as ofile:             
+            ofile.write("GEOM\n")
+            ofile.write("     GEO_DIM 9 9 18 1 1\n")
+            ofile.write("     RAD_CONF\n")
+            ofile.write('     {}  {}  {}  {}  {}  {}  {}  {}  10\n'.format(c0_assb[0],c0_assb[1],c0_assb[2],c0_assb[3],c0_assb[4],c0_assb[5],c0_assb[6],c0_assb[7]))
+            ofile.write('     {}  {}  {}  {}  {}  {}  {}  {}  10\n'.format(c0_assb[8],c0_assb[9],c0_assb[10],c0_assb[11],c0_assb[12],c0_assb[13],c0_assb[14],c0_assb[15]))
+            ofile.write('     {}  {}  {}  {}  {}  {}  {}  {}  10\n'.format(c0_assb[16],c0_assb[17],c0_assb[18],c0_assb[19],c0_assb[20],c0_assb[21],c0_assb[22],c0_assb[23])) 
+            ofile.write('     {}  {}  {}  {}  {}  {}  {}  {}  10\n'.format(c0_assb[24],c0_assb[25],c0_assb[26],c0_assb[27],c0_assb[28],c0_assb[29],c0_assb[30],c0_assb[31])) 
+            ofile.write('     {}  {}  {}  {}  {}  {}  {}  10   10\n'.format(c0_assb[32],c0_assb[33],c0_assb[34],c0_assb[35],c0_assb[36],c0_assb[37],c0_assb[38])) 
+            ofile.write('     {}  {}  {}  {}  {}  {}  {}  10   00 \n'.format(c0_assb[39],c0_assb[40],c0_assb[41],c0_assb[42],c0_assb[43],c0_assb[44],c0_assb[45]))
+            ofile.write('     {}  {}  {}  {}  {}  {}  10   10   00\n'.format(c0_assb[46],c0_assb[47],c0_assb[48],c0_assb[49],c0_assb[50],c0_assb[51]))
+            ofile.write('     {}  {}  {}  {}  10   10   10   00   00\n'.format(c0_assb[52],c0_assb[53],c0_assb[54],c0_assb[55]))
+            ofile.write("     10   10   10   10   10   00   00   00   00\n")
+            ofile.write("     GRID_X      1*10.75 8*21.50\n")
+            ofile.write("     NEUTMESH_X  1*1 8*1\n")
+            ofile.write("     GRID_Y      1*10.75 8*21.50\n")
+            ofile.write("     NEUTMESH_Y  1*1 8*1\n")
+            ofile.write("     GRID_Z      30.48 15.24 10.16 5.08 10*30.48 5.08 10.16 15.24 30.48\n")            
+            ofile.write("     ASSY_TYPE   10   1*2   16*2    1*2 REFL\n")
+            for i in range(xs_unique_cycle.shape[0]):
+                if 'gd_0' in xs_unique_cycle[i]:
+                    ofile.write("     ASSY_TYPE   {}   1*1 1*4  14*{}  1*4  1*3 FUEL\n".format(tag_unique_cycle[i],xs_ref[i]))
+                else:
+                    ofile.write("     ASSY_TYPE   {}   1*1 1*4  1*4 12*{} 1*4 1*4  1*3 FUEL\n".format(tag_unique_cycle[i],xs_ref[i]))
+            ofile.write("\n")
+
+            ofile.write("     boun_cond   0 2 0 2 2 2\n")
+            ofile.write("     SYMMETRY 4\n")
+
+            ofile.write("     PINCAL_LOC\n")
+            for x in range(pincal_loc.shape[0]):
+                ofile.write("      ")
+                for y in range(pincal_loc.shape[1]):
+                    val = pincal_loc[x,y]
+                    if np.isnan(val):
+                        pass
+                    else:
+                        ofile.write(str(int(pincal_loc[x,y])))
+                        ofile.write("  ")
+                ofile.write("\n")
+            ofile.write("\n")
+            ofile.write("!******************************************************************************\n\n")
+        
+        with open(filename,"a") as ofile:             
+            ofile.write("FDBK\n")
+            ofile.write("     FA_POWPIT     {} 21.5\n".format(np.round(self.power/193,4)))
+            ofile.write("     GAMMA_FRAC    0.0208    0.0    0.0\n")
+            ofile.write("     EFF_DOPLT   T  0.5556\n")
+            ofile.write("\n")
+            ofile.write("!******************************************************************************\n\n")
+
+
+        with open(filename,"a") as ofile:   
+            ofile.write("TH\n")          
+            ofile.write("     FLU_TYP       0\n")
+            ofile.write("     N_PINGT    264 25\n")
+            ofile.write("     PIN_DIM      4.1 4.75 0.58 6.13\n")
+            ofile.write("     FLOW_COND    {}  {}\n".format(np.round(self.inlet_temperature-273.15,2),np.round(self.flow/193,4)))
+            ofile.write("     HGAP     10000.0\n")
+            ofile.write("     N_RING   6\n")
+            ofile.write("     THMESH_X       9*1\n")
+            ofile.write("     THMESH_Y       9*1\n")
+            ofile.write("     THMESH_Z       1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18\n")
+            ofile.write("\n")
+            ofile.write("!******************************************************************************\n\n")
+
+        with open(filename,"a") as ofile:             
+            ofile.write("DEPL\n")
+            ofile.write("     TIME_STP  1 \n")
+            ofile.write("     INP_HST   './mcyc_exp.dep' 1 21\n")
+            ofile.write("     PMAXS_F   1 '{}' 1\n".format(cdir + '/' + 'xs_gbot'))
+            ofile.write("     PMAXS_F   2 '{}' 2\n".format(cdir + '/' + 'xs_grad'))
+            ofile.write("     PMAXS_F   3 '{}' 3\n".format(cdir + '/' + 'xs_gtop'))
+            ofile.write("     PMAXS_F   4 '{}' 4\n".format(cdir + '/' + 'xs_g250_gd_0_wt_0'))
+            for i in range(xs_unique_cycle.shape[0]):
+                ofile.write("     PMAXS_F   {} '{}' {}\n".format(5+i,cdir + '/' + xs_unique_cycle[i],5+i))
+            ofile.write("\n")
+            ofile.write("!******************************************************************************\n\n")
+
+        with open(filename,"a") as ofile:             
+            ofile.write("MCYCLE\n")
+            ofile.write("  CYCLE_DEF  1\n")
+            ofile.write("    DEPL_STEP 0\n")
+            ofile.write("    POWER_LEV 2*100.0\n")
+            ofile.write("    BANK_SEQ 2*1\n")
+            ofile.write("\n")
+            ofile.write("  CYCLE_DEF  2\n")
+            ofile.write("    DEPL_STEP 1 1 18*30\n")
+            ofile.write("    POWER_LEV 21*100.0\n")
+            ofile.write("    BANK_SEQ 21*1\n")
+            ofile.write("\n")
+            ofile.write("  CYCLE_DEF  3\n")
+            ofile.write("    DEPL_STEP 1 1 24*30\n")
+            ofile.write("    POWER_LEV 27*100.0\n")
+            ofile.write("    BANK_SEQ 27*1\n")
+            ofile.write("\n")
+            ofile.write("  LOCATION\n")
+            ofile.write("     H-08  H-09  H-10  H-11  H-12  H-13  H-14  H-15  0\n")   
+            ofile.write("     I-08  I-09  I-10  I-11  I-12  I-13  I-14  I-15  0\n")
+            ofile.write("     J-08  J-09  J-10  J-11  J-12  J-13  J-14  J-15  0\n")
+            ofile.write("     K-08  K-09  K-10  K-11  K-12  K-13  K-14  K-15  0\n")
+            ofile.write("     L-08  L-09  L-10  L-11  L-12  L-13  L-14  0     0\n")
+            ofile.write("     M-08  M-09  M-10  M-11  M-12  M-13  M-14  0\n")
+            ofile.write("     N-08  N-09  N-10  N-11  N-12  N-13  0     0\n")
+            ofile.write("     O-08  O-09  O-10  O-11  0     0     0\n")
+            ofile.write("     0     0     0     0     0\n")
+            ofile.write("\n")
+
+            ofile.write("  SHUF_MAP  1  1\n")
+            for x in range(core_cycle_lattice.shape[0]):
+                ofile.write("     ")
+                for y in range(core_cycle_lattice.shape[1]):
+                    ofile.write(core_cycle_lattice[x,y])
+                    ofile.write("  ")
+                ofile.write("\n")
+            ofile.write("\n")
+
+            ofile.write("  CYCLE_IND    1  0  1 \n")
+            if ncyc==1:
+                ofile.write("  CYCLE_IND    2  1  2 \n")
+            else:
+                ofile.write("  CYCLE_IND    2  1  3 \n")
+            ofile.write("  CONV_EC      0.1   2 \n")
+            ofile.write("\n")
+            ofile.write("!******************************************************************************\n\n")
+            ofile.write(".")
+
+        # Run PARCS INPUT DECK
+        
+        parcscmd = "/cm/shared/codes/TRACE51341_PARCS_332/PARCS-v332_Exe/Executables/Linux/parcs-v332-linux2-intel-x64-release.x"
+        
+        print('Execute PARCS')
+        print('Running in process')
+        try:
+            #
+            output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=120)
+            # Get Results
+            if 'Finished' in str(output):
+                ofile = fname + '.out'
+                self.get_cycle_results(fname,ncyc,pin_power=False)
+                os.system('rm -f {}.parcs_pin*'.format(fname))
+                # os.system('rm -f {}.inp'.format(fname))
+                os.system('rm -f {}.inp_parcs_err'.format(fname))
+                os.system('rm -f {}.inp_paths_err'.format(fname))
+                os.system('rm -f {}.parcs_dep'.format(fname))
+                os.system('rm -f {}.parcs_itr'.format(fname))
+                os.system('rm -f {}.parcs_msg'.format(fname))
+                os.system('rm -f {}.parcs_out'.format(fname))
+                os.system('rm -f {}.parcs_sum'.format(fname))
+                os.system('rm -f {}.parcs_xml'.format(fname))
+                os.system('rm -f mcyc_exp.dep')
+            else:
+                if ncyc==1:
+                    self.cycle_parameters = {}
+                self.cycle_parameters['C'+str(ncyc)] = {}
+                self.cycle_parameters['C'+str(ncyc)]["cycle_length"] = np.random.uniform(0,10)
+                self.cycle_parameters['C'+str(ncyc)]["PinPowerPeaking"] = np.random.uniform(10,20)
+                self.cycle_parameters['C'+str(ncyc)]["FDeltaH"]= np.random.uniform(10,20)
+                self.cycle_parameters['C'+str(ncyc)]["max_boron"] = np.random.uniform(5000,10000) 
+                os.system('rm -f ./*')
+
+        except subprocess.TimeoutExpired:
+            print('Timed out - killing')
+            
+            os.system('rm -f {}.parcs_pin*'.format(fname))
+            if ncyc==1:
+                    self.cycle_parameters = {}
+            self.cycle_parameters['C'+str(ncyc)] = {}
+            self.cycle_parameters['C'+str(ncyc)]["cycle_length"]= np.random.uniform(0,10)
+            self.cycle_parameters['C'+str(ncyc)]["PinPowerPeaking"] = np.random.uniform(10,20)
+            self.cycle_parameters['C'+str(ncyc)]["FDeltaH"] = np.random.uniform(10,20)
+            self.cycle_parameters['C'+str(ncyc)]["max_boron"] = np.random.uniform(5000,10000)
+            os.system('rm -f ./*')
+
+        print('{} calculation is done!'.format(self.name))
+        os.chdir(pwd)
+        gc.collect()  
+        print('finished collecting garbage...')
+        print('exiting evaluate...')
+        return()
+
     def evaluate(self):
             """
             Creates the input deck, runs the calculation and retrieves the results and the cost.
@@ -6174,386 +6453,183 @@ class MCycle_Grouped_Loading_Pattern_Solution(Solution):
 
             pwd = Path(os.getcwd())
 
-            if not os.path.exists(self.name):
-                os.makedirs(self.name)
-            else:
-                shutil.rmtree(self.name, ignore_errors=True)
-                os.makedirs(self.name)
-            
-            cdir = self.library
-            shutil.copyfile(cdir + '/' + 'mcyc_exp_quarter.dep', self.name +"/" + 'mcyc_exp.dep')
-            os.chdir(self.name)
- 
-            fuel_locations = list(self.core_dict['fuel']['C1'].keys())
-            cyc0_assemblies = [461,  461,  462,  461,  502,  462,  502,  462,
-                               461,  462,  461,  462,  461,  502,  502,  462,
-                               461,  461,  501,  461,  462,  461,  501,  461,
-                               461,  462,  461,  462,  461,  501,  501,  461,
-                               502,  461,  462,  461,  462,  461,  462, 
-                               462,  462,  461,  462,  461,  502,  461,
-                               502,  502,  501,  501,  501,  501,
-                               501,  501,  461,  502 ]
-            bu_file = pwd / self.name
-            bu_file = bu_file / 'mcyc_exp.dep'
-            bu=self.get_burnup(bu_file)
-            reac = self.get_reac(cyc0_assemblies,bu)
-            ass_groups = self.rank_assb(fuel_locations,reac)
+            if 'initial' in self.name:
+                TEST=True
 
-            # Cycle 1 Calculation
-
-            self.lp_dict = {}
-            self.lp_dict['C1']={}
-            c1_genome = self.genome[0:56]
-            c1_lp = self.getlp_from_genome(c1_genome,ass_groups)
-            floc = 0
-            for i in range(len(c1_lp)):
-                cyc_tag = 'C1' 
-                self.lp_dict[cyc_tag][fuel_locations[i]]=c1_lp[i]
-                self.core_dict['fuel'][cyc_tag][fuel_locations[i]]['Value']=c1_lp[i]
-                self.core_dict['core'][cyc_tag][fuel_locations[i]]['Value']=c1_lp[i]
-
-            self.full_core = self.get_full_core()
-            
-            if self.map_size == 'quarter':
-                self.core_lattice = self.get_quarter_lattice()
-            else:
-                self.core_lattice = self.get_full_lattice()
-            
-            cycle_dir = 'c1'
-            import pdb; pdb.set_trace()
-
-            core_lattice_c1 = copy.deepcopy(self.core_lattice)
-            xs_array_c1 = np.zeros((core_lattice_c1.shape[0],core_lattice_c1.shape[1]), dtype='<U20')
-            pincal_loc = np.zeros((core_lattice_c1.shape[0],core_lattice_c1.shape[1]))
-            for x in range(core_lattice_c1.shape[0]):
-                for y in range(core_lattice_c1.shape[1]):
-                    loc = core_lattice_c1[x,y]
-                    if loc != "00" and loc[0] != "R":
-                        core_lattice_c1[x,y] = self.core_dict['Inventory'][self.full_core['C1'][loc]]['Tag']
-                        xs_val = self.core_dict['Inventory'][self.full_core['C1'][loc]]['Cross_Section']
-                        if xs_val == False:
-                            xs_array_c1[x,y] = None
-                        else:
-                            xs_array_c1[x,y] = xs_val
-                            core_lattice_c1[x,y] = '-'+core_lattice_c1[x,y]
-                        pincal_loc[x,y]=1
-                    elif loc[0] == "R":
-                        core_lattice_c1[x,y] = "0   "
-                        xs_array_c1[x,y] = None
-                        pincal_loc[x,y]=0
-                    elif loc == "00":
-                        core_lattice_c1[x,y] = "    "
-                        xs_array_c1[x,y] = None
-                        pincal_loc[x,y]=np.nan
-
-            xs_unique_c1 = np.unique(xs_array_c1)
-            xs_unique_c1 = np.delete(xs_unique_c1, np.argwhere(xs_unique_c1 == 'None'))
-
-            core_lattice_c2 = copy.deepcopy(self.core_lattice)
-            xs_array_c2 = np.zeros((core_lattice_c2.shape[0],core_lattice_c2.shape[1]), dtype='<U20')
-            for x in range(core_lattice_c2.shape[0]):
-                for y in range(core_lattice_c2.shape[1]):
-                    loc = core_lattice_c2[x,y]
-                    if loc != "00" and loc[0] != "R":
-                        core_lattice_c2[x,y] = self.core_dict['Inventory'][self.full_core['C2'][loc]]['Tag']
-                        xs_val = self.core_dict['Inventory'][self.full_core['C2'][loc]]['Cross_Section']
-                        if xs_val == False:
-                            xs_array_c2[x,y] = None
-                        else:
-                            xs_array_c2[x,y] = xs_val
-                            core_lattice_c2[x,y] = '-'+core_lattice_c2[x,y]
-                            
-                    elif loc[0] == "R":
-                        core_lattice_c2[x,y] = "0   "
-                        xs_array_c2[x,y] = None
-                    elif loc == "00":
-                        core_lattice_c2[x,y] = "    "
-                        xs_array_c2[x,y] = None
-
-            xs_unique_c2 = np.unique(xs_array_c2)
-            xs_unique_c2 = np.delete(xs_unique_c2, np.argwhere(xs_unique_c2 == 'None'))
-
-            core_lattice_c3 = copy.deepcopy(self.core_lattice)
-            xs_array_c3 = np.zeros((core_lattice_c3.shape[0],core_lattice_c3.shape[1]), dtype='<U20')
-            for x in range(core_lattice_c3.shape[0]):
-                for y in range(core_lattice_c3.shape[1]):
-                    loc = core_lattice_c3[x,y]
-                    if loc != "00" and loc[0] != "R":
-                        core_lattice_c3[x,y] = self.core_dict['Inventory'][self.full_core['C3'][loc]]['Tag']
-                        xs_val = self.core_dict['Inventory'][self.full_core['C3'][loc]]['Cross_Section']
-                        if xs_val == False:
-                            xs_array_c3[x,y] = None
-                        else:
-                            xs_array_c3[x,y] = xs_val
-                            core_lattice_c3[x,y] = '-'+core_lattice_c3[x,y]
-                    elif loc[0] == "R":
-                        core_lattice_c3[x,y] = "0   "
-                        xs_array_c3[x,y] = None
-                    elif loc == "00":
-                        core_lattice_c3[x,y] = "    "
-                        xs_array_c3[x,y] = None
-
-            xs_unique_c3 = np.unique(xs_array_c3)
-            xs_unique_c3 = np.delete(xs_unique_c3, np.argwhere(xs_unique_c3 == 'None'))
-            xs_unique = np.append(xs_unique_c1,xs_unique_c2)
-            xs_unique = np.append(xs_unique,xs_unique_c3)
-            xs_forced = np.array([self.core_dict['Inventory']['FE461']['Cross_Section'],
-                        self.core_dict['Inventory']['FE462']['Cross_Section'],
-                        self.core_dict['Inventory']['FE501']['Cross_Section'],
-                        self.core_dict['Inventory']['FE502']['Cross_Section']])
-            xs_unique = np.append(xs_unique,xs_forced)
-            xs_unique = np.unique(xs_unique)
-
-            tag_unique = copy.deepcopy(xs_unique)
-            xs_ref = np.arange(5,5+len(xs_unique)) # 1-3 for reflectors and 4 for blankets
-            for key,value in self.core_dict["Inventory"].items():
-                for i in range(xs_unique.shape[0]):
-                    if value['Cross_Section']==xs_unique[i]:
-                        tag_unique[i]=value['Tag']
-            fname = 'solution'
-            filename = fname + '.inp'
-            with open(filename,"w") as ofile:             
-                ofile.write("!******************************************************************************\n")
-                ofile.write('CASEID {}  \n'.format(fname))
-                ofile.write("!******************************************************************************\n\n")
-
-            with open(filename,"a") as ofile:             
-                ofile.write("CNTL\n")
-                ofile.write("     RUN_OPTS F T F F\n")
-                ofile.write("     TH_FDBK    T\n")
-                ofile.write("     INT_TH     T -1\n")
-                ofile.write("     CORE_POWER 100.0\n")
-                ofile.write("     CORE_TYPE  PWR\n")
-                ofile.write("     PPM        1000\n")
-                ofile.write("     DEPLETION  T  1.0E-5 T\n")
-                ofile.write("     TREE_XS    T  {} T  T  F  F  T  F  T  F  T  F  T  T  T  F \n".format(int(len(xs_unique)+4)))
-                ofile.write("     BANK_POS   100 100 100 100 100 100\n")
-                ofile.write("     XE_SM      1 1 1 1\n")
-                ofile.write("     SEARCH     PPM 1.0 1800.0 10.0\n")
-                ofile.write("     MULT_CYC   T\n")
-                ofile.write("     XS_EXTRAP  1.0 0.3\n")
-                ofile.write("     PIN_POWER  T\n")
-                ofile.write("     PLOT_OPTS 0 0 0 0 0 2\n")
-                ofile.write("\n")
-                ofile.write("!******************************************************************************\n\n")
-                
-            with open(filename,"a") as ofile:             
-                ofile.write("PARAM\n")
-                ofile.write("     LSOLVER  1 1 20\n")
-                ofile.write("     NODAL_KERN     NEMMG\n")
-                ofile.write("     CMFD     2\n")
-                ofile.write("     DECUSP   2\n")
-                ofile.write("     INIT_GUESS 0\n")
-                ofile.write("     CONV_SS   1.e-6 5.e-5 1.e-3 0.001\n")
-                ofile.write("     EPS_ERF   0.010\n")
-                ofile.write("     EPS_ANM   0.000001\n")
-                ofile.write("     NLUPD_SS  5 5 1\n")
-                ofile.write("\n")
-                ofile.write("!******************************************************************************\n\n")
-            
-
-            with open(filename,"a") as ofile:             
-                ofile.write("GEOM\n")
-                ofile.write("     GEO_DIM 9 9 18 1 1\n")
-                ofile.write("     RAD_CONF\n")
-                ofile.write("     461  461  462  461  502  462  502  462  10\n")   
-                ofile.write("     461  462  461  462  461  502  502  462  10\n")
-                ofile.write("     461  461  501  461  462  461  501  461  10\n")
-                ofile.write("     461  462  461  462  461  501  501  461  10\n")
-                ofile.write("     502  461  462  461  462  461  462  10   10\n")
-                ofile.write("     462  462  461  462  461  502  461  10   00 \n")
-                ofile.write("     502  502  501  501  501  501  10   10   00\n")
-                ofile.write("     501  501  461  502  10   10   10   00   00\n")
-                ofile.write("     10   10   10   10   10   00   00   00   00\n")
-                ofile.write("     GRID_X      1*10.75 8*21.50\n")
-                ofile.write("     NEUTMESH_X  1*1 8*1\n")
-                ofile.write("     GRID_Y      1*10.75 8*21.50\n")
-                ofile.write("     NEUTMESH_Y  1*1 8*1\n")
-                ofile.write("     GRID_Z      30.48 15.24 10.16 5.08 10*30.48 5.08 10.16 15.24 30.48\n")            
-                ofile.write("     ASSY_TYPE   10   1*2   16*2    1*2 REFL\n")
-                for i in range(xs_unique.shape[0]):
-                    if 'gd_0' in xs_unique[i]:
-                        ofile.write("     ASSY_TYPE   {}   1*1 1*4  14*{}  1*4  1*3 FUEL\n".format(tag_unique[i],xs_ref[i]))
-                    else:
-                        ofile.write("     ASSY_TYPE   {}   1*1 1*4  1*4 12*{} 1*4 1*4  1*3 FUEL\n".format(tag_unique[i],xs_ref[i]))
-                ofile.write("\n")
-
-                ofile.write("     boun_cond   0 2 0 2 2 2\n")
-                ofile.write("     SYMMETRY 4\n")
-
-                ofile.write("     PINCAL_LOC\n")
-                for x in range(pincal_loc.shape[0]):
-                    ofile.write("      ")
-                    for y in range(pincal_loc.shape[1]):
-                        val = pincal_loc[x,y]
-                        if np.isnan(val):
-                            pass
-                        else:
-                            ofile.write(str(int(pincal_loc[x,y])))
-                            ofile.write("  ")
-                    ofile.write("\n")
-                ofile.write("\n")
-                ofile.write("!******************************************************************************\n\n")
-            
-            with open(filename,"a") as ofile:             
-                ofile.write("FDBK\n")
-                ofile.write("     FA_POWPIT     {} 21.5\n".format(np.round(self.power/193,4)))
-                ofile.write("     GAMMA_FRAC    0.0208    0.0    0.0\n")
-                ofile.write("     EFF_DOPLT   T  0.5556\n")
-                ofile.write("\n")
-                ofile.write("!******************************************************************************\n\n")
-
-
-            with open(filename,"a") as ofile:   
-                ofile.write("TH\n")          
-                ofile.write("     FLU_TYP       0\n")
-                ofile.write("     N_PINGT    264 25\n")
-                ofile.write("     PIN_DIM      4.1 4.75 0.58 6.13\n")
-                ofile.write("     FLOW_COND    {}  {}\n".format(np.round(self.inlet_temperature-273.15,2),np.round(self.flow/193,4)))
-                ofile.write("     HGAP     10000.0\n")
-                ofile.write("     N_RING   6\n")
-                ofile.write("     THMESH_X       9*1\n")
-                ofile.write("     THMESH_Y       9*1\n")
-                ofile.write("     THMESH_Z       1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18\n")
-                ofile.write("\n")
-                ofile.write("!******************************************************************************\n\n")
-
-            with open(filename,"a") as ofile:             
-                ofile.write("DEPL\n")
-                ofile.write("     TIME_STP  1 \n")
-                ofile.write("     INP_HST   './mcyc_exp.dep' 1 21\n")
-                ofile.write("     PMAXS_F   1 '{}' 1\n".format(cdir + '/' + 'xs_gbot'))
-                ofile.write("     PMAXS_F   2 '{}' 2\n".format(cdir + '/' + 'xs_grad'))
-                ofile.write("     PMAXS_F   3 '{}' 3\n".format(cdir + '/' + 'xs_gtop'))
-                ofile.write("     PMAXS_F   4 '{}' 4\n".format(cdir + '/' + 'xs_g250_gd_0_wt_0'))
-                for i in range(xs_unique.shape[0]):
-                    ofile.write("     PMAXS_F   {} '{}' {}\n".format(5+i,cdir + '/' + xs_unique[i],5+i))
-                ofile.write("\n")
-                ofile.write("!******************************************************************************\n\n")
-
-            with open(filename,"a") as ofile:             
-                ofile.write("MCYCLE\n")
-                ofile.write("  CYCLE_DEF  1\n")
-                ofile.write("    DEPL_STEP 0\n")
-                ofile.write("    POWER_LEV 2*100.0\n")
-                ofile.write("    BANK_SEQ 2*1\n")
-                ofile.write("\n")
-                ofile.write("  CYCLE_DEF  2\n")
-                ofile.write("    DEPL_STEP 1 1 18*30\n")
-                ofile.write("    POWER_LEV 21*100.0\n")
-                ofile.write("    BANK_SEQ 21*1\n")
-                ofile.write("\n")
-                ofile.write("  CYCLE_DEF  3\n")
-                ofile.write("    DEPL_STEP 1 1 24*30\n")
-                ofile.write("    POWER_LEV 27*100.0\n")
-                ofile.write("    BANK_SEQ 27*1\n")
-                ofile.write("\n")
-                ofile.write("  LOCATION\n")
-                ofile.write("     H-08  H-09  H-10  H-11  H-12  H-13  H-14  H-15  0\n")   
-                ofile.write("     I-08  I-09  I-10  I-11  I-12  I-13  I-14  I-15  0\n")
-                ofile.write("     J-08  J-09  J-10  J-11  J-12  J-13  J-14  J-15  0\n")
-                ofile.write("     K-08  K-09  K-10  K-11  K-12  K-13  K-14  K-15  0\n")
-                ofile.write("     L-08  L-09  L-10  L-11  L-12  L-13  L-14  0     0\n")
-                ofile.write("     M-08  M-09  M-10  M-11  M-12  M-13  M-14  0\n")
-                ofile.write("     N-08  N-09  N-10  N-11  N-12  N-13  0     0\n")
-                ofile.write("     O-08  O-09  O-10  O-11  0     0     0\n")
-                ofile.write("     0     0     0     0     0\n")
-                ofile.write("\n")
-
-                ofile.write("  SHUF_MAP  1  1\n")
-                for x in range(core_lattice_c1.shape[0]):
-                    ofile.write("     ")
-                    for y in range(core_lattice_c1.shape[1]):
-                        ofile.write(core_lattice_c1[x,y])
-                        ofile.write("  ")
-                    ofile.write("\n")
-                ofile.write("\n")
-
-                ofile.write("  SHUF_MAP  2  1\n")
-                for x in range(core_lattice_c2.shape[0]):
-                    ofile.write("     ")
-                    for y in range(core_lattice_c2.shape[1]):
-                        ofile.write(core_lattice_c2[x,y])
-                        ofile.write("  ")
-                    ofile.write("\n")
-                ofile.write("\n")
-
-                ofile.write("  SHUF_MAP  3  1\n")
-                for x in range(core_lattice_c3.shape[0]):
-                    ofile.write("     ")
-                    for y in range(core_lattice_c3.shape[1]):
-                        ofile.write(core_lattice_c3[x,y])
-                        ofile.write("  ")
-                    ofile.write("\n")
-                ofile.write("\n")
-
-                ofile.write("  CYCLE_IND    1  0  1 \n")
-                ofile.write("  CYCLE_IND    2  1  2 \n")
-                ofile.write("  CYCLE_IND    3  2  3 \n")
-                ofile.write("  CYCLE_IND    4  3  3 \n")
-                ofile.write("  CONV_EC      0.1   4 \n")
-                ofile.write("\n")
-                ofile.write("!******************************************************************************\n\n")
-                ofile.write(".")
-
-            # Run PARCS INPUT DECK
-            
-            parcscmd = "/cm/shared/codes/TRACE51341_PARCS_332/PARCS-v332_Exe/Executables/Linux/parcs-v332-linux2-intel-x64-release.x"
-          
-            print('Execute PARCS')
-            print('Running in process')
-            try:
-                #
-                output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=240)
-                # Get Results
-                if 'Finished' in str(output):
-                    ofile = fname + '.out'
-                    self.get_results(fname,pin_power=False)
-                    os.system('rm -f {}.parcs_pin*'.format(fname))
-                   # os.system('rm -f {}.inp'.format(fname))
-                    os.system('rm -f {}.inp_parcs_err'.format(fname))
-                    os.system('rm -f {}.inp_paths_err'.format(fname))
-                    os.system('rm -f {}.parcs_cyc-01'.format(fname))
-                    os.system('rm -f {}.parcs_cyc-02'.format(fname))
-                    os.system('rm -f {}.parcs_cyc-03'.format(fname))
-                    os.system('rm -f {}.parcs_cyc-04'.format(fname))
-                    os.system('rm -f {}.parcs_dep'.format(fname))
-                    os.system('rm -f {}.parcs_itr'.format(fname))
-                    os.system('rm -f {}.parcs_msg'.format(fname))
-                    os.system('rm -f {}.parcs_out'.format(fname))
-                    os.system('rm -f {}.parcs_sum'.format(fname))
-                    os.system('rm -f {}.parcs_xml'.format(fname))
-                    os.system('rm -f mcyc_exp.dep')
+            if TEST==False:
+                if not os.path.exists(self.name):
+                    os.makedirs(self.name)
                 else:
-                    self.parameters["cycle1_length"]['value'] = np.random.uniform(0,10)
-                    self.parameters["cycle2_length"]['value'] = np.random.uniform(0,10)
-                    self.parameters["cycle3_length"]['value'] = np.random.uniform(0,10)
-                    self.parameters["PinPowerPeaking"]['value'] = np.random.uniform(10,20)
-                    self.parameters["FDeltaH"]['value'] = np.random.uniform(10,20)
-                    self.parameters["max_boron"]['value'] = np.random.uniform(5000,10000)
-                    self.parameters["lcoe"]['value'] = np.random.uniform(100,200)  
-                    os.system('rm -f ./*')
+                    shutil.rmtree(self.name, ignore_errors=True)
+                    os.makedirs(self.name)
+                
+                cdir = self.library
+                shutil.copyfile(cdir + '/' + 'mcyc_exp_quarter.dep', self.name +"/" + 'mcyc_exp.dep')
+                os.chdir(self.name)
+    
+                fuel_locations = list(self.core_dict['fuel']['C1'].keys())
+                cyc0_assemblies = [461,  461,  462,  461,  502,  462,  502,  462,
+                                461,  462,  461,  462,  461,  502,  502,  462,
+                                461,  461,  501,  461,  462,  461,  501,  461,
+                                461,  462,  461,  462,  461,  501,  501,  461,
+                                502,  461,  462,  461,  462,  461,  462, 
+                                462,  462,  461,  462,  461,  502,  461,
+                                502,  502,  501,  501,  501,  501,
+                                501,  501,  461,  502 ]
+                bu_file = pwd / self.name
+                bu_file = bu_file / 'mcyc_exp.dep'
+                bu=self.get_burnup(bu_file)
+                reac = self.get_reac(cyc0_assemblies,bu)
+                c1_ass_groups = self.rank_assb(fuel_locations,reac)
 
-            except subprocess.TimeoutExpired:
-                print('Timed out - killing')
-            
-                os.system('rm -f {}.parcs_pin*'.format(fname))
-                self.parameters["cycle1_length"]['value'] = np.random.uniform(0,10)
-                self.parameters["cycle2_length"]['value'] = np.random.uniform(0,10)
-                self.parameters["cycle3_length"]['value'] = np.random.uniform(0,10)
-                self.parameters["PinPowerPeaking"]['value'] = np.random.uniform(10,20)
-                self.parameters["FDeltaH"]['value'] = np.random.uniform(10,20)
-                self.parameters["max_boron"]['value'] = np.random.uniform(5000,10000)
-                self.parameters["lcoe"]['value'] = np.random.uniform(100,200)
-                os.system('rm -f ./*')
+                # Cycle 1 Calculation
 
-            if 'initial' in self.name and self.parameters["max_boron"]['value'] > 5000:
-                print('Re-run initial case due to non-convergence')
-                self.generate_initial(self.settings['genome']['chromosomes'])
-                os.chdir(pwd)
-                self.evaluate()
-            print('{} calculation is done!'.format(self.name))
-            os.chdir(pwd)
-            gc.collect()  
-            print('finished collecting garbage...')
-            print('exiting evaluate...')
+                self.lp_dict = {}
+                self.lp_dict['C1']={}
+                c1_genome = self.genome[0:56]
+                c1_lp = self.getlp_from_genome(c1_genome,c1_ass_groups)
+                floc = 0
+                for i in range(len(c1_lp)):
+                    cyc_tag = 'C1' 
+                    self.lp_dict[cyc_tag][fuel_locations[i]]=c1_lp[i]
+                    self.core_dict['fuel'][cyc_tag][fuel_locations[i]]['Value']=c1_lp[i]
+                    self.core_dict['core'][cyc_tag][fuel_locations[i]]['Value']=c1_lp[i]
+
+                self.full_core = self.get_full_core()
+                
+                if self.map_size == 'quarter':
+                    self.core_lattice = self.get_quarter_lattice()
+                else:
+                    self.core_lattice = self.get_full_lattice()
+                
+                cycle_dir = 'c1'
+                cycle_exp = pwd / self.name 
+                cycle_exp = cycle_exp / 'mcyc_exp.dep'
+                self.run_cycle(fuel_locations,cyc0_assemblies,c1_lp,cycle_exp,cycle_dir,ncyc=1)
+                if 'initial' in self.name and self.cycle_parameters['C1']["max_boron"] > 5000:
+                    print('Re-run initial case due to non-convergence')
+                    self.generate_initial(self.settings['genome']['chromosomes'])
+                    os.chdir(pwd)
+                    self.evaluate()
+                
+                # Cycle 2 Calculation
+
+                fuel_locations = list(self.core_dict['fuel']['C2'].keys())
+                cyc1_assemblies = []
+                for i in range(len(fuel_locations)):
+                    prev_cyc_assb = c1_lp[i]
+                    if 'FE' in prev_cyc_assb:
+                        tag = int(prev_cyc_assb[2:])
+                    else:
+                        loc_id=fuel_locations.index(prev_cyc_assb)
+                        tag = cyc0_assemblies[loc_id]
+                    cyc1_assemblies.append(tag)
+                
+                bu_file = pwd / self.name
+                bu_file = bu_file / 'c1'
+                bu_file = bu_file / 'solution.parcs_cyc-02'
+                bu=self.get_burnup(bu_file)
+                reac = self.get_reac(cyc1_assemblies,bu)
+                c2_ass_groups = self.rank_assb(fuel_locations,reac)
+
+                self.lp_dict = {}
+                self.lp_dict['C2']={}
+                c2_genome = self.genome[56:112]
+                c2_lp = self.getlp_from_genome(c2_genome,c2_ass_groups)
+                floc = 0
+                for i in range(len(c1_lp)):
+                    cyc_tag = 'C2' 
+                    self.lp_dict[cyc_tag][fuel_locations[i]]=c2_lp[i]
+                    self.core_dict['fuel'][cyc_tag][fuel_locations[i]]['Value']=c2_lp[i]
+                    self.core_dict['core'][cyc_tag][fuel_locations[i]]['Value']=c2_lp[i]
+                
+                self.full_core = self.get_full_core()
+                
+                if self.map_size == 'quarter':
+                    self.core_lattice = self.get_quarter_lattice()
+                else:
+                    self.core_lattice = self.get_full_lattice()
+
+                cycle_dir = 'c2'
+                cycle_exp = pwd / self.name 
+                cycle_exp = cycle_exp / 'c1'
+                cycle_exp = cycle_exp / 'solution.parcs_cyc-02'
+                self.run_cycle(fuel_locations,cyc1_assemblies,c2_lp,cycle_exp,cycle_dir,ncyc=2)
+                if 'initial' in self.name and self.cycle_parameters['C2']["max_boron"] > 5000:
+                    print('Re-run initial case due to non-convergence')
+                    self.generate_initial(self.settings['genome']['chromosomes'])
+                    os.chdir(pwd)
+                    self.evaluate()
+                
+                # Cycle 3 Calculation
+
+                fuel_locations = list(self.core_dict['fuel']['C3'].keys())
+                cyc2_assemblies = []
+                for i in range(len(fuel_locations)):
+                    prev_cyc_assb = c2_lp[i]
+                    if 'FE' in prev_cyc_assb:
+                        tag = int(prev_cyc_assb[2:])
+                    else:
+                        loc_id=fuel_locations.index(prev_cyc_assb)
+                        tag = cyc1_assemblies[loc_id]
+                    cyc2_assemblies.append(tag)
+                
+                bu_file = pwd / self.name
+                bu_file = bu_file / 'c2'
+                bu_file = bu_file / 'solution.parcs_cyc-02'
+                bu=self.get_burnup(bu_file)
+                reac = self.get_reac(cyc2_assemblies,bu)
+                c3_ass_groups = self.rank_assb(fuel_locations,reac)
+
+                self.lp_dict = {}
+                self.lp_dict['C3']={}
+                c3_genome = self.genome[112:]
+                c3_lp = self.getlp_from_genome(c3_genome,c3_ass_groups)
+                floc = 0
+                for i in range(len(c1_lp)):
+                    cyc_tag = 'C3' 
+                    self.lp_dict[cyc_tag][fuel_locations[i]]=c3_lp[i]
+                    self.core_dict['fuel'][cyc_tag][fuel_locations[i]]['Value']=c3_lp[i]
+                    self.core_dict['core'][cyc_tag][fuel_locations[i]]['Value']=c3_lp[i]
+                
+                self.full_core = self.get_full_core()
+                
+                if self.map_size == 'quarter':
+                    self.core_lattice = self.get_quarter_lattice()
+                else:
+                    self.core_lattice = self.get_full_lattice()
+
+                cycle_dir = 'c3'
+                cycle_exp = pwd / self.name 
+                cycle_exp = cycle_exp / 'c2'
+                cycle_exp = cycle_exp / 'solution.parcs_cyc-02'
+                self.run_cycle(fuel_locations,cyc2_assemblies,c3_lp,cycle_exp,cycle_dir,ncyc=3)
+                if 'initial' in self.name and self.cycle_parameters['C3']["max_boron"] > 5000:
+                    print('Re-run initial case due to non-convergence')
+                    self.generate_initial(self.settings['genome']['chromosomes'])
+                    os.chdir(pwd)
+                    self.evaluate()
+
+                # Get MultiCycle Results
+                
+                self.parameters['max_boron']['value']=np.max(np.array([self.cycle_parameters['C1']['max_boron'],
+                                                            self.cycle_parameters['C2']['max_boron'],
+                                                            self.cycle_parameters['C3']['max_boron']]))
+                self.parameters['PinPowerPeaking']['value']=np.max(np.array([self.cycle_parameters['C1']['PinPowerPeaking'],
+                                                                    self.cycle_parameters['C2']['PinPowerPeaking'],
+                                                                    self.cycle_parameters['C3']['PinPowerPeaking']]))
+                self.parameters['FDeltaH']['value']=np.max(np.array([self.cycle_parameters['C1']['FDeltaH'],
+                                                            self.cycle_parameters['C2']['FDeltaH'],
+                                                            self.cycle_parameters['C3']['FDeltaH']]))
+                self.parameters['cycle1_length']['value'] =  self.cycle_parameters['C1']['cycle_length']    
+                self.parameters['cycle2_length']['value'] =  self.cycle_parameters['C2']['cycle_length']  
+                self.parameters['cycle3_length']['value'] =  self.cycle_parameters['C3']['cycle_length']   
+                self.get_lcoe()
+            else:
+                self.parameters['max_boron']['value']=600
+                self.parameters['PinPowerPeaking']['value']=5.6
+                self.parameters['FDeltaH']['value']=3.2
+                self.parameters['cycle1_length']['value'] =  350  
+                self.parameters['cycle2_length']['value'] =  350 
+                self.parameters['cycle3_length']['value'] =  350
+                self.parameters['lcoe']['value'] = 6.0
