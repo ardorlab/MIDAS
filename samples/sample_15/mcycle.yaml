@@ -4,9 +4,9 @@ optimization:
     temperature: 20.0
     alpha: 0.001
   population_size: 10 
-  number_of_generations: 2
+  number_of_generations: 40
   reproducer: standard
-  buffer_length: 5
+  buffer_length: 10
   Move_Acceptance_Method: 0
   mutation:
     method: mutate_by_genome
@@ -139,3 +139,6 @@ genome:
     ncycles: 3
     xs_library: /home/gkdelipe/codes/midas/MIDAS/xslib
     number_assemblies: 193
+  design_limits:
+    reload_burnup: 60
+    fresh_feed: 38
