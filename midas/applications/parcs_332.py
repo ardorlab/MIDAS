@@ -5712,7 +5712,7 @@ class MCycle_Grouped_Loading_Pattern_Solution(Solution):
         enr_map['FE566']=5.65
         enr_map['FE586']=5.85
 
-        cycle1_param={'EFPD': self.parameters['cycle1_length']['value'],
+        cycle1_param={'EFPD': self.parameters['cycle1_length']['target'],
                     'Batches': 3,
                     'Thermal_Power': self.power,
                     'Efficiency': 0.33,
@@ -5773,7 +5773,7 @@ class MCycle_Grouped_Loading_Pattern_Solution(Solution):
 
         lcoe_c1, bu, asb_cost = LCOE_MCYC(cycle1_param,lcoe_param, asb_param)
 
-        cycle2_param={'EFPD': self.parameters['cycle2_length']['value'],
+        cycle2_param={'EFPD': self.parameters['cycle2_length']['target'],
                     'Batches': 3,
                     'Thermal_Power': self.power,
                     'Efficiency': 0.33,
@@ -5834,7 +5834,7 @@ class MCycle_Grouped_Loading_Pattern_Solution(Solution):
 
         lcoe_c2, bu, asb_cost = LCOE_MCYC(cycle2_param,lcoe2_param, asb2_param)
 
-        cycle3_param={'EFPD': self.parameters['cycle3_length']['value'],
+        cycle3_param={'EFPD': self.parameters['cycle3_length']['target'],
                     'Batches': 3,
                     'Thermal_Power': self.power,
                     'Efficiency': 0.33,
@@ -6108,7 +6108,7 @@ class MCycle_Grouped_Loading_Pattern_Solution(Solution):
             reac.append(ireac)
         return(reac)
 
-    def rank_assb(self,fuel_loc,reac):
+    def rank_assb(self,fuel_loc,reac,bu):
         reac = np.array(reac)
         reac_sorted = np.argsort(reac)
         fuel_loc=np.array(fuel_loc)
@@ -6156,6 +6156,12 @@ class MCycle_Grouped_Loading_Pattern_Solution(Solution):
                 cycle_lp.append(gene)
         return(cycle_lp)
 
+    def test_fail(self,fpath):
+        val=False
+        if os.path.exists(fpath):
+            val = True
+        return(val)
+
     def run_cycle(self,fuel_loc,c0_assb,cycle_lp,exp_file,rdir,ncyc=1):
         pwd = Path(os.getcwd())
         run_directory = pwd / rdir
@@ -6170,6 +6176,7 @@ class MCycle_Grouped_Loading_Pattern_Solution(Solution):
         dist_file = run_directory / 'mcyc_exp.dep'
         shutil.copyfile(src_file,dist_file)
         os.chdir(run_directory)
+        print('{} cycle {} calculation starts at {}!'.format(self.name,ncyc,os.getcwd()))
 
         core_cycle_lattice = copy.deepcopy(self.core_lattice)
         xs_array_cycle = np.zeros((core_cycle_lattice.shape[0],core_cycle_lattice.shape[1]), dtype='<U20')
@@ -6326,7 +6333,10 @@ class MCycle_Grouped_Loading_Pattern_Solution(Solution):
         with open(filename,"a") as ofile:             
             ofile.write("DEPL\n")
             ofile.write("     TIME_STP  1 \n")
-            ofile.write("     INP_HST   './mcyc_exp.dep' 1 21\n")
+            if ncyc == 1 or ncyc == 2:
+                ofile.write("     INP_HST   './mcyc_exp.dep' 1 21\n")
+            else:
+                ofile.write("     INP_HST   './mcyc_exp.dep' 1 27\n")
             ofile.write("     PMAXS_F   1 '{}' 1\n".format(cdir + '/' + 'xs_gbot'))
             ofile.write("     PMAXS_F   2 '{}' 2\n".format(cdir + '/' + 'xs_grad'))
             ofile.write("     PMAXS_F   3 '{}' 3\n".format(cdir + '/' + 'xs_gtop'))
@@ -6410,6 +6420,7 @@ class MCycle_Grouped_Loading_Pattern_Solution(Solution):
                 os.system('rm -f mcyc_exp.dep')
             else:
                 if ncyc==1:
+                    
                     self.cycle_parameters = {}
                 self.cycle_parameters['C'+str(ncyc)] = {}
                 self.cycle_parameters['C'+str(ncyc)]["cycle_length"] = np.random.uniform(0,10)
@@ -6431,205 +6442,225 @@ class MCycle_Grouped_Loading_Pattern_Solution(Solution):
             self.cycle_parameters['C'+str(ncyc)]["max_boron"] = np.random.uniform(5000,10000)
             os.system('rm -f ./*')
 
-        print('{} calculation is done!'.format(self.name))
+        print('{} cycle {} calculation is done at {}!'.format(self.name,ncyc,os.getcwd()))
         os.chdir(pwd)
+        gc.collect()  
+        print('finished collecting garbage...')
+        print('exiting cycle evaluate...')
+        return()
+
+    def evaluate(self):
+        """
+        Creates the input deck, runs the calculation and retrieves the results and the cost.
+
+        Parameters: 
+        loc: String - Directory of execution
+        fname: String - File name
+
+        Written by Gregory Delipei 7/29/2023
+        """
+
+        # Pre-processing steps for all cycles
+
+        pwd = Path(os.getcwd())
+
+        if not os.path.exists(self.name):
+            os.makedirs(self.name)
+        else:
+            shutil.rmtree(self.name, ignore_errors=True)
+            os.makedirs(self.name)
+        
+        cdir = self.library
+        shutil.copyfile(cdir + '/' + 'mcyc_exp_quarter.dep', self.name +"/" + 'mcyc_exp.dep')
+        os.chdir(self.name)
+
+        fuel_locations = list(self.core_dict['fuel']['C1'].keys())
+        cyc0_assemblies = [461,  461,  462,  461,  502,  462,  502,  462,
+                        461,  462,  461,  462,  461,  502,  502,  462,
+                        461,  461,  501,  461,  462,  461,  501,  461,
+                        461,  462,  461,  462,  461,  501,  501,  461,
+                        502,  461,  462,  461,  462,  461,  462, 
+                        462,  462,  461,  462,  461,  502,  461,
+                        502,  502,  501,  501,  501,  501,
+                        501,  501,  461,  502 ]
+        bu_file = pwd / self.name
+        bu_file = bu_file / 'mcyc_exp.dep'
+        bu=self.get_burnup(bu_file)
+        reac = self.get_reac(cyc0_assemblies,bu)
+        c1_ass_groups = self.rank_assb(fuel_locations,reac,bu)
+
+        # Cycle 1 Calculation
+
+        self.lp_dict = {}
+        self.lp_dict['C1']={}
+        c1_genome = self.genome[0:56]
+        c1_lp = self.getlp_from_genome(c1_genome,c1_ass_groups)
+        floc = 0
+        for i in range(len(c1_lp)):
+            cyc_tag = 'C1' 
+            self.lp_dict[cyc_tag][fuel_locations[i]]=c1_lp[i]
+            self.core_dict['fuel'][cyc_tag][fuel_locations[i]]['Value']=c1_lp[i]
+            self.core_dict['core'][cyc_tag][fuel_locations[i]]['Value']=c1_lp[i]
+
+        self.full_core = self.get_full_core()
+        
+        if self.map_size == 'quarter':
+            self.core_lattice = self.get_quarter_lattice()
+        else:
+            self.core_lattice = self.get_full_lattice()
+        
+        cycle_dir = 'c1'
+        cycle_exp = pwd / self.name 
+        cycle_exp = cycle_exp / 'mcyc_exp.dep'
+        self.run_cycle(fuel_locations,cyc0_assemblies,c1_lp,cycle_exp,cycle_dir,ncyc=1)
+        if 'initial' in self.name and self.cycle_parameters['C1']["max_boron"] > 5000:
+            print('Re-run initial case due to non-convergence')
+            self.generate_initial(self.settings['genome']['chromosomes'])
+            os.chdir(pwd)
+            self.evaluate()
+            return()
+        
+        # Cycle 2 Calculation
+
+        fuel_locations = list(self.core_dict['fuel']['C2'].keys())
+        cyc1_assemblies = []
+        for i in range(len(fuel_locations)):
+            prev_cyc_assb = c1_lp[i]
+            if 'FE' in prev_cyc_assb:
+                tag = int(prev_cyc_assb[2:])
+            else:
+                loc_id=fuel_locations.index(prev_cyc_assb)
+                tag = cyc0_assemblies[loc_id]
+            cyc1_assemblies.append(tag)
+        
+        bu_file = pwd / self.name
+        bu_file = bu_file / 'c1'
+        bu_file = bu_file / 'solution.parcs_cyc-02'
+        RUN=self.test_fail(bu_file)
+        if RUN:
+            bu=self.get_burnup(bu_file)
+            reac = self.get_reac(cyc1_assemblies,bu)
+            c2_ass_groups = self.rank_assb(fuel_locations,reac,bu)
+
+            self.lp_dict = {}
+            self.lp_dict['C2']={}
+            c2_genome = self.genome[56:112]
+            c2_lp = self.getlp_from_genome(c2_genome,c2_ass_groups)
+            floc = 0
+            for i in range(len(c1_lp)):
+                cyc_tag = 'C2' 
+                self.lp_dict[cyc_tag][fuel_locations[i]]=c2_lp[i]
+                self.core_dict['fuel'][cyc_tag][fuel_locations[i]]['Value']=c2_lp[i]
+                self.core_dict['core'][cyc_tag][fuel_locations[i]]['Value']=c2_lp[i]
+            
+            self.full_core = self.get_full_core()
+            
+            if self.map_size == 'quarter':
+                self.core_lattice = self.get_quarter_lattice()
+            else:
+                self.core_lattice = self.get_full_lattice()
+
+            cycle_dir = 'c2'
+            cycle_exp = pwd / self.name 
+            cycle_exp = cycle_exp / 'c1'
+            cycle_exp = cycle_exp / 'solution.parcs_cyc-02'
+            self.run_cycle(fuel_locations,cyc1_assemblies,c2_lp,cycle_exp,cycle_dir,ncyc=2)
+            if 'initial' in self.name and self.cycle_parameters['C2']["max_boron"] > 5000:
+                print('Re-run initial case due to non-convergence')
+                self.generate_initial(self.settings['genome']['chromosomes'])
+                os.chdir(pwd)
+                self.evaluate()
+                return()
+        else:
+            self.parameters['max_boron']['value']=np.random.uniform(5000,10000)
+            self.parameters['PinPowerPeaking']['value']=np.random.uniform(10,20)
+            self.parameters['FDeltaH']['value']=np.random.uniform(10,20)
+            self.parameters['cycle1_length']['value'] =  np.random.uniform(0,10)  
+            self.parameters['cycle2_length']['value'] =  np.random.uniform(0,10)
+            self.parameters['cycle3_length']['value'] =  np.random.uniform(0,10)
+            self.parameters['lcoe']['value'] =  np.random.uniform(100,200)
+            os.chdir(pwd)
+            return()
+
+        # Cycle 3 Calculation
+
+        fuel_locations = list(self.core_dict['fuel']['C3'].keys())
+        cyc2_assemblies = []
+        for i in range(len(fuel_locations)):
+            prev_cyc_assb = c2_lp[i]
+            if 'FE' in prev_cyc_assb:
+                tag = int(prev_cyc_assb[2:])
+            else:
+                loc_id=fuel_locations.index(prev_cyc_assb)
+                tag = cyc1_assemblies[loc_id]
+            cyc2_assemblies.append(tag)
+        
+        bu_file = pwd / self.name
+        bu_file = bu_file / 'c2'
+        bu_file = bu_file / 'solution.parcs_cyc-02'
+        RUN=self.test_fail(bu_file)
+        if RUN:
+            bu=self.get_burnup(bu_file)
+            reac = self.get_reac(cyc2_assemblies,bu)
+            c3_ass_groups = self.rank_assb(fuel_locations,reac,bu)
+
+            self.lp_dict = {}
+            self.lp_dict['C3']={}
+            c3_genome = self.genome[112:]
+            c3_lp = self.getlp_from_genome(c3_genome,c3_ass_groups)
+            floc = 0
+            for i in range(len(c1_lp)):
+                cyc_tag = 'C3' 
+                self.lp_dict[cyc_tag][fuel_locations[i]]=c3_lp[i]
+                self.core_dict['fuel'][cyc_tag][fuel_locations[i]]['Value']=c3_lp[i]
+                self.core_dict['core'][cyc_tag][fuel_locations[i]]['Value']=c3_lp[i]
+            
+            self.full_core = self.get_full_core()
+            
+            if self.map_size == 'quarter':
+                self.core_lattice = self.get_quarter_lattice()
+            else:
+                self.core_lattice = self.get_full_lattice()
+
+            cycle_dir = 'c3'
+            cycle_exp = pwd / self.name 
+            cycle_exp = cycle_exp / 'c2'
+            cycle_exp = cycle_exp / 'solution.parcs_cyc-02'
+            self.run_cycle(fuel_locations,cyc2_assemblies,c3_lp,cycle_exp,cycle_dir,ncyc=3)
+            if 'initial' in self.name and self.cycle_parameters['C3']["max_boron"] > 5000:
+                print('Re-run initial case due to non-convergence')
+                self.generate_initial(self.settings['genome']['chromosomes'])
+                os.chdir(pwd)
+                self.evaluate()
+
+            # Get MultiCycle Results
+            
+            self.parameters['max_boron']['value']=np.max(np.array([self.cycle_parameters['C1']['max_boron'],
+                                                        self.cycle_parameters['C2']['max_boron'],
+                                                        self.cycle_parameters['C3']['max_boron']]))
+            self.parameters['PinPowerPeaking']['value']=np.max(np.array([self.cycle_parameters['C1']['PinPowerPeaking'],
+                                                                self.cycle_parameters['C2']['PinPowerPeaking'],
+                                                                self.cycle_parameters['C3']['PinPowerPeaking']]))
+            self.parameters['FDeltaH']['value']=np.max(np.array([self.cycle_parameters['C1']['FDeltaH'],
+                                                        self.cycle_parameters['C2']['FDeltaH'],
+                                                        self.cycle_parameters['C3']['FDeltaH']]))
+            self.parameters['cycle1_length']['value'] =  self.cycle_parameters['C1']['cycle_length']    
+            self.parameters['cycle2_length']['value'] =  self.cycle_parameters['C2']['cycle_length']  
+            self.parameters['cycle3_length']['value'] =  self.cycle_parameters['C3']['cycle_length']   
+            self.get_lcoe()
+        else:
+            self.parameters['max_boron']['value']=np.random.uniform(5000,10000)
+            self.parameters['PinPowerPeaking']['value']=np.random.uniform(10,20)
+            self.parameters['FDeltaH']['value']=np.random.uniform(10,20)
+            self.parameters['cycle1_length']['value'] =  np.random.uniform(0,10)  
+            self.parameters['cycle2_length']['value'] =  np.random.uniform(0,10)
+            self.parameters['cycle3_length']['value'] =  np.random.uniform(0,10)
+            self.parameters['lcoe']['value'] =  np.random.uniform(100,200)    
+        os.chdir(pwd)
+        print('{} calculation is done at {}!'.format(self.name,os.getcwd()))
         gc.collect()  
         print('finished collecting garbage...')
         print('exiting evaluate...')
         return()
 
-    def evaluate(self):
-            """
-            Creates the input deck, runs the calculation and retrieves the results and the cost.
 
-            Parameters: 
-            loc: String - Directory of execution
-            fname: String - File name
-
-            Written by Gregory Delipei 7/29/2023
-            """
-
-            # Pre-processing steps for all cycles
-
-            pwd = Path(os.getcwd())
-
-            if 'initial' in self.name:
-                TEST=True
-
-            if TEST==False:
-                if not os.path.exists(self.name):
-                    os.makedirs(self.name)
-                else:
-                    shutil.rmtree(self.name, ignore_errors=True)
-                    os.makedirs(self.name)
-                
-                cdir = self.library
-                shutil.copyfile(cdir + '/' + 'mcyc_exp_quarter.dep', self.name +"/" + 'mcyc_exp.dep')
-                os.chdir(self.name)
-    
-                fuel_locations = list(self.core_dict['fuel']['C1'].keys())
-                cyc0_assemblies = [461,  461,  462,  461,  502,  462,  502,  462,
-                                461,  462,  461,  462,  461,  502,  502,  462,
-                                461,  461,  501,  461,  462,  461,  501,  461,
-                                461,  462,  461,  462,  461,  501,  501,  461,
-                                502,  461,  462,  461,  462,  461,  462, 
-                                462,  462,  461,  462,  461,  502,  461,
-                                502,  502,  501,  501,  501,  501,
-                                501,  501,  461,  502 ]
-                bu_file = pwd / self.name
-                bu_file = bu_file / 'mcyc_exp.dep'
-                bu=self.get_burnup(bu_file)
-                reac = self.get_reac(cyc0_assemblies,bu)
-                c1_ass_groups = self.rank_assb(fuel_locations,reac)
-
-                # Cycle 1 Calculation
-
-                self.lp_dict = {}
-                self.lp_dict['C1']={}
-                c1_genome = self.genome[0:56]
-                c1_lp = self.getlp_from_genome(c1_genome,c1_ass_groups)
-                floc = 0
-                for i in range(len(c1_lp)):
-                    cyc_tag = 'C1' 
-                    self.lp_dict[cyc_tag][fuel_locations[i]]=c1_lp[i]
-                    self.core_dict['fuel'][cyc_tag][fuel_locations[i]]['Value']=c1_lp[i]
-                    self.core_dict['core'][cyc_tag][fuel_locations[i]]['Value']=c1_lp[i]
-
-                self.full_core = self.get_full_core()
-                
-                if self.map_size == 'quarter':
-                    self.core_lattice = self.get_quarter_lattice()
-                else:
-                    self.core_lattice = self.get_full_lattice()
-                
-                cycle_dir = 'c1'
-                cycle_exp = pwd / self.name 
-                cycle_exp = cycle_exp / 'mcyc_exp.dep'
-                self.run_cycle(fuel_locations,cyc0_assemblies,c1_lp,cycle_exp,cycle_dir,ncyc=1)
-                if 'initial' in self.name and self.cycle_parameters['C1']["max_boron"] > 5000:
-                    print('Re-run initial case due to non-convergence')
-                    self.generate_initial(self.settings['genome']['chromosomes'])
-                    os.chdir(pwd)
-                    self.evaluate()
-                
-                # Cycle 2 Calculation
-
-                fuel_locations = list(self.core_dict['fuel']['C2'].keys())
-                cyc1_assemblies = []
-                for i in range(len(fuel_locations)):
-                    prev_cyc_assb = c1_lp[i]
-                    if 'FE' in prev_cyc_assb:
-                        tag = int(prev_cyc_assb[2:])
-                    else:
-                        loc_id=fuel_locations.index(prev_cyc_assb)
-                        tag = cyc0_assemblies[loc_id]
-                    cyc1_assemblies.append(tag)
-                
-                bu_file = pwd / self.name
-                bu_file = bu_file / 'c1'
-                bu_file = bu_file / 'solution.parcs_cyc-02'
-                bu=self.get_burnup(bu_file)
-                reac = self.get_reac(cyc1_assemblies,bu)
-                c2_ass_groups = self.rank_assb(fuel_locations,reac)
-
-                self.lp_dict = {}
-                self.lp_dict['C2']={}
-                c2_genome = self.genome[56:112]
-                c2_lp = self.getlp_from_genome(c2_genome,c2_ass_groups)
-                floc = 0
-                for i in range(len(c1_lp)):
-                    cyc_tag = 'C2' 
-                    self.lp_dict[cyc_tag][fuel_locations[i]]=c2_lp[i]
-                    self.core_dict['fuel'][cyc_tag][fuel_locations[i]]['Value']=c2_lp[i]
-                    self.core_dict['core'][cyc_tag][fuel_locations[i]]['Value']=c2_lp[i]
-                
-                self.full_core = self.get_full_core()
-                
-                if self.map_size == 'quarter':
-                    self.core_lattice = self.get_quarter_lattice()
-                else:
-                    self.core_lattice = self.get_full_lattice()
-
-                cycle_dir = 'c2'
-                cycle_exp = pwd / self.name 
-                cycle_exp = cycle_exp / 'c1'
-                cycle_exp = cycle_exp / 'solution.parcs_cyc-02'
-                self.run_cycle(fuel_locations,cyc1_assemblies,c2_lp,cycle_exp,cycle_dir,ncyc=2)
-                if 'initial' in self.name and self.cycle_parameters['C2']["max_boron"] > 5000:
-                    print('Re-run initial case due to non-convergence')
-                    self.generate_initial(self.settings['genome']['chromosomes'])
-                    os.chdir(pwd)
-                    self.evaluate()
-                
-                # Cycle 3 Calculation
-
-                fuel_locations = list(self.core_dict['fuel']['C3'].keys())
-                cyc2_assemblies = []
-                for i in range(len(fuel_locations)):
-                    prev_cyc_assb = c2_lp[i]
-                    if 'FE' in prev_cyc_assb:
-                        tag = int(prev_cyc_assb[2:])
-                    else:
-                        loc_id=fuel_locations.index(prev_cyc_assb)
-                        tag = cyc1_assemblies[loc_id]
-                    cyc2_assemblies.append(tag)
-                
-                bu_file = pwd / self.name
-                bu_file = bu_file / 'c2'
-                bu_file = bu_file / 'solution.parcs_cyc-02'
-                bu=self.get_burnup(bu_file)
-                reac = self.get_reac(cyc2_assemblies,bu)
-                c3_ass_groups = self.rank_assb(fuel_locations,reac)
-
-                self.lp_dict = {}
-                self.lp_dict['C3']={}
-                c3_genome = self.genome[112:]
-                c3_lp = self.getlp_from_genome(c3_genome,c3_ass_groups)
-                floc = 0
-                for i in range(len(c1_lp)):
-                    cyc_tag = 'C3' 
-                    self.lp_dict[cyc_tag][fuel_locations[i]]=c3_lp[i]
-                    self.core_dict['fuel'][cyc_tag][fuel_locations[i]]['Value']=c3_lp[i]
-                    self.core_dict['core'][cyc_tag][fuel_locations[i]]['Value']=c3_lp[i]
-                
-                self.full_core = self.get_full_core()
-                
-                if self.map_size == 'quarter':
-                    self.core_lattice = self.get_quarter_lattice()
-                else:
-                    self.core_lattice = self.get_full_lattice()
-
-                cycle_dir = 'c3'
-                cycle_exp = pwd / self.name 
-                cycle_exp = cycle_exp / 'c2'
-                cycle_exp = cycle_exp / 'solution.parcs_cyc-02'
-                self.run_cycle(fuel_locations,cyc2_assemblies,c3_lp,cycle_exp,cycle_dir,ncyc=3)
-                if 'initial' in self.name and self.cycle_parameters['C3']["max_boron"] > 5000:
-                    print('Re-run initial case due to non-convergence')
-                    self.generate_initial(self.settings['genome']['chromosomes'])
-                    os.chdir(pwd)
-                    self.evaluate()
-
-                # Get MultiCycle Results
-                
-                self.parameters['max_boron']['value']=np.max(np.array([self.cycle_parameters['C1']['max_boron'],
-                                                            self.cycle_parameters['C2']['max_boron'],
-                                                            self.cycle_parameters['C3']['max_boron']]))
-                self.parameters['PinPowerPeaking']['value']=np.max(np.array([self.cycle_parameters['C1']['PinPowerPeaking'],
-                                                                    self.cycle_parameters['C2']['PinPowerPeaking'],
-                                                                    self.cycle_parameters['C3']['PinPowerPeaking']]))
-                self.parameters['FDeltaH']['value']=np.max(np.array([self.cycle_parameters['C1']['FDeltaH'],
-                                                            self.cycle_parameters['C2']['FDeltaH'],
-                                                            self.cycle_parameters['C3']['FDeltaH']]))
-                self.parameters['cycle1_length']['value'] =  self.cycle_parameters['C1']['cycle_length']    
-                self.parameters['cycle2_length']['value'] =  self.cycle_parameters['C2']['cycle_length']  
-                self.parameters['cycle3_length']['value'] =  self.cycle_parameters['C3']['cycle_length']   
-                self.get_lcoe()
-            else:
-                self.parameters['max_boron']['value']=600
-                self.parameters['PinPowerPeaking']['value']=5.6
-                self.parameters['FDeltaH']['value']=3.2
-                self.parameters['cycle1_length']['value'] =  350  
-                self.parameters['cycle2_length']['value'] =  350 
-                self.parameters['cycle3_length']['value'] =  350
-                self.parameters['lcoe']['value'] = 6.0
