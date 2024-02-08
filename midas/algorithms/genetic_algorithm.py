@@ -1649,12 +1649,12 @@ class Genetic_Algorithm(object):
         
         opt.write_track_file(self.population, self.generation)
 
-#        scrambler = Fixed_Genome_Mutator(1,1,200,self.file_settings)
-#        uniqueness = Unique_Solution_Analyzer(scrambler)
+        #scrambler = Fixed_Genome_Mutator(1,1,200,self.file_settings)
+        #uniqueness = Unique_Solution_Analyzer(scrambler)
         for self.generation.current in range(self.generation.total):
             self.population.children = self.repodroduction.reproduce(self.population.parents, 
                                                                      self.solution)
-#            self.population.children = uniqueness.analyze(self.population.children)
+            #self.population.children = uniqueness.analyze(self.population.children)
             for i,solution in enumerate(self.population.children):
                 solution.name = "child_{}_{}".format(self.generation.current, i)
                 solution.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
@@ -1717,25 +1717,21 @@ class Genetic_Algorithm(object):
             foo.evaluate()
             self.population.children.append(foo)
 
-      #  self.population.parents = map(evaluate_function, self.population.parents)
-      #  self.population.children = map(evaluate_function, self.population.children)
         self.population = self.selection.perform(self.population)
         opt.check_best_worst_average(self.population.parents)
         opt.write_track_file(self.population, self.generation)
 
-#        scrambler = Fixed_Genome_Mutator(1,1,200,self.file_settings)
-#        uniqueness = Unique_Solution_Analyzer(scrambler)
+        #scrambler = Fixed_Genome_Mutator(1,1,200,self.file_settings)
+        #uniqueness = Unique_Solution_Analyzer(scrambler)
         for self.generation.current in range(self.generation.total):
             self.population.children = self.repodroduction.reproduce(self.population.parents, 
                                                                      self.solution)
-#            self.population.children = uniqueness.analyze(self.population.children)
+            #self.population.children = uniqueness.analyze(self.population.children)
             for i,solution in enumerate(self.population.children):
                 solution.name = "child_{}_{}".format(self.generation.current, i)
                 solution.parameters = copy.deepcopy(self.file_settings['optimization']['objectives'])
                 solution.add_additional_information(self.file_settings)
                 solution.evaluate()
-
-           # self.population.children = map(evaluate_function, self.population.children)
 
             self.population = self.selection.perform(self.population)
             opt.check_best_worst_average(self.population.parents)
