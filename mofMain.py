@@ -183,6 +183,8 @@ class Optimization_Factory(object):
             solution_type = parcs_332.MCycle_Loading_Pattern_Solution
         elif data_type_string.lower() == "mcycle_grouped_loading_pattern_parcs332":
             solution_type = parcs_332.MCycle_Grouped_Loading_Pattern_Solution
+        elif data_type_string.lower() == "mcycle_inventory_loading_pattern_parcs332":
+            solution_type = parcs_332.MCycle_Inventory_Loading_Pattern_Solution
         elif data_type_string.lower() == "loading_patternsimple_parcs332":
             solution_type = parcs_332.Loading_PatternSimple_Solution
         elif data_type_string.lower() == "fixed_loading_pattern":

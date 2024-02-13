@@ -16,7 +16,7 @@ optimization:
   selection:
     fitness: weighted
     method: tournament
-  data_type: mcycle_grouped_loading_pattern_parcs332
+  data_type: mcycle_inventory_loading_pattern_parcs332
   objectives:
     max_boron:
       goal: less_than_target
@@ -32,15 +32,15 @@ optimization:
       weight: 600.0
     cycle1_length:
       goal: greater_than_target
-      target: 530
+      target: 540
       weight: 1.0
     cycle2_length:
       goal: greater_than_target
-      target: 700
+      target: 720
       weight: 1.0
     cycle3_length:
       goal: greater_than_target
-      target: 700
+      target: 720
       weight: 1.0
     lcoe:
       goal: minimize
