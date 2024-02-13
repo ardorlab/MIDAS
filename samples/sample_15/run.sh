@@ -14,7 +14,7 @@ cd $SLURM_SUBMIT_DIR
 # Main -------------------------------------------------------------------------------------------------------------
 
 rm -rf solution_*
-python ../../mofMain.py --input mcycle.yaml --cpus 10
+python ../../mofMain.py --input mcycle_inv.yaml --cpus 10
 
 
 ##stress-ng --cpu $SLURM_CPUS_ON_NODE --timeout 60s --metrics-brief
