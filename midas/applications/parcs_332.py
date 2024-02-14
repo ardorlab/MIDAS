@@ -8296,6 +8296,139 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                         bu_3d[ifass-1, iz]=val
         return((bu_2d, bu_3d))
     
+    def get_alldep(self,ofile):
+        '''
+        Extract all results from a PARCS .parcs_dep file
+        '''
+        nfa=len(self.core_dict['fuel']['C1'].keys())
+        txt = Path(ofile).read_text()
+        txt_dep = txt.split('   PT')[1:]
+        nsteps = len(txt_dep)
+        res_dir = {}
+        for i in range(nsteps):
+            ires = {}
+            itxt_dep = txt_dep[i]
+            # Scalar Values
+            itxt_scalar = itxt_dep.split('\n')[1]
+            itxt_scalar = itxt_scalar.split()
+            ires['KEFF'] = float(itxt_scalar[2])
+            ires['AXOFF'] = float(itxt_scalar[4])
+            ires['PZ'] = float(itxt_scalar[5])
+            ires['PXY'] = float(itxt_scalar[6])
+            ires['PXYZ'] = float(itxt_scalar[7])
+            ires['PPIN'] = float(itxt_scalar[8])
+            ires['EFPD'] = float(itxt_scalar[9])
+            ires['BUAVE'] = float(itxt_scalar[10])
+            ires['BUMAX'] = float(itxt_scalar[11])
+            ires['BETA'] = float(itxt_scalar[12])
+            ires['BORON'] = float(itxt_scalar[14])
+            ires['TFUEL'] = float(itxt_scalar[15])
+            ires['TMOD'] = float(itxt_scalar[16])
+            ires['DMOD'] = float(itxt_scalar[17])
+            # 2D power
+            pow_2d=np.zeros(nfa)
+            itxt_pow2d = itxt_dep.split(' RPF 2D MAP')[1].split(' RPF 1D MAP')[0]
+            itxt_pow2d = itxt_pow2d.split('\n')
+            itxt_pow2d=list(filter(lambda a: a != '', itxt_pow2d))
+            itxt_pow2d=list(filter(lambda a: a != ' ', itxt_pow2d))
+            counter=0
+            for j in range(1,len(itxt_pow2d)-1):
+                line_dep = itxt_pow2d[j].split()
+                for k in range(1,len(line_dep)):
+                    val = float(line_dep[k])
+                    if val > 0.0:
+                        pow_2d[counter]=val
+                        counter+=1
+                    else:
+                        pass
+            ires['POW2D']=np.array(pow_2d)
+            # 2D burnup
+            bu_2d=np.zeros(nfa)
+            itxt_bu2d = itxt_dep.split(' EXP 2D MAP')[1].split(' EXP 1D MAP')[0]
+            itxt_bu2d = itxt_bu2d.split('\n')
+            itxt_bu2d=list(filter(lambda a: a != '', itxt_bu2d))
+            itxt_bu2d=list(filter(lambda a: a != ' ', itxt_bu2d))
+            counter=0
+            for j in range(1,len(itxt_bu2d)-1):
+                line_dep = itxt_bu2d[j].split()
+                for k in range(1,len(line_dep)):
+                    val = float(line_dep[k])
+                    if val > 0.0:
+                        bu_2d[counter]=val
+                        counter+=1
+                    else:
+                        pass
+            ires['BU2D']=np.array(bu_2d)
+
+            # 3D 
+            z_id=[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]
+            nz=len(z_id)
+            refl_id=[9,18,27,36,44,45,53,60,61,66,67,68,69,70,71,72,73]
+
+            # 3D Power
+            pow_3d=np.zeros((nfa,nz))
+            itxt_pow3d = itxt_dep.split(' RPF 3D MAP 1.0E+00')[1].split(' EXP 2D MAP')[0]
+            itxt_pow3d=itxt_pow3d.split('\n')
+            itxt_pow3d=list(filter(lambda a: a != '', itxt_pow3d))
+            itxt_pow3d=list(filter(lambda a: a != ' ', itxt_pow3d))
+            asb_counter=0
+            fasb_counter=0
+            ifass = 0
+            iass = 0
+            for j in range(1,len(itxt_pow3d)):
+                line_dep = itxt_pow3d[j].split()
+                if line_dep[0]=='k':
+                    asb_counter=copy.deepcopy(iass)
+                    fasb_counter=copy.deepcopy(ifass)
+                elif int(line_dep[0]) not in z_id: 
+                    pass
+                else:
+                    iz = z_id[-1] - int(line_dep[0])
+                    ifass = copy.deepcopy(fasb_counter)
+                    iass = copy.deepcopy(asb_counter)
+                    for k in range(1,len(line_dep)):
+                        iass +=1
+                        if iass in refl_id:
+                            pass
+                        else:
+                            ifass +=1
+                            val = float(line_dep[k])
+                            pow_3d[ifass-1, iz]=val
+            ires['POW3D'] =  np.flip(pow_3d, axis=1)
+
+            # 3D Burnup
+            bu_3d=np.zeros((nfa,nz))
+            itxt_bu_3d = itxt_dep.split(' EXP 3D MAP 1.0E+00')[1].split(' END STEP')[0]
+            itxt_bu_3d=itxt_bu_3d.split('\n')
+            itxt_bu_3d=list(filter(lambda a: a != '', itxt_bu_3d))
+            itxt_bu_3d=list(filter(lambda a: a != ' ', itxt_bu_3d))
+            asb_counter=0
+            fasb_counter=0
+            ifass = 0
+            iass = 0
+            for j in range(1,len(itxt_bu_3d)):
+                line_dep = itxt_bu_3d[j].split()
+                if line_dep[0]=='k':
+                    asb_counter=copy.deepcopy(iass)
+                    fasb_counter=copy.deepcopy(ifass)
+                elif int(line_dep[0]) not in z_id: 
+                    pass
+                else:
+                    iz = z_id[-1] - int(line_dep[0])
+                    ifass = copy.deepcopy(fasb_counter)
+                    iass = copy.deepcopy(asb_counter)
+                    for k in range(1,len(line_dep)):
+                        iass +=1
+                        if iass in refl_id:
+                            pass
+                        else:
+                            ifass +=1
+                            val = float(line_dep[k])
+                            bu_3d[ifass-1, iz]=val
+            ires['BU3D'] =  np.flip(bu_3d, axis=1)
+            res_dir['STEP_'+str(i+1)] = ires
+        return(res_dir)
+
     def get_reac(self,ass,bu):
         reac = []
         xsDict =  pickle.load(open( self.settings['genome']['parcs_data']['xs_library'] + '/xs_dts_mcyc.p', "rb" ) )
@@ -8489,11 +8622,26 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             xs_type.append(xs_val)
             fuel_type.append(fuel_val)
             burnup_2d.append(bu_val)
-        rdict['LP_XS']=xs_type
-        rdict['LP_TYPE']=fuel_type
-        rdict['LP_BU2D']=burnup_2d
+        rdict['LP_XS']=np.array(xs_type)
+        rdict['LP_TYPE']=np.array(fuel_type)
+        rdict['LP_BU2D']=np.array(burnup_2d)
+        if opt == 'heavy':
+            nz = 16
+            burnup_3d = np.zeros((len(burnup_2d),nz))
+            for i in range(len(cycle_lp)):
+                iasb = cycle_lp[i]
+                if 'FE' in iasb:
+                    bu_val = np.zeros(nz)
+                else:
+                    bu_val = self.reload_inventory[iasb]['BU3D']
+                burnup_3d[i,:] = bu_val
+            rdict['LP_BU3D']=np.flip(burnup_3d, axis=1)
+            ofile = ftag + '.parcs_dep'
+            res_dir = self.get_alldep(ofile)
+            rdict['RES'] = res_dir
         pickle.dump( rdict, open( dts_fpath, "wb" ) )
         return
+    
     def run_cycle(self,fuel_loc,c0_assb,cycle_lp,rdir,ncyc=1):
         pwd = Path(os.getcwd())
         run_directory = pwd / rdir

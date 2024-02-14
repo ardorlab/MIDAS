@@ -143,4 +143,4 @@ genome:
     reload_burnup: 60
     fresh_feed: 95
 options:
-  store: light 
+  store: heavy 
