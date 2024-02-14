@@ -189,7 +189,7 @@ def SA(x, k, active, Buffer, BufferCost, self, opt):
     NewSolutionCost = [active.fitness]
     for number in range(self.file_settings['optimization']['population_size']):
         challenge = self.solution()
-        if str(self.solution) == "<class 'midas.applications.parcs_332.MCycle_Loading_Pattern_Solution'>" or str(self.solution) == "<class 'midas.applications.parcs_332.MCycle_Grouped_Loading_Pattern_Solution'>":
+        if str(self.solution) == "<class 'midas.applications.parcs_332.MCycle_Loading_Pattern_Solution'>" or str(self.solution) == "<class 'midas.applications.parcs_332.MCycle_Grouped_Loading_Pattern_Solution'>" or str(self.solution) == "<class 'midas.applications.parcs_332.MCycle_Inventory_Loading_Pattern_Solution'>":
                     challenge.genome = active.reproduce()
         else:
             challenge.genome = self.mutation.reproduce(active.genome)
@@ -350,7 +350,7 @@ class SimulatedAnnealing(object):
         for self.generation.current in range(self.generation.total):
             for number in range(self.population.size):
                 challenge = self.solution()
-                if str(self.solution) == "<class 'midas.applications.parcs_332.MCycle_Loading_Pattern_Solution'>" or str(self.solution) == "<class 'midas.applications.parcs_332.MCycle_Grouped_Loading_Pattern_Solution'>":
+                if str(self.solution) == "<class 'midas.applications.parcs_332.MCycle_Loading_Pattern_Solution'>" or str(self.solution) == "<class 'midas.applications.parcs_332.MCycle_Grouped_Loading_Pattern_Solution'>" or str(self.solution) == "<class 'midas.applications.parcs_332.MCycle_Inventory_Loading_Pattern_Solution'>":
                     challenge.genome = active.reproduce()
                 else:
                     challenge.genome = self.mutation.reproduce(active.genome)

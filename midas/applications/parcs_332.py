@@ -8459,6 +8459,41 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                 del self.reload_inventory[key]
         return
 
+    def store_cycle(self,opt,ftag,cycle_lp,ncyc):
+        '''
+        Store cycle depletion results in a binary dictionary (ldts.p or hdts.p)
+        Two options: 
+            - light storage stores only cycle objectives and loading pattern
+            - heavy storage stores more quantities
+        '''
+        dts_fpath = "ldts.p" if opt=='light' else "hdts.p"
+        rdict = {}
+        for key, value in self.cycle_parameters['C'+str(ncyc)].items():
+            rdict[key]= value
+        
+        xs_type = []
+        fuel_type= []
+        burnup_2d = []
+        for i in range(len(cycle_lp)):
+            iasb = cycle_lp[i]
+            if 'FE' in iasb:
+                xs_val = self.core_dict['Inventory'][iasb]['Cross_Section']
+                fuel_val = int(self.core_dict['Inventory'][iasb]['Tag'])
+                bu_val = 0.0
+                
+            else:
+                fresh_iasb = 'FE' + str(self.reload_inventory[iasb]['TYPE'])
+                xs_val = self.core_dict['Inventory'][fresh_iasb]['Cross_Section']
+                fuel_val = int(self.reload_inventory[iasb]['TYPE'])
+                bu_val = self.reload_inventory[iasb]['BU2D']
+            xs_type.append(xs_val)
+            fuel_type.append(fuel_val)
+            burnup_2d.append(bu_val)
+        rdict['LP_XS']=xs_type
+        rdict['LP_TYPE']=fuel_type
+        rdict['LP_BU2D']=burnup_2d
+        pickle.dump( rdict, open( dts_fpath, "wb" ) )
+        return
     def run_cycle(self,fuel_loc,c0_assb,cycle_lp,rdir,ncyc=1):
         pwd = Path(os.getcwd())
         run_directory = pwd / rdir
@@ -8653,6 +8688,13 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             if 'Finished' in str(output):
                 ofile = fname + '.out'
                 self.get_cycle_results(fname,ncyc,pin_power=False)
+
+                # Store Optionally 
+                if 'options' in self.settings:
+                    if 'store' in self.settings['options']:
+                        store_op = self.settings['options']['store']
+                        self.store_cycle(store_op,fname,cycle_lp,ncyc)
+
                 ## update reload inventory
                 bu_2d, bu_3d=self.get_burnup(fname+'.parcs_dep')
                 reac = self.get_reac(c0_assb,bu_2d)
@@ -8671,11 +8713,14 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                         idict['LOC'+str(ncyc)]=fuel_loc[i]
                         self.reload_inventory_counter +=1 
                         self.reload_inventory['ASB'+str(self.reload_inventory_counter)] = idict
+                
+                # Clean
+
                 os.system('rm -f {}.parcs_pin*'.format(fname))
                 # os.system('rm -f {}.inp'.format(fname))
                 os.system('rm -f {}.inp_parcs_err'.format(fname))
                 os.system('rm -f {}.inp_paths_err'.format(fname))
-                #os.system('rm -f {}.parcs_dep'.format(fname))
+                os.system('rm -f {}.parcs_dep'.format(fname))
                 os.system('rm -f {}.parcs_itr'.format(fname))
                 os.system('rm -f {}.parcs_msg'.format(fname))
                 os.system('rm -f {}.parcs_out'.format(fname))
@@ -8962,8 +9007,26 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
         self.parameters['cycle2_length']['value'] =  self.cycle_parameters['C2']['cycle_length']  
         self.parameters['cycle3_length']['value'] =  self.cycle_parameters['C3']['cycle_length']   
         self.get_lcoe()
-        import pdb; pdb.set_trace()
 
+        # Store Results 
+        if 'options' in self.settings:
+            if 'store' in self.settings['options']:
+                opt = self.settings['options']['store']
+                dts_fpath = "ldts.p" if opt=='light' else "hdts.p" 
+                if dts_fpath in os.listdir('./c1/') and dts_fpath in os.listdir('./c2/') and dts_fpath in os.listdir('./c3/'):
+                    c1_dts = pickle.load(open( './c1/' + dts_fpath, "rb" ) )
+                    c2_dts = pickle.load(open( './c2/' + dts_fpath, "rb" ) )
+                    c3_dts = pickle.load(open( './c3/' + dts_fpath, "rb" ) )
+                    rdict = {}
+                    rdict['C1'] = c1_dts
+                    rdict['C2'] = c2_dts
+                    rdict['C3'] = c3_dts
+                    for key, value in self.parameters.items():
+                        rdict[key]= value['value']
+                    pickle.dump( rdict, open( dts_fpath, "wb" ) )
+                    os.system('rm -f {}'.format('./c1/' + dts_fpath))
+                    os.system('rm -f {}'.format('./c2/' + dts_fpath))
+                    os.system('rm -f {}'.format('./c3/' + dts_fpath))
         os.chdir(pwd)
         print('{} calculation is done at {}!'.format(self.name,os.getcwd()))
         gc.collect()  
