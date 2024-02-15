@@ -8624,10 +8624,12 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             xs_type.append(xs_val)
             fuel_type.append(fuel_val)
             burnup_2d.append(bu_val)
+            lp.append(lp_val)
         rdict['LP_XS']=np.array(xs_type)
         rdict['LP_TYPE']=np.array(fuel_type)
         rdict['LP_BU2D']=np.array(burnup_2d)
         rdict['LP_ASB']=np.array(cycle_lp)
+        rdict['LP_FUEL']=np.array(lp)
         if opt == 'heavy':
             nz = 16
             burnup_3d = np.zeros((len(burnup_2d),nz))
