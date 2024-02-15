@@ -8607,24 +8607,27 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
         xs_type = []
         fuel_type= []
         burnup_2d = []
+        lp = []
         for i in range(len(cycle_lp)):
             iasb = cycle_lp[i]
             if 'FE' in iasb:
                 xs_val = self.core_dict['Inventory'][iasb]['Cross_Section']
                 fuel_val = int(self.core_dict['Inventory'][iasb]['Tag'])
                 bu_val = 0.0
-                
+                lp_val = iasb
             else:
                 fresh_iasb = 'FE' + str(self.reload_inventory[iasb]['TYPE'])
                 xs_val = self.core_dict['Inventory'][fresh_iasb]['Cross_Section']
                 fuel_val = int(self.reload_inventory[iasb]['TYPE'])
                 bu_val = self.reload_inventory[iasb]['BU2D']
+                lp_val = self.reload_inventory[iasb]['GROUP']
             xs_type.append(xs_val)
             fuel_type.append(fuel_val)
             burnup_2d.append(bu_val)
         rdict['LP_XS']=np.array(xs_type)
         rdict['LP_TYPE']=np.array(fuel_type)
         rdict['LP_BU2D']=np.array(burnup_2d)
+        rdict['LP_ASB']=np.array(cycle_lp)
         if opt == 'heavy':
             nz = 16
             burnup_3d = np.zeros((len(burnup_2d),nz))
