@@ -6802,6 +6802,10 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             self.number_assemblies = int(info['number_assemblies'])
         if 'ncycles' in info:
             self.ncycles = int(info['ncycles'])
+            if 'design_limits' in settings['genome']:
+                if 'optimize' in settings['genome']['design_limits']:
+                    if settings['genome']['design_limits']['optimize']=='single_cycle':
+                        self.ncycles=1
         if 'fixed_problem' == settings['optimization']['reproducer']:
             self.fixed_genome = True
         elif 'unique_genes' == settings['optimization']['reproducer']:
@@ -8055,6 +8059,80 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
         self.parameters["lcoe"]['value'] = lcoe
         return()
 
+    def get_lcoe_cycle(self,ncycle):
+        
+        enr_map = {}
+        enr_map['FE461']=4.60
+        enr_map['FE462']=4.60
+        enr_map['FE501']=4.95
+        enr_map['FE502']=4.95
+        enr_map['FE526']=5.25
+        enr_map['FE566']=5.65
+        enr_map['FE586']=5.85
+
+        cycle_param={'EFPD': self.parameters['cycle_length']['target'],
+                    'Batches': 3,
+                    'Thermal_Power': self.power,
+                    'Efficiency': 0.33,
+                    'Fuel_Assemblies': self.number_assemblies}
+
+        lcoe_param={'Discount_Rate': 0.07,
+                    'Uranium_Ore_Price': 80,
+                    'Conversion_Price': 10,
+                    'Enrichment_Price': 160,
+                    'Fabrication_Price': 250,
+                    'Uranium_Ore_Loss': 0.002,
+                    'Conversion_Loss': 0.002,
+                    'Enrichment_Loss': 0.002,
+                    'Fabrication_Loss': 0.002,
+                    'Enrichment_Feed': 0.00711,
+                    'Enrichment_Tail': 0.003,
+                    'Storage_Price': 200,
+                    'Disposal_Price': 463,
+                    'Uranium_Ore_Time': -2.0,
+                    'Conversion_Time': -1.5,
+                    'Enrichment_Time': -1.0,
+                    'Fabrication_Time': -0.5,
+                    'Storage_Time': 5.0+cycle_param['EFPD']*cycle_param['Batches']/365.25,
+                    'Disposal_Time': cycle_param['EFPD']*cycle_param['Batches']/365.25}
+
+        as_values=list(self.full_core['C'+str(ncycle)].values())
+        for i in range(len(as_values)):
+            elt = as_values[i]
+            if elt in self.core_dict['fuel']['C'+str(ncycle)]:
+                as_values[i]='BRN'
+
+        unique_fa =  np.unique(as_values)
+        asb_param = {}
+        for i in range(len(unique_fa)):
+            nfa = as_values.count(unique_fa[i])
+            if 'ASB' in unique_fa[i]:
+                enr = 0.01
+                asb_dict = {'Number': nfa,
+                            'Fuel_Rods': 264,
+                            'Fuel_Radius': 0.41,
+                            'Fuel_Height': 365.76,
+                            'Enrichment': enr,
+                            'Fuel_Density': 10.23,
+                            'Fabrication_Price': 0.0
+                            }
+            else:
+                asb=unique_fa[i]
+                enr = enr_map[asb]/100
+                asb_dict = {'Number': nfa,
+                            'Fuel_Rods': 264,
+                            'Fuel_Radius': 0.41,
+                            'Fuel_Height': 365.76,
+                            'Enrichment': enr,
+                            'Fuel_Density': 10.23,
+                            'Fabrication_Price': 250
+                            }
+            asb_param[unique_fa[i]]=asb_dict
+
+        lcoe, bu, asb_cost = LCOE_MCYC(cycle_param,lcoe_param, asb_param)
+        self.parameters["lcoe"]['value'] = lcoe
+        return()
+
     def get_cycle_results(self,filepath,ncyc=1,pin_power=False):
         efpd=[]
         boron =[]
@@ -8184,6 +8262,64 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
         return(nfa)
 
     def reproduce(self):
+        if self.ncycles==1:
+            new_genome=self.reproduce_cycle()
+        else:
+            new_genome=self.reproduce_mcycle()
+        return(new_genome)
+
+    def reproduce_cycle(self):
+        old_genome = copy.deepcopy(self.genome)
+        nfuel = len(self.core_dict['fuel']['C1'].keys())
+        no_gene_found = True
+        ncount = 0
+        while no_gene_found:  
+            pos_id = random.choice(np.arange(nfuel))
+            cyc_genome = old_genome[0:56]
+            inv = list(self.core_dict['Inventory'].keys())
+            old_gene = old_genome[pos_id]
+            fresh_feed_bool = False
+            max_fresh_feed = np.inf
+            if 'design_limits' in self.settings['genome']:
+                if 'fresh_feed' in self.settings['genome']['design_limits']:
+                    max_fresh_feed = self.settings['genome']['design_limits']['fresh_feed']
+                    fresh_feed_bool = True
+            burnt_fuel_list = []
+            fresh_fuel_list = []
+            for i in range(len(inv)):
+                if 'FE' in inv[i]:
+                    fresh_fuel_list.append(inv[i])
+                else:
+                    burnt_fuel_list.append(inv[i]) 
+
+            nfa_reload = int(56/len(burnt_fuel_list))        
+            inv.remove(old_gene)
+       
+            new_genome = copy.deepcopy(old_genome)
+            new_gene = random.choice(inv)
+            nfa=cyc_genome.count(new_gene)
+            if new_gene in burnt_fuel_list and nfa == nfa_reload:
+                cgen_id = random.choice(np.where(np.array(cyc_genome)==new_gene)[0])
+                new_genome[pos_id] = new_gene
+                new_genome[cgen_id] = old_gene
+                no_gene_found = False
+            else:
+                new_genome[pos_id] = new_gene
+                ifeed = self.feed_counter(new_genome)
+                if fresh_feed_bool and ifeed>max_fresh_feed:
+                    pass
+                else:
+                    no_gene_found = False
+            ncount +=1
+            if ncount > 10000:
+                new_genome = copy.deepcopy(old_genome)
+                no_gene_found = False
+        feed = self.feed_counter(new_genome)
+        print('Number of tries: {}'.format(ncount))
+        print('Fresh feed: {}'.format(feed))
+        return(new_genome)
+
+    def reproduce_mcycle(self):
         old_genome = self.genome
         nfuel = len(self.core_dict['fuel']['C1'].keys())
         no_gene_found = True
@@ -8814,9 +8950,9 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
         with open(filename,"a") as ofile:             
             ofile.write("DEPL\n")
             if ncyc==1:
-                ofile.write("     TIME_STP  1 1 18*30\n")
+                ofile.write("     TIME_STP  1 1 17*30 13\n")
             else:
-                ofile.write("     TIME_STP  1 1 24*30\n")
+                ofile.write("     TIME_STP  1 1 22*30 14 14\n")
             ofile.write("     INP_HST   './cyc_exp.dep' -2 1\n")
             ofile.write("     PMAXS_F   1 '{}' 1\n".format(cdir + '/' + 'xs_gbot'))
             ofile.write("     PMAXS_F   2 '{}' 2\n".format(cdir + '/' + 'xs_grad'))
@@ -8912,7 +9048,22 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
 
     def evaluate(self):
         """
+        Redirects to the appropriate evaluate function
+
+        Written by Gregory Delipei 7/29/2023
+        """
+
+        if self.ncycles==1:
+            self.evaluate_cycle()
+        else:
+            self.evaluate_mcycle()
+        return()
+       
+    def evaluate_cycle(self):
+        """
         Creates the input deck, runs the calculation and retrieves the results and the cost.
+
+        Single-Cycle problem.
 
         Parameters: 
         loc: String - Directory of execution
@@ -8920,6 +9071,228 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
 
         Written by Gregory Delipei 7/29/2023
         """
+        start = time.time()
+        print('Start of Single-Cycle Run')
+
+        # Pre-processing steps for all cycles
+
+        pwd = Path(os.getcwd())
+
+        if not os.path.exists(self.name):
+            os.makedirs(self.name)
+        else:
+            shutil.rmtree(self.name, ignore_errors=True)
+            os.makedirs(self.name)
+        
+        cdir = self.library
+        ncycle = int(self.settings['genome']['design_limits']['ncycle'])
+        depfile = self.settings['genome']['design_limits']['depfile']
+        os.chdir(self.name)
+        shutil.copyfile(depfile, 'mcyc_exp.dep')
+        fuel_locations = list(self.core_dict['fuel']['C'+str(ncycle)].keys())
+
+        if 'inventory_binary' in self.settings['genome']['design_limits']:
+            self.reload_inventory = pickle.load(open( self.settings['genome']['design_limits']['inventory_binary'], "rb" ) )
+            if 'dinventory_binary' in self.settings['genome']['design_limits']:
+                self.discharge_inventory = pickle.load(open( self.settings['genome']['design_limits']['dinventory_binary'], "rb" ) )
+            else:
+                self.discharge_inventory = {}
+            self.cycle_parameters = {}
+            self.reload_inventory_counter = len(self.reload_inventory) + len(self.discharge_inventory)
+            c_ass_groups = self.rank_assb()
+
+            self.lp_dict = {}
+            self.lp_dict['C'+str(ncycle)]={}
+            c_genome = self.genome
+            c_lp = self.getlp_from_genome(c_genome,c_ass_groups)
+            ## update inventory
+            for key, value in self.reload_inventory.items():
+                if 'LOC'+str(ncycle) not in value:
+                    value['LOC'+str(ncycle)]='OUT'
+                if key in c_lp:
+                    id = c_lp.index(key)
+                    iloc = fuel_locations[id]
+                    value['LOC'+str(ncycle)] = iloc
+                else:
+                    pass
+
+            floc = 0
+            for i in range(len(c_lp)):
+                cyc_tag = 'C'+str(ncycle) 
+                self.lp_dict[cyc_tag][fuel_locations[i]]=c_lp[i]
+                self.core_dict['fuel'][cyc_tag][fuel_locations[i]]['Value']=c_lp[i]
+                self.core_dict['core'][cyc_tag][fuel_locations[i]]['Value']=c_lp[i]
+            
+            self.full_core = self.get_full_core()
+            
+            if self.map_size == 'quarter':
+                self.core_lattice = self.get_quarter_lattice()
+            else:
+                self.core_lattice = self.get_full_lattice()
+
+            cycle_dir = 'c' + str(ncycle)
+            cyc_assemblies = []
+            for i in range(len(c_lp)):
+                iasb = c_lp[i]
+                if iasb in self.reload_inventory:
+                    itag = self.reload_inventory[iasb]['TYPE']
+                else:
+                    itag = int(iasb[2:])
+                cyc_assemblies.append(itag)
+            
+            self.run_cycle(fuel_locations,cyc_assemblies,c_lp,cycle_dir,ncyc=ncycle)
+            if 'initial' in self.name and self.cycle_parameters['C'+str(ncycle)]["max_boron"] > 5000:
+                print('Re-run initial case due to non-convergence')
+                self.generate_initial(self.settings['genome']['chromosomes'])
+                os.chdir(pwd)
+                self.evaluate()
+                return()
+
+            if 'design_limits' in self.settings['genome']:
+                if 'reload_burnup' in self.settings['genome']['design_limits']:
+                    max_bu = self.settings['genome']['design_limits']['reload_burnup']
+                    self.clean_inventory(max_bu)
+        else:
+            ## Get initial fuel assembly types and burnup
+            cyc0_assemblies = []
+            txt = Path('mcyc_exp.dep').read_text()
+            txt_dep = txt.split(' Assembly Type Layout')[1].split('========')[0]
+            txt_dep=txt_dep.split('\n')
+            txt_dep=list(filter(lambda a: a != '', txt_dep))
+            txt_dep=list(filter(lambda a: a != ' ', txt_dep))
+            for i in range(len(txt_dep)):
+                line_txt = txt_dep[i].split()
+                for j in range(len(line_txt)):
+                    val = int(line_txt[j])
+                    if val != 10:
+                        cyc0_assemblies.append(val)
+
+            nfa=len(cyc0_assemblies)
+            bu_file = pwd / self.name
+            bu_file = bu_file / 'mcyc_exp.dep'
+            bu_2d, bu_3d=self.get_burnup(bu_file)
+
+            ## Compute the reactivity of each fuel assembly and create initial reload inventory
+            reac = self.get_reac(cyc0_assemblies,bu_2d)
+            self.reload_inventory ={}
+            self.discharge_inventory ={}
+            self.reload_inventory_counter = 0
+            for i in range(len(bu_2d)):
+                idict = {}
+                idict['BU2D']=bu_2d[i]
+                idict['BU3D']=bu_3d[i,:]
+                idict['REAC']=reac[i]
+                idict['TYPE']=cyc0_assemblies[i]
+                idict['LOC1']='OUT'
+                idict['LOC2']='OUT'
+                idict['LOC3']='OUT'
+                self.reload_inventory_counter +=1 
+                self.reload_inventory['ASB'+str(self.reload_inventory_counter)] = idict
+            
+            ## Group assemblies by reactivity
+
+            c1_ass_groups = self.rank_assb()
+
+            # Cycle 1 Calculation
+
+            self.lp_dict = {}
+            self.lp_dict['C'+str(ncycle)]={}
+            c1_genome = self.genome
+            c1_lp = self.getlp_from_genome(c1_genome,c1_ass_groups)
+
+            ## update inventory
+            for key, value in self.reload_inventory.items():
+                if key in c1_lp:
+                    id = c1_lp.index(key)
+                    iloc = fuel_locations[id]
+                    value['LOC'+str(ncycle)] = iloc
+                else:
+                    pass
+
+            floc = 0
+            for i in range(len(c1_lp)):
+                cyc_tag = 'C' + str(ncycle) 
+                self.lp_dict[cyc_tag][fuel_locations[i]]=c1_lp[i]
+                self.core_dict['fuel'][cyc_tag][fuel_locations[i]]['Value']=c1_lp[i]
+                self.core_dict['core'][cyc_tag][fuel_locations[i]]['Value']=c1_lp[i]
+
+            self.full_core = self.get_full_core()
+        
+            if self.map_size == 'quarter':
+                self.core_lattice = self.get_quarter_lattice()
+            else:
+                self.core_lattice = self.get_full_lattice()
+        
+            cycle_dir = 'c' + str(ncycle)
+            cyc1_assemblies = []
+            for i in range(len(c1_lp)):
+                iasb = c1_lp[i]
+                if iasb in self.reload_inventory:
+                    itag = self.reload_inventory[iasb]['TYPE']
+                else:
+                    itag = int(iasb[2:])
+                cyc1_assemblies.append(itag)
+
+            self.run_cycle(fuel_locations,cyc1_assemblies,c1_lp,cycle_dir,ncyc=ncycle)
+            if 'initial' in self.name and self.cycle_parameters['C'+str(ncycle)]["max_boron"] > 5000:
+                print('Re-run initial case due to non-convergence')
+                self.generate_initial(self.settings['genome']['chromosomes'])
+                os.chdir(pwd)
+                self.evaluate()
+                return()
+        
+            if 'design_limits' in self.settings['genome']:
+                if 'reload_burnup' in self.settings['genome']['design_limits']:
+                    max_bu = self.settings['genome']['design_limits']['reload_burnup']
+                    self.clean_inventory(max_bu)
+
+        # Get Single-Cycle Results
+
+        self.parameters['max_boron']['value']=self.cycle_parameters['C'+str(ncycle)]['max_boron']
+        self.parameters['PinPowerPeaking']['value']=self.cycle_parameters['C'+str(ncycle)]['PinPowerPeaking']
+        self.parameters['FDeltaH']['value']=self.cycle_parameters['C'+str(ncycle)]['FDeltaH']
+        self.parameters['cycle_length']['value'] =  self.cycle_parameters['C'+str(ncycle)]['cycle_length']    
+        self.get_lcoe_cycle(ncycle)
+
+        # Store Results 
+        if 'options' in self.settings:
+            if 'store' in self.settings['options']:
+                opt = self.settings['options']['store']
+                dts_fpath = "ldts.p" if opt=='light' else "hdts.p" 
+                if dts_fpath in os.listdir('./c' + str(ncycle) + '/'):
+                    c_dts = pickle.load(open( './c' + str(ncycle) + '/' + dts_fpath, "rb" ) )
+                    rdict = {}
+                    rdict['C'+str(ncycle)] = c_dts
+                    for key, value in self.parameters.items():
+                        rdict[key]= value['value']
+                    pickle.dump( rdict, open( dts_fpath, "wb" ) )
+                    os.system('rm -f {}'.format( './c' + str(ncycle) + '/' + dts_fpath))
+        reload_inv_path = 'inv_dts.p'
+        discharge_inv_path = 'dinv_dts.p'
+        pickle.dump( self.reload_inventory, open( reload_inv_path, "wb" ) )
+        pickle.dump( self.discharge_inventory, open( discharge_inv_path, "wb" ) )
+        os.chdir(pwd)
+        print('{} calculation is done at {}!'.format(self.name,os.getcwd()))
+        print('End of Single-Cycle Run ... Duration: {} s'.format(time.time()-start))
+        gc.collect()  
+        print('finished collecting garbage...')
+        print('exiting evaluate...')
+        return()
+
+    def evaluate_mcycle(self):
+        """
+        Creates the input deck, runs the calculation and retrieves the results and the cost.
+
+        Multi-Cycle problem with 3 cycles.
+
+        Parameters: 
+        loc: String - Directory of execution
+        fname: String - File name
+
+        Written by Gregory Delipei 7/29/2023
+        """
+        
+        print('Start of Multi-Cycle Run')
 
         # Pre-processing steps for all cycles
 
@@ -9182,9 +9555,8 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                     os.system('rm -f {}'.format('./c3/' + dts_fpath))
         os.chdir(pwd)
         print('{} calculation is done at {}!'.format(self.name,os.getcwd()))
+        print('End of Multi-Cycle Run')
         gc.collect()  
         print('finished collecting garbage...')
         print('exiting evaluate...')
         return()
-
-
