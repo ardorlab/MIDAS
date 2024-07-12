@@ -4629,6 +4629,7 @@ class MCycle_Loading_Pattern_Solution(Solution):
             print('finished collecting garbage...')
             print('exiting evaluate...')
 
+
 class MCycle_Grouped_Loading_Pattern_Solution(Solution):
     """
     Solution class for designing multi-cycle loading patterns using PARCS code.
@@ -5750,13 +5751,21 @@ class MCycle_Grouped_Loading_Pattern_Solution(Solution):
     def get_lcoe(self):
         
         enr_map = {}
+        enr_map['FE400']=4.00
+        enr_map['FE401']=4.00
+        enr_map['FE402']=4.00
+        enr_map['FE450']=4.50
+        enr_map['FE460']=4.60
         enr_map['FE461']=4.60
         enr_map['FE462']=4.60
         enr_map['FE501']=4.95
         enr_map['FE502']=4.95
         enr_map['FE526']=5.25
+        enr_map['FE550']=5.50
         enr_map['FE566']=5.65
         enr_map['FE586']=5.85
+        enr_map['FE600']=6.00
+        enr_map['FE601']=6.00
 
         cycle1_param={'EFPD': self.parameters['cycle1_length']['target'],
                     'Batches': 3,
@@ -7865,13 +7874,21 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
     def get_lcoe(self):
         
         enr_map = {}
+        enr_map['FE400']=4.00
+        enr_map['FE401']=4.00
+        enr_map['FE402']=4.00
+        enr_map['FE450']=4.50
+        enr_map['FE460']=4.60
         enr_map['FE461']=4.60
         enr_map['FE462']=4.60
         enr_map['FE501']=4.95
         enr_map['FE502']=4.95
         enr_map['FE526']=5.25
+        enr_map['FE550']=5.50
         enr_map['FE566']=5.65
         enr_map['FE586']=5.85
+        enr_map['FE600']=6.00
+        enr_map['FE601']=6.00
 
         cycle1_param={'EFPD': self.parameters['cycle1_length']['target'],
                     'Batches': 3,
@@ -8062,13 +8079,21 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
     def get_lcoe_cycle(self,ncycle):
         
         enr_map = {}
+        enr_map['FE400']=4.00
+        enr_map['FE401']=4.00
+        enr_map['FE402']=4.00
+        enr_map['FE450']=4.50
+        enr_map['FE460']=4.60
         enr_map['FE461']=4.60
         enr_map['FE462']=4.60
         enr_map['FE501']=4.95
         enr_map['FE502']=4.95
         enr_map['FE526']=5.25
+        enr_map['FE550']=5.50
         enr_map['FE566']=5.65
         enr_map['FE586']=5.85
+        enr_map['FE600']=6.00
+        enr_map['FE601']=6.00
 
         cycle_param={'EFPD': self.parameters['cycle_length']['target'],
                     'Batches': 3,
@@ -8302,7 +8327,11 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                 cgen_id = random.choice(np.where(np.array(cyc_genome)==new_gene)[0])
                 new_genome[pos_id] = new_gene
                 new_genome[cgen_id] = old_gene
-                no_gene_found = False
+                ifeed = self.feed_counter(new_genome)
+                if fresh_feed_bool and ifeed > max_fresh_feed:
+                    pass
+                else:
+                    no_gene_found = False
             else:
                 new_genome[pos_id] = new_gene
                 ifeed = self.feed_counter(new_genome)
@@ -8967,7 +8996,7 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
         # Run PARCS INPUT DECK
         
         parcscmd = "/cm/shared/codes/TRACE51341_PARCS_332/PARCS-v332_Exe/Executables/Linux/parcs-v332-linux2-intel-x64-release.x"
-        
+
         print('Execute PARCS')
         print('Running in process')
         try:
@@ -9271,6 +9300,7 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
         discharge_inv_path = 'dinv_dts.p'
         pickle.dump( self.reload_inventory, open( reload_inv_path, "wb" ) )
         pickle.dump( self.discharge_inventory, open( discharge_inv_path, "wb" ) )
+        os.system('rm -f mcyc_exp.dep')
         os.chdir(pwd)
         print('{} calculation is done at {}!'.format(self.name,os.getcwd()))
         print('End of Single-Cycle Run ... Duration: {} s'.format(time.time()-start))
@@ -9553,6 +9583,7 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                     os.system('rm -f {}'.format('./c1/' + dts_fpath))
                     os.system('rm -f {}'.format('./c2/' + dts_fpath))
                     os.system('rm -f {}'.format('./c3/' + dts_fpath))
+        os.system('rm -f mcyc_exp.dep')
         os.chdir(pwd)
         print('{} calculation is done at {}!'.format(self.name,os.getcwd()))
         print('End of Multi-Cycle Run')
