@@ -3,11 +3,11 @@ optimization:
   cooling_schedule:
     temperature: 20.0
     alpha: 0.001
-  population_size: 2 
+  population_size: 1 
   number_of_generations: 5
   reproducer: standard
-  buffer_length: 2
-  Move_Acceptance_Method: 1
+  buffer_length: 1
+  Move_Acceptance_Method: 0
   mutation:
     method: mutate_by_genome
     initial_rate: 0.25
@@ -30,17 +30,9 @@ optimization:
       goal: less_than_target
       target: 1.48
       weight: 600.0
-    cycle1_length:
+    cycle_length:
       goal: greater_than_target
-      target: 540
-      weight: 1.0
-    cycle2_length:
-      goal: greater_than_target
-      target: 720
-      weight: 1.0
-    cycle3_length:
-      goal: greater_than_target
-      target: 720
+      target: 530
       weight: 1.0
     lcoe:
       goal: minimize
@@ -142,5 +134,8 @@ genome:
   design_limits:
     reload_burnup: 60
     fresh_feed: 95
+    optimize: single_cycle
+    depfile: /home/gkdelipe/codes/midas/MIDAS/xslib/mcyc_exp_quarter.dep
+    ncycle: 1
 options:
   store: light 

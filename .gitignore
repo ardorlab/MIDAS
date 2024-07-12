@@ -109,8 +109,14 @@ samples/sample_15/*
 !samples/sample_15/readme
 !samples/sample_15/mcycle.yaml
 !samples/sample_15/mcycle_inv.yaml
+!samples/sample_15/mcycle_single.yaml
+!samples/sample_15/mcycle_single2.yaml
 !samples/sample_15/run.sh
 !samples/sample_15/clean.sh
+!samples/sample_15/inv1_dts.p
+!samples/sample_15/dinv1_dts.p
+!samples/sample_15/inv2_dts.p
+!samples/sample_15/dinv2_dts.p
 
 
 # rl_dev
@@ -131,4 +137,3 @@ ppo*
 a2c*
 error.txt
 output.txt
-

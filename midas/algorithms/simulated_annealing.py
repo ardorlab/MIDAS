@@ -6,9 +6,11 @@ import numpy
 import random
 import statistics
 import shutil
+import time
 from multiprocessing import Pool
 from midas.utils.solution_types import evaluate_function
 from midas.utils.metrics import Simulated_Annealing_Metric_Toolbox
+from midas import logo, version
 import multiprocessing
 
 
@@ -256,8 +258,8 @@ def SA_prun(k, self):
     one = []
     one.append(active)
     one = self.fitness.calculate(one)
-    print('calculation {}, fitness = {}'.format(k,active.fitness))
 
+    print('calculation {}, fitness = {}'.format(k,active.fitness))
 
     return (active)
 
@@ -318,6 +320,27 @@ class SimulatedAnnealing(object):
                 self.perform_cleanup = False
         else:
             self.perform_cleanup = False
+
+        if self.num_procs > 1:
+            omethod = "Parallel Simulated Annealing"
+        else:
+            omethod = "Simulated Annealing"
+        f = open(version.__ofile__, 'a')
+        f.write('\n\n---------------------------------------GENERAL INFORMATION----------------------------------------')
+        f.write('\nOptimization Method: {}'.format(omethod))
+        f.write('\nProcessors: {}'.format(self.num_procs))
+        f.write('\nTemparture Updates: {}'.format(file_settings['optimization']['number_of_generations']))
+        f.write('\nSA Iterations: {}'.format(file_settings['optimization']['population_size']))
+        f.write('\nPSA Iterations: {}'.format(self.num_procs))
+        f.write('\nBuffer Size: {}'.format(file_settings['optimization']['buffer_length']))
+        f.write('\nObjectives:')
+        for key, value in file_settings['optimization']['objectives'].items():
+            if 'target' not in value:
+                f.write('\n  Name: {},  Goal: {},  Weight:  {}'.format(key,value['goal'],value['weight']))
+            else:
+                f.write('\n  Name: {},  Goal: {},  Target:  {},  Weight:  {}'.format(key,value['goal'],value['target'],value['weight']))
+        f.write('\n--------------------------------------------------------------------------------------------------')
+        f.close()
 
     def main_in_serial(self):
         """
@@ -576,6 +599,32 @@ class SimulatedAnnealing(object):
                     else:
                         deviation = statistics.stdev(STDCostlist)
             return deviation
+        
+        def BufferPrint(Buffer):
+            f = open(version.__ofile__, 'a')
+            f.write('\n\n------------------------------------CURRENT BUFFER RESULTS -------------------------------------')
+            for i in range(len(Buffer)):
+                buffer_solution = Buffer[i]
+                f.write('\nSolution {}:'.format(buffer_solution.name))
+                for key, value in buffer_solution.parameters.items():
+                    f.write('\n  {}: {}'.format(key,value['value']))
+                f.write('\n  fitness: {}'.format(buffer_solution.fitness))
+                for key, value in buffer_solution.core_dict['fuel'].items():
+                    f.write('\n  {}: '.format(key))
+                    for kkey, vvalue in value.items():
+                        f.write('{}: {}, '.format(kkey, vvalue['Value']))
+            f.write('\n--------------------------------------------------------------------------------------------------')
+            f.close()
+
+        def PSAPrint(print_dict):
+            f = open(version.__ofile__, 'a')
+            f.write('\n\n-----------------------------------PSA ITERATION {} RESULTS ------------------------------------'.format(print_dict['iteration']))
+            f.write('\nTemperature: {}'.format(print_dict['temperature']))
+            f.write('\nMove Acceptance Ratio: {}'.format(print_dict['move_acceptance_ratio']))
+            f.write('\nStandard Deviation: {}'.format(print_dict['standard_deviation']))
+            f.write('\nTemperature: {}'.format(print_dict['temperature_update']))
+            f.write('\n--------------------------------------------------------------------------------------------------')
+            f.close()
 
         SetStart = 0
         # SetStart determines if initial buffer will be set or completely random
@@ -589,6 +638,11 @@ class SimulatedAnnealing(object):
         all_values = open('all_value_tracker.txt','w')
         all_values.close()
 
+        f = open(version.__ofile__, 'a')
+        f.write('\n\nRUNNING BUFFER INITIALIZATION...')
+        f.close()
+
+        start = time.time()
         if SetStart == 0:
             initial_temp, Buffer = InitialTemp(self,ctx)
             Buffer = self.fitness.calculate(Buffer)
@@ -597,8 +651,13 @@ class SimulatedAnnealing(object):
         if SetStart == 1:
             Buffer, BufferCost, initial_temp = SetInitial(self)
             self.cooling_schedule.temperature = initial_temp
+        end = time.time()
 
         opt = Simulated_Annealing_Metric_Toolbox()
+        BufferPrint(Buffer)
+        f = open(version.__ofile__, 'a')
+        f.write('\n\nBUFFER INITIALIZATION COMPLETED IN {}s'.format(end-start))
+        f.close()
 
         track_file = open('optimization_track_file.txt', 'w')
         track_file.write("Beginning Optimization \n")
@@ -610,6 +669,14 @@ class SimulatedAnnealing(object):
 
         
         for x in range(self.file_settings['optimization']['number_of_generations']):
+            f = open(version.__ofile__, 'a')
+            f.write('\n\nRUNNING PSA TEMPERATURE ITERATION {}...'.format(x+1))
+            f.close()
+            print_dict={}
+            print_dict['iteration']=x+1
+            print_dict['temperature']=self.cooling_schedule.temperature
+            
+            start = time.time()
             with ctx.Pool(processes=self.num_procs, ) as p:
                 data = p.starmap(SA, [(x, k, active, Buffer, BufferCost, self, opt) for k in range(self.num_procs)])
 
@@ -638,6 +705,7 @@ class SimulatedAnnealing(object):
                 MoveAcceptanceRatio = TotalMoves / (self.num_procs * self.file_settings['optimization']['population_size'])
             else:
                 MoveAcceptanceRatio = TotalAcceptanceProbability / (self.num_procs * self.file_settings['optimization']['population_size'])
+            print_dict['move_acceptance_ratio'] = MoveAcceptanceRatio
             # update Buffer
             Buffer, BufferCost = UpdateBuffer(Buffer, BufferCost, NewSolutions, NewSolutionsfitness)
             # update active solution
@@ -652,8 +720,16 @@ class SimulatedAnnealing(object):
             tempdeviation = LAMStats(self.cooling_schedule.temperature, TSolutionsfitness)
             temp = LAM(self.cooling_schedule.temperature, tempdeviation, MoveAcceptanceRatio)
             self.cooling_schedule.temperature = temp
+            print_dict['temperature_update']=self.cooling_schedule.temperature
+            print_dict['standard_deviation']=tempdeviation
 
             opt.record_best_and_new_solution(BestSolution, active, self.cooling_schedule)
+            end=time.time()
+            PSAPrint(print_dict)
+            BufferPrint(Buffer)
+            f = open(version.__ofile__, 'a')
+            f.write('\n\nPSA TEMPERATURE ITERATION {} COMPLETED IN {}s'.format(x+1,end-start))
+            f.close()
         track_file = open('optimization_track_file.txt', 'a')
         track_file.write("End of Optimization \n")
         track_file.close()

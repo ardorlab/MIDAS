@@ -9,7 +9,7 @@ import pickle
 import argparse
 from matplotlib import pyplot
 from multiprocessing import Pool
-from midas import logo
+from midas import logo, version
 from midas.algorithms import genetic_algorithm as GA
 from midas.algorithms import simulated_annealing as SA
 from midas.algorithms import random_solutions as RS
@@ -534,8 +534,11 @@ class No_Solution_Front(object):
 
 if __name__ == "__main__":
 
-    f = open("midas.out", 'w')
+     
+    f = open(version.__ofile__, 'w')
     f.write(logo.__logo__)
+    f.write('Version {}'.format(version.__version__))
+    f.close()
 
     input_help_message = 'Input file containing all the information'
     input_help_message += 'needed to perform the optimization routine.'  
