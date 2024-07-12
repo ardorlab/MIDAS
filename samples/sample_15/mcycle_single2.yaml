@@ -30,17 +30,9 @@ optimization:
       goal: less_than_target
       target: 1.48
       weight: 600.0
-    cycle1_length:
+    cycle_length:
       goal: greater_than_target
-      target: 540
-      weight: 1.0
-    cycle2_length:
-      goal: greater_than_target
-      target: 720
-      weight: 1.0
-    cycle3_length:
-      goal: greater_than_target
-      target: 720
+      target: 700
       weight: 1.0
     lcoe:
       goal: minimize
@@ -142,5 +134,10 @@ genome:
   design_limits:
     reload_burnup: 60
     fresh_feed: 95
+    optimize: single_cycle
+    depfile: /home/gkdelipe/codes/midas/MIDAS/xslib/mcyc_exp_quarter.dep
+    ncycle: 3
+    inventory_binary: /home/gkdelipe/codes/midas/MIDAS/samples/sample_15/inv2_dts.p
+    dinventory_binary: /home/gkdelipe/codes/midas/MIDAS/samples/sample_15/dinv2_dts.p
 options:
   store: light 
