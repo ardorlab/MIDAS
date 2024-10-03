@@ -2,13 +2,14 @@
 # Import Block  #
 # # # # # # # # #
 import os
+import sys
 import argparse
 import logging
 import logging.config
 from copy import deepcopy
 from midas import midas_version as version
 from midas.input_parser import  Input_Parser
-from midas.optimizer import Optimization_Factory
+from midas.optimizer import Optimizer
 
 
 # # # # # # # # # # #
@@ -18,7 +19,7 @@ def Parse_Args():
     """
     Function for parsing command line arguments.
     
-    Written by Nicholas Rollins. 10/03/2024
+    Updated by Nicholas Rollins. 10/03/2024
     """
     input_help_message = 'Input file containing all the information'
     input_help_message += 'needed to perform the optimization routine.'  
@@ -53,17 +54,44 @@ class Formatter(logging.Formatter): #!TODO: It might be cleaner to move this to 
             self._style._fmt = "%(levelname)s: %(message)s"
         return super().format(record)
 
+def main():
+    exitcode = 0
+    try:
+    #!TODO: set global variables from external file.
+    
+## Read command line arguments
+        args = Parse_Args()
+        if not '.yaml' in args.input:
+            raise ValueError("Input File needs to be a valid .yaml file")
+
+## Print MIDAS header
+        logger.info(version.__logo__)
+        logger.info("MIDAS Version %s\n", version.__version__)
+    
+## Parse input file
+        inp_lines = Input_Parser(args.cpus, args.input)
+        logger.info("Parsed input file: %s", str(args.input))
+    
+## Generate optimizer
+        optimizer = Optimizer(inp_lines)
+        optimizer.build_optimizer()
+        logger.info("Completed Optimizer assembly.")
+    
+## Execute
+        logger.info("Begin Optimization...\n")
+        optimizer.main() #execute optimization through the algorithm class.
+        logger.info("\nOptimization completed.")
+    
+    except Exception as e:
+        exitcode = e.value
+
+    return exitcode
+
 
 # # # # # # # # # # # # # # # #
 #  Primary Execution Pathway  #
 # # # # # # # # # # # # # # # #
 if __name__ == "__main__":
-## Read command line arguments
-    args = Parse_Args()
-    if not '.yaml' in args.input:
-        raise ValueError("Input File needs to be a valid .yaml file")
-
-## Initialize
     #Clear output file
     if os.path.exists(version.__ofile__):
         os.remove(version.__ofile__)
@@ -75,25 +103,10 @@ if __name__ == "__main__":
     logger.setLevel(logging.INFO)
     logger.addHandler(handler)
     
-    #Print MIDAS header
-    logger.info(version.__logo__)
-    logger.info("MIDAS Version %s\n", version.__version__)
+    #Execute MIDAS
+    exitcode = main()
     
-## Parse input file
-    inp_lines = Input_Parser(args.cpus, args.input)
-    logger.info("Parsed input file: %s", str(args.input))
-    
-## Generate optimizer
-    factory = Optimization_Factory(inp_lines)
-    optimization = factory.build_optimizer() #create algorithm object 
-    logger.info("Completed Optimizer assembly.")
-    
-## Execute
-    logger.info("Begin Optimization...\n")
-    optimization.main() #execute optimization through the algorithm class.
-    logger.info("\nOptimization completed.")
-    
-## Clean up
-    #!TODO: is there anything to be cleaned up?
+    #Clean up
     logger.info("MIDAS execution completed.")
-    logging.shutdown() #!TODO: put this after a try-block main() call to catch errors and make sure files get closed/shutdown anyway.
+    logging.shutdown()
+    sys.exit(exitcode)
