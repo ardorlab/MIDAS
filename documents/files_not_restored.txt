@@ -1,0 +1,3 @@
+CHANGE LOG.txt
+DeveloperManual.md
+UNIT TESTING LIST.txt
