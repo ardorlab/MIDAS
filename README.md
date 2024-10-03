@@ -293,7 +293,4 @@ The repository is structured in the following way:
 # Resources
 MIDAS is an updated version of the MOF (Modular Optimization Framework) for which you can find more information about the framework structure, theory and applications in https://doi.org/10.48550/arXiv.2204.00141.
 
-MIDAS previous version MOF has been used to control the Crud deposition in nuclear reactors (https://www.mdpi.com/2673-4117/3/4/36). 
-
-
-
+MIDAS previous version MOF has been used to control the Crud deposition in nuclear reactors (https://www.mdpi.com/2673-4117/3/4/36).
