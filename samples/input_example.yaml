@@ -1,0 +1,63 @@
+## General Settings
+
+## Optimizer Block
+optimization:
+  methodology: genetic_algorithm
+  data_type: loading_pattern_parcs332
+  results_directory_name: output_files
+  population_size: 10
+  number_of_generations: 3
+  objectives:
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      weight: 1.0
+    PinPowerPeaking:
+      goal: less_than_target
+      weight: 400.0 
+      target: 2.1
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      weight: 600.0     
+    cycle_length:
+      goal: maximize
+      weight: 1.00
+
+## Algorithm Settings
+algorithm:
+  fitness: standard
+  selection: tournament #tournament or roulette
+  reproducer: standard
+  mutation_rate: 0.75
+
+## Genome
+decision_variables:
+  # parameters used to fill each chromosome.
+  parameters:
+    FE200: 
+      #type: 200
+      serial: xs_g200_gd_0_bp_0
+      #name: FE200
+      map: &ID001
+        [1,
+         1, 1,
+         1, 1, 1,
+         1, 1, 1, 1,
+         1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1,                        
+         1, 1, 1, 1]
+    FE250:
+      #type: 250
+      serial: xs_g250_gd_0_bp_0
+      #name: FE250
+      map: *ID001 #this is natively interpreted by yaml, which is super nice.
+
+## Calculation Settings
+parcs_data:
+  xs_library_path: C:/Users/Nicholas/xs_lib/
+  power: 100
+  flow: 1000
+  inlet_temperature: 500
+  number_assemblies: 193
