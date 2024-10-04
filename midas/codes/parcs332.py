@@ -3,10 +3,6 @@ import os
 import gc
 from pathlib import Path
 
-'''
-Probably better to keep applications for the general optimization problems
-and tha parcs under the codes folder.
-'''
 
 ## Functions ##
 def get_results(parameters, filename): #!TODO: implement pin power reconstruction.
