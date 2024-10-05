@@ -9,7 +9,7 @@ import csv
 
 from midas.algorithms import genetic_algorithm as GA
 from midas.utils import optimizer_tools as optools
-from midas.applications import parcs332 as parcs
+from midas.codes import parcs332 as parcs
 #!from midas.applications import parcs_332
 
 
@@ -39,6 +39,8 @@ class Optimizer():
         self.population = optools.Population(self.input.population_size, num_gene_combos)
         self.generation = optools.Generation(self.input.num_generations, num_gene_combos)
         self.fitness    = optools.Fitness()
+        if self.input.calculation_type == "parcs":
+            self.eval_func  = parcs.evaluate #assign, don't execute.
         
         if methodology == 'genetic_algorithm':
             self.algorithm = GA.Genetic_Algorithm(self.input)
@@ -112,7 +114,7 @@ class Optimizer():
     ## Evaluate fitness
         logger.info("Calculating fitness for generation %s...", self.population.current)
         ## Execute and parse objective/constraint values
-        self.population.current = pool.starmap(parcs.evaluate, zip(self.population.current, repeat(self.input))) #!TODO: evaluate needs to be an attribute
+        self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
         ## Calculate fitness from objective/constriant values
         for soln in self.population.current:
             soln.fitness_value = self.fitness.calculate(soln.parameters)
@@ -159,7 +161,7 @@ class Optimizer():
         ## Evaluate fitness
             logger.info("Calculating fitness for generation %s...", self.population.current)
             ## Execute and parse objective/constraint values
-            self.population.current = pool.starmap(parcs.evaluate, zip(self.population.current, repeat(self.input)))
+            self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
             ## Calculate fitness from objective/constriant values
             for soln in self.population.current:
                 soln.fitness_value = self.fitness.calculate(soln.parameters)
