@@ -63,14 +63,35 @@ def get_results(parameters, filename): #!TODO: implement pin power reconstructio
     return parameters
 
 def evaluate(solution, input):
+    """
+    #!TODO: write docstring.
+    
+    Updated by Nicholas Rollins. 10/03/2024
+    """
 ## Create and move to unique directory for PARCS execution
     cwd = Path(os.getcwd())
     indv_dir = cwd.joinpath(input.results_dir_name + '/' + solution.name)
     os.mkdir(indv_dir)
     os.chdir(indv_dir)
 
-## Prepare input values for writing
-    #!copy over 'boc_exp.dep'
+## Prepare depletion file template #!TODO: can this file be dynamically generated instead of copied?
+    if input.map_size == 'quarter':
+        if input.number_assemblies == 193:
+            shutil.copyfile('/home/nkrollin/midas/MIDAS/xslib/' + 'boc_exp_quart193_18.dep', 'boc_exp.dep') #!TODO: change this path to global variable
+    else: #assume full geometry if not quarter-core
+        if input.number_assemblies == 193:
+            shutil.copyfile('/home/nkrollin/midas/MIDAS/xslib/' + 'boc_exp_full193.dep', 'boc_exp.dep')
+        elif input.number_assemblies == 157:
+            shutil.copyfile('/home/nkrollin/midas/MIDAS/xslib/' + 'boc_exp_full157.dep', 'boc_exp.dep')
+    
+## Fill loading pattern with chromosome
+    fuel_locations = list(input.core_dict['fuel'].keys())
+    soln_loading_pattern = {}
+    for i in range(len(solution.chromosome)):
+        soln_loading_pattern[fuel_locations[i]] = solution.chromosome[i]
+    
+    raise InputError("DEBUG STOP.")#!
+    #!input.core_lattice
     
 ## Generate Input File
     filename = solution.name + '.inp'
