@@ -24,7 +24,7 @@ class Input_Parser():
         self.parse_input_data()
         self.validate_input()
     
-    def yaml_linereader(data,keyword,default):
+    def yaml_line_reader(data,keyword,default):
         """
         #!TODO: write docstring.
         
@@ -43,6 +43,8 @@ class Input_Parser():
         
         Written by Nicholas Rollins. 09/11/2024
         """
+        #!TODO: add input validation, especially for inputs as dicts
+        #!TODO: add defaults
         ## Optimization Block ##
         info = self.file_settings['optimization']
         
@@ -53,8 +55,6 @@ class Input_Parser():
         self.num_generations = yaml_line_reader(info, 'number_of_generations', 1)
         self.parameters = yaml_line_reader(info, 'objectives', None)
         
-        self.genome = yaml_line_reader(self.file_settings['decision_variables'], 'parameters', None) #!TODO: add genome validation.
-        
         ## Algorithm Block ##
         info = self.file_settings['algorithm']
         
@@ -63,6 +63,12 @@ class Input_Parser():
         self.reproducer = yaml_line_reader(info, 'reproducer', None)
         self.mutation_type = yaml_line_reader(info, 'mutation_type', None)
         self.mutation_rate = yaml_line_reader(info, 'mutation_rate', None)
+        
+        ## Fuel Assembly Block ##
+        self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)
+        
+        ## Genome Block ##
+        self.genome = yaml_line_reader(self.file_settings['decision_variables'], 'parameters', None)
         
         ## Calculation Block ##
         info = self.file_settings['parcs_data']
