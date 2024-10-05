@@ -9,7 +9,7 @@ import argparse
 import logging
 import logging.config
 from copy import deepcopy
-from midas import midas_version as version
+import midas_data
 from midas.input_parser import  Input_Parser
 from midas.optimizer import Optimizer
 from midas.utils.problem_preparation import Prepare_Problem_Values as prep_inp
@@ -59,38 +59,36 @@ class Formatter(logging.Formatter): #!TODO: It might be cleaner to move this to 
 
 def main():
     exitcode = 0
-    try:
+
 ## Set global variables and settings
     #!TODO: read global variables from external file.
     #!global midas_rng_seed = 
-    
+
 ## Read command line arguments
-        args = Parse_Args()
-        if not '.yaml' in args.input:
-            raise ValueError("Input File needs to be a valid .yaml file")
+    args = Parse_Args()
+    if not '.yaml' in args.input:
+        raise ValueError("Input File needs to be a valid .yaml file")
 
 ## Print MIDAS header
-        logger.info(version.__logo__)
-        logger.info("MIDAS Version %s\n", version.__version__)
-    
+    logger.info(midas_data.__logo__)
+    logger.info("MIDAS Version %s\n\n", midas_data.__version__)
+    logger.info("====================================================================================================\n")
+
 ## Parse input file
-        inp_lines = Input_Parser(args.cpus, args.input)
-    ## Prepare input values for writing
-        inp_lines = prep_inp.single_cycle_preparation(input_obj)
-        logger.info("Parsed input file: %s", str(args.input))
-    
+    inp_lines = Input_Parser(args.cpus, args.input)
+## Prepare input values for writing
+    inp_lines = prep_inp.single_cycle_preparation(inp_lines)
+    logger.info("Parsed input file: %s", str(args.input))
+
 ## Generate optimizer
-        optimizer = Optimizer(inp_lines)
-        optimizer.build_optimizer()
-        logger.info("Completed Optimizer assembly.")
-    
+    optimizer = Optimizer(inp_lines)
+    optimizer.build_optimizer()
+    logger.info("Completed Optimizer assembly.")
+
 ## Execute
-        logger.info("Begin Optimization...\n")
-        optimizer.main() #execute optimization through the algorithm class.
-        logger.info("\nOptimization completed.")
-    
-    except Exception as e:
-        exitcode = e.value
+    logger.info("Begin Optimization...\n")
+    optimizer.main() #execute optimization through the algorithm class.
+    logger.info("\nOptimization completed.")
 
     return exitcode
 
@@ -100,12 +98,12 @@ def main():
 # # # # # # # # # # # # # # # #
 if __name__ == "__main__":
     #Clear output file
-    if os.path.exists(version.__ofile__):
-        os.remove(version.__ofile__)
+    if os.path.exists(midas_data.__ofile__):
+        os.remove(midas_data.__ofile__)
     
     #Initialize logging
-    logger = logging.getLogger()
-    handler = logging.FileHandler(filename=version.__ofile__)
+    logger = logging.getLogger("MIDAS_logger")
+    handler = logging.FileHandler(filename=midas_data.__ofile__)
     handler.setFormatter(Formatter())
     logger.setLevel(logging.INFO)
     logger.addHandler(handler)

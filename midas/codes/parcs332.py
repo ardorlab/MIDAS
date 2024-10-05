@@ -1,6 +1,8 @@
 ## Import Block ##
 import os
 import gc
+import logging
+import shutil
 from pathlib import Path
 
 
@@ -68,6 +70,9 @@ def evaluate(solution, input):
     
     Updated by Nicholas Rollins. 10/03/2024
     """
+## Initialize logging for the present file
+    logger = logging.getLogger("MIDAS_logger")
+    
 ## Create and move to unique directory for PARCS execution
     cwd = Path(os.getcwd())
     indv_dir = cwd.joinpath(input.results_dir_name + '/' + solution.name)
@@ -76,13 +81,13 @@ def evaluate(solution, input):
 
 ## Prepare depletion file template #!TODO: can this file be dynamically generated instead of copied?
     if input.map_size == 'quarter':
-        if input.number_assemblies == 193:
-            shutil.copyfile('/home/nkrollin/midas/MIDAS/xslib/' + 'boc_exp_quart193_18.dep', 'boc_exp.dep') #!TODO: change this path to global variable
+        if input.num_assemblies == 193:
+            shutil.copyfile('/home1/nkrollin/midas/MIDAS/samples/xslib/' + 'boc_exp_quart193_18.dep', 'boc_exp.dep') #!TODO: change this path to global variable
     else: #assume full geometry if not quarter-core
-        if input.number_assemblies == 193:
-            shutil.copyfile('/home/nkrollin/midas/MIDAS/xslib/' + 'boc_exp_full193.dep', 'boc_exp.dep')
-        elif input.number_assemblies == 157:
-            shutil.copyfile('/home/nkrollin/midas/MIDAS/xslib/' + 'boc_exp_full157.dep', 'boc_exp.dep')
+        if input.num_assemblies == 193:
+            shutil.copyfile('/home1/nkrollin/midas/MIDAS/samples/xslib/' + 'boc_exp_full193.dep', 'boc_exp.dep')
+        elif input.num_assemblies == 157:
+            shutil.copyfile('/home1/nkrollin/midas/MIDAS/samples/xslib/' + 'boc_exp_full157.dep', 'boc_exp.dep')
     
 ## Fill loading pattern with chromosome
     fuel_locations = list(input.core_dict['fuel'].keys())
@@ -90,7 +95,7 @@ def evaluate(solution, input):
     for i in range(len(solution.chromosome)):
         soln_loading_pattern[fuel_locations[i]] = solution.chromosome[i]
     
-    raise InputError("DEBUG STOP.")#!
+    raise ValueError("DEBUG STOP.")#!
     #!input.core_lattice
     
 ## Generate Input File

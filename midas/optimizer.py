@@ -1,5 +1,6 @@
 ## Import Block ##
 import os
+import logging
 from pathlib import Path
 from shutil import rmtree
 from copy import deepcopy
@@ -39,6 +40,7 @@ class Optimizer():
         self.population = optools.Population(self.input.population_size, num_gene_combos)
         self.generation = optools.Generation(self.input.num_generations, num_gene_combos)
         self.fitness    = optools.Fitness()
+        self.eval_func  = None
         if self.input.calculation_type == "parcs":
             self.eval_func  = parcs.evaluate #assign, don't execute.
         
@@ -94,6 +96,9 @@ class Optimizer():
         
         Written by Nicholas Rollins. 09/27/2024
         """
+    ## Initialize logging for the present file
+        logger = logging.getLogger("MIDAS_logger")
+        
     ## Create results directory and/or clear old
         cwd = Path(os.getcwd())
         results_dir = cwd.joinpath(self.input.results_dir_name)
@@ -112,7 +117,7 @@ class Optimizer():
         pool = Pool(processes=self.input.num_procs) #initialize parallel execution
         
     ## Evaluate fitness
-        logger.info("Calculating fitness for generation %s...", self.population.current)
+        logger.info("Calculating fitness for generation %s...", self.generation.current)
         ## Execute and parse objective/constraint values
         self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
         ## Calculate fitness from objective/constriant values

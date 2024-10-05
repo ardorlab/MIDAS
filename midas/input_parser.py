@@ -9,6 +9,20 @@ Created by Nicholas Rollins. 09/11/2024
 
 
 ## Classes ##
+def yaml_line_reader(data,keyword,default):
+    """
+    #!TODO: write docstring.
+    
+    Written by Nicholas Rollins. 10/03/2024
+    """
+    try:
+        parsed_val = data[keyword]
+        #!TODO: validatation of value based on keyword
+    except:
+        parsed_val = default
+    return parsed_val
+
+
 class Input_Parser():
     """
     Centralized class for parsing user-supplied input arguments from the 
@@ -24,18 +38,6 @@ class Input_Parser():
         self.parse_input_data()
         self.validate_input()
     
-    def yaml_line_reader(data,keyword,default):
-        """
-        #!TODO: write docstring.
-        
-        Written by Nicholas Rollins. 10/03/2024
-        """
-        try:
-            parsed_val = data[keyword]
-            #!TODO: validatation of value based on keyword
-        except:
-            parsed_val = default
-        return parsed_val
         
     def parse_input_data(self):
         """
@@ -53,7 +55,8 @@ class Input_Parser():
         self.results_dir_name = yaml_line_reader(info, 'results_directory_name', None)
         self.population_size = yaml_line_reader(info, 'population_size', 1)
         self.num_generations = yaml_line_reader(info, 'number_of_generations', 1)
-        self.parameters = yaml_line_reader(info, 'objectives', None)
+        self.symmetry = yaml_line_reader(info, 'solution_symmetry', None)
+        self.objectives = yaml_line_reader(info, 'objectives', None)
         
         ## Algorithm Block ##
         info = self.file_settings['algorithm']
@@ -71,13 +74,16 @@ class Input_Parser():
         self.genome = yaml_line_reader(self.file_settings['decision_variables'], 'parameters', None)
         
         ## Calculation Block ##
-        info = self.file_settings['parcs_data']
+        info = self.file_settings['parcs_data'] #!TODO: this needs to be set by calculation_type
         
+        self.nrow = yaml_line_reader(info['map'], 'num_rows', 17)
+        self.ncol = yaml_line_reader(info['map'], 'num_cols', 17)
+        self.num_assemblies = yaml_line_reader(info['map'], 'number_assemblies', 193)
+        self.map_size = yaml_line_reader(info['map'], 'core_symmetry', 'full')
         self.xs_lib = yaml_line_reader(info, 'xs_library_path', None)
         self.power = yaml_line_reader(info, 'power', 100)
         self.flow = yaml_line_reader(info, 'flow', None)
         self.inlet_temp = yaml_line_reader(info, 'inlet_temperature', None)
-        self.num_assemblies = yaml_line_reader(info, 'number_assemblies', None)
         
         #!TODO: add core_dict and other values for PARCS/Simulate3
         
