@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # # # # # # # # #
 # Import Block  #
 # # # # # # # # #
@@ -10,6 +12,7 @@ from copy import deepcopy
 from midas import midas_version as version
 from midas.input_parser import  Input_Parser
 from midas.optimizer import Optimizer
+from midas.utils.problem_preparation import Prepare_Problem_Values as prep_inp
 
 
 # # # # # # # # # # #
@@ -57,7 +60,9 @@ class Formatter(logging.Formatter): #!TODO: It might be cleaner to move this to 
 def main():
     exitcode = 0
     try:
-    #!TODO: set global variables from external file.
+## Set global variables and settings
+    #!TODO: read global variables from external file.
+    #!global midas_rng_seed = 
     
 ## Read command line arguments
         args = Parse_Args()
@@ -70,6 +75,8 @@ def main():
     
 ## Parse input file
         inp_lines = Input_Parser(args.cpus, args.input)
+    ## Prepare input values for writing
+        inp_lines = prep_inp.single_cycle_preparation(input_obj)
         logger.info("Parsed input file: %s", str(args.input))
     
 ## Generate optimizer
