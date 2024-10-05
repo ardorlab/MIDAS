@@ -66,7 +66,7 @@ class Problem_Preparation_Tools():
                 core_id.append((i-8,j-8))
         core_id = np.array(core_id).reshape((nrows,ncols,2))
         
-        core_sym_map, fuel_sym_map = Problem_Preparation_Tools.symmetric_core(inp_obj.symmetry,nrows,ncols,core_map,core_id)
+        core_sym_map, fuel_sym_map = Problem_Preparation_Tools.symmetric_core(input_obj.symmetry,nrows,ncols,core_map,core_id)
         
         return core_sym_map, fuel_sym_map
 
@@ -83,12 +83,12 @@ class Problem_Preparation_Tools():
         Updated by Nicholas Rollins. 10/04/2024
         """
         #!TODO: I think this assumes only one layer of radial reflectors.
-        sym_center   = (np.floor(nrow/2)+1,np.floor(ncol/2)+1) #x,y-coordinates for centerpoint of symmetry
-        sym_vertical = (nrow-1,np.floor(ncol/2)+1)
+        sym_center   = (np.floor(nrows/2),np.floor(ncols/2)) #x,y-coordinates for centerpoint of symmetry
+        sym_vertical = (nrows-1,np.floor(ncols/2))
         if symmetry == 'quarter':
-            sym_corner   = (np.floor(nrow/2)+1,ncol-1)
+            sym_corner   = (np.floor(nrows/2),ncols-1)
         elif symmetry == 'octant':
-            sym_corner   = (nrow-1,ncol-1)
+            sym_corner   = (nrows-1,ncols-1)
         
         row_iter = np.arange(sym_center[0],sym_vertical[0]+1,1)
         col_iter = np.arange(sym_center[1],sym_corner[1]+1,1)
@@ -101,18 +101,22 @@ class Problem_Preparation_Tools():
                     dict_value={'Symmetric_Assemblies':[],
                                 'Value': None}
                     if (irow,icol) == sym_center:
+                        irow = int(irow); icol = int(icol)
                         pass
-                    elif irow == sym_horizontal[0] and icol != sym_center[1]:                 
+                    elif irow == sym_horizontal[0] and icol != sym_center[1]:  
+                        irow = int(irow); icol = int(icol)
                         idy = core_id[irow,icol][0]
                         idx = core_id[irow,icol][1]
                         idxy_1= np.where((core_id[:,:,0] == idy) & (core_id[:,:,1] == -idx))
                         dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0]]
                     elif icol == sym_vertical[1] and irow != sym_center[0]:
+                        irow = int(irow); icol = int(icol)
                         idy = core_id[irow,icol][0]
                         idx = core_id[irow,icol][1]
                         idxy_1= np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == idx))
                         dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0]]
                     else:
+                        irow = int(irow); icol = int(icol)
                         idy = core_id[irow,icol][0]
                         idx = core_id[irow,icol][1]
                         idxy_1= np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == idx))
@@ -129,8 +133,10 @@ class Problem_Preparation_Tools():
                     dict_value={'Symmetric_Assemblies':[],
                                 'Value': None}
                     if (irow,icol) == sym_center:
+                        irow = int(irow); icol = int(icol)
                         pass
-                    elif icol == sym_vertical[1] and irow != sym_center[0]:                 
+                    elif icol == sym_vertical[1] and irow != sym_center[0]:
+                        irow = int(irow); icol = int(icol)
                         idy = core_id[irow,icol][0]
                         idx = core_id[irow,icol][1]
                         idxy_1= np.where((core_id[:,:,0] == idx) & (core_id[:,:,1] == -idy))
@@ -138,6 +144,7 @@ class Problem_Preparation_Tools():
                         idxy_3= np.where((core_id[:,:,0] == idx) & (core_id[:,:,1] == idy))
                         dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0], core_map[idxy_2][0], core_map[idxy_3][0]]
                     elif icol == irow and irow != sym_center[0]:
+                        irow = int(irow); icol = int(icol)
                         idy = core_id[irow,icol][0]
                         idx = core_id[irow,icol][1]
                         idxy_1= np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == idx))
@@ -145,6 +152,7 @@ class Problem_Preparation_Tools():
                         idxy_3= np.where((core_id[:,:,0] == idy)  & (core_id[:,:,1] == -idx))
                         dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0], core_map[idxy_2][0], core_map[idxy_3][0]]
                     else:
+                        irow = int(irow); icol = int(icol)
                         idy = core_id[irow,icol][0]
                         idx = core_id[irow,icol][1]
                         idxy_1= np.where((core_id[:,:,0] == -idx) & (core_id[:,:,1] == -idy))
@@ -233,12 +241,12 @@ class Prepare_Problem_Values():
                     pincal_loc[x,y]=1
         
     ## Store results alongside input data
-        inp_obj.core_dict = core_dict
-        inp_obj.full_core = full_core
-        inp_obj.core_lattice = core_lattice
-        inp_obj.pincal_loc = pincal_loc
+        input_obj.core_dict = core_dict
+        input_obj.full_core = full_core
+        input_obj.core_lattice = core_lattice
+        input_obj.pincal_loc = pincal_loc
         
-        return inp_obj
+        return input_obj
 
 
 class LWR_Core_Shapes():
