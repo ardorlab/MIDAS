@@ -3,7 +3,11 @@ import os
 import gc
 import logging
 import shutil
+import numpy as np
+from copy import deepcopy
 from pathlib import Path
+import subprocess
+from subprocess import STDOUT
 
 
 ## Functions ##
@@ -75,7 +79,7 @@ def evaluate(solution, input):
     
 ## Create and move to unique directory for PARCS execution
     cwd = Path(os.getcwd())
-    indv_dir = cwd.joinpath(input.results_dir_name + '/' + solution.name)
+    indv_dir = cwd.joinpath(input.results_dir_name / Path(solution.name))
     os.mkdir(indv_dir)
     os.chdir(indv_dir)
 
@@ -89,46 +93,75 @@ def evaluate(solution, input):
         elif input.num_assemblies == 157:
             shutil.copyfile('/home1/nkrollin/midas/MIDAS/samples/xslib/' + 'boc_exp_full157.dep', 'boc_exp.dep')
     
-## Fill loading pattern with chromosome
-    fuel_locations = list(input.core_dict['fuel'].keys())
-    soln_loading_pattern = {}
+## Prepare values for file writing
+    list_unique_xs = np.concatenate([value if isinstance(value,list) else np.concatenate(list(value.values()))\
+                                    for value in input.xs_list.values()])
+
+    ## Fill loading pattern with chromosome
+    fuel_locations = [loc for loc in input.core_dict.keys() if 2 < len(loc) <  5]
+    soln_fuel_locations = {}
     for i in range(len(solution.chromosome)):
-        soln_loading_pattern[fuel_locations[i]] = solution.chromosome[i]
+        soln_fuel_locations[fuel_locations[i]] = solution.chromosome[i]
     
-    raise ValueError("DEBUG STOP.")#!
-    #!input.core_lattice
+    soln_core_dict = deepcopy(input.core_dict)
+    for loc, label in soln_fuel_locations.items():
+        tag = None
+        for fueltype in input.tag_list['fuel']:
+            if fueltype[1] == label:
+                tag = fueltype[0]
+        if not tag:
+            raise ValueError("FA label not found in tag_list.")
+        soln_core_dict[loc]['Value'] = tag
+    #!for loc, label in soln_refl_locations.items(): #!TODO: create a way to specify reflector locs for multiple radial refls.
+
+    soln_core_lattice = deepcopy(input.core_lattice) # core lattice filled with chromosome
+    for loc, vals in soln_core_dict.items():
+        sym_locs = [loc] + vals['Symmetric_Assemblies']
+        for j in range(len(soln_core_lattice)):
+            for i in range(len(soln_core_lattice[j])):
+                if soln_core_lattice[j][i] in sym_locs:
+                    if soln_core_lattice[j][i][0] == "R" and len(soln_core_lattice[j][i]) >= 5: #reflector
+                        soln_core_lattice[j][i] = "10" #!TODO: add support more multiple radial refls.
+                    else:
+                        soln_core_lattice[j][i] = vals['Value']
     
 ## Generate Input File
     filename = solution.name + '.inp'
     
     ## CaseID Block
-    with open(filename,"w") as ofile:             
+    with open(filename,"w") as ofile:
         ofile.write("!******************************************************************************\n")
         ofile.write('CASEID {}  \n'.format(solution.name))
         ofile.write("!******************************************************************************\n\n")
 
     ## CNTL Block
-    with open(filename,"a") as ofile:             
+    with open(filename,"a") as ofile:
         ofile.write("CNTL\n")
         ofile.write("     RUN_OPTS F T F F\n")
-        ofile.write("     TH_FDBK    T\n")
+        if input.th_fdbk:
+            ofile.write("     TH_FDBK    T\n")
+        else:
+            ofile.write("     TH_FDBK    F\n")
         ofile.write("     INT_TH     T -1\n")
         ofile.write("     CORE_POWER 100.0\n")
         ofile.write("     CORE_TYPE  PWR\n")
         ofile.write("     PPM        1000 1.0 1800.0 10.0\n")
         ofile.write("     DEPLETION  T  1.0E-5 T\n")
-        ofile.write("     TREE_XS    T  {} T  T  F  F  T  F  T  F  T  F  T  T  T  F \n".format(int(len(xs_unique)+4)))
+        ofile.write("     TREE_XS    T  {}  T  T  F  F  T  F  T  F  T  F  T  T  T  F  F \n".format(int(len(list_unique_xs))))
         ofile.write("     BANK_POS   100 100 100 100 100 100\n")
         ofile.write("     XE_SM      1 1 1 1\n")
         ofile.write("     SEARCH     PPM\n")
         ofile.write("     XS_EXTRAP  1.0 0.3\n")
-        ofile.write("     PIN_POWER  T\n")
+        if input.pin_power_recon:
+            ofile.write("     PIN_POWER  T\n")
+        else:
+            ofile.write("     PIN_POWER  F\n")
         ofile.write("     PLOT_OPTS 0 0 0 0 0 2\n")
         ofile.write("\n")
         ofile.write("!******************************************************************************\n\n")
         
     ## PARAM Block
-    with open(filename,"a") as ofile:             
+    with open(filename,"a") as ofile:
         ofile.write("PARAM\n")
         ofile.write("     LSOLVER  1 1 20\n")
         ofile.write("     NODAL_KERN     NEMMG\n")
@@ -142,83 +175,142 @@ def evaluate(solution, input):
         ofile.write("\n")
         ofile.write("!******************************************************************************\n\n")
     
-    ## GEOM Block
-    with open(filename,"a") as ofile:             
+    ## GEOM Block Inputs ##
+    with open(filename,"a") as ofile:
         ofile.write("GEOM\n")
-        ofile.write("     GEO_DIM 9 9 18 1 1\n")
-        ofile.write("     RAD_CONF\n")
-        for x in range(self.core_lattice.shape[0]):
+        if input.map_size == 'quarter':
+            dim_size = [np.floor(input.nrow/2)+1, np.floor(input.ncol/2)+1]
+        else: #assume full geometry if not quarter-core
+            dim_size = [input.nrow, input.ncol]
+        ofile.write(f"     GEO_DIM {dim_size[0]} {dim_size[1]} {input.number_axial} 1 1\n")
+        ofile.write("     RAD_CONF\n\n")
+        for x in range(soln_core_lattice.shape[0]):
             ofile.write("     ")
-            for y in range(self.core_lattice.shape[1]):
-                ofile.write(self.core_lattice[x,y])
+            for y in range(soln_core_lattice.shape[1]):
+                ofile.write(soln_core_lattice[x,y])
                 ofile.write("  ")
             ofile.write("\n")
+        ofile.write("\n")
     
-        ofile.write("     GRID_X      1*10.75 8*21.50\n")
-        ofile.write("     NEUTMESH_X  1*1 8*1\n")
-        ofile.write("     GRID_Y      1*10.75 8*21.50\n")
-        ofile.write("     NEUTMESH_Y  1*1 8*1\n")
-        ofile.write("     GRID_Z      30.48 15.24 10.16 5.08 10*30.48 5.08 10.16 15.24 30.48\n")            
-        ofile.write("     ASSY_TYPE   10   1*2   16*2    1*2 REFL\n")
-        for i in range(xs_unique.shape[0]):
-            if 'gd_0' in xs_unique[i]:
-                ofile.write("     ASSY_TYPE   {}   1*1 1*4  14*{}  1*4  1*3 FUEL\n".format(tag_unique[i],xs_ref[i]))
+        assembly_width = 21.50 #!TODO: change this to an input with default.
+        if input.map_size == 'quarter':
+            ofile.write(f"     GRID_X      1*{assembly_width/2} {dim_size[0]-1}*{assembly_width}\n")
+            ofile.write(f"     NEUTMESH_X  1*1 {dim_size[0]-1}*1\n")
+            ofile.write(f"     GRID_Y      1*{assembly_width/2} {dim_size[0]-1}*{assembly_width}\n")
+            ofile.write(f"     NEUTMESH_Y  1*1 {dim_size[0]-1}*1\n")
+        else: #assume full geometry if not quarter-core
+            ofile.write(f"     GRID_X      {dim_size[0]}*{assembly_width}\n")
+            ofile.write(f"     NEUTMESH_X  {dim_size[0]}*1\n")
+            ofile.write(f"     GRID_Y      {dim_size[1]}*{assembly_width}\n")
+            ofile.write(f"     NEUTMESH_Y  {dim_size[1]}*1\n")
+        ofile.write("     GRID_Z      {}\n".format('  '.join([str(x) for x in input.axial_nodes])))
+        # Write radial reflectors
+        xsnum_radtop = 2 + len(input.xs_list['reflectors']['radial'])
+        rad_tags = [tag[0] for tag in input.tag_list['reflectors']]
+        for i in range(len(input.xs_list['reflectors']['radial'])):
+            tag = input.tag_list['reflectors'][rad_tags.index(input.tag_list['reflectors'][i][0])][0]
+            ofile.write("     ASSY_TYPE   {}   1*1  {}*{}  1*{} REFL\n".format(tag,input.number_axial-2,2+i,xsnum_radtop))
+        # Write fuel types
+        if 'blankets' in input.fa_options:
+            xsnum_fuel = xsnum_radtop + len(input.xs_list['blankets'])
+        else:
+            xsnum_fuel = xsnum_radtop
+        for key in input.fa_options['fuel'].keys():
+            fuel = input.fa_options['fuel'][key]
+            xsnum_fuel += 1
+            if 'blanket' in fuel:
+                xsnum_blanket = xsnum_radtop + \
+                                input.xs_list['blankets'].index(input.fa_options['blankets'][fuel['blanket']]['serial']) + 1
+                ofile.write("     ASSY_TYPE   {}   1*1  1*{} {}*{}  1*{}  1*{} FUEL\n".format(fuel['type'],xsnum_blanket,\
+                                                                                       input.number_axial-4,xsnum_fuel,\
+                                                                                       xsnum_blanket,xsnum_radtop))
             else:
-                ofile.write("     ASSY_TYPE   {}   1*1 1*4  1*4 12*{} 1*4 1*4  1*3 FUEL\n".format(tag_unique[i],xs_ref[i]))
+                ofile.write("     ASSY_TYPE   {}   1*1  {}*{}  1*{} FUEL\n".format(fuel['type'],input.number_axial-2,\
+                                                                                  xsnum_fuel,xsnum_radtop))
         ofile.write("\n")
 
-        ofile.write("     boun_cond   0 2 0 2 2 2\n")
-        ofile.write("     SYMMETRY 4\n")
+        if input.map_size == 'quarter':
+            ofile.write("     BOUN_COND   0 2 0 2 2 2\n")
+            ofile.write("     SYMMETRY 4\n")
+        else: #assume full geometry if not quarter-core
+            ofile.write("     BOUN_COND   2 2 2 2 2 2\n")
+            ofile.write("     SYMMETRY 1\n")
 
         ofile.write("     PINCAL_LOC\n")
-        for x in range(pincal_loc.shape[0]):
+        for x in range(input.pincal_loc.shape[0]):
             ofile.write("      ")
-            for y in range(pincal_loc.shape[1]):
-                val = pincal_loc[x,y]
-                if np.isnan(val):
-                    pass
-                else:
-                    ofile.write(str(int(pincal_loc[x,y])))
+            for y in range(input.pincal_loc.shape[1]):
+                val = input.pincal_loc[x,y]
+                try:
+                    if np.isnan(val):
+                        pass
+                    else:
+                        ofile.write(str(input.pincal_loc[x,y]))
+                        ofile.write("  ")
+                except TypeError:
+                    ofile.write(str(input.pincal_loc[x,y]))
                     ofile.write("  ")
             ofile.write("\n")
         ofile.write("\n")
         ofile.write("!******************************************************************************\n\n")
 
     ## FDBK Block
-    with open(filename,"a") as ofile:             
+    with open(filename,"a") as ofile:
         ofile.write("FDBK\n")
-        ofile.write("     FA_POWPIT     {} 21.5\n".format(np.round(self.power/193,4)))
+        ofile.write("     FA_POWPIT     {} {}\n".format(np.round(input.power/input.num_assemblies,4),assembly_width))
         ofile.write("     GAMMA_FRAC    0.0208    0.0    0.0\n")
         ofile.write("     EFF_DOPLT   T  0.5556\n")
         ofile.write("\n")
         ofile.write("!******************************************************************************\n\n")
 
     ## TH Block
-    with open(filename,"a") as ofile:   
-        ofile.write("TH\n")          
-        ofile.write("     FLU_TYP       0\n")
-        ofile.write("     N_PINGT    264 25\n")
-        ofile.write("     PIN_DIM      4.1 4.75 0.58 6.13\n")
-        ofile.write("     FLOW_COND    {}  {}\n".format(np.round(self.inlet_temperature-273.15,2),np.round(self.flow/193,4)))
-        ofile.write("     HGAP     11356.0\n")
-        ofile.write("     N_RING   6\n")
-        ofile.write("     THMESH_X       9*1\n")
-        ofile.write("     THMESH_Y       9*1\n")
-        ofile.write("     THMESH_Z       1 2 3 4 5 6 7 8 9 10 11 12\n")
+    with open(filename,"a") as ofile:
+        ofile.write("TH\n")
+        if input.th_fdbk:
+            ofile.write("     FLU_TYP       0\n")
+            ofile.write("     N_PINGT    264 25\n")
+            ofile.write("     PIN_DIM      4.1 4.75 0.58 6.13\n")
+            ofile.write("     FLOW_COND    {}  {}\n".format(np.round(input.inlet_temp-273.15,2),\
+                                                             np.round(input.flow/input.num_assemblies,4)))
+            ofile.write("     HGAP     11356.0\n") #!TODO:check this value, should it be parameterized?
+            ofile.write("     N_RING   6\n")
+            ofile.write("     THMESH_X       9*1\n")
+            ofile.write("     THMESH_Y       9*1\n")
+            ofile.write("     THMESH_Z       1 2 3 4 5 6 7 8 9 10 11 12\n")
+        else:
+            ofile.write("UNIF_TH   0.740    626.85     {}\n".format(np.round(input.inlet_temp-273.15,2))) #!TODO: how to deal with av. fuel temp?
         ofile.write("\n")
         ofile.write("!******************************************************************************\n\n")
 
     ## DEPL Block
-    with open(filename,"a") as ofile:             
+    with open(filename,"a") as ofile:
         ofile.write("DEPL\n")
-        ofile.write("     TIME_STP  1 1 14*30\n")
+        ofile.write("     TIME_STP  1 1 14*30\n") #!TODO: parameterize this input.
         ofile.write("     INP_HST   './boc_exp.dep' -2 1\n")
-        ofile.write("     PMAXS_F   1 '{}' 1\n".format(cdir + '/' + 'xs_gbot'))
-        ofile.write("     PMAXS_F   2 '{}' 2\n".format(cdir + '/' + 'xs_grad'))
-        ofile.write("     PMAXS_F   3 '{}' 3\n".format(cdir + '/' + 'xs_gtop'))
-        ofile.write("     PMAXS_F   4 '{}' 4\n".format(cdir + '/' + 'xs_g250_gd_0_wt_0'))
-        for i in range(xs_unique.shape[0]):
-            ofile.write("     PMAXS_F   {} '{}' {}\n".format(5+i,cdir + '/' + xs_unique[i],5+i))
+        # Write reflector cross sections
+        ofile.write("     PMAXS_F   1 '{}' 1\n".format(input.xs_lib / Path(input.xs_list['reflectors']['bot'][0])))
+        for i in range(len(input.xs_list['reflectors']['radial'])):
+            rxs_index = 2 + i
+            radpath = input.xs_lib / Path(input.xs_list['reflectors']['radial'][i])
+            ofile.write("     PMAXS_F   {} '{}' 2\n".format(rxs_index,radpath,rxs_index))
+        ofile.write("     PMAXS_F   {} '{}' {}\n".format(rxs_index+1,\
+                                                          input.xs_lib / Path(input.xs_list['reflectors']['top'][0]),\
+                                                          rxs_index+1))
+        nxs_index = rxs_index + 2
+        # Write blankets cross sections
+        if 'blankets' in input.fa_options:
+            for i in range(len(input.xs_list['blankets'])):
+                bxs_index = i + rxs_index + 2
+                blanketpath = input.xs_lib / Path(input.xs_list['blankets'][i])
+                ofile.write("     PMAXS_F   {} '{}' {}\n".format(bxs_index,blanketpath,bxs_index))
+            nxs_index = bxs_index + 1
+            
+        # Write fuel types cross sections
+        for i in range(len(input.xs_list['fuel'])):
+            fxs_index = i + nxs_index
+            ofile.write("     PMAXS_F   {} '{}' {}\n".format(fxs_index,\
+                                                              input.xs_lib / Path(input.xs_list['fuel'][i]),\
+                                                              fxs_index))
         ofile.write("\n")
         ofile.write(".")
 
