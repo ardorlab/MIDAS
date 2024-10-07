@@ -16,29 +16,28 @@ class Problem_Preparation_Tools():
         
         Written by Nicholas Rollins. 10/04/2024
         """
-        xs_list = {'fuel':[], 'top':[], 'radial':[], 'bot':[]}
-        tag_list = {'fuel':[], 'reflectors':[], 'blankets':[]}
+        xs_list = {'fuel':[], 'reflectors':{'top':[], 'radial':[], 'bot':[]}, 'blankets':[]}
+        tag_list = {'fuel':[], 'reflectors':[]}
         
-        for param in input_obj['assembly_options']['fuel']:
+        for key, param in input_obj.fa_options['fuel'].items():
             xs_list['fuel'].append(param['serial'])
-            tag_list['fuel'].append(param['type'])
-        for param in input_obj['assembly_options']['reflectors']:
+            tag_list['fuel'].append((str(param['type']),key))
+        for key, param in input_obj.fa_options['reflectors'].items():
             if param['refl_type'] == 'all':
                 xs_list['reflectors']['top'].append(param['serial'])
                 xs_list['reflectors']['radial'].append(param['serial'])
                 xs_list['reflectors']['bot'].append(param['serial'])
-                tag_list['reflectors']['top'].append(10)
-                tag_list['reflectors']['radial'].append(10)
-                tag_list['reflectors']['bot'].append(10)
+                tag_list['reflectors'].append((str(10+len(tag_list['reflectors'])),key))
             elif param['refl_type'] == 'top':
                 xs_list['reflectors']['top'].append(param['serial'])
-                tag_list['reflectors']['top'].append(11)
             elif param['refl_type'] == 'radial':
                 xs_list['reflectors']['radial'].append(param['serial'])
-                tag_list['reflectors']['radial'].append(10)
+                tag_list['reflectors']['radial'].append((str(10+len(tag_list['reflectors'])),key))
             elif param['refl_type'] == 'bot':
                 xs_list['reflectors']['bot'].append(param['serial'])
-                tag_list['reflectors']['bot'].append(12)
+        if 'blankets' in input_obj.fa_options:
+            for key, param in input_obj.fa_options['blankets'].items():
+                xs_list['blankets'].append(param['serial'])
         
         return xs_list, tag_list
     
@@ -66,9 +65,9 @@ class Problem_Preparation_Tools():
                 core_id.append((i-8,j-8))
         core_id = np.array(core_id).reshape((nrows,ncols,2))
         
-        core_sym_map, fuel_sym_map = Problem_Preparation_Tools.symmetric_core(input_obj.symmetry,nrows,ncols,core_map,core_id)
+        core_sym_map = Problem_Preparation_Tools.symmetric_core(input_obj.symmetry,nrows,ncols,core_map,core_id)
         
-        return core_sym_map, fuel_sym_map
+        return core_sym_map
 
     def symmetric_core(symmetry,nrows,ncols,core_map,core_id):
         """
@@ -164,18 +163,10 @@ class Problem_Preparation_Tools():
                         idxy_7= np.where((core_id[:,:,0] == idy) & (core_id[:,:,1] == -idx))
                         dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0], core_map[idxy_2][0], core_map[idxy_3][0], core_map[idxy_4][0],
                                                               core_map[idxy_5][0], core_map[idxy_6][0], core_map[idxy_7][0]]
-                    core_dict[core_map[irow,icol]] = dict_value
+                    if core_map[irow,icol]: #skip empty locations
+                        core_dict[core_map[irow,icol]] = dict_value
         
-        fuel_dict={} # extract fuel assembly locations
-        for key, value in core_dict.items():
-            if key is None:
-                continue
-            elif key[0]=="R":
-                continue
-            else:
-                fuel_dict[key]=value
-        
-        return(core_dict,fuel_dict)
+        return core_dict
 
 
 class Prepare_Problem_Values():
@@ -191,18 +182,13 @@ class Prepare_Problem_Values():
         
         Updated by Nicholas Rollins. 10/04/2024
         """
+    ## Parse cross sections and FA labels
+        xs_list, tag_list = Problem_Preparation_Tools.parse_FAlabels(input_obj)
+        
     ## Generate core map matching the length and symmetry of the chromosome
         core_shape = LWR_Core_Shapes.get_core_shape(input_obj.nrow, input_obj.ncol)
-        core_dict = {}
-        core_dict['core'], core_dict['fuel'] = Problem_Preparation_Tools.generate_core(input_obj, core_shape) #create LP maps that match the length and symmetry of the chromosome.
-        
-    ## Expand to full core map while maintaining symmetry
-        full_core  = {}
-        for key, value in core_dict['fuel'].items():
-            full_core[key]=value['Value']
-            for skey in value['Symmetric_Assemblies']:
-               full_core[skey]=value['Value'] 
-        
+        core_dict = Problem_Preparation_Tools.generate_core(input_obj, core_shape) #create LP maps that match the length and symmetry of the chromosome.
+ 
     ## Generate map of core for printing to file
         if input_obj.map_size == "quarter":
             size_x = int(np.ceil(input_obj.nrow/2))
@@ -230,7 +216,6 @@ class Prepare_Problem_Values():
             for y in range(core_lattice.shape[1]):
                 loc = core_lattice[x,y]
                 if loc[0] == "R":
-                    #!core_lattice[x,y] = core_dict['Reflectors']['Radial']['Tag']
                     pincal_loc[x,y]=0
                 elif loc == "00":
                     if input_obj.map_size == 'quarter':
@@ -241,8 +226,9 @@ class Prepare_Problem_Values():
                     pincal_loc[x,y]=1
         
     ## Store results alongside input data
+        input_obj.xs_list = xs_list
+        input_obj.tag_list = tag_list
         input_obj.core_dict = core_dict
-        input_obj.full_core = full_core
         input_obj.core_lattice = core_lattice
         input_obj.pincal_loc = pincal_loc
         
