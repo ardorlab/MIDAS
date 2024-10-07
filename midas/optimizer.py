@@ -41,7 +41,7 @@ class Optimizer():
         self.generation = optools.Generation(self.input.num_generations, num_gene_combos)
         self.fitness    = optools.Fitness()
         self.eval_func  = None
-        if self.input.calculation_type == "parcs":
+        if self.input.code_interface == "parcs":
             self.eval_func  = parcs.evaluate #assign, don't execute.
         
         if methodology == 'genetic_algorithm':
