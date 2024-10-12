@@ -58,6 +58,11 @@ class Formatter(logging.Formatter): #!TODO: It might be cleaner to move this to 
         return super().format(record)
 
 def main():
+    """
+    Primary execution pathway for MIDAS optimization.
+    
+    Written by Nicholas Rollins. 10/08/2024
+    """
     exitcode = 0
 
 ## Set global variables and settings
@@ -77,7 +82,7 @@ def main():
 ## Parse input file
     inp_lines = Input_Parser(args.cpus, args.input)
 ## Prepare input values for writing
-    inp_lines = prep_inp.single_cycle_preparation(inp_lines)
+    inp_lines = prep_inp.prepare_cycle(inp_lines)
     logger.info("Parsed input file: %s", str(args.input))
 
 ## Generate optimizer
@@ -103,10 +108,13 @@ if __name__ == "__main__":
     
     #Initialize logging
     logger = logging.getLogger("MIDAS_logger")
-    handler = logging.FileHandler(filename=midas_data.__ofile__)
-    handler.setFormatter(Formatter())
+    filehandler = logging.FileHandler(filename=midas_data.__ofile__)
+    consolehandler = logging.StreamHandler()
+    filehandler.setFormatter(Formatter())
+    consolehandler.setFormatter(Formatter())
     logger.setLevel(logging.INFO)
-    logger.addHandler(handler)
+    logger.addHandler(filehandler)
+    logger.addHandler(consolehandler)
     
     #Execute MIDAS
     exitcode = main()

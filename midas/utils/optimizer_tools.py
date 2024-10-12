@@ -20,7 +20,7 @@ class Population():
             self.size = pop_size
         
         self.current = []
-        self.archive = []
+        self.archive = {'solutions':[], 'fitnesses':[], 'parameters':[]}
 
     def calculate_size(self, number_genes):
         """
@@ -66,7 +66,7 @@ class Solution():
         self.chromosome = []
         self.fitness_value = float("NaN")
     
-    def generate_initial(self,genome):
+    def generate_initial(self,calc_type,genome):
         """
         Generates the initial solutions to the optimization problem by
           randomly generating a new chromosome.
@@ -75,21 +75,57 @@ class Solution():
             genome: Dictionary
                 The genome portion of the dictionary settings file. 
 
-        Written by Brian Andersen. 1/9/2020
-        Updated by Nicholas Rollins. 09/27/2024
+        Written by Nicholas Rollins. 10/11/2024
         """
-        chromosome_list = list(genome.keys())
+        if calc_type in ['single_cycle']:
+            return self.LP_chromosome(genome)
+        elif calc_type == 'eq_cycle':
+            return self.EQ_chromosome(genome)
+        else:
+            return None
+    
+    def LP_chromosome(self,genome):
+        genes_list = list(genome.keys())
         chromosome_length = []
-        for gene in chromosome_list:
+        for gene in genes_list:
             chromosome_length.append(len(genome[gene]['map']))
         
         chromosome = []
         for i in range(max(chromosome_length)):
-                gene = random.choice(chromosome_list)
-                if genome[gene]['map'][i]:
+                gene_options = Constrain_Input.calc_gene_options(genes_list, genome, chromosome)
+                gene = random.choice(gene_options)
+                if genome[gene]['map'][i]: #check that the selected gene option is viable at this location.
                     chromosome.append(gene)
         
         return chromosome
+    
+    def EQ_chromosome(self,genome):
+        raise ValueError("DEBUG STOP")#!
+
+
+class Constrain_Input():
+    def calc_gene_options(genes_list, genome, chromosome):
+        """
+        Constrain the available options for the chromosome based on
+        the existing inventory.
+        
+        Written by Nicholas Rollins. 10/10/2024
+        """
+        valid_genes_list = []
+        for gene in genes_list:
+            if genome[gene]['constraint']:
+                ctype = genome[gene]['constraint']['type']
+                cvalue = genome[gene]['constraint']['value']
+                if ctype == 'max_quantity':
+                    if chromosome.count(gene) < cvalue: #only include option if less than the max quantity have been already used.
+                        valid_genes_list.append(gene)
+                elif ctype == 'less_than_variable':
+                    if chromosome.count(gene) < chromosome.count(cvalue): #only include option if fewer than the target option have been already used.
+                        valid_genes_list.append(gene)
+            else:
+                valid_genes_list.append(gene)
+        
+        return valid_genes_list
 
 
 class Fitness(object):
@@ -109,32 +145,36 @@ class Fitness(object):
         """
         pass
 
-    def calculate(self,solution):
+    def calculate(self,parameters):
         """
         Calculates the generic fitness function, based on the listed fitness
         function above. Returns the solution list with evaluated fitnesses.
 
         Parameters:
-            solution_list: List
-                List of solutions whose fitness is to be calculated.
+            parameters: Dict
+                Dictionary of objectives/constraints values to be included 
+                in the fitness function.
 
         Written by Nicholas Rollins. 09/27/2024
         """
-        solution.fitness = 0.0
+        fitness = 0.0
         
-        for param in solution.parameters:
-            pgoal = solution.parameters[param]['goal']
-            pweight = solution.parameters[param]['weight']
-            pvalue = solution.parameters[param]['value']
+        for param in parameters:
+            pgoal = parameters[param]['goal']
+            pweight = parameters[param]['weight']
+            pvalue = parameters[param]['value']
             if pgoal == 'maximize':
-                solution.fitness += pvalue
+                fitness += pvalue
             elif pgoal == 'minimize':
-                solution.fitness -= pvalue
+                fitness -= pvalue
             elif pgoal == 'meet_target':
-                solution.fitness -= abs(ptarget - pvalue)
+                ptarget = parameters[param]['target']
+                fitness -= abs(ptarget - pvalue)
             elif pgoal == 'greater_than_target':
-                solution.fitness += pvalue - ptarget
+                ptarget = parameters[param]['target']
+                fitness += pvalue - ptarget
             elif pgoal == 'less_than_target':
-                solution.fitness += ptarget - pvalue
+                ptarget = parameters[param]['target']
+                fitness += ptarget - pvalue
         
-        return solution.fitness
+        return fitness
