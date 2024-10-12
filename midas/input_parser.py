@@ -12,13 +12,15 @@ Created by Nicholas Rollins. 09/11/2024
 ## Classes ##
 def yaml_line_reader(data,keyword,default):
     """
-    #!TODO: write docstring.
+    Parse the data of a given keyword from the '.yaml' input file data.
+    If the keyword is not found, revert to a provided default value. Then,
+    validate the parsed value to ensure it is formatted correctly and/or 
+    is a supported option for that keyword.
     
     Written by Nicholas Rollins. 10/03/2024
     """
     try:
         parsed_val = data[keyword]
-        #!TODO: validatation of value based on keyword
     except:
         parsed_val = default
     parsed_val = validate_input(keyword, parsed_val)
@@ -42,12 +44,12 @@ def validate_input(keyword, value):
     
     elif keyword == 'code_type':
         value = str(value).lower()
-        if value not in ["parcs"]:
-            raise ValueError("Code types currently supported: PARCS.")
+        if value not in ["parcs342"]:
+            raise ValueError("Code types currently supported: PARCS342.")
     
     elif keyword == 'data_type':
         value = str(value).lower().replace(' ','_')
-        if value not in ["single_cycle"]:
+        if value not in ["single_cycle","eq_cycle"]:
             raise ValueError("Data type not supported.")
     
     elif keyword == 'results_directory_name':
@@ -80,7 +82,10 @@ def validate_input(keyword, value):
             #check objectives/constraints
             for key, item in value.items():
                 new_key = str(key).lower().replace(' ','_')
-                if new_key not in ['max_boron','pinpowerpeaking','fdeltah','cycle_length']:
+                if new_key not in ['max_boron',
+                                   'pinpowerpeaking',
+                                   'fdeltah',
+                                   'cycle_length']:
                     raise ValueError(f"Requested objective/constraint '{key}' not supported.")
                 new_item = {}
                 if isinstance(item, dict):
@@ -182,9 +187,7 @@ def validate_input(keyword, value):
                                     new_subsubkey =str(subsubkey).lower().replace(' ','_')
                                     if new_subsubkey == 'refl_type':
                                         new_subsubitem = str(subsubitem).lower()
-                                        try:
-                                            assert new_subsubitem in ['all','radial','top','bot']
-                                        except AssertionError:
+                                        if new_subsubitem not in ['all','radial','top','bot']:
                                             raise ValueError(f"Reflector type for '{subsubkey}' must be radial, top, bottom, or all.")
                                     elif new_subsubkey == 'serial':
                                         new_subsubitem = str(subsubitem)
@@ -243,12 +246,17 @@ def validate_input(keyword, value):
             if 'fuel' not in new_dict or len(new_dict['fuel']) == 0:
                 raise ValueError("Assembly options must include fuel types.")
             if 'reflectors' not in new_dict or len(new_dict['reflectors']) == 0:
-                raise ValueError("Assembly options must include as least one reflector type under key 'reflectors'.")
-            if len(new_dict['blankets']) == 0:
-                raise ValueError("Blanket options must include as least one blanket type.")
+                raise ValueError("Assembly options must include at least one reflector type under key 'reflectors'.")
+            if 'blankets' in new_dict and len(new_dict['blankets']) == 0:
+                raise ValueError("Blanket options must include at least one blanket type.")
+            radial_exists = False
             for key, value in new_dict['reflectors'].items():
                 if "refl_type" not in value and "serial" not in value:
                     raise ValueError(f"'refl_type' or 'serial' parameters missing from '{key}'.")
+                elif value['refl_type'] == 'radial' or value['refl_type'] == 'all':
+                    radial_exists = True
+            if not radial_exists:
+                raise ValueError("Assembly options must include at least one reflector labeled 'radial' or 'all'.")
             if 'blankets' in new_dict:
                 for key, value in new_dict['blankets'].items():
                     if "serial" not in value:
@@ -258,9 +266,13 @@ def validate_input(keyword, value):
                 if "type" not in value and "serial" not in value:
                     raise ValueError(f"'type' or 'serial' parameters missing from '{key}'.")
                 if 'blanket' in new_dict['fuel'][key]:
-                    if new_dict['fuel'][key]['blanket'] not in new_dict['blankets']:
+                    try:
+                        if new_dict['fuel'][key]['blanket'] not in new_dict['blankets']:
+                            raise ValueError(f"Requested blanket '{new_dict['fuel'][key]['blanket']}'" + \
+                                              f" for fuel type '{key}' does not exist in blankets.")
+                    except KeyError:
                         raise ValueError(f"Requested blanket '{new_dict['fuel'][key]['blanket']}'" + \
-                                          f" for fuel type '{key}' does not exist in blankets.")
+                                              f" for fuel type '{key}' does not exist in blankets.")
                 if value['type'] not in list_unique_fuel_types:
                     list_unique_fuel_types.append(value['type'])
                 else:
@@ -282,12 +294,48 @@ def validate_input(keyword, value):
                         new_subkey = str(subkey).lower()
                         if new_subkey == 'map':
                             new_dict[new_key][new_subkey] = subitem
+                        elif new_subkey == 'constraint':
+                            new_subitem = {}
+                            if isinstance(subitem, dict):
+                                #check types and values
+                                for subsubkey, subsubitem in subitem.items():
+                                    new_subsubkey =str(subsubkey).lower()
+                                    if new_subsubkey == 'type':
+                                        new_subsubitem = str(subsubitem).lower().replace(' ','_')
+                                        if new_subsubitem not in ['max_quantity','less_than_variable']:
+                                            raise ValueError(f"Requested decision variable constraint type '{subsubitem}' not supported.")
+                                    elif new_subsubkey == 'value':
+                                        try:
+                                            new_subsubitem = int(subsubitem)
+                                        except ValueError:
+                                            new_subsubitem = str(subsubitem)
+                                new_subitem[new_subsubkey] = new_subsubitem
+                            else:
+                                if not subitem: #allow constraint option to be "None".
+                                    new_dict[new_subkey] = None
                 else:
                     raise ValueError(f"Decision variables '{key}' must be nested with its parameters.")
             #check decision variable logic
             for key, value in new_dict.items():
                 if 'map' not in value:
                     raise ValueError(f"Decision variable '{key}' must include a 'map' parameter.")
+                if 'constraint' in value:
+                    if 'type' not in value['constraint']:
+                        raise ValueError(f"Decision variable '{key}' includes a constraint but no 'type' parameter.")
+                    elif 'value' not in value['constraint']:
+                        raise ValueError(f"Decision variable '{key}' includes a constraint but no 'value' parameter.")
+                    elif value['constraint']['type'] == 'max_quantity':
+                        if not isinstance(value['constraint']['value'], int):
+                            raise ValueError(f"Maximum quantity constraint for decision variable '{key}' must be an integer.")
+                    elif value['constraint']['type'] == 'less_than_variable':
+                        if not isinstance(value['constraint']['value'], str):
+                            raise ValueError(f"'Less Than' constraint for decision variable '{key}' must be a valid decision variable name.")
+                        elif value['constraint']['value'] not in new_dict.keys():
+                            raise ValueError(f"'Less Than' constraint for decision variable '{key}' must be a valid decision variable name.")
+                        elif value['constraint']['value'] == key:
+                            raise ValueError(f"'Less Than' constraint for decision variable '{key}' may not be '{key}'.")
+                else:
+                    new_dict[key]['constraint'] = None
             return new_dict
         else:
             raise ValueError("Decision variable parameters must be nested with gene options and their parameters.")
@@ -309,6 +357,11 @@ def validate_input(keyword, value):
     
     elif keyword == 'xs_library_path':
         value = Path(str(value))
+    
+    elif keyword == 'xs_extension':
+        value = str(value).split('.')[-1] #this supports both e.g. ".exe" and "exe".
+        if value: #skip if no extension
+            value = "." + value
     
     elif keyword == 'power':
         value = float(value)
@@ -367,7 +420,7 @@ class Input_Parser():
         info = self.file_settings['optimization']
         
         self.methodology = yaml_line_reader(info, 'methodology', 'genetic_algorithm')
-        self.code_interface = yaml_line_reader(info, 'code_type', 'PARCS')
+        self.code_interface = yaml_line_reader(info, 'code_type', 'PARCS342')
         self.calculation_type = yaml_line_reader(info, 'data_type', 'single_cycle')
         self.results_dir_name = yaml_line_reader(info, 'results_directory_name', 'output_files')
         self.population_size = yaml_line_reader(info, 'population_size', 1)
@@ -401,7 +454,8 @@ class Input_Parser():
         self.ncol = yaml_line_reader(info['map'], 'num_cols', 17)
         self.num_assemblies = yaml_line_reader(info['map'], 'number_assemblies', 193)
         self.map_size = yaml_line_reader(info['map'], 'core_symmetry', 'full')
-        self.xs_lib = yaml_line_reader(info, 'xs_library_path', None)
+        self.xs_lib = yaml_line_reader(info, 'xs_library_path', '../../') #as a relative path, this assumes the needed cross sections are in the base directory for the job.
+        self.xs_extension = yaml_line_reader(info, 'xs_extension', '')
         self.power = yaml_line_reader(info, 'power', 3800.0)
         self.flow = yaml_line_reader(info, 'flow', 18231.89)
         self.inlet_temp = yaml_line_reader(info, 'inlet_temperature', 565.0)

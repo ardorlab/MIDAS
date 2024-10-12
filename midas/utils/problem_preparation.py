@@ -176,9 +176,10 @@ class Prepare_Problem_Values():
     
     Written by Nicholas Rollins. 10/04/2024
     """
-    def single_cycle_preparation(input_obj):
+    def prepare_cycle(input_obj):
         """
-        #!TODO: write docstring.
+        Prepares the provided input parameters in the necessary format for writing to
+        the external model's input file.
         
         Updated by Nicholas Rollins. 10/04/2024
         """
@@ -225,12 +226,37 @@ class Prepare_Problem_Values():
                 else:
                     pincal_loc[x,y]=1
         
+        # full-core map of locations; used for multi-cycle calcs.
+        if input_obj.map_size == "quarter":
+            size_x = int(np.ceil(input_obj.nrow/2))
+            size_y = int(np.ceil(input_obj.ncol/2))
+            full_core_locs = np.zeros((size_y,size_x), dtype='<U8')
+            for y in range(size_y):
+                for x in range(size_x):
+                    val = core_shape[size_y-1+y,size_x-1+x]
+                    if val is None or val[0] == "R":
+                        full_core_locs[y,x] = "    "
+                    else:
+                        full_core_locs[y,x] = val[0] + '-' + val[1:]
+        else: #assume full map
+            size_x = int(input_obj.nrow)
+            size_y = int(input_obj.ncol)
+            full_core_locs = np.zeros((size_y,size_x), dtype='<U8')
+            for y in range(size_y):
+                for x in range(size_x):
+                    val = core_shape[y,x]
+                    if val is None or val[0] == "R":
+                        full_core_locs[y,x] = "    "
+                    else:
+                        full_core_locs[y,x] = val[0] + '-' + val[1:]
+        
     ## Store results alongside input data
         input_obj.xs_list = xs_list
         input_obj.tag_list = tag_list
         input_obj.core_dict = core_dict
         input_obj.core_lattice = core_lattice
         input_obj.pincal_loc = pincal_loc
+        input_obj.full_core_locs = full_core_locs
         
         return input_obj
 

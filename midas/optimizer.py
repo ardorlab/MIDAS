@@ -10,8 +10,7 @@ import csv
 
 from midas.algorithms import genetic_algorithm as GA
 from midas.utils import optimizer_tools as optools
-from midas.codes import parcs332 as parcs
-#!from midas.applications import parcs_332
+from midas.codes import parcs342
 
 
 ## Classes ##
@@ -41,8 +40,8 @@ class Optimizer():
         self.generation = optools.Generation(self.input.num_generations, num_gene_combos)
         self.fitness    = optools.Fitness()
         self.eval_func  = None
-        if self.input.code_interface == "parcs":
-            self.eval_func  = parcs.evaluate #assign, don't execute.
+        if self.input.code_interface == "parcs342":
+            self.eval_func  = parcs342.evaluate #assign, don't execute.
         
         if methodology == 'genetic_algorithm':
             self.algorithm = GA.Genetic_Algorithm(self.input)
@@ -86,13 +85,15 @@ class Optimizer():
         if chromosome:
             soln.chromosome = chromosome
         else: #generate random chromosome
-            soln.chromosome = soln.generate_initial(self.input.genome)
+            soln.chromosome = soln.generate_initial(self.input.calculation_type, self.input.genome)
 
         return soln
 
     def main(self):
         """
-        #!TODO: write docstring.
+        Primary execution logic for the Optimizer class. The intention is for all 
+        optimization jobs, regardless of algorithm, calculation type, or code model, 
+        to use this function.
         
         Written by Nicholas Rollins. 09/27/2024
         """
@@ -126,69 +127,99 @@ class Optimizer():
         logger.info("Done!")
     
     ## Archive initial results
-        archive_header = "Generation,Individual,Fitness Value"
-        for param in self.input.parameters.keys():
-            archive_header += ',' + str(param)
-        archive_header += ",Chromosome"
+        for soln in self.population.current:
+            self.population.archive['solutions'].append(soln.chromosome)
+            self.population.archive['fitnesses'].append(soln.fitness_value)
+            self.population.archive['parameters'].append(soln.parameters)
+        
+        ## Only initialize the results file the first time.
+        archive_header = ["Generation","Individual","Fitness Value"]
+        for param in self.input.objectives.keys():
+            archive_header.append(str(param))
+        archive_header.append("Chromosome")
         ## write output file
         with open("optimizer_results.csv", 'w') as csvfile:
-            csvwriter = csv.writer(csvfile, delimiter=',')
+            csvwriter = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
             csvwriter.writerow(archive_header)
         
-        best_soln_index = [s['value'] for s in self.population.current].index(max([s['value'] for s in self.population.current]))
+        best_soln_index = [s.fitness_value for s in self.population.current].index(max([s.fitness_value for s in self.population.current]))
         for i in range(len(self.population.current)):
             soln = self.population.current[i]
-            soln_result_string = str(self.generation.current) + ',' + str(i) + ',' + str(soln.fitness_value)
+            soln_result_list = [str(self.generation.current),str(i),str(soln.fitness_value)]
             for param in soln.parameters.keys():
-                soln_result_string += ',' + str(soln.parameter[param]['value'])
+                soln_result_list.append(str(soln.parameters[param]['value']))
             for gene in soln.chromosome:
-                soln_result_string += ',' + str(gene)
-                ## write to output file
-                with open("optimizer_results.csv", 'a') as csvfile:
-                    csvwriter = csv.writer(csvfile, delimiter=',')
-                    csvwriter.writerow(soln_result_string)
+                soln_result_list.append(str(gene))
+            ## write to output file
+            with open("optimizer_results.csv", 'a') as csvfile:
+                csvwriter = csv.writer(csvfile, delimiter=',')
+                csvwriter.writerow(soln_result_list)
             if i == best_soln_index:
-                best_soln_string = ",".join(soln_result_string.split(',')[2:]) #remove generation and individual index.
+                best_soln_string = ",".join(soln_result_list[2:]) #remove generation and individual index.
         
         
-        logger.info("Generation %s Best Individual:", self.population.current)
+        logger.info("Generation %s Best Individual:", self.generation.current)
         logger.info(best_soln_string+'\n') #!should there be a header to label entries?
         
-    ## Iterate over generations #!TODO: I believe selection is missing from this process?
-        for self.generation.current in range(self.generation.total):
+        
+## Iterate Over Generations  ## #!TODO: I believe selection is missing from this process?
+
+        for self.generation.current in range(1,self.generation.total):
         ## Create new generation
-            logger.info("Creating population of %s individuals for generation %s...", self.input.population_size, self.population.current+1)
+            logger.info("Creating population of %s individuals for generation %s...", self.input.population_size, self.generation.current)
             new_chromosome_list = self.algorithm.reproduction(self.population.current)
             self.population.current = []
             for i in range(len(new_chromosome_list)):
-                self.population.current.append(self.generate_solution(f'Gen_%s_Indv_{i}', self.population.current+1))
+                self.population.current.append(self.generate_solution(f'Gen_{self.generation.current}_Indv_{i}', new_chromosome_list[i]))
         
         ## Evaluate fitness
-            logger.info("Calculating fitness for generation %s...", self.population.current)
+            ## If chromosome exists in previous generations, skip call to external model.
+            inactive_solutions = []
+            for soln in self.population.current:
+                try:
+                    soln_index = self.population.archive['solutions'].index(soln.chromosome)
+                    soln.fitness_value = self.population.archive['fitnesses'][soln_index]
+                    soln.parameters = self.population.archive['parameters'][soln_index]
+                    inactive_solutions.append(soln)
+                    self.population.current.remove(soln)
+                    logger.debug(f"Fitness value for solution '{soln.name}' will be taken from the archive.")
+                except ValueError:
+                    continue #chromosome is unique, do nothing.
+            
+            logger.info("Calculating fitness for generation %s...", self.generation.current)
             ## Execute and parse objective/constraint values
             self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
             ## Calculate fitness from objective/constriant values
             for soln in self.population.current:
                 soln.fitness_value = self.fitness.calculate(soln.parameters)
             logger.info("Done!")
+            
+            ## Recombine active and inactive solutions.
+            for soln in inactive_solutions:
+                self.population.current.append(soln)
         
         ## Archive results
-            best_soln_index = [s['value'] for s in self.population.current].index(max([s['value'] for s in self.population.current]))
+            for soln in self.population.current:
+                self.population.archive['solutions'].append(soln.chromosome)
+                self.population.archive['fitnesses'].append(soln.fitness_value)
+                self.population.archive['parameters'].append(soln.parameters)
+            
+            best_soln_index = [s.fitness_value for s in self.population.current].index(max([s.fitness_value for s in self.population.current]))
             for i in range(len(self.population.current)):
                 soln = self.population.current[i]
-                soln_result_string = str(self.generation.current) + ',' + str(i) + ',' + str(soln.fitness_value)
+                soln_result_list = [str(self.generation.current),str(i),str(soln.fitness_value)]
                 for param in soln.parameters.keys():
-                    soln_result_string += ',' + str(soln.parameter[param]['value'])
+                    soln_result_list.append(str(soln.parameters[param]['value']))
                 for gene in soln.chromosome:
-                    soln_result_string += ',' + str(gene)
-                    ## write to output file
-                    with open("optimizer_results.csv", 'a') as csvfile:
-                        csvwriter = csv.writer(csvfile, delimiter=',')
-                        csvwriter.writerow(soln_result_string)
+                    soln_result_list.append(str(gene))
+                ## write to output file
+                with open("optimizer_results.csv", 'a') as csvfile:
+                    csvwriter = csv.writer(csvfile, delimiter=',')
+                    csvwriter.writerow(soln_result_list)
                 if i == best_soln_index:
-                    best_soln_string = ",".join(soln_result_string.split(',')[2:]) #remove generation and individual index.
+                    best_soln_string = ",".join(soln_result_list[2:]) #remove generation and individual index.
             
-            logger.info("Generation %s Best Individual:", self.population.current)
+            logger.info("Generation %s Best Individual:", self.generation.current)
             logger.info(best_soln_string+'\n') #!should there be a header to label entries?
     
         return
