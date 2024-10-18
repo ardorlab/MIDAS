@@ -52,6 +52,7 @@ class Genetic_Algorithm():
         Updated by Nicholas Rollins. 09/27/2024
         """
     ## Perform selection process of parents
+        # Selection is established by biasing reproduction using an ordered list.
         pop_list = self.selection_methods(pop_list, self.input.selection)
     
     ## Select individuals for mutation. The rest undergo crossover.
@@ -73,17 +74,22 @@ class Genetic_Algorithm():
                 mutation_list.append(soln_to_move)
                 crossover_list.remove(soln_to_move)
     
+        LWR_core_parameters = [self.input.nrow, self.input.ncol, self.input.symmetry]
     ## Perform Crossover
         crossover_mates_lists = GA_reproduction.crossover_assign_mates(crossover_list)
         child_chromosome_list = []
         for mate_one, mate_two in zip(crossover_mates_lists[0], crossover_mates_lists[1]):
-            child_one, child_two = GA_reproduction.crossover(mate_one, mate_two, self.input.mutation_rate['initial_rate'], self.input.genome) #!TODO: this should be an adaptive rate.
+            child_one, child_two = GA_reproduction.crossover(mate_one, mate_two, 
+                                                            self.input.mutation_rate['initial_rate'], 
+                                                            LWR_core_parameters, self.input.genome, self.input.batches) # default for 'batches' is None. #!TODO: this should be an adaptive mutation rate.
             child_chromosome_list.extend([child_one, child_two])
     
     ## Perform Mutation
         for chromosome in mutation_list:
             if self.input.mutation_type == "mutate_by_gene":
                 child = GA_reproduction.mutate_by_gene(self.input, chromosome)
+            else:
+                raise ValueError("Requested mutation type not recognized.")
             child_chromosome_list.append(child)
         
         return child_chromosome_list
@@ -103,13 +109,16 @@ class Genetic_Algorithm():
 
 class GA_reproduction():
     """
-    #!TODO: write docstring.
+    Functions for performing reproduction of chromosomes using GA
+    methodologies, including crossover and mutation. Does not include
+    the random generation of new individuals.
     
     Written by Nicholas Rollins. 09/27/2024
     """
-    def crossover_assign_mates(crossover_list):
+    def crossover_assign_mates(crossover_list,SS_decode=False):
         """
-        #!TODO: write docstring.
+        Before crossover between chromosomes can be performed, the
+        individuals in the population need to be paired off.
         
         Written by Nicholas Rollins. 09/27/2024
         """
@@ -120,10 +129,13 @@ class GA_reproduction():
 
             partner_similarities = -1
             for suitor in crossover_list:
-                if suitor is parent_one:
-                    pass
-                else:
-                    new_suitor_similarities = GA_reproduction.check_intersection(parent_one, suitor)
+                if not suitor is parent_one:
+                    if SS_decode:
+                        parent_one_zones = [loc[0] for loc in parent_one]
+                        suitor_zones = [loc[0] for loc in suitor]
+                        new_suitor_similarities = GA_reproduction.check_intersection(parent_one_zones, suitor_zones)
+                    else:
+                        new_suitor_similarities = GA_reproduction.check_intersection(parent_one, suitor)
                     if new_suitor_similarities > partner_similarities:
                         parent_two = suitor[:]
                         partner_similarities = new_suitor_similarities
@@ -134,9 +146,10 @@ class GA_reproduction():
 
             first_mate_list.append(parent_one)
             second_mate_list.append(parent_two)
+        
         return (first_mate_list, second_mate_list)
     
-    def crossover(chromosome_one, chromosome_two, mutation_rate, genome):
+    def crossover(chromosome_one, chromosome_two, mutation_rate, LWR_core_parameters, genome, batches=None):
         """
         Function for performing crossover of the mated solutions by swapping
         differing genes between the chromosomes. Edited as of 1/20/2020 to account
@@ -155,32 +168,69 @@ class GA_reproduction():
         """
         difference_positions = GA_reproduction.return_different_positions(chromosome_one, chromosome_two)
         genes_list = list(genome.keys())
+        if batches:
+            genes_list = list(batches.keys())
         
-        child_one = []
-        child_two = []
-        position_count = 0
-        for i, j in zip(chromosome_one, chromosome_two):
-            if position_count in difference_positions:
-                if random.random() < mutation_rate:
-                    child1_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, 
-                                                                                 genome, 
-                                                                                 child_one+chromosome_one[len(child_one):]) #constrain input for child_one
-                    child2_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, 
-                                                                                 genome, 
-                                                                                 child_two+chromosome_two[len(child_two):]) #constrain input for child_two
-                    if j in child1_gene_opts and i in child2_gene_opts: #swap genes
-                        child_one.append(j)
-                        child_two.append(i)
+        chromosome_is_valid = False
+        attempts = 0
+        while not chromosome_is_valid:
+            child_one = []
+            child_two = []
+            position_count = 0
+            for i, j in zip(chromosome_one, chromosome_two):
+                if position_count in difference_positions:
+                    if random.random() < mutation_rate:
+                        if batches:
+                            if i[0] != j[0]: #batches don't match.
+                                #constrain input for child_one and child_two
+                                child1_zone = [loc[0] for loc in child_one+chromosome_one[len(child_one):]]
+                                child2_zone = [loc[0] for loc in child_two+chromosome_two[len(child_two):]]
+                                child1_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, batches, 
+                                                                                             LWR_core_parameters, child1_zone)
+                                child2_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, batches, 
+                                                                                             LWR_core_parameters, child2_zone)
+                                if j[0] in child1_gene_opts and i[0] in child2_gene_opts: #swap batches
+                                    child_one.append((j[0],None))
+                                    child_two.append((i[0],None))
+                                else: #don't swap batches
+                                    child_one.append(i)
+                                    child_two.append(j)
+                            elif i[1] != j[1]: #FA's don't match.
+                                #swapping FA's won't be constrained here; any potential conflicts will be resolved by EQ_reload_fuel().
+                                child_one.append(j)
+                                child_two.append(i)
+                        else:
+                            #constrain input for child_one and child_two
+                            child1_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, genome, LWR_core_parameters, 
+                                                                                         child_one+chromosome_one[len(child_one):])
+                            child2_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, genome, LWR_core_parameters, 
+                                                                                         child_two+chromosome_two[len(child_two):])
+                            if j in child1_gene_opts and i in child2_gene_opts: #swap genes
+                                child_one.append(j)
+                                child_two.append(i)
+                            else: #don't swap genes
+                                child_one.append(i)
+                                child_two.append(j)
                     else: #don't swap genes
                         child_one.append(i)
                         child_two.append(j)
                 else: #don't swap genes
                     child_one.append(i)
                     child_two.append(j)
-            else: #don't swap genes
-                child_one.append(i)
-                child_two.append(j)
-            position_count += 1
+                position_count += 1
+                
+            attempts += 1
+            if optools.Constrain_Input.check_constraints(genes_list,batches,LWR_core_parameters,\
+                                                         [loc[0] for loc in child_one]) and \
+               optools.Constrain_Input.check_constraints(genes_list,batches,LWR_core_parameters,\
+                                                         [loc[0] for loc in child_two]):
+                chromosome_is_valid = True
+            if attempts > 1000:
+                raise ValueError("Crossover has failed after 1,000 attempts. Consider relaxing the constraints on the input space.")
+                
+        if batches: #reload fuel in 'None' locations.
+            child_one = optools.Constrain_Input.EQ_reload_fuel(genome,LWR_core_parameters,child_one)
+            child_two = optools.Constrain_Input.EQ_reload_fuel(genome,LWR_core_parameters,child_two)
 
         return child_one, child_two
     
@@ -194,7 +244,6 @@ class GA_reproduction():
         for i, j in zip(list_one, list_two):
             if i == j:
                 match_count += 1
-
         return match_count
     
     @staticmethod
@@ -206,12 +255,9 @@ class GA_reproduction():
         diff_position_list = []
         position_count = 0
         for i, j in zip(list_one, list_two):
-            if i == j:
-                pass
-            else:
+            if not i == j:
                 diff_position_list.append(position_count)
             position_count += 1
-
         return diff_position_list
     
 ## Mutation types ##
@@ -221,21 +267,54 @@ class GA_reproduction():
         
         Updated by Nicholas Rollins. 09/27/2024
         """
-
-        child_chromosome = deepcopy(chromosome)
+        ## Initialize logging for the present file
+        logger = logging.getLogger("MIDAS_logger")
+        
+        LWR_core_parameters = [input_obj.nrow, input_obj.ncol, input_obj.symmetry]
+        
+        if input_obj.calculation_type in ["eq_cycle"]:
+            zone_chromosome = [loc[0] for loc in chromosome]
+            child_zone_chromosome = deepcopy(zone_chromosome)
+            old_soln = zone_chromosome
+            new_soln = child_zone_chromosome
+            all_gene_options = input_obj.batches
+            all_genes_list = list(input_obj.batches.keys())
+        else:
+            child_chromosome = deepcopy(chromosome)
+            old_soln = chromosome
+            new_soln = child_chromosome
+            all_gene_options = input_obj.genome
+            all_genes_list = list(input_obj.genome.keys())
 
         num_mutations = 1 #!TODO: this was hardcoded to 1 in old MIDAS. Should probably be parameterized.
-        while child_chromosome == chromosome:
-            for i in range(num_mutations):
-                loc_to_mutate = random.randint(0, len(child_chromosome)-1) #choose a random gene
-                old_gene = child_chromosome[loc_to_mutate]
+        chromosome_is_valid = False
+        attempts = 0
+        while not chromosome_is_valid:
+            while new_soln == old_soln:
+                for i in range(num_mutations):
+                    loc_to_mutate = random.randint(0, len(new_soln)-1) #choose a random gene
+                    old_gene = new_soln[loc_to_mutate]
+                    gene_options = optools.Constrain_Input.calc_gene_options(all_genes_list, all_gene_options, LWR_core_parameters, old_soln) #constraint input
+                    new_gene = random.choice(gene_options)
+                    if new_gene != old_gene:
+                        if all_gene_options[new_gene]['map'][loc_to_mutate] == 1:
+                            new_soln[loc_to_mutate] = new_gene
+            chromosome_is_valid = optools.Constrain_Input.check_constraints(all_genes_list,all_gene_options,\
+                                                                            LWR_core_parameters,new_soln)
+            attempts += 1
+            if attempts > 100000:
+                logger.error(f"Mutate-by-Gene has failed after 100,000 attempts; Parent will be restored. Consider relaxing the constraints on the input space.")
+                new_soln = deepcopy(old_soln)
 
-                genes_list = list(input_obj.genome.keys())
-                gene_options = optools.Constrain_Input.calc_gene_options(genes_list, input_obj.genome, child_chromosome) #constraint input
-                new_gene = random.choice(gene_options)
-                if new_gene != old_gene:
-                    if input_obj.genome[new_gene]['map'][loc_to_mutate] == 1:
-                        child_chromosome[loc_to_mutate] = new_gene
+        if input_obj.calculation_type in ["eq_cycle"]:
+            #recreate child_chromosome
+            child_chromosome = []
+            for i in range(len(new_soln)):
+                if new_soln[i] == chromosome[i][0]:
+                    child_chromosome.append(chromosome[i])
+                else:
+                    child_chromosome.append((new_soln[i],None))
+            child_chromosome = optools.Constrain_Input.EQ_reload_fuel(input_obj.genome,LWR_core_parameters,child_chromosome)
 
         return child_chromosome
 

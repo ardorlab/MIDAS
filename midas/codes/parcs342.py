@@ -8,79 +8,10 @@ from copy import deepcopy
 from pathlib import Path
 import subprocess
 from subprocess import STDOUT
+from midas.utils.optimizer_tools import Constrain_Input
 
 
 ## Functions ##
-def get_results(parameters, filename, job_failed=False): #!TODO: implement pin power reconstruction.
-    """
-    Currently supports cycle length, F_q, F_dh, and max boron.
-    
-    Updated by Nicholas Rollins. 09/27/2024
-    """
-    ## Initialize logging for the present file
-    logger = logging.getLogger("MIDAS_logger")
-    
-    ## Prepare container for results
-    results_dict = {}
-    for res in ["cycle_length", "pinpowerpeaking", "fdeltah", "max_boron"]:
-        results_dict[res] = {}
-        results_dict[res]['value'] = []
-        
-    if not job_failed:
-        ## Read file for parsing
-        with open(filename + ".parcs_dpl", "r") as ofile:
-            filestr = ofile.read()
-        
-        ## Split file by section
-        res_str = filestr.split('===============================================================================')
-        res_str = res_str[1].split('_______________________________________________________________________________')
-        res_str = res_str[0].split('\n')
-        
-        ## Parse raw values by timestep
-        efpd_list = []; boron_list = []; keff_list = []; fq_list = []; fdh_list = []
-        for i in range(2, len(res_str)-1):
-            res_val=res_str[i].split()
-            
-            efpd_list.append(float(res_val[9]))
-            boron_list.append(float(res_val[14]))
-            keff_list.append(float(res_val[2]))
-            fq_list.append(float(res_val[7]))
-            fdh_list.append(float(res_val[6]))
-        
-        del filestr, res_str, res_val #unload file contents to clean up memory
-        
-        results_dict["cycle_length"]["value"] = calc_cycle_length(efpd_list,boron_list,keff_list)
-        results_dict["pinpowerpeaking"]["value"] = max(fq_list)
-        results_dict["fdeltah"]["value"] = max(fdh_list)
-        results_dict["max_boron"]["value"] = max(boron_list)
-        
-        ## Correct Boron value if non-critical
-        if results_dict["max_boron"]["value"] == 1800.0: #!TODO: initial guess should be a variable. can this be read from output file?
-            new_max_boron = 0
-            for i in range(len(boron_list)): #!TODO: I think this serves to line up boron_list with keff_list. Could be replaced by index()
-                if boron_list[i]== 1800.0:
-                    boron_worth = 10.0 #pcm/ppm
-                    excess_rho = (keff_list[i] - 1.0)*10**5 #pcm; excess reactivity
-                    excess_boron = excess_rho/boron_worth #ppm
-                    max_boron_corrected = 1800.0 + excess_boron
-                    if mboron > new_max_boron:
-                        new_max_boron = mboron
-            results_dict["max_boron"]["value"] = new_max_boron
-    
-    else: #job has failed; fill parameters with absurdly negative values.
-        results_dict["cycle_length"]["value"] = 0.0
-        results_dict["pinpowerpeaking"]["value"] = 10.0
-        results_dict["fdeltah"]["value"] = 10.0
-        results_dict["max_boron"]["value"] = 10000
-    
-    for param in parameters.keys():
-        if param in results_dict:
-            parameters[param]['value'] = results_dict[param]["value"]
-        else:
-            logger.warning(f"Parameter '{param}' not supported in PARCS342 results parsing.")
-    
-    return parameters
-
 def evaluate(solution, input):
     """
     #!TODO: write docstring.
@@ -99,25 +30,51 @@ def evaluate(solution, input):
     logger.debug(f"Changing to new working directory: {indv_dir}")
     os.chdir(indv_dir)
 
-## Prepare depletion file template #!TODO: can this file be dynamically generated instead of copied? #!TODO: is this necessary?
-    if input.map_size == 'quarter':
-        if input.num_assemblies == 193:
-            shutil.copyfile('/home1/nkrollin/midas/MIDAS/samples/xslib/' + 'boc_exp_quart193_18.dep', 'boc_exp.dep') #!TODO: change this path to global variable
-    else: #assume full geometry if not quarter-core
-        if input.num_assemblies == 193:
-            shutil.copyfile('/home1/nkrollin/midas/MIDAS/samples/xslib/' + 'boc_exp_full193.dep', 'boc_exp.dep')
-        elif input.num_assemblies == 157:
-            shutil.copyfile('/home1/nkrollin/midas/MIDAS/samples/xslib/' + 'boc_exp_full157.dep', 'boc_exp.dep')
+## Prepare depletion file template
+    with open('boc_exp.dep',"w") as depfile:
+        depfile.write("\n BEGIN STEP\n\n EXP 3D MAP 1.0E+00\n\n")
+        columncount = 0
+        for i in range(1,input.num_assemblies+1):
+            ## write column headers
+            if columncount == 0:
+                depfile.write(" k lb ")
+            depfile.write(str(i).ljust(8))
+            columncount += 1
+            ## write rows for every 10 columns
+            if columncount == 10:
+                depfile.write('\n')
+                for j in range(input.number_axial-2,0,-1): #iterate in reverse; assume 1 node each top and bottom reflectors.
+                    depfile.write(' '+str(j).ljust(3))
+                    for k in range(columncount):
+                        depfile.write('{:.3f}'.format(input.boc_exposure).rjust(8))
+                    depfile.write('\n')
+                depfile.write('\n')
+                columncount = 0
+        ## write rows for leftover columns
+        if columncount!= 0:
+            depfile.write('\n')
+            for j in range(input.number_axial-2,0,-1): #iterate in reverse; assume 1 node each top and bottom reflectors.
+                depfile.write(' '+str(j).ljust(3))
+                for k in range(columncount):
+                    depfile.write('{:.3f}'.format(input.boc_exposure).rjust(8))
+                depfile.write('\n')
+            depfile.write('\n')
+        depfile.write(' END STEP\n')
     
 ## Prepare values for file writing
     list_unique_xs = np.concatenate([value if isinstance(value,list) else np.concatenate(list(value.values()))\
                                     for value in input.xs_list.values()])
 
-    ## Fill loading pattern with chromosome
+    ## Fill loading pattern with chromosome (core_dict from Prepare_Problem_Values.prepare_cycle)
     fuel_locations = [loc for loc in input.core_dict.keys() if 2 < len(loc) <  5]
     soln_fuel_locations = {}
-    for i in range(len(solution.chromosome)):
-        soln_fuel_locations[fuel_locations[i]] = solution.chromosome[i]
+    if input.calculation_type in ['eq_cycle']:
+        soln_FAs = Constrain_Input.SS_decoder(solution.chromosome)
+        for i in range(len(solution.chromosome)):
+            soln_fuel_locations[fuel_locations[i]] = soln_FAs[i]
+    else:
+        for i in range(len(solution.chromosome)):
+            soln_fuel_locations[fuel_locations[i]] = solution.chromosome[i]
     
     soln_core_dict = deepcopy(input.core_dict)
     for loc, label in soln_fuel_locations.items():
@@ -163,6 +120,8 @@ def evaluate(solution, input):
         ofile.write("      CORE_TYPE  PWR\n")
         ofile.write("      PPM        1000 1.0 1800.0 10.0\n")
         ofile.write("      DEPLETION  T  1.0E-5 T\n")
+        if input.calculation_type in ['eq_cycle']:
+            ofile.write("      MULT_CYC   T  F\n") #v3.4.2 specific line to enable the MCYCLE block
         ofile.write("      TREE_XS    T  {}  T  T  F  F  T  F  T  F  T  F  T  T  T  F  F \n".format(int(len(list_unique_xs))))
         ofile.write("      BANK_POS   100 100 100 100 100 100\n")
         ofile.write("      XE_SM      1 1 1 1\n")
@@ -302,7 +261,7 @@ def evaluate(solution, input):
         ofile.write("DEPL\n")
         if input.calculation_type == 'single_cycle':
             ofile.write("      TIME_STP  1 1 4*30\n") #!TODO: parameterize this input.
-        #!ofile.write("      INP_HST   './boc_exp.dep' -2 1\n") #!TODO: I don't believe this is necessary.
+        ofile.write("      INP_HST   './boc_exp.dep' -2 1\n")
         ofile.write("      OUT_OPT   T  T  T  T  F\n")
         # Write reflector cross sections
         ofile.write("      PMAXS_F   1 '{}{}' 1\n".format(input.xs_lib / Path(input.xs_list['reflectors']['bot'][0]),\
@@ -330,20 +289,21 @@ def evaluate(solution, input):
                                                               input.xs_lib / Path(input.xs_list['fuel'][i]),\
                                                               input.xs_extension,fxs_index))
     
-    ## MCYCL Block ##
-    if input.calculation_type == 'eq_cycle':
+    ## MCYCLE Block ##
+    if input.calculation_type in ['eq_cycle']:
+        soln_full_core_lattice = prepare_shuffling_map(input, solution.chromosome)
         with open(filename,"a") as ofile:
             ofile.write("\n")
             ofile.write("!******************************************************************************\n\n")
             
-            ofile.write("MCYCL\n")
+            ofile.write("MCYCLE\n")
             ofile.write("    CYCLE_DEF   1\n")
             ofile.write("      DEPL_STEP 1 1 17*30 18\n")
             ofile.write("      POWER_LEV 21*100.0\n")
             ofile.write("      BANK_SEQ  21*1\n\n")
             
-            ofile.write("    LOCATION\n")
-            for x in range(1,input.full_core_locs.shape[0]-1):
+            ofile.write("    LOCATION   0\n")
+            for x in range(input.full_core_locs.shape[0]):
                 for y in range(input.full_core_locs.shape[1]):
                     val = input.full_core_locs[x,y]
                     try:
@@ -357,15 +317,21 @@ def evaluate(solution, input):
             ofile.write("\n")
             
             ofile.write("    SHUF_MAP   1   1\n")
-            #!TODO: add shuffle map from chromosome.
-            ofile.write("\n")
+            for x in range(soln_full_core_lattice.shape[0]):
+                for y in range(soln_full_core_lattice.shape[1]):
+                    val = soln_full_core_lattice[x,y]
+                    ofile.write(str(soln_full_core_lattice[x,y]))
+                    ofile.write("  ")
+                ofile.write('\n')
+            ofile.write('\n')
             
             ofile.write("    CYCLE_IND    1  0  1\n")
-            for i in range(2,10): #!TODO: this max number of cycles could easily be a parameter.
+            max_convergence_cycles = 2 #!TODO: this max number of cycles could easily be a parameter.
+            for i in range(2,max_convergence_cycles+1):
                 ofile.write(f"    CYCLE_IND    {i}  1  1\n")
             ofile.write(f"    CONV_EC    0.1  {i}\n")
     
-    ## Terminate ##
+    ## Termination Character ##
     with open(filename,"a") as ofile:
         ofile.write(".")
 
@@ -391,6 +357,76 @@ def evaluate(solution, input):
     gc.collect()
     
     return solution
+
+def get_results(parameters, filename, job_failed=False): #!TODO: implement pin power reconstruction.
+    """
+    Currently supports cycle length, F_q, F_dh, and max boron.
+    
+    Updated by Nicholas Rollins. 09/27/2024
+    """
+    ## Initialize logging for the present file
+    logger = logging.getLogger("MIDAS_logger")
+    
+    ## Prepare container for results
+    results_dict = {}
+    for res in ["cycle_length", "pinpowerpeaking", "fdeltah", "max_boron"]:
+        results_dict[res] = {}
+        results_dict[res]['value'] = []
+        
+    if not job_failed:
+        ## Read file for parsing
+        with open(filename + ".parcs_dpl", "r") as ofile:
+            filestr = ofile.read()
+        
+        ## Split file by section
+        res_str = filestr.split('===============================================================================')
+        res_str = res_str[-1].split('_______________________________________________________________________________')
+        res_str = res_str[0].split('\n')
+        
+        ## Parse raw values by timestep
+        efpd_list = []; boron_list = []; keff_list = []; fq_list = []; fdh_list = []
+        for i in range(2, len(res_str)-1):
+            res_val=res_str[i].split()
+            
+            efpd_list.append(float(res_val[9]))
+            boron_list.append(float(res_val[14]))
+            keff_list.append(float(res_val[2]))
+            fq_list.append(float(res_val[7]))
+            fdh_list.append(float(res_val[6]))
+        
+        del filestr, res_str, res_val #unload file contents to clean up memory
+        
+        results_dict["cycle_length"]["value"] = calc_cycle_length(efpd_list,boron_list,keff_list)
+        results_dict["pinpowerpeaking"]["value"] = max(fq_list)
+        results_dict["fdeltah"]["value"] = max(fdh_list)
+        results_dict["max_boron"]["value"] = max(boron_list)
+        
+        ## Correct Boron value if non-critical
+        if results_dict["max_boron"]["value"] == 1800.0: #!TODO: initial guess should be a variable. can this be read from output file?
+            new_max_boron = 0
+            for i in range(len(boron_list)): #!TODO: I think this serves to line up boron_list with keff_list. Could be replaced by index()
+                if boron_list[i]== 1800.0:
+                    boron_worth = 10.0 #pcm/ppm
+                    excess_rho = (keff_list[i] - 1.0)*10**5 #pcm; excess reactivity
+                    excess_boron = excess_rho/boron_worth #ppm
+                    max_boron_corrected = 1800.0 + excess_boron
+                    if mboron > new_max_boron:
+                        new_max_boron = mboron
+            results_dict["max_boron"]["value"] = new_max_boron
+    
+    else: #job has failed; fill parameters with absurdly negative values.
+        results_dict["cycle_length"]["value"] = 0.0
+        results_dict["pinpowerpeaking"]["value"] = 10.0
+        results_dict["fdeltah"]["value"] = 10.0
+        results_dict["max_boron"]["value"] = 10000
+    
+    for param in parameters.keys():
+        if param in results_dict:
+            parameters[param]['value'] = results_dict[param]["value"]
+        else:
+            logger.warning(f"Parameter '{param}' not supported in PARCS342 results parsing.")
+    
+    return parameters
 
 def calc_cycle_length(efpd,boron,keff):
     if boron[-1]==0.1:
@@ -422,3 +458,46 @@ def calc_cycle_length(efpd,boron,keff):
         def_dbor = defpd/dbor
         eoc = efpd[-1] + def_dbor*(boron[-1]-0.1)
     return eoc
+
+def prepare_shuffling_map(input, chromosome):
+    """
+    Prepares the formatted full-core shuffling scheme for the MCYCL block.
+    
+    Written by Nicholas Rollins. 10/16/2024
+    """
+    # map with labels that much the format in input.core_dict
+    full_core_lattice = deepcopy(input.full_core_locs)
+    for i in range(len(full_core_lattice)):
+        for j in range(len(full_core_lattice[i])):
+            full_core_lattice[i][j] = full_core_lattice[i][j].replace('-','')
+
+    # array to hold the final map for printing
+    soln_full_core_lattice = deepcopy(full_core_lattice)
+    soln_labels_list = []
+    for key in input.core_dict.keys():
+        if key[0] != "R":
+            soln_labels_list.append(key)        
+
+    # fill map with shuffling scheme
+    for i in range(len(chromosome)):
+        labels = [soln_labels_list[i]] #which loc/FA we're pulling from
+        labels.extend(input.core_dict[labels[0]]['Symmetric_Assemblies'])
+        try:
+            source_labels = [soln_labels_list[chromosome[i][1]]]
+            source_labels.extend(input.core_dict[source_labels[0]]['Symmetric_Assemblies'])
+            tags = []
+            for loc in source_labels:
+                tags.append(loc[0]+'-'+loc[1:]) #value to print in loc
+        except TypeError:
+            for fueltype in input.tag_list['fuel']:
+                if fueltype[1] == chromosome[i][1]:
+                    tags = [' -'+fueltype[0]]*len(labels)
+                    break
+
+        for idx in range(len(labels)):
+            for irow in range(len(full_core_lattice)):
+                for jcol in range(len(full_core_lattice[irow])):
+                    if full_core_lattice[irow][jcol] == labels[idx]:
+                        soln_full_core_lattice[irow][jcol] = tags[idx]
+    
+    return soln_full_core_lattice

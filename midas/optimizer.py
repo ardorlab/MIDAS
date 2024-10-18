@@ -49,25 +49,20 @@ class Optimizer():
 
         return
     
-    def calculate_number_gene_combinations(self, genome_map):
+    def calculate_number_gene_combinations(self, genome):
         """
         Calculates number of possible gene combinations for inputs.
 
         parameters:
-            genome_map: From the input file data dictionary would be the two
-            keys: [decision_variables][parameters]. 
+            genome_map: From the input file data dictionary under the keys: 
+            [decision_variables][parameters]. 
         
         Written by Brian Andersen. 1/7/2019
         Updated by Nicholas Rollins. 09/24/2024
         """
-        
         number_changes = 0
-        for chromosome in genome_map:
-            if chromosome == 'symmetry_list':
-                pass
-            else:
-                number_changes += len(genome_map[chromosome]['map'])  
-
+        for gene in genome:
+            number_changes += len(genome[gene]['map'])  
         return number_changes
     
     def generate_solution(self,name,chromosome=None):
@@ -82,10 +77,12 @@ class Optimizer():
         #copy objectives and constraints from input
         soln.parameters = deepcopy(self.input.objectives)
         
+        LWR_core_parameters = [self.input.nrow, self.input.ncol, self.input.symmetry]
         if chromosome:
             soln.chromosome = chromosome
         else: #generate random chromosome
-            soln.chromosome = soln.generate_initial(self.input.calculation_type, self.input.genome)
+            soln.chromosome = soln.generate_initial(self.input.calculation_type, LWR_core_parameters,\
+                                                    self.input.genome, self.input.batches) #'batches' is None when not applicable.
 
         return soln
 
@@ -155,11 +152,11 @@ class Optimizer():
                 csvwriter = csv.writer(csvfile, delimiter=',')
                 csvwriter.writerow(soln_result_list)
             if i == best_soln_index:
-                best_soln_string = ",".join(soln_result_list[2:]) #remove generation and individual index.
+                best_soln_string = ",".join(soln_result_list)
         
         
         logger.info("Generation %s Best Individual:", self.generation.current)
-        logger.info(best_soln_string+'\n') #!should there be a header to label entries?
+        logger.info(', '.join(archive_header)+'\n'+best_soln_string+'\n')
         
         
 ## Iterate Over Generations  ## #!TODO: I believe selection is missing from this process?
@@ -217,9 +214,12 @@ class Optimizer():
                     csvwriter = csv.writer(csvfile, delimiter=',')
                     csvwriter.writerow(soln_result_list)
                 if i == best_soln_index:
-                    best_soln_string = ",".join(soln_result_list[2:]) #remove generation and individual index.
+                    best_soln_string = ",".join(soln_result_list)
             
             logger.info("Generation %s Best Individual:", self.generation.current)
-            logger.info(best_soln_string+'\n') #!should there be a header to label entries?
+            logger.info(', '.join(archive_header)+'\n'+best_soln_string+'\n')
+        
+## Optimization concluded
+        #!TODO: do some wrap-up after the optimizer. Report best solution, statistics, etc.
     
         return
