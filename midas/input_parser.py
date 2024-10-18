@@ -282,7 +282,7 @@ def validate_input(keyword, value):
             raise ValueError("Assembly optinos must be nested with reflectors, fuels, and/or blankets with their parameters.")
     
 ## Genome Block ##
-    elif keyword == 'parameters':
+    elif keyword in ['parameters', 'batches']:
         new_dict = {}
         if isinstance(value, dict):
             for key, item in value.items():
@@ -309,10 +309,11 @@ def validate_input(keyword, value):
                                             new_subsubitem = int(subsubitem)
                                         except ValueError:
                                             new_subsubitem = str(subsubitem)
-                                new_subitem[new_subsubkey] = new_subsubitem
+                                    new_subitem[new_subsubkey] = new_subsubitem
                             else:
                                 if not subitem: #allow constraint option to be "None".
-                                    new_dict[new_subkey] = None
+                                    new_subitem = None
+                            new_dict[new_key][new_subkey] = new_subitem
                 else:
                     raise ValueError(f"Decision variables '{key}' must be nested with its parameters.")
             #check decision variable logic
@@ -336,9 +337,18 @@ def validate_input(keyword, value):
                             raise ValueError(f"'Less Than' constraint for decision variable '{key}' may not be '{key}'.")
                 else:
                     new_dict[key]['constraint'] = None
+                if keyword == 'batches': #!TODO: add a check to make sure batch 0 exists, and batches are numbered in order.
+                    new_key = key.lower().replace(' ','_').split('_')
+                    try:
+                        batch_num = int(new_key[-1])
+                    except ValueError:
+                        raise ValueError("Please restrict the 'batches' names to the form e.g. 'batch 0' (zero-indexed).")
             return new_dict
         else:
-            raise ValueError("Decision variable parameters must be nested with gene options and their parameters.")
+            if not value:
+                return None
+            else:
+                raise ValueError(f"Decision variable '{keyword}' must be nested with parameter options and their parameters.")
     
 ## Calculation Block ##
     elif keyword == 'num_rows':
@@ -391,6 +401,12 @@ def validate_input(keyword, value):
                 new_value.append(float(node))
         return new_value
     
+    elif keyword == 'boc_core_exposure':
+        try:
+            value = float(value)
+        except ValueError:
+            raise ValueError("'boc_core_exposure' must be a real number.")
+    
     return value
 
 
@@ -442,10 +458,13 @@ class Input_Parser():
         
     ## Genome Block ##
         self.genome = yaml_line_reader(self.file_settings['decision_variables'], 'parameters', None)
+        self.batches = yaml_line_reader(self.file_settings['decision_variables'], 'batches', None)
         #check that decision variable options are valid.
         for key, value in self.genome.items():
             if key not in self.fa_options['fuel']:
                 raise ValueError(f"Decision variable option '{key}' not found in the list of fuel types under 'assembly_options'.")
+        if self.calculation_type == 'eq_cycle' and not self.batches:
+            raise ValueError(f"'Batches' must be specified in Decision Variables for the 'EQ Cycle' type.")
         
     ## Calculation Block ##
         info = self.file_settings['parcs_data'] #!TODO: this needs to be set by calculation_type
@@ -463,5 +482,6 @@ class Input_Parser():
         self.pin_power_recon = yaml_line_reader(info, 'pin_power_recon', True)
         self.number_axial = yaml_line_reader(info, 'num_axial_nodes', 19)
         self.axial_nodes = yaml_line_reader(info, 'axial_nodes', "16.12, 20.32, 15*25.739, 20.32, 16.12")
+        self.boc_exposure = yaml_line_reader(info, 'boc_core_exposure', 0.0)
         
         return

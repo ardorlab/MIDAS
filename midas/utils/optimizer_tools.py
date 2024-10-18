@@ -1,7 +1,9 @@
 ## Import Block ##
 import math
 import random
+import numpy as np
 from copy import deepcopy
+from midas.utils.problem_preparation import LWR_Core_Shapes
 """
 These are generic optimizer classes that are shared by all algorithms. #!TODO: can this be solved with the super().__init__ method?
 """
@@ -66,7 +68,7 @@ class Solution():
         self.chromosome = []
         self.fitness_value = float("NaN")
     
-    def generate_initial(self,calc_type,genome):
+    def generate_initial(self,calc_type,LWR_core_parameters,genome,batches=None):
         """
         Generates the initial solutions to the optimization problem by
           randomly generating a new chromosome.
@@ -78,13 +80,13 @@ class Solution():
         Written by Nicholas Rollins. 10/11/2024
         """
         if calc_type in ['single_cycle']:
-            return self.LP_chromosome(genome)
+            return self.LP_chromosome(genome, LWR_core_parameters)
         elif calc_type == 'eq_cycle':
-            return self.EQ_chromosome(genome)
+            return self.EQ_chromosome(genome, batches, LWR_core_parameters)
         else:
             return None
     
-    def LP_chromosome(self,genome):
+    def LP_chromosome(self,genome,LWR_core_parameters):
         genes_list = list(genome.keys())
         chromosome_length = []
         for gene in genes_list:
@@ -92,40 +94,241 @@ class Solution():
         
         chromosome = []
         for i in range(max(chromosome_length)):
-                gene_options = Constrain_Input.calc_gene_options(genes_list, genome, chromosome)
+                gene_options = Constrain_Input.calc_gene_options(genes_list, genome, LWR_core_parameters, chromosome)
                 gene = random.choice(gene_options)
                 if genome[gene]['map'][i]: #check that the selected gene option is viable at this location.
                     chromosome.append(gene)
         
         return chromosome
     
-    def EQ_chromosome(self,genome):
-        raise ValueError("DEBUG STOP")#!
+    def EQ_chromosome(self,genome,batches,LWR_core_parameters):
+        """
+        Encodes the shuffling scheme as a chromosome for Equilibrium cycle 
+        calculations. Each entry is a tuple containing the batch name loaded in 
+        that location, and either the name of the fuel assembly type (if fresh fuel)
+        or the index in the chromosome of the shuffling source for the fuel assembly
+        (if reloaded fuel).
+        
+        chromosome: list, e.g. [('batch_0','FAtype_1'),('batch_1',0)]
+        
+        Written by Nicholas Rollins. 10/14/2024
+        """
+        batches_list = list(batches.keys())
+        chromosome_length = []
+        for batch in batches_list:
+            chromosome_length.append(len(batches[batch]['map']))
+        
+    ## Randomly generate zoning map.
+        chromosome_is_valid = False
+        attempts = 0
+        while not chromosome_is_valid:
+            zone_chromosome = [None]*max(chromosome_length) #zone map only, not encoded.
+            chromosome_randindex = list(range(max(chromosome_length)))
+            random.shuffle(chromosome_randindex)
+            for i in chromosome_randindex:
+                batch_options = Constrain_Input.calc_gene_options(batches_list, batches, LWR_core_parameters, zone_chromosome)
+                valid = False
+                while not valid:
+                    try:
+                        batch = random.choice(batch_options)
+                    except IndexError:
+                        raise IndexError("Random chromosome generation has no valid solution. Is the input space over-constrained?")
+                    if batches[batch]['map'][i]: #check that the selected gene option is viable at this location.
+                        zone_chromosome[i] = batch
+                        valid = True
+                    else:
+                        batch_options.remove(batch)
+            chromosome_is_valid = Constrain_Input.check_constraints(batches_list, batches, LWR_core_parameters, zone_chromosome)
+            attempts += 1
+            if attempts > 10000:
+                raise ValueError("Random chromosome generation has failed after 10,000 attempts. Is the input space over-constrained?")
+        
+    ## Assemble list of gene options for each batch.
+        gene_options_dict = {}
+        gene_options_dict[0] = list(genome.keys()) #list of fresh fuel options for batch 0
+        for i in range(len(zone_chromosome)):
+            batch_num = int(str(zone_chromosome[i]).replace(' ','_').split('_')[-1])
+            # add loc as viable option for reloading for a subsequent batch.
+            if batch_num+1 not in gene_options_dict:
+                gene_options_dict[batch_num+1] = [i]
+            else:
+                gene_options_dict[batch_num+1].append(i)
+        
+    ## Randomly load fuel into shuffling scheme.
+        chromosome = []
+        for i in range(len(zone_chromosome)):
+            chromosome.append((zone_chromosome[i],None))
+        chromosome = Constrain_Input.EQ_reload_fuel(genome,LWR_core_parameters,chromosome)
+        
+        return chromosome
 
 
 class Constrain_Input():
-    def calc_gene_options(genes_list, genome, chromosome):
+    """
+    Class used to verify or constrain the parameters that make up a potential solution.
+    Constraints should ALWAYS be employed when creating or manipulating a solution, even
+    if the constraint is trivial (i.e. None, or "unconstrained").
+    
+    Written by Nicholas Rollins. 10/10/2024
+    """
+    def calc_gene_options(genes_list, genome, LWR_core_parameters, chromosome):
         """
         Constrain the available options for the chromosome based on
         the existing inventory.
         
         Written by Nicholas Rollins. 10/10/2024
         """
+        ## fetch the duplication multiplicity of each location when expanded to the full core.
+        num_rows = LWR_core_parameters[0]
+        num_cols = LWR_core_parameters[1]
+        symmetry = LWR_core_parameters[2]
+        multdict = LWR_Core_Shapes.get_symmetry_multiplicity(num_rows, num_cols, symmetry)
+        
+        ## if chromosome represents a shuffling scheme, not a loading pattern, the LP needs to be extracted first.
         valid_genes_list = []
         for gene in genes_list:
             if genome[gene]['constraint']:
                 ctype = genome[gene]['constraint']['type']
                 cvalue = genome[gene]['constraint']['value']
+                gene_counts = LWR_Core_Shapes.count_in_LP(multdict,chromosome)
+                if gene not in gene_counts:
+                    gene_counts[gene] = 0
+                if cvalue not in gene_counts:
+                    gene_counts[cvalue] = 0
                 if ctype == 'max_quantity':
-                    if chromosome.count(gene) < cvalue: #only include option if less than the max quantity have been already used.
+                    #only include option if less than the max quantity have been already used.
+                    if gene_counts[gene] < cvalue and (cvalue - gene_counts[gene]) > 1:
                         valid_genes_list.append(gene)
                 elif ctype == 'less_than_variable':
-                    if chromosome.count(gene) < chromosome.count(cvalue): #only include option if fewer than the target option have been already used.
+                    #only include option if fewer than the target option have been already used.
+                    if gene_counts[gene] < gene_counts[cvalue] and (gene_counts[cvalue] - gene_counts[gene]) > 1:
                         valid_genes_list.append(gene)
             else:
                 valid_genes_list.append(gene)
         
         return valid_genes_list
+
+    def check_constraints(genes_list, genome, LWR_core_parameters, solution):
+        """
+        Check solution parameters against user-specified constraints on the input space.
+        Returns True if the solution is valid and False if a constraint is violated.
+        
+        Written by Nicholas Rollins. 10/15/2024
+        """
+        if not genome:
+            return True
+        else:
+            ## fetch the duplication multiplicity of each location when expanded to the full core.
+            num_rows = LWR_core_parameters[0]
+            num_cols = LWR_core_parameters[1]
+            symmetry = LWR_core_parameters[2]
+            multdict = LWR_Core_Shapes.get_symmetry_multiplicity(num_rows, num_cols, symmetry)
+            
+            ## make sure that quantities of each gene type appearing in the solution are allowed.
+            for gene in genes_list:
+                if genome[gene]['constraint']:
+                    ctype = genome[gene]['constraint']['type']
+                    cvalue = genome[gene]['constraint']['value']
+                    gene_counts = LWR_Core_Shapes.count_in_LP(multdict,solution)
+                    if gene not in gene_counts:
+                        gene_counts[gene] = 0
+                    if cvalue not in gene_counts:
+                        gene_counts[cvalue] = 0
+                    if ctype == 'max_quantity':
+                        #only include option if less than the max quantity have been already used.
+                        if not gene_counts[gene] <= cvalue:
+                            return False
+                    elif ctype == 'less_than_variable':
+                        #only include option if fewer than the target option have been already used.
+                        if not gene_counts[gene] <= gene_counts[cvalue]:
+                            return False
+                else:
+                    continue
+            
+        return True #if you haven't exited with "False" by this point, all constraints were passed.
+    
+    def SS_decoder(chromosome):
+        """
+        Extracts the encoded loading pattern from a chromosome 
+        that represents a shuffling scheme.
+        
+        Written by Nicholas Rollins. 10/14/2024
+        """
+        decoded_LP =  [None]*len(chromosome)
+        for i in range(len(chromosome)):
+            gene = chromosome[i][1]
+            feed_fuel = False
+            while not feed_fuel:
+                if isinstance(gene, int): #FA is an index, implying reloaded fuel.
+                    gene = chromosome[gene][1]
+                else:
+                    decoded_LP[i] = gene
+                    feed_fuel = True
+        return decoded_LP
+
+    def EQ_reload_fuel(genome, LWR_core_parameters, chromosome):
+        """
+        For an equilibrium cycle solution with batches selected for each location,
+        missing FA types (i.e. None) are randomly filled from the available options.
+        #!TODO: this could be expanded to general Shuffling Scheme reloading if the 
+                gene_options_dict is decided differently.
+        
+        Written by Nicholas Rollins. 10/15/2024
+        """
+        ## Extract zones map
+        zone_chromosome = [loc[0] for loc in chromosome]
+        
+        ## fetch the duplication multiplicity of each location when expanded to the full core.
+        num_rows = LWR_core_parameters[0]
+        num_cols = LWR_core_parameters[1]
+        symmetry = LWR_core_parameters[2]
+        multdict = LWR_Core_Shapes.get_symmetry_multiplicity(num_rows, num_cols, symmetry)
+        
+        ## Assemble list of gene options for each batch.
+        gene_options_dict = {}
+        gene_options_dict[0] = list(genome.keys()) #list of fresh fuel options for batch 0
+        for i in range(len(zone_chromosome)):
+            batch_num = int(str(zone_chromosome[i]).replace(' ','_').split('_')[-1])
+            # add loc as viable option for reloading for a subsequent batch.
+            if batch_num+1 not in gene_options_dict:
+                gene_options_dict[batch_num+1] = [i]
+            else:
+                gene_options_dict[batch_num+1].append(i)
+
+        ## Remove already used gene options and resolve conflicts
+        for i in range(len(zone_chromosome)):
+            batch_num = int(str(zone_chromosome[i]).replace(' ','_').split('_')[-1])
+            if chromosome[i][1] and batch_num != 0:
+                try:
+                    gene_options_dict[batch_num].remove(chromosome[i][1])
+                except ValueError: #previous selection at this location made invalid by mutation.
+                    chromosome[i] = (chromosome[i][0],None)
+        
+        ## Randomly load fuel into empty locations in shuffling scheme.
+        for i in range(len(zone_chromosome)):
+            batch_num = int(zone_chromosome[i].replace(' ','_').split('_')[-1])
+            
+            if not chromosome[i][1]: #location is missing a FA
+            ## choose valid loading option before continuing.
+                valid = False
+                attempt = 0
+                while not valid:
+                    attempt += 1
+                    gene = random.choice(gene_options_dict[batch_num])
+                    if batch_num == 0:
+                        #!if genome[gene]['map'][i]: #check that the selected gene option is viable at this location. this requires decoding.
+                        valid = True
+                    #there must be enough symmetrical locs in the source to fill the symmetric locs in the target.
+                    elif multdict[i] <= multdict[gene]:
+                        valid = True
+                    if attempt > 1000:
+                        raise ValueError("Failed to reload fuel in shuffling scheme.")
+                    
+                chromosome[i] = (chromosome[i][0],gene)
+                if batch_num != 0:
+                    gene_options_dict[batch_num].remove(gene)
+
+        return chromosome
 
 
 class Fitness(object):

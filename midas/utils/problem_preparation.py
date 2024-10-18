@@ -102,27 +102,26 @@ class Problem_Preparation_Tools():
                     if (irow,icol) == sym_center:
                         irow = int(irow); icol = int(icol)
                         pass
-                    elif irow == sym_horizontal[0] and icol != sym_center[1]:  
-                        irow = int(irow); icol = int(icol)
-                        idy = core_id[irow,icol][0]
-                        idx = core_id[irow,icol][1]
-                        idxy_1= np.where((core_id[:,:,0] == idy) & (core_id[:,:,1] == -idx))
-                        dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0]]
+                    elif irow == sym_corner[0] and icol != sym_center[1]:  
+                        continue
                     elif icol == sym_vertical[1] and irow != sym_center[0]:
                         irow = int(irow); icol = int(icol)
                         idy = core_id[irow,icol][0]
                         idx = core_id[irow,icol][1]
-                        idxy_1= np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == idx))
-                        dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0]]
+                        idxy_1 = np.where((core_id[:,:,0] == idx) & (core_id[:,:,1] == -idy))
+                        idxy_2 = np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == idx))
+                        idxy_3 = np.where((core_id[:,:,0] == idx) & (core_id[:,:,1] == idy))
+                        dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0], core_map[idxy_2][0], core_map[idxy_3][0]]
                     else:
                         irow = int(irow); icol = int(icol)
                         idy = core_id[irow,icol][0]
                         idx = core_id[irow,icol][1]
-                        idxy_1= np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == idx))
-                        idxy_2= np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == -idx))
-                        idxy_3= np.where((core_id[:,:,0] == idy) & (core_id[:,:,1] == -idx))
+                        idxy_1 = np.where((core_id[:,:,0] == idx) & (core_id[:,:,1] == -idy))
+                        idxy_2 = np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == -idx))
+                        idxy_3 = np.where((core_id[:,:,0] == -idx) & (core_id[:,:,1] == idy))
                         dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0], core_map[idxy_2][0], core_map[idxy_3][0]]
-                    core_dict[core_map[irow,icol]] = dict_value
+                    if core_map[irow,icol]: #skip empty locations
+                        core_dict[core_map[irow,icol]] = dict_value
         elif symmetry == 'octant':
             core_dict={}
             for irow in row_iter:
@@ -245,8 +244,13 @@ class Prepare_Problem_Values():
             for y in range(size_y):
                 for x in range(size_x):
                     val = core_shape[y,x]
-                    if val is None or val[0] == "R":
+                    if val is None:
                         full_core_locs[y,x] = "    "
+                    elif val[0] == "R":
+                        if input_obj.code_interface == "parcs342":
+                            full_core_locs[y,x] = "   0"
+                        else:
+                            full_core_locs[y,x] = "    "
                     else:
                         full_core_locs[y,x] = val[0] + '-' + val[1:]
         
@@ -286,5 +290,41 @@ class LWR_Core_Shapes():
                                None ,"R1401","R1402", "C14" , "D14" , "E14" , "F14" , "G14" , "H14" , "I14" , "J14" , "K14" , "L14" , "M14" ,"R1414","R1415",   None  ,
                                None , None ,"R1502","R1503","R1504", "E15" , "F15" , "G15" , "H15" , "I15" , "J15" , "K15" ,"R1512","R1513","R1514",  None ,   None  ,
                                None , None , None  , None ,"R1604","R1605","R1606","R1607","R1608","R1609","R1610","R1611","R1612",  None , None ,  None ,   None  ]
-        
+    
         return np.array(core_shape[(num_rows,num_cols)]).reshape((num_rows,num_cols))
+    
+    def get_symmetry_multiplicity(num_rows, num_cols, symmetry):
+        multdict = {}
+        multdict[(17,17)] = {}
+        multdict[(17,17)]['octant'] = { 0:1,\
+                                        1:4,  2:4,\
+                                        3:4,  4:8,  5:4,\
+                                        6:4,  7:8,  8:8,  9:4,\
+                                       10:4, 11:8, 12:8, 13:8, 14:4,\
+                                       15:4, 16:8, 17:8, 18:8, 19:8, 20:4,\
+                                       21:4, 22:8, 23:8, 24:8, 25:8, 26:8,\
+                                       27:4, 28:8, 29:8, 30:8}
+        multdict[(17,17)]['quarter'] = { 0:1,\
+                                         1:4,  2:4,  3:4,  4:4,  5:4,  6:4,  7:4,  8:4,\
+                                         9:4, 10:4, 11:4, 12:4, 13:4, 14:4, 15:4, 16:4,\
+                                        17:4, 18:4, 19:4, 20:4, 21:4, 22:4, 23:4, 24:4,\
+                                        25:4, 26:4, 27:4, 28:4, 29:4, 30:4, 31:4,\
+                                        32:4, 33:4, 34:4, 35:4, 36:4, 37:4, 38:4,\
+                                        39:4, 40:4, 41:4, 42:4, 43:4, 44:4,\
+                                        45:4, 46:4, 47:4, 48:4}
+        
+        return multdict[(num_rows,num_cols)][symmetry]
+    
+    def count_in_LP(multdict, chromosome):
+        gene_type_count = {'total':0}
+        for i in range(len(chromosome)):
+            multiplicity = multdict[i]
+            gene = chromosome[i]
+            if gene in gene_type_count:
+                gene_type_count[gene] += multiplicity
+            else:
+                gene_type_count[gene] = multiplicity
+            gene_type_count['total'] += multiplicity
+        return gene_type_count
+        
+        
