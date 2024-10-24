@@ -13,8 +13,7 @@ import midas_data
 from midas.input_parser import  Input_Parser
 from midas.optimizer import Optimizer
 from midas.utils.problem_preparation import Prepare_Problem_Values as prep_inp
-
-
+from midas.utils.decorators import error_handler, timer, profiler
 # # # # # # # # # # #
 # Define Functions  #
 # # # # # # # # # # #
@@ -57,6 +56,9 @@ class Formatter(logging.Formatter): #!TODO: It might be cleaner to move this to 
             self._style._fmt = "%(levelname)s: %(message)s"
         return super().format(record)
 
+@error_handler
+@timer
+@profiler
 def main():
     """
     Primary execution pathway for MIDAS optimization.
@@ -116,8 +118,11 @@ if __name__ == "__main__":
     logger.addHandler(filehandler)
     logger.addHandler(consolehandler)
     
+
     #Execute MIDAS
+
     exitcode = main()
+
     
     #Clean up
     logger.info("MIDAS execution completed.")
