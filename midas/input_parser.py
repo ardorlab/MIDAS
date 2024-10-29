@@ -39,7 +39,7 @@ def validate_input(keyword, value):
 ## Optimization Block ##
     if keyword == 'methodology':
         value = str(value).lower().replace(' ','_')
-        if value not in ["genetic_algorithm"]:
+        if value not in ["genetic_algorithm","bayesian_optimization"]:
             raise ValueError("Requested methodology '" + self.methodology + "' invalid.")
     
     elif keyword == 'code_type':
@@ -70,6 +70,9 @@ def validate_input(keyword, value):
                 raise ValueError("Number of generations may be a positive number, or 'calculate_from_genes'.")
         except AttributeError:
                 value = int(value)
+
+    elif keyword == 'batch_size':
+        value = int(value)
     
     elif keyword == 'solution_symmetry':
         value = str(value).lower().replace(' ','_')
@@ -167,6 +170,18 @@ def validate_input(keyword, value):
             new_dict['final_rate'] = float(new_value[0])
         return new_dict
     
+    elif keyword == 'acquisition_function':
+        value = str(value).lower()
+        if value == 'expected improvement':
+            value = str("EI")
+        elif value == 'probability of improvement':
+            value = str("PI")
+        elif value == 'lower confidence bound':
+            value = str("LCB")
+        elif value == 'gp hedge':
+            value = str("gp_hedge")
+        if value not in ["EI","PI","LCB","gp_hedge"]:
+            raise ValueError("Acquisition function not supported.")
 ## Fuel Assembly Block ##
     elif keyword == 'assembly_options':
         if isinstance(value, dict):
@@ -441,6 +456,7 @@ class Input_Parser():
         self.results_dir_name = yaml_line_reader(info, 'results_directory_name', 'output_files')
         self.population_size = yaml_line_reader(info, 'population_size', 1)
         self.num_generations = yaml_line_reader(info, 'number_of_generations', 1)
+        self.batch_size = yaml_line_reader(info, 'batch_size', 1)
         self.symmetry = yaml_line_reader(info, 'solution_symmetry', 'octant')
         self.objectives = yaml_line_reader(info, 'objectives', None)
         
@@ -452,6 +468,7 @@ class Input_Parser():
         self.reproducer = yaml_line_reader(info, 'reproducer', 'standard')
         self.mutation_type = yaml_line_reader(info, 'mutation_type', 'mutate_by_gene')
         self.mutation_rate = yaml_line_reader(info, 'mutation_rate', 0.5)
+        self.acquisition_function = yaml_line_reader(info, 'acquisition_function', 'gp_hedge')
         
     ## Fuel Assembly Block ##
         self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)
