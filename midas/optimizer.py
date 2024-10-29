@@ -9,6 +9,7 @@ from itertools import repeat
 import csv
 
 from midas.algorithms import genetic_algorithm as GA
+from midas.algorithms import bayesian_optimization as BO
 from midas.utils import optimizer_tools as optools
 from midas.codes import parcs342
 
@@ -45,6 +46,8 @@ class Optimizer():
         
         if methodology == 'genetic_algorithm':
             self.algorithm = GA.Genetic_Algorithm(self.input)
+        elif methodology == 'bayesian_optimization':
+            self.algorithm = BO.Bayesian_Optimization(self.input)
         #!TODO: Add the other algorithms back in.
 
         return
