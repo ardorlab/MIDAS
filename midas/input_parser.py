@@ -407,6 +407,10 @@ def validate_input(keyword, value):
         except ValueError:
             raise ValueError("'boc_core_exposure' must be a real number.")
     
+    elif keyword=='depletion_steps':
+        value = str(value)
+        #!TODO: change this to a more generic list of units and timesteps
+    
     return value
 
 
@@ -420,7 +424,10 @@ class Input_Parser():
     def __init__(self, num_procs, inp_file):
         self.num_procs = int(num_procs)
         with open(inp_file) as f:
-            self.file_settings = yaml.safe_load(f)
+            try:
+                self.file_settings = yaml.safe_load(f)
+            except yaml.parser.ParserError:
+                raise yaml.parser.ParserError("Trouble reading the '.yaml' input file. Please check the integrity of the input, including the consistency of spaces!")
         
         self.parse_input_data()
     
@@ -483,5 +490,6 @@ class Input_Parser():
         self.number_axial = yaml_line_reader(info, 'num_axial_nodes', 19)
         self.axial_nodes = yaml_line_reader(info, 'axial_nodes', "16.12, 20.32, 15*25.739, 20.32, 16.12")
         self.boc_exposure = yaml_line_reader(info, 'boc_core_exposure', 0.0)
+        self.depl_steps = yaml_line_reader(info, 'depletion_steps', "1 1 6*30")
         
         return

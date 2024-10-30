@@ -142,7 +142,7 @@ class Optimizer():
         best_soln_index = [s.fitness_value for s in self.population.current].index(max([s.fitness_value for s in self.population.current]))
         for i in range(len(self.population.current)):
             soln = self.population.current[i]
-            soln_result_list = [str(self.generation.current),str(i),str(soln.fitness_value)]
+            soln_result_list = [str(self.generation.current),str(i),'{0:.3f}'.format(soln.fitness_value)]
             for param in soln.parameters.keys():
                 soln_result_list.append(str(soln.parameters[param]['value']))
             for gene in soln.chromosome:
@@ -204,7 +204,7 @@ class Optimizer():
             best_soln_index = [s.fitness_value for s in self.population.current].index(max([s.fitness_value for s in self.population.current]))
             for i in range(len(self.population.current)):
                 soln = self.population.current[i]
-                soln_result_list = [str(self.generation.current),str(i),str(soln.fitness_value)]
+                soln_result_list = [str(self.generation.current),str(i),'{0:.3f}'.format(soln.fitness_value)]
                 for param in soln.parameters.keys():
                     soln_result_list.append(str(soln.parameters[param]['value']))
                 for gene in soln.chromosome:
