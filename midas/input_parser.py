@@ -76,6 +76,13 @@ def validate_input(keyword, value):
         if value not in ['octant','quarter','full']:
             raise ValueError("Symmetry of the solution list must be octant, quarter, or full.")
     
+    elif keyword == 'set_seed':
+        if value:
+            value = int(value)
+    
+    elif keyword == 'debug_mode':
+        value = bool(value)
+    
     elif keyword == 'objectives':
         if isinstance(value, dict):
             new_dict = {}
@@ -450,6 +457,9 @@ class Input_Parser():
         self.num_generations = yaml_line_reader(info, 'number_of_generations', 1)
         self.symmetry = yaml_line_reader(info, 'solution_symmetry', 'octant')
         self.objectives = yaml_line_reader(info, 'objectives', None)
+        #!TODO: should these be in a 'general' block?
+        self.set_seed = yaml_line_reader(info, 'set_seed', None)
+        self.debug_mode = yaml_line_reader(info, 'debug_mode', False)
         
     ## Algorithm Block ##
         info = self.file_settings['algorithm']
