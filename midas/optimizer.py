@@ -12,7 +12,7 @@ from midas.algorithms import genetic_algorithm as GA
 from midas.algorithms import bayesian_optimization as BO
 from midas.utils import optimizer_tools as optools
 from midas.codes import parcs342
-from midas.codes import smr
+from midas.codes import nuscale_lut
 
 
 ## Classes ##
@@ -46,7 +46,7 @@ class Optimizer():
         if self.input.code_interface == "parcs342":
             self.eval_func  = parcs342.evaluate #assign, don't execute.
         elif self.input.code_interface == "smr":
-            self.eval_func = smr.evaluate
+            self.eval_func = nuscale_lut.evaluate
         
         if methodology == 'genetic_algorithm':
             self.algorithm = GA.Genetic_Algorithm(self.input)

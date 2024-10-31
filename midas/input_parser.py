@@ -181,9 +181,9 @@ def validate_input(keyword, value):
         value = str(value).lower().replace(' ','_')
         if value in ['expected_improvement','ei']:
             value = "EI"
-        elif value == 'probability_of_improvement':
+        elif value in ['probability_of_improvement','pi']:
             value = "PI"
-        elif value == 'lower_confidence_bound':
+        elif value in ['lower_confidence_bound','lcb']:
             value = "LCB"
         elif value == 'gp_hedge':
             value = "gp_hedge"
