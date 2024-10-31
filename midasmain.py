@@ -9,6 +9,7 @@ import argparse
 import logging
 import logging.config
 from copy import deepcopy
+import random
 import midas_data
 from midas.input_parser import  Input_Parser
 from midas.optimizer import Optimizer
@@ -86,6 +87,14 @@ def main():
 ## Prepare input values for writing
     inp_lines = prep_inp.prepare_cycle(inp_lines)
     logger.info("Parsed input file: %s", str(args.input))
+
+## Seed the global RNG (if requested)
+    if inp_lines.set_seed:
+        random.seed(inp_lines.set_seed)
+
+## Update logger level
+	if inp_lines.debug_mode:
+		logger.setLevel(logging.DEBUG)
 
 ## Generate optimizer
     optimizer = Optimizer(inp_lines)
