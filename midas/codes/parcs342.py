@@ -118,11 +118,11 @@ def evaluate(solution, input):
             ofile.write("      TH_FDBK    F\n")
         ofile.write("      CORE_POWER 100.0\n")
         ofile.write("      CORE_TYPE  PWR\n")
-        ofile.write("      PPM        1000 1.0 1800.0 10.0\n")
+        ofile.write("      PPM        1000 1.0 1800.0 10.0\n") #!TODO: this should be a parameterized boron guess value.
         ofile.write("      DEPLETION  T  1.0E-5 T\n")
         if input.calculation_type in ['eq_cycle']:
             ofile.write("      MULT_CYC   T  F\n") #v3.4.2 specific line to enable the MCYCLE block
-        ofile.write("      TREE_XS    T  {}  T  T  F  F  T  F  T  F  T  F  T  T  T  F  F \n".format(int(len(list_unique_xs))))
+        ofile.write("      TREE_XS    T  {}  T  T  F  F  T  F  F  F  T  F  T  T  T  F  F \n".format(int(len(list_unique_xs))))
         ofile.write("      BANK_POS   100 100 100 100 100 100\n")
         ofile.write("      XE_SM      1 1 1 1\n")
         ofile.write("      SEARCH     PPM\n")
@@ -260,7 +260,7 @@ def evaluate(solution, input):
     with open(filename,"a") as ofile:
         ofile.write("DEPL\n")
         if input.calculation_type == 'single_cycle':
-            ofile.write("      TIME_STP  1 1 4*30\n") #!TODO: parameterize this input.
+            ofile.write(f"      TIME_STP  {input.depl_steps}\n") #!TODO: parameterize this input.
         ofile.write("      INP_HST   './boc_exp.dep' -2 1\n")
         ofile.write("      OUT_OPT   T  T  T  T  F\n")
         # Write reflector cross sections
@@ -326,7 +326,7 @@ def evaluate(solution, input):
             ofile.write('\n')
             
             ofile.write("    CYCLE_IND    1  0  1\n")
-            max_convergence_cycles = 2 #!TODO: this max number of cycles could easily be a parameter.
+            max_convergence_cycles = 10 #!TODO: this max number of cycles could easily be a parameter.
             for i in range(2,max_convergence_cycles+1):
                 ofile.write(f"    CYCLE_IND    {i}  1  1\n")
             ofile.write(f"    CONV_EC    0.1  {i}\n")
@@ -337,8 +337,13 @@ def evaluate(solution, input):
 
 ## Run PARCS INPUT DECK #!TODO: separate the input writing and execution into two different functions that are called in sequence.
     parcscmd = "/cm1/codes/parcs_342/Executables/Linux/parcs-v342-linux2-intel-x64-release.x" #!TODO: move this to a global or environmental variable
+    
+    if input.calculation_type in ['eq_cycle']:
+        walltime = 1800 #sec
+    else:
+        walltime = 600 #sec
     try:
-        output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=50) #wait until calculation finishes
+        output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=walltime) #wait until calculation finishes
     ## Get Results
         if 'Finished' in str(output): #job completed
             logging.debug(f"Job {solution.name} completed successfully.")
@@ -349,7 +354,7 @@ def evaluate(solution, input):
             solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
     except subprocess.TimeoutExpired: #job timed out
         os.system('rm -f {}.parcs_pin*'.format(solution.name))
-        logger.warning(f"Job {solution.name} has timed out!")
+        logger.error(f"Job {solution.name} has timed out!")
         solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
     
     logger.debug(f"Returning to original working directory: {cwd}")
@@ -429,7 +434,7 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
     return parameters
 
 def calc_cycle_length(efpd,boron,keff):
-    if boron[-1]==0.1:
+    if boron[-1]==0.1: #boron went to zero before end of cycle.
         eoc1_ind = 0
         eco2_ind = len(efpd)
         for i in range(len(efpd)):
@@ -439,9 +444,9 @@ def calc_cycle_length(efpd,boron,keff):
         dbor = abs(boron[eoc1_ind-1]-boron[eoc1_ind])
         defpd = abs(efpd[eoc1_ind-1]-efpd[eoc1_ind])
         def_dbor = defpd/dbor
-        eoc = efpd[eoc1_ind] + def_dbor*(boron[eoc1_ind]-0.1)
-    elif boron[-1]==boron[0]==1800.0:
-        drho_dcb=10 
+        eoc = efpd[eoc1_ind] + def_dbor*(boron[eoc1_ind]-0.1) #linear extrapolation to efpd at boron=0.1
+    elif boron[-1]==boron[0]==1800.0: #true boron exceeds initial guess #!TODO: this should be a parameterized boron guess value.
+        drho_dcb=10
         drho1 = (keff[-2]-1.0)*10**5
         dcb1 = drho1/drho_dcb
         cb1= boron[-2] + dcb1

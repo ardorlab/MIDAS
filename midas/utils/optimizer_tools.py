@@ -367,17 +367,19 @@ class Fitness(object):
             pweight = parameters[param]['weight']
             pvalue = parameters[param]['value']
             if pgoal == 'maximize':
-                fitness += pvalue
+                fitness += pvalue*pweight
             elif pgoal == 'minimize':
-                fitness -= pvalue
+                fitness -= pvalue*pweight
             elif pgoal == 'meet_target':
                 ptarget = parameters[param]['target']
-                fitness -= abs(ptarget - pvalue)
+                fitness -= abs(ptarget - pvalue)*pweight
             elif pgoal == 'greater_than_target':
                 ptarget = parameters[param]['target']
-                fitness += pvalue - ptarget
+                penalty = (ptarget - pvalue)*pweight if ptarget - pvalue > 0.0 else 0.0
+                fitness -= penalty
             elif pgoal == 'less_than_target':
                 ptarget = parameters[param]['target']
-                fitness += ptarget - pvalue
+                penalty = (pvalue - ptarget)*pweight if pvalue - ptarget > 0.0 else 0.0
+                fitness -= penalty
         
         return fitness
