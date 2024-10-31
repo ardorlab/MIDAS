@@ -1,4 +1,4 @@
-from skopt import Optimizer
+from skopt import Optimizer as skOptimizer
 from skopt.space import Real, Integer, Categorical
 
 class Bayesian_Optimization():
@@ -10,7 +10,7 @@ class Bayesian_Optimization():
     """
     def __init__(self, input):
         self.input = input
-        self.optimizer = Optimizer(
+        self.optimizer = skOptimizer(
             dimensions = self.parse_dimensions(),
             n_initial_points = 0,
             acq_func = self.input.acquisition_function

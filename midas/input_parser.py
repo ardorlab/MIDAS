@@ -44,8 +44,8 @@ def validate_input(keyword, value):
     
     elif keyword == 'code_type':
         value = str(value).lower()
-        if value not in ["parcs342"]:
-            raise ValueError("Code types currently supported: PARCS342.")
+        if value not in ["parcs342","smr"]:
+            raise ValueError("Code types currently supported: PARCS342, SMR.")
     
     elif keyword == 'data_type':
         value = str(value).lower().replace(' ','_')
@@ -171,17 +171,19 @@ def validate_input(keyword, value):
         return new_dict
     
     elif keyword == 'acquisition_function':
-        value = str(value).lower()
-        if value == 'expected improvement':
-            value = str("EI")
-        elif value == 'probability of improvement':
-            value = str("PI")
-        elif value == 'lower confidence bound':
-            value = str("LCB")
-        elif value == 'gp hedge':
-            value = str("gp_hedge")
+        value = str(value).lower().replace(' ','_')
+        if value in ['expected_improvement','ei']:
+            value = "EI"
+        elif value == 'probability_of_improvement':
+            value = "PI"
+        elif value == 'lower_confidence_bound':
+            value = "LCB"
+        elif value == 'gp_hedge':
+            value = "gp_hedge"
+        #Verification that valid acquisition function is specified
         if value not in ["EI","PI","LCB","gp_hedge"]:
-            raise ValueError("Acquisition function not supported.")
+            raise ValueError("Acquisition function not supported. Supported acquisition types are EI, PI, LCB, gp_hedge.")
+        
 ## Fuel Assembly Block ##
     elif keyword == 'assembly_options':
         if isinstance(value, dict):
@@ -468,7 +470,7 @@ class Input_Parser():
         self.reproducer = yaml_line_reader(info, 'reproducer', 'standard')
         self.mutation_type = yaml_line_reader(info, 'mutation_type', 'mutate_by_gene')
         self.mutation_rate = yaml_line_reader(info, 'mutation_rate', 0.5)
-        self.acquisition_function = yaml_line_reader(info, 'acquisition_function', 'gp_hedge')
+        self.acquisition_function = yaml_line_reader(info, 'acquisition_function', 'gp_hedge')#!TODO: Come back to this
         
     ## Fuel Assembly Block ##
         self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)
