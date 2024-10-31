@@ -54,6 +54,11 @@ class Genetic_Algorithm():
     ## Perform selection process of parents
         # Selection is established by biasing reproduction using an ordered list.
         pop_list = self.selection_methods(pop_list, self.input.selection)
+
+    ## Container for holding new list of child chromosomes
+        child_chromosome_list = []
+        # preserve best performing parent in the next generation
+        child_chromosome_list.append(max(pop_list, key=lambda soln: soln.fitness_value)
     
     ## Select individuals for mutation. The rest undergo crossover.
         mutation_list  = []
@@ -77,7 +82,6 @@ class Genetic_Algorithm():
         LWR_core_parameters = [self.input.nrow, self.input.ncol, self.input.symmetry]
     ## Perform Crossover
         crossover_mates_lists = GA_reproduction.crossover_assign_mates(crossover_list)
-        child_chromosome_list = []
         for mate_one, mate_two in zip(crossover_mates_lists[0], crossover_mates_lists[1]):
             child_one, child_two = GA_reproduction.crossover(mate_one, mate_two, 
                                                             self.input.mutation_rate['initial_rate'], 
@@ -91,6 +95,10 @@ class Genetic_Algorithm():
             else:
                 raise ValueError("Requested mutation type not recognized.")
             child_chromosome_list.append(child)
+    
+    ## Check new population size
+        while len(child_chromosome_list) > len(pop_list):
+            del child_chromosome_list[random.randint(1,len(child_chromosome_list))] # remove any random child to reduce population size (except first child)
         
         return child_chromosome_list
     
@@ -339,6 +347,8 @@ class GA_selection():
             selection_probability = {}
             selection_probability['low_bound'] = []
             selection_probability['up_bound']  = []
+            
+            # the probability of selecting an individual is weighted by its fitness
             for solution in unused_solutions:
                 selection_probability['low_bound'].append(probability_sum)
                 probability_sum += solution.fitness
@@ -347,11 +357,11 @@ class GA_selection():
             value = random.random()
             value = value*probability_sum
             for j, solution in enumerate(unused_solutions):
-                if(selection_probability['low_bound'][j] <= value
-                   and value <= selection_probability['up_bound'][j]):
+                if selection_probability['low_bound'][j] <= value <= selection_probability['up_bound'][j]:
                     winners.append(solution)
                     unused_solutions.remove(solution)
 
+            # if we run out of parents, continue from a fresh list
             if not unused_solutions:
                 unused_solutions = deepcopy(pop_list)
 
