@@ -45,7 +45,7 @@ class Optimizer():
         self.eval_func  = None
         if self.input.code_interface == "parcs342":
             self.eval_func  = parcs342.evaluate #assign, don't execute.
-        elif self.input.code_interface == "smr":
+        elif self.input.code_interface == "nuscale_database":
             self.eval_func = nuscale_lut.evaluate
         
         if methodology == 'genetic_algorithm':
