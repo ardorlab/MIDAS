@@ -58,7 +58,7 @@ class Genetic_Algorithm():
     ## Container for holding new list of child chromosomes
         child_chromosome_list = []
         # preserve best performing parent in the next generation
-        child_chromosome_list.append(max(pop_list, key=lambda soln: soln.fitness_value)
+        child_chromosome_list.append(max(pop_list, key=lambda soln: soln.fitness_value))
     
     ## Select individuals for mutation. The rest undergo crossover.
         mutation_list  = []
