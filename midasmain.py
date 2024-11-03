@@ -93,8 +93,8 @@ def main():
         random.seed(inp_lines.set_seed)
 
 ## Update logger level
-	if inp_lines.debug_mode:
-		logger.setLevel(logging.DEBUG)
+    if inp_lines.debug_mode:
+        logger.setLevel(logging.DEBUG)
 
 ## Generate optimizer
     optimizer = Optimizer(inp_lines)
