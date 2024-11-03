@@ -1,6 +1,6 @@
+import importlib.metadata as importlib_metadata
 from skopt import Optimizer as skOptimizer
 from skopt.space import Real, Integer, Categorical
-import importlib.metadata
 
 class Bayesian_Optimization():
    #!TODO: Finish docstrings (put in parameters)
