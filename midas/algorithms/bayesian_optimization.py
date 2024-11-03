@@ -1,4 +1,4 @@
-import importlib.metadata as importlib_metadata
+import importlib_metadata as importlib.metadata
 from skopt import Optimizer as skOptimizer
 from skopt.space import Real, Integer, Categorical
 
