@@ -44,8 +44,8 @@ def validate_input(keyword, value):
     
     elif keyword == 'code_type':
         value = str(value).lower()
-        if value not in ["parcs342","smr"]:
-            raise ValueError("Code types currently supported: PARCS342, SMR.")
+        if value not in ["parcs342","nuscale_database"]:
+            raise ValueError("Code types currently supported: PARCS342, nuscale_database.")
     
     elif keyword == 'data_type':
         value = str(value).lower().replace(' ','_')
