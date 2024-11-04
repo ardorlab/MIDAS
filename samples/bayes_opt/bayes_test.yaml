@@ -23,11 +23,30 @@ optimization:
       weight: 600.0     
     cycle_length:
       goal: maximize
-      weight: 10.00
+      weight: 1.00
 
 ## Algorithm Settings
 algorithm:
   acquisition_function: gp_hedge
+
+## Fuel Assembly Parts
+assembly_options:
+  reflectors:
+    FA420REFL:
+      refl_type: all #all, radial, top, or bottom
+      serial: stp_FA420REFL
+  blankets:
+    FA260BLANKET:
+      serial: stp_FA260BLANKET
+  fuel: 
+    FA420IFBA064: 
+      type: 20
+    FA420IFBA104: 
+      type: 30
+    FA420IFBA128: 
+      type: 40
+    FA460IFBA128: 
+      type: 50
 
 ## Genome
 decision_variables:
