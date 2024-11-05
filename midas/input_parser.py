@@ -503,23 +503,22 @@ class Input_Parser():
             raise ValueError(f"'Batches' must be specified in Decision Variables for the 'EQ Cycle' type.")
         
     ## Calculation Block ##
-        if self.code_interface == 'PARCS342':
-            info = self.file_settings['parcs_data'] #!TODO: this needs to be set by calculation_type
-            
-            self.nrow = yaml_line_reader(info['map'], 'num_rows', 17)
-            self.ncol = yaml_line_reader(info['map'], 'num_cols', 17)
-            self.num_assemblies = yaml_line_reader(info['map'], 'number_assemblies', 193)
-            self.map_size = yaml_line_reader(info['map'], 'core_symmetry', 'full')
-            self.xs_lib = yaml_line_reader(info, 'xs_library_path', '../../') #as a relative path, this assumes the needed cross sections are in the base directory for the job.
-            self.xs_extension = yaml_line_reader(info, 'xs_extension', '')
-            self.power = yaml_line_reader(info, 'power', 3800.0)
-            self.flow = yaml_line_reader(info, 'flow', 18231.89)
-            self.inlet_temp = yaml_line_reader(info, 'inlet_temperature', 565.0)
-            self.th_fdbk = yaml_line_reader(info, 'th_fdbk', True)
-            self.pin_power_recon = yaml_line_reader(info, 'pin_power_recon', True)
-            self.number_axial = yaml_line_reader(info, 'num_axial_nodes', 19)
-            self.axial_nodes = yaml_line_reader(info, 'axial_nodes', "16.12, 20.32, 15*25.739, 20.32, 16.12")
-            self.boc_exposure = yaml_line_reader(info, 'boc_core_exposure', 0.0)
-            self.depl_steps = yaml_line_reader(info, 'depletion_steps', "1 1 6*30")
+        info = self.file_settings['parcs_data'] #!TODO: this needs to be set by calculation_type
+        
+        self.nrow = yaml_line_reader(info['map'], 'num_rows', 17)
+        self.ncol = yaml_line_reader(info['map'], 'num_cols', 17)
+        self.num_assemblies = yaml_line_reader(info['map'], 'number_assemblies', 193)
+        self.map_size = yaml_line_reader(info['map'], 'core_symmetry', 'full')
+        self.xs_lib = yaml_line_reader(info, 'xs_library_path', '../../') #as a relative path, this assumes the needed cross sections are in the base directory for the job.
+        self.xs_extension = yaml_line_reader(info, 'xs_extension', '')
+        self.power = yaml_line_reader(info, 'power', 3800.0)
+        self.flow = yaml_line_reader(info, 'flow', 18231.89)
+        self.inlet_temp = yaml_line_reader(info, 'inlet_temperature', 565.0)
+        self.th_fdbk = yaml_line_reader(info, 'th_fdbk', True)
+        self.pin_power_recon = yaml_line_reader(info, 'pin_power_recon', True)
+        self.number_axial = yaml_line_reader(info, 'num_axial_nodes', 19)
+        self.axial_nodes = yaml_line_reader(info, 'axial_nodes', "16.12, 20.32, 15*25.739, 20.32, 16.12")
+        self.boc_exposure = yaml_line_reader(info, 'boc_core_exposure', 0.0)
+        self.depl_steps = yaml_line_reader(info, 'depletion_steps', "1 1 6*30")
         
         return
