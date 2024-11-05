@@ -40,13 +40,13 @@ assembly_options:
       serial: stp_FA260BLANKET
   fuel: 
     FA420IFBA064: 
-      type: 20
+      type: 2
     FA420IFBA104: 
-      type: 30
+      type: 3
     FA420IFBA128: 
-      type: 40
+      type: 4
     FA460IFBA128: 
-      type: 50
+      type: 5
 
 ## Genome
 decision_variables:
