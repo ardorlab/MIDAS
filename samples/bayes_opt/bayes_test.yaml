@@ -41,16 +41,22 @@ assembly_options:
   fuel: 
     2: 
       type: 2
+      serial: None
     3: 
       type: 3
+      serial: None
     4: 
       type: 4
+      serial: None
     5: 
       type: 5
+      serial: None
     6: 
       type: 6
+      serial: None
     7: 
       type: 7
+      serial: None
 
 ## Genome
 decision_variables:
