@@ -78,3 +78,18 @@ decision_variables:
       map: *ID001
     7:
       map: *ID001
+
+parcs_data:
+  map:
+    num_rows: 7
+    num_cols: 7
+    number_assemblies: 37
+    core_symmetry: full #printing symmetry
+  xs_library_path: ../../
+  power: 3800.0 #MW_th
+  flow: 18231.89
+  inlet_temperature: 565.0 #K
+  th_fdbk: False
+  pin_power_recon: False
+  num_axial_nodes: 19
+  axial_nodes: 16.12, 20.32, 15*25.739, 20.32, 16.12
