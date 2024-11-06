@@ -303,7 +303,8 @@ def validate_input(keyword, value):
                     raise ValueError("All fuel types must have a unique 'type' value.")
             return new_dict
         else:
-            raise ValueError("Assembly optinos must be nested with reflectors, fuels, and/or blankets with their parameters.")
+            if value:
+                raise ValueError("Assembly options must be nested with reflectors, fuels, and/or blankets with their parameters.")
     
 ## Genome Block ##
     elif keyword in ['parameters', 'batches']:
@@ -461,10 +462,11 @@ class Input_Parser():
         
         Written by Nicholas Rollins. 09/11/2024
         """
-        #!TODO: add input validation, especially for inputs as dicts
-        #!TODO: add defaults
     ## Optimization Block ##
-        info = self.file_settings['optimization']
+        try:
+            info = self.file_settings['optimization']
+        except KeyError:
+            info = None
         
         self.methodology = yaml_line_reader(info, 'methodology', 'genetic_algorithm')
         self.code_interface = yaml_line_reader(info, 'code_type', 'PARCS342')
@@ -480,7 +482,10 @@ class Input_Parser():
         self.debug_mode = yaml_line_reader(info, 'debug_mode', False)
         
     ## Algorithm Block ##
-        info = self.file_settings['algorithm']
+        try:
+            info = self.file_settings['algorithm']
+        except KeyError:
+            info = None
         
         selection_default = {'fitness':'weighted','method':'roulette'}
         self.selection = yaml_line_reader(info, 'selection', selection_default)
@@ -491,24 +496,42 @@ class Input_Parser():
         
     ## Fuel Assembly Block ##
         self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)
+        if not self.fa_options:
+            raise ValueError("Assembly options must be nested with reflectors, fuels, and/or blankets with their parameters.")
         
     ## Genome Block ##
-        self.genome = yaml_line_reader(self.file_settings['decision_variables'], 'parameters', None)
-        self.batches = yaml_line_reader(self.file_settings['decision_variables'], 'batches', None)
+        try:
+            info = self.file_settings['decision_variables']
+        except KeyError:
+            info = None
+        
+        self.genome = yaml_line_reader(info, 'parameters', None)
+        self.batches = yaml_line_reader(info, 'batches', None)
         #check that decision variable options are valid.
+        if not self.genome:
+            raise ValueError("'Parameters' must be specified in Decision Variables.")
+        if self.calculation_type == 'eq_cycle' and not self.batches:
+            raise ValueError("'Batches' must be specified in Decision Variables for the 'EQ Cycle' type.")
         for key, value in self.genome.items():
             if key not in self.fa_options['fuel']:
                 raise ValueError(f"Decision variable option '{key}' not found in the list of fuel types under 'assembly_options'.")
-        if self.calculation_type == 'eq_cycle' and not self.batches:
-            raise ValueError(f"'Batches' must be specified in Decision Variables for the 'EQ Cycle' type.")
         
     ## Calculation Block ##
-        info = self.file_settings['parcs_data'] #!TODO: this needs to be set by calculation_type
+        try:
+            if self.code_interface == "parcs342":
+                info = self.file_settings['parcs_data']
+        except KeyError:
+            info = None
         
-        self.nrow = yaml_line_reader(info['map'], 'num_rows', 17)
-        self.ncol = yaml_line_reader(info['map'], 'num_cols', 17)
-        self.num_assemblies = yaml_line_reader(info['map'], 'number_assemblies', 193)
-        self.map_size = yaml_line_reader(info['map'], 'core_symmetry', 'full')
+        try:
+            infomap = info['map']
+        except KeyError:
+            infomap = None
+        
+        self.nrow = yaml_line_reader(infomap, 'num_rows', 17)
+        self.ncol = yaml_line_reader(infomap, 'num_cols', 17)
+        self.num_assemblies = yaml_line_reader(infomap, 'number_assemblies', 193)
+        self.map_size = yaml_line_reader(infomap, 'core_symmetry', 'full')
         self.xs_lib = yaml_line_reader(info, 'xs_library_path', '../../') #as a relative path, this assumes the needed cross sections are in the base directory for the job.
         self.xs_extension = yaml_line_reader(info, 'xs_extension', '')
         self.power = yaml_line_reader(info, 'power', 3800.0)
