@@ -2,11 +2,11 @@
 optimization:
   methodology: genetic_algorithm
   code_type: PARCS342
-  data_type: single cycle
+  data_type: EQ cycle
   results_directory_name: output_files
-  population_size: 10
-  number_of_generations: 3
-  solution_symmetry: octant #chromosome symmetry
+  population_size: 100
+  number_of_generations: 30
+  solution_symmetry: quarter #chromosome symmetry; octant NOT allowed for EQ cycle.
   objectives:
     max_boron:
       goal: less_than_target
@@ -67,22 +67,47 @@ decision_variables:
     FA420IFBA064:
       map: &ID001
         [1,
-         1, 1,
-         1, 1, 1,
-         1, 1, 1, 1,
-         1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1, 1,
          1, 1, 1, 1, 1, 1,
-         1, 1, 1, 1, 1, 1,                        
          1, 1, 1, 1]
       constraint:
         type: max_quantity
-        target: 100
+        value: 20
     FA420IFBA104:
       map: *ID001 #this is natively interpreted by yaml, which is super nice.
+      constraint:
+        type: max_quantity
+        value: 100
     FA420IFBA128:
       map: *ID001
+      constraint:
+        type: max_quantity
+        value: 100
     FA460IFBA128:
       map: *ID001
+      constraint:
+        type: max_quantity
+        value: 20
+  batches:
+    batch 0:
+      map: *ID001
+      constraint:
+        type: max_quantity
+        value: 72
+    batch 1:
+      map: *ID001
+      constraint:
+        type: less_than_variable
+        value: batch 0
+    batch 2:
+      map: *ID001
+      constraint:
+        type: less_than_variable
+        value: batch 1
 
 ## Calculation Settings
 parcs_data:
@@ -92,6 +117,7 @@ parcs_data:
     number_assemblies: 193
     core_symmetry: full #printing symmetry
   xs_library_path: ../../
+  xs_extension: PMAXS #assumed file extension of the xs files (mixed extensions NOT supported)
   power: 3800.0 #MW_th
   flow: 18231.89
   inlet_temperature: 565.0 #K
@@ -99,3 +125,4 @@ parcs_data:
   pin_power_recon: False
   num_axial_nodes: 19
   axial_nodes: 16.12, 20.32, 15*25.739, 20.32, 16.12
+  boc_core_exposure: 10.0

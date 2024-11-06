@@ -1,0 +1,112 @@
+## Optimizer Block
+optimization:
+  methodology: genetic_algorithm
+  code_type: PARCS342
+  data_type: single cycle
+  results_directory_name: output_files
+  population_size: 10
+  number_of_generations: 3
+  solution_symmetry: octant #chromosome symmetry
+  objectives:
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      weight: 1.0
+    PinPowerPeaking:
+      goal: less_than_target
+      weight: 400.0 
+      target: 2.1
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      weight: 600.0     
+    cycle_length:
+      goal: maximize
+      weight: 1.00
+
+## Algorithm Settings
+algorithm:
+  selection:
+    fitness: weighted
+    method: tournament #tournament or roulette
+  reproducer: standard
+  mutation_type: mutate_by_gene
+  mutation_rate: 0.25, 0.55
+
+## Fuel Assembly Parts
+assembly_options:
+  reflectors:
+    FA420REFL:
+      refl_type: all #all, radial, top, or bottom
+      serial: stp_FA420REFL
+  blankets:
+    FA260BLANKET:
+      serial: stp_FA260BLANKET
+  fuel: 
+    FA420IFBA064: 
+      type: 20
+      serial: stp_FA420IFBA064 #cross section name in library
+      blanket: FA260BLANKET
+    FA420IFBA104: 
+      type: 30
+      serial: stp_FA420IFBA104
+      blanket: FA260BLANKET
+    FA420IFBA128: 
+      type: 40
+      serial: stp_FA420IFBA128
+      blanket: FA260BLANKET
+    FA460IFBA128: 
+      type: 50
+      serial: stp_FA460IFBA128
+      blanket: FA260BLANKET
+
+## Genome
+decision_variables:
+  # parameters used to fill each chromosome.
+  parameters:
+    FA420IFBA064:
+      map: &ID001
+        [1,
+         1, 1,
+         1, 1, 1,
+         1, 1, 1, 1,
+         1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1,                        
+         1, 1, 1, 1]
+      constraint:
+        type: max_quantity
+        value: 20
+    FA420IFBA104:
+      map: *ID001 #this is natively interpreted by yaml, which is super nice.
+      constraint:
+        type: max_quantity
+        value: 100
+    FA420IFBA128:
+      map: *ID001
+      constraint:
+        type: max_quantity
+        value: 100
+    FA460IFBA128:
+      map: *ID001
+      constraint:
+        type: max_quantity
+        value: 20
+
+## Calculation Settings
+parcs_data:
+  map:
+    num_rows: 17
+    num_cols: 17
+    number_assemblies: 193
+    core_symmetry: full #printing symmetry
+  xs_library_path: ../../ #!../../../../MIDAS/samples/xs_lib/ #this MUST be a relative path.
+  xs_extension: .PMAXS
+  power: 3800.0 #MW_th
+  flow: 18231.89
+  inlet_temperature: 565.0 #K
+  th_fdbk: False
+  pin_power_recon: False
+  num_axial_nodes: 19
+  axial_nodes: 16.12, 20.32, 15*25.739, 20.32, 16.12
+  depletion_steps: 5*-0.1 -0.5 9*-1.0 6*-5.0
