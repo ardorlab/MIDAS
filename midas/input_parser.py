@@ -43,7 +43,7 @@ def validate_input(keyword, value):
             raise ValueError("Requested methodology '" + self.methodology + "' invalid.")
     
     elif keyword == 'code_type':
-        value = str(value).lower()
+        value = str(value).lower().replace(' ','_')
         if value not in ["parcs342","nuscale_database"]:
             raise ValueError("Code types currently supported: PARCS342, nuscale_database.")
     
@@ -496,7 +496,7 @@ class Input_Parser():
         
     ## Fuel Assembly Block ##
         self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)
-        if not self.fa_options:
+        if not self.fa_options and self.code_interface != 'nuscale_database':
             raise ValueError("Assembly options must be nested with reflectors, fuels, and/or blankets with their parameters.")
         
     ## Genome Block ##
@@ -520,6 +520,8 @@ class Input_Parser():
         try:
             if self.code_interface == "parcs342":
                 info = self.file_settings['parcs_data']
+            elif self.code_interface == "nuscale_database":
+                info = self.file_settings['nucale_data']
         except KeyError:
             info = None
         
