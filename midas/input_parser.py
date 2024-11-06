@@ -496,7 +496,7 @@ class Input_Parser():
         
     ## Fuel Assembly Block ##
         self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)
-        if not self.fa_options and self.code_interface != 'nuscale_database':
+        if not self.fa_options and self.code_interface not in ['nuscale_database']:
             raise ValueError("Assembly options must be nested with reflectors, fuels, and/or blankets with their parameters.")
         
     ## Genome Block ##
