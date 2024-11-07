@@ -11,7 +11,6 @@ def evaluate(solution, input): #!TODO: Put parameters in docstring
     Written by Cole Howard. 10/29/2024
     """
     solutions = solution.chromosome
-    raise ValueError(solutions)
     #Each objective is stored as one index in a single array within the hdf5 file, so I am getting each specific value
     for soln in solutions:    
         objectives, BU = read_hdf5(soln) #TODO!: Add cost back in
