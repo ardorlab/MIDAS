@@ -527,7 +527,7 @@ class Input_Parser():
         
         try:
             infomap = info['map']
-        except KeyError:
+        except:
             infomap = None
         
         self.nrow = yaml_line_reader(infomap, 'num_rows', 17)
