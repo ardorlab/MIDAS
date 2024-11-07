@@ -42,16 +42,17 @@ def read_hdf5(soln):
     for sol in soln:
         if sol == 'NSFA23':
             individual.append(2)
-        if sol == 'NSFA23GAD':
+        elif sol == 'NSFA23GAD':
             individual.append(3)
-        if sol == 'NSFA39':
+        elif sol == 'NSFA39':
             individual.append(4)
-        if sol == 'NSFA39GAD':
+        elif sol == 'NSFA39GAD':
             individual.append(5)
-        if sol == 'NSFA455':
+        elif sol == 'NSFA455':
             individual.append(6)
-        if sol == 'NSFA455GAD':
+        elif sol == 'NSFA455GAD':
             individual.append(7)
+    raise ValueError(individual)
     assembly_name = ''.join(map(str,individual))
     file_number = f'{individual[1]}' #The number in the hdf5 file is the same as the second number in the LP array for now, will change to first and second
     filepath = f"/cm/shared/databases/SMR_IPWR_DATABASE/Solutions_{file_number}.hdf5"
