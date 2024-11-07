@@ -10,7 +10,7 @@ def evaluate(solutions, input): #!TODO: Put parameters in docstring
 
     Written by Cole Howard. 10/29/2024
     """
-    print(solutions)
+    print(type(solutions))
     for soln in solutions:
         #Each objective is stored as one index in a single array withon the hdf5 file, so I am getting each specific value
         objectives, BU = read_hdf5(solutions) #TODO!: Add cost back in
