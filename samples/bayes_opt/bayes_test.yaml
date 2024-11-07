@@ -31,65 +31,37 @@ algorithm:
 
 ## Fuel Assembly Parts
 assembly_options:
-  reflectors:
-    FA420REFL:
-      refl_type: all #all, radial, top, or bottom
-      serial: stp_FA420REFL
-  blankets:
-    FA260BLANKET:
-      serial: stp_FA260BLANKET
   fuel: 
-    2: 
+    NSFA23: 
       type: 2
-      serial: None
-    3: 
+    NSFA23GAD: 
       type: 3
-      serial: None
-    4: 
+    NSFA39: 
       type: 4
-      serial: None
-    5: 
+    NSFA39GAD: 
       type: 5
-      serial: None
-    6: 
+    NSFA455: 
       type: 6
-      serial: None
-    7: 
+    NSFA455GAD: 
       type: 7
-      serial: None
 
 ## Genome
 decision_variables:
   # parameters used to fill each chromosome.
   parameters:
-    2:
+    NSFA23:
       map: &ID001
         [1,
          1, 1,
          1, 1, 1,
          1, 1]
-    3:
+    NSFA23GAD:
       map: *ID001 #this is natively interpreted by yaml, which is super nice.
-    4:
+    NSFA39:
       map: *ID001
-    5:
+    NSFA39GAD:
       map: *ID001
-    6:
+    NSFA455:
       map: *ID001
-    7:
+    NSFA455GAD:
       map: *ID001
-
-parcs_data:
-  map:
-    num_rows: 7
-    num_cols: 7
-    number_assemblies: 37
-    core_symmetry: full #printing symmetry
-  xs_library_path: ../../
-  power: 3800.0 #MW_th
-  flow: 18231.89
-  inlet_temperature: 565.0 #K
-  th_fdbk: False
-  pin_power_recon: False
-  num_axial_nodes: 19
-  axial_nodes: 16.12, 20.32, 15*25.739, 20.32, 16.12
