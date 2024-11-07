@@ -3,29 +3,27 @@ import os
 import numpy as np
 import logging
 
-def evaluate(solutions, input): #!TODO: Put parameters in docstring
+def evaluate(solution, input): #!TODO: Put parameters in docstring
     """
     This function will find the output parameters for the NuScale SMR based on the SMR database of loading pattern calculations
     and write them into a dictionary in the solution.parameters object
 
     Written by Cole Howard. 10/29/2024
     """
-    print(type(solutions))
-    for soln in solutions:
-        #Each objective is stored as one index in a single array withon the hdf5 file, so I am getting each specific value
-        objectives, BU = read_hdf5(solutions) #TODO!: Add cost back in
-        soln.parameters['cycle_length'] = objectives[0]
-        soln.parameters['fdeltah'] = objectives[1]
-        soln.parameters['pinpowerpeaking'] = objectives[2]
-        soln.parameters['max_boron'] = objectives[3]
-        #soln.parameters['cycle_cost'] = cost
+    #Each objective is stored as one index in a single array within the hdf5 file, so I am getting each specific value
+    objectives, BU = read_hdf5(solution) #TODO!: Add cost back in
+    solution.parameters['cycle_length'] = objectives[0]
+    solution.parameters['fdeltah'] = objectives[1]
+    solution.parameters['pinpowerpeaking'] = objectives[2]
+    solution.parameters['max_boron'] = objectives[3]
+    #solution.parameters['cycle_cost'] = cost
 
-        # Adding in burnup parameters in case it is used later on
-        soln.parameters['max_burnup'] = max(BU)
-        soln.parameters['min_burnup'] = min(BU)
-        soln.parameters['average_burnup'] = np.mean(BU)
+    # Adding in burnup parameters in case it is used later on
+    solution.parameters['max_burnup'] = max(BU)
+    solution.parameters['min_burnup'] = min(BU)
+    solution.parameters['average_burnup'] = np.mean(BU)
 
-    return solutions
+    return solution
 
 def read_hdf5(individual):
     """
