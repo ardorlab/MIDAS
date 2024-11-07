@@ -31,6 +31,8 @@ algorithm:
 
 ## Fuel Assembly Parts
 assembly_options:
+  reflectors: None
+  blankets: None
   fuel: 
     NSFA23: 
       type: 2
