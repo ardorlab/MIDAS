@@ -27,7 +27,7 @@ def evaluate(solution, input): #!TODO: Put parameters in docstring
 
     return solutions
 
-def read_hdf5(individual):
+def read_hdf5(soln):
     """
     This function will search the hdf5 files containing the NuScale SMR database of loading patterns for the user-defined loading pattern,
     then return the parameters for that solution
@@ -38,6 +38,20 @@ def read_hdf5(individual):
 
     Written by Cole Howard. 10/29/2024
     """
+    individual = []
+    for sol in soln:
+        if sol == 'NSFA23':
+            individual.append(2)
+        if sol == 'NSFA23GAD':
+            individual.append(3)
+        if sol == 'NSFA39':
+            individual.append(4)
+        if sol == 'NSFA39GAD':
+            individual.append(5)
+        if sol == 'NSFA455':
+            individual.append(6)
+        if sol == 'NSFA455GAD':
+            individual.append(7)
     assembly_name = ''.join(map(str,individual))
     file_number = f'{individual[1]}' #The number in the hdf5 file is the same as the second number in the LP array for now, will change to first and second
     filepath = f"/cm/shared/databases/SMR_IPWR_DATABASE/Solutions_{file_number}.hdf5"
