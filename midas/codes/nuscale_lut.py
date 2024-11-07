@@ -10,6 +10,7 @@ def evaluate(solution, input): #!TODO: Put parameters in docstring
 
     Written by Cole Howard. 10/29/2024
     """
+    raise ValueError(str(solution))
     #Each objective is stored as one index in a single array within the hdf5 file, so I am getting each specific value
     objectives, BU = read_hdf5(solution) #TODO!: Add cost back in
     solution.parameters['cycle_length'] = objectives[0]
