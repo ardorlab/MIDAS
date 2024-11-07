@@ -10,21 +10,22 @@ def evaluate(solution, input): #!TODO: Put parameters in docstring
 
     Written by Cole Howard. 10/29/2024
     """
-    raise ValueError(str(solution))
+    solutions = solution.chromosome
     #Each objective is stored as one index in a single array within the hdf5 file, so I am getting each specific value
-    objectives, BU = read_hdf5(solution) #TODO!: Add cost back in
-    solution.parameters['cycle_length'] = objectives[0]
-    solution.parameters['fdeltah'] = objectives[1]
-    solution.parameters['pinpowerpeaking'] = objectives[2]
-    solution.parameters['max_boron'] = objectives[3]
-    #solution.parameters['cycle_cost'] = cost
+    for soln in solutions:    
+        objectives, BU = read_hdf5(soln) #TODO!: Add cost back in
+        soln.parameters['cycle_length'] = objectives[0]
+        soln.parameters['fdeltah'] = objectives[1]
+        soln.parameters['pinpowerpeaking'] = objectives[2]
+        soln.parameters['max_boron'] = objectives[3]
+        #solution.parameters['cycle_cost'] = cost
 
-    # Adding in burnup parameters in case it is used later on
-    solution.parameters['max_burnup'] = max(BU)
-    solution.parameters['min_burnup'] = min(BU)
-    solution.parameters['average_burnup'] = np.mean(BU)
+        # Adding in burnup parameters in case it is used later on
+        soln.parameters['max_burnup'] = max(BU)
+        soln.parameters['min_burnup'] = min(BU)
+        soln.parameters['average_burnup'] = np.mean(BU)
 
-    return solution
+    return solutions
 
 def read_hdf5(individual):
     """
