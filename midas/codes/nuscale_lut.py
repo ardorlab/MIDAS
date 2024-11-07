@@ -11,6 +11,7 @@ def evaluate(solution, input): #!TODO: Put parameters in docstring
     Written by Cole Howard. 10/29/2024
     """
     solutions = solution.chromosome
+    raise ValueError(solutions)
     #Each objective is stored as one index in a single array within the hdf5 file, so I am getting each specific value
     for soln in solutions:    
         objectives, BU = read_hdf5(soln) #TODO!: Add cost back in
@@ -41,17 +42,17 @@ def read_hdf5(soln):
     individual = []
     for sol in soln:
         if sol == 'NSFA23':
-            individual.append(2)
+            individual.append(int(2))
         elif sol == 'NSFA23GAD':
-            individual.append(3)
+            individual.append(int(3))
         elif sol == 'NSFA39':
-            individual.append(4)
+            individual.append(int(4))
         elif sol == 'NSFA39GAD':
-            individual.append(5)
+            individual.append(int(5))
         elif sol == 'NSFA455':
-            individual.append(6)
+            individual.append(int(6))
         elif sol == 'NSFA455GAD':
-            individual.append(7)
+            individual.append(int(7))
     raise ValueError(soln)
     assembly_name = ''.join(map(str,individual))
     file_number = f'{individual[1]}' #The number in the hdf5 file is the same as the second number in the LP array for now, will change to first and second
