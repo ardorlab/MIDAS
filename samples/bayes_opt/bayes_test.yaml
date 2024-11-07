@@ -32,22 +32,37 @@ algorithm:
 ## Fuel Assembly Parts
 assembly_options:
   reflectors:
-    NSFA: None
+    NSFA:
+      refl_type: None
+      serial: None
   blankets:
-    NSFA: None
+    NSFA:
+      serial: None
   fuel: 
     NSFA23: 
       type: 2
+      serial: None
+      blanket: None
     NSFA23GAD: 
       type: 3
+      serial: None
+      blanket: None
     NSFA39: 
       type: 4
+      serial: None
+      blanket: None
     NSFA39GAD: 
       type: 5
+      serial: None
+      blanket: None
     NSFA455: 
       type: 6
+      serial: None
+      blanket: None
     NSFA455GAD: 
       type: 7
+      serial: None
+      blanket: None
 
 ## Genome
 decision_variables:
