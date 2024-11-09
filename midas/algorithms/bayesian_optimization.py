@@ -23,35 +23,36 @@ class Bayesian_Optimization():
 
         Written by Cole Howard, 10/21/2024
         """
-        dimensions = []
+        dimension_space = []
 
-        for param, attributes in self.input.genome.items():
-            # Check if 'map' exists for the parameter (specifying physical locations)
-            if 'map' in attributes:
-                variable_map = attributes['map']
-                valid_positions = [pos for pos, val in enumerate(variable_map) if val == 1]
+        # Assuming all maps have the same layout
+        map_shape = None
+        location_options = {}  # Tracks which assemblies can go in each location
 
-                # For each valid position, treat the parameter as a categorical variable (param name)
-                for pos in valid_positions:
-                    # Create a categorical dimension using the parameter name
-                    dim = Categorical([param])
-                    dimensions.append(dim)
+        # Build location options based on assembly maps
+        for assembly, data in self.input.genome.items():
+            assembly_map = data['map']
+
+            # Initialize map shape if not yet set
+            if map_shape is None:
+                map_shape = len(assembly_map)
+
+            # Iterate over the map and store permissible assemblies for each position
+            for idx, loc in enumerate(assembly_map):
+                if loc == 1:
+                    if idx not in location_options:
+                        location_options[idx] = []
+                    location_options[idx].append(assembly)
+
+        # Create categorical dimensions for each map position
+        for idx in range(map_shape):
+            if idx in location_options:
+                dimension_space.append(Categorical(location_options[idx], name=f"position_{idx}"))
             else:
-                # If no map exists, infer the type from the provided values
-                variable_values = attributes.get('values', []) #!TODO: Using 'values' string as a placeholder until I figure out what to use here
+                # Positions without valid assemblies can be left empty or filled as needed
+                dimension_space.append(Categorical([None], name=f"position_{idx}"))
 
-                if all(isinstance(v, int) for v in variable_values):
-                    dim = Integer(min(variable_values), max(variable_values))
-                elif all(isinstance(v, float) for v in variable_values):
-                    dim = Real(min(variable_values), max(variable_values))
-                elif all(isinstance(v, str) for v in variable_values):
-                    dim = Categorical(variable_values)
-                else:
-                    raise ValueError(f"Mixed or unknown types in variable '{param}' values: {variable_values}")
-
-                dimensions.append(dim)
-
-        return dimensions
+        return dimension_space
     
     def reproduction(self, generation):
         """
