@@ -1,0 +1,527 @@
+
+ .----------------.  .----------------.  .----------------.  .----------------.  .----------------.   
+| .--------------. || .--------------. || .--------------. || .--------------. || .--------------. |  
+| | ____    ____ | || |     _____    | || |  ________    | || |      __      | || |    _______   | |  
+| ||_   \  /   _|| || |    |_   _|   | || | |_   ___ `.  | || |     /  \     | || |   /  ___  |  | |  
+| |  |   \/   |  | || |      | |     | || |   | |   `. \ | || |    / /\ \    | || |  |  (__ \_|  | |  
+| |  | |\  /| |  | || |      | |     | || |   | |    | | | || |   / ____ \   | || |   '.___`-.   | |  
+| | _| |_\/_| |_ | || |     _| |_    | || |  _| |___.' / | || | _/ /    \ \_ | || |  |`\____) |  | |  
+| ||_____||_____|| || |    |_____|   | || | |________.'  | || ||____|  |____|| || |  |_______.'  | |  
+| |              | || |              | || |              | || |              | || |              | |  
+| '--------------' || '--------------' || '--------------' || '--------------' || '--------------' |  
+ '----------------'  '----------------'  '----------------'  '----------------'  '----------------'  
+
+MIDAS Version 0.2.1
+
+
+====================================================================================================
+
+Parsed input file: /home/cahowar9/cahowar9/MIDAS/samples/bayes_opt/bayes_test.yaml
+Completed Optimizer assembly.
+Begin Optimization...
+
+Generating initial population of 30 individuals...
+Calculating fitness for generation 0...
+Done!
+Generation 0 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+0,6,718.000,1318.0,2.148,1.546,794.8,NSFA39,NSFA455,NSFA23GAD,NSFA23GAD,NSFA39GAD,NSFA23,NSFA23,NSFA39GAD
+
+Creating population of 30 individuals for generation 1...
+Calculating fitness for generation 1...
+Done!
+Generation 1 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+1,3,131.000,1795.0,2.446,1.767,936.6,NSFA455,NSFA39GAD,NSFA39,NSFA455GAD,NSFA39GAD,NSFA23GAD,NSFA39,NSFA39GAD
+
+Creating population of 30 individuals for generation 2...
+Calculating fitness for generation 2...
+Done!
+Generation 2 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+2,3,-282.900,1354.0,3.249,2.342,747.9,NSFA455,NSFA39GAD,NSFA23GAD,NSFA23,NSFA455GAD,NSFA23GAD,NSFA23GAD,NSFA39
+
+Creating population of 30 individuals for generation 3...
+Calculating fitness for generation 3...
+Done!
+Generation 3 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+3,3,-1164.700,1248.0,4.261,3.015,620.7,NSFA455GAD,NSFA39GAD,NSFA455,NSFA23,NSFA39,NSFA23,NSFA23GAD,NSFA23
+
+Creating population of 30 individuals for generation 4...
+Calculating fitness for generation 4...
+Done!
+Generation 4 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+4,1,-274.100,1419.0,3.274,2.355,839.5,NSFA455GAD,NSFA39GAD,NSFA23,NSFA23,NSFA455,NSFA39,NSFA39GAD,NSFA39GAD
+
+Creating population of 30 individuals for generation 5...
+Calculating fitness for generation 5...
+Done!
+Generation 5 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+5,3,-524.000,1306.0,3.532,2.543,692.6,NSFA39,NSFA39GAD,NSFA39,NSFA455GAD,NSFA39,NSFA39,NSFA455,NSFA39
+
+Creating population of 30 individuals for generation 6...
+Calculating fitness for generation 6...
+Done!
+Generation 6 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+6,1,-888.200,1321.0,3.913,2.798,648.8,NSFA455GAD,NSFA39GAD,NSFA39,NSFA23GAD,NSFA39,NSFA39GAD,NSFA23,NSFA23GAD
+
+Creating population of 30 individuals for generation 7...
+Calculating fitness for generation 7...
+Done!
+Generation 7 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+7,0,-1260.500,1451.0,4.246,3.018,671.7,NSFA39GAD,NSFA455GAD,NSFA39GAD,NSFA23GAD,NSFA23,NSFA23,NSFA23GAD,NSFA23
+
+Creating population of 30 individuals for generation 8...
+Calculating fitness for generation 8...
+Done!
+Generation 8 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+8,3,-1608.500,1706.0,4.398,3.137,710.9,NSFA39GAD,NSFA39GAD,NSFA39GAD,NSFA23,NSFA39,NSFA39,NSFA455,NSFA23
+
+Creating population of 30 individuals for generation 9...
+Calculating fitness for generation 9...
+Done!
+Generation 9 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+9,4,-1303.800,1596.0,4.205,2.997,744.4,NSFA39GAD,NSFA39GAD,NSFA455GAD,NSFA23,NSFA39,NSFA39GAD,NSFA23,NSFA23GAD
+
+Creating population of 30 individuals for generation 10...
+Calculating fitness for generation 10...
+Done!
+Generation 10 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+10,2,-1373.500,1763.0,4.135,2.964,793.9,NSFA39GAD,NSFA39GAD,NSFA39GAD,NSFA39,NSFA23GAD,NSFA23GAD,NSFA39,NSFA455GAD
+
+Creating population of 30 individuals for generation 11...
+Calculating fitness for generation 11...
+Done!
+Generation 11 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+11,2,-1072.100,2017.0,3.601,2.592,912.5,NSFA39GAD,NSFA39GAD,NSFA39GAD,NSFA39GAD,NSFA23,NSFA455GAD,NSFA39GAD,NSFA39
+
+Creating population of 30 individuals for generation 12...
+Calculating fitness for generation 12...
+Done!
+Generation 12 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+12,3,-928.100,2095.0,3.372,2.432,946.9,NSFA39GAD,NSFA39GAD,NSFA39GAD,NSFA23,NSFA39GAD,NSFA23GAD,NSFA39GAD,NSFA23GAD
+
+Creating population of 30 individuals for generation 13...
+Calculating fitness for generation 13...
+Done!
+Generation 13 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+13,2,-1567.700,1723.0,4.35,3.105,730.3,NSFA39GAD,NSFA39GAD,NSFA39GAD,NSFA23GAD,NSFA23GAD,NSFA23,NSFA23,NSFA455
+
+Creating population of 30 individuals for generation 14...
+Calculating fitness for generation 14...
+Done!
+Generation 14 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+14,1,-1608.300,1705.0,4.4,3.137,710.9,NSFA39GAD,NSFA39GAD,NSFA39GAD,NSFA39,NSFA23,NSFA455,NSFA39,NSFA39
+
+Creating population of 30 individuals for generation 15...
+Calculating fitness for generation 15...
+Done!
+Generation 15 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+15,4,-1605.200,1715.0,4.397,3.136,722.2,NSFA39GAD,NSFA39GAD,NSFA39GAD,NSFA455,NSFA23,NSFA23GAD,NSFA39,NSFA23
+
+Creating population of 30 individuals for generation 16...
+Calculating fitness for generation 16...
+Done!
+Generation 16 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+16,2,-1414.600,1853.0,4.065,2.925,791.4,NSFA39GAD,NSFA39GAD,NSFA39GAD,NSFA455GAD,NSFA23GAD,NSFA23GAD,NSFA23,NSFA23GAD
+
+Creating population of 30 individuals for generation 17...
+Calculating fitness for generation 17...
+Done!
+Generation 17 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+17,3,-1585.200,1693.0,4.41,3.142,729.0,NSFA39GAD,NSFA39GAD,NSFA39GAD,NSFA23,NSFA23,NSFA455,NSFA455,NSFA39
+
+Creating population of 30 individuals for generation 18...
+Calculating fitness for generation 18...
+Done!
+Generation 18 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+18,3,-1181.600,1806.0,3.925,2.823,860.2,NSFA39GAD,NSFA39GAD,NSFA39GAD,NSFA39,NSFA39,NSFA455,NSFA455,NSFA39GAD
+
+Creating population of 30 individuals for generation 19...
+Calculating fitness for generation 19...
+Done!
+Generation 19 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+19,4,-433.700,1017.0,3.36,2.399,621.7,NSFA455,NSFA455GAD,NSFA455,NSFA39,NSFA39,NSFA39,NSFA23GAD,NSFA23GAD
+
+Creating population of 30 individuals for generation 20...
+Calculating fitness for generation 20...
+Done!
+Generation 20 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+20,3,-1041.600,1503.0,4.001,2.857,748.0,NSFA39GAD,NSFA455GAD,NSFA39GAD,NSFA23,NSFA23GAD,NSFA39,NSFA455GAD,NSFA23GAD
+
+Creating population of 30 individuals for generation 21...
+Calculating fitness for generation 21...
+Done!
+Generation 21 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+21,4,-1440.700,1744.0,4.191,2.999,751.1,NSFA39GAD,NSFA39GAD,NSFA39GAD,NSFA39,NSFA23,NSFA23GAD,NSFA39GAD,NSFA39
+
+Creating population of 30 individuals for generation 22...
+Calculating fitness for generation 22...
+Done!
+Generation 22 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+22,4,-1184.200,1345.0,4.294,3.042,675.6,NSFA39GAD,NSFA39GAD,NSFA23,NSFA39,NSFA39,NSFA23,NSFA23GAD,NSFA455GAD
+
+Creating population of 30 individuals for generation 23...
+Calculating fitness for generation 23...
+Done!
+Generation 23 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+23,3,-1457.600,1751.0,4.213,3.015,759.6,NSFA39GAD,NSFA39GAD,NSFA39GAD,NSFA39,NSFA39,NSFA39,NSFA455GAD,NSFA39
+
+Creating population of 30 individuals for generation 24...
+Calculating fitness for generation 24...
+Done!
+Generation 24 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+24,1,-1645.600,1701.0,4.424,3.153,688.8,NSFA39GAD,NSFA39GAD,NSFA39GAD,NSFA23,NSFA23GAD,NSFA23,NSFA39,NSFA39
+
+Creating population of 30 individuals for generation 25...
+Calculating fitness for generation 25...
+Done!
+Generation 25 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+25,4,-1009.700,1581.0,3.911,2.806,791.3,NSFA39GAD,NSFA39GAD,NSFA39,NSFA39GAD,NSFA455,NSFA455,NSFA39,NSFA23
+
+Creating population of 30 individuals for generation 26...
+Calculating fitness for generation 26...
+Done!
+Generation 26 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+26,4,-864.700,1350.0,3.85,2.766,656.9,NSFA23GAD,NSFA39GAD,NSFA455GAD,NSFA23GAD,NSFA23,NSFA23GAD,NSFA23GAD,NSFA23GAD
+
+Creating population of 30 individuals for generation 27...
+Calculating fitness for generation 27...
+Done!
+Generation 27 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+27,3,-649.900,1645.0,3.477,2.503,859.7,NSFA39GAD,NSFA455GAD,NSFA39GAD,NSFA23GAD,NSFA39,NSFA39GAD,NSFA23,NSFA39GAD
+
+Creating population of 30 individuals for generation 28...
+Calculating fitness for generation 28...
+Done!
+Generation 28 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+28,0,-1204.400,1373.0,4.273,3.03,667.8,NSFA39GAD,NSFA39GAD,NSFA39,NSFA23,NSFA23GAD,NSFA455,NSFA39GAD,NSFA23
+
+Creating population of 30 individuals for generation 29...
+Calculating fitness for generation 29...
+Done!
+Generation 29 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+29,3,217.600,813.0,2.425,1.769,521.0,NSFA455,NSFA23,NSFA23,NSFA23,NSFA23,NSFA455,NSFA39GAD,NSFA39
+
+Creating population of 30 individuals for generation 30...
+Calculating fitness for generation 30...
+Done!
+Generation 30 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+30,4,-1519.300,1320.0,4.621,3.264,579.5,NSFA39GAD,NSFA39GAD,NSFA23GAD,NSFA23GAD,NSFA39,NSFA23,NSFA23,NSFA23
+
+Creating population of 30 individuals for generation 31...
+Calculating fitness for generation 31...
+Done!
+Generation 31 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+31,4,-1429.400,1338.0,4.556,3.216,632.6,NSFA39GAD,NSFA39GAD,NSFA455,NSFA23,NSFA23GAD,NSFA39,NSFA39,NSFA23GAD
+
+Creating population of 30 individuals for generation 32...
+Calculating fitness for generation 32...
+Done!
+Generation 32 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+32,4,-110.100,1134.0,3.044,2.188,692.3,NSFA39GAD,NSFA23GAD,NSFA23,NSFA39GAD,NSFA23,NSFA23,NSFA455,NSFA455GAD
+
+Creating population of 30 individuals for generation 33...
+Calculating fitness for generation 33...
+Done!
+Generation 33 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+33,1,111.300,1631.0,2.663,1.926,935.1,NSFA23,NSFA455GAD,NSFA455GAD,NSFA39GAD,NSFA455GAD,NSFA39,NSFA23GAD,NSFA23
+
+Creating population of 30 individuals for generation 34...
+Calculating fitness for generation 34...
+Done!
+Generation 34 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+34,4,74.500,1388.0,2.852,2.055,808.3,NSFA39GAD,NSFA23,NSFA455GAD,NSFA23,NSFA39GAD,NSFA455,NSFA455,NSFA23
+
+Creating population of 30 individuals for generation 35...
+Calculating fitness for generation 35...
+Done!
+Generation 35 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+35,3,-842.100,1181.0,3.819,2.742,602.7,NSFA23GAD,NSFA39GAD,NSFA23GAD,NSFA455,NSFA23GAD,NSFA23,NSFA23,NSFA23GAD
+
+Creating population of 30 individuals for generation 36...
+Calculating fitness for generation 36...
+Done!
+Generation 36 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+36,4,-20.800,1167.0,2.896,2.109,675.0,NSFA455,NSFA455,NSFA39GAD,NSFA39,NSFA23,NSFA39,NSFA39GAD,NSFA23GAD
+
+Creating population of 30 individuals for generation 37...
+Calculating fitness for generation 37...
+Done!
+Generation 37 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+37,2,-1356.800,1553.0,4.344,3.084,756.2,NSFA39GAD,NSFA39GAD,NSFA455GAD,NSFA23,NSFA23,NSFA455GAD,NSFA455,NSFA39
+
+Creating population of 30 individuals for generation 38...
+Calculating fitness for generation 38...
+Done!
+Generation 38 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+38,4,-124.800,1814.0,2.729,1.973,936.6,NSFA23GAD,NSFA39GAD,NSFA455GAD,NSFA23,NSFA39GAD,NSFA23,NSFA39,NSFA39GAD
+
+Creating population of 30 individuals for generation 39...
+Calculating fitness for generation 39...
+Done!
+Generation 39 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+39,3,-81.200,1689.0,2.83,2.04,935.8,NSFA39GAD,NSFA455GAD,NSFA39,NSFA455GAD,NSFA39GAD,NSFA455,NSFA455GAD,NSFA455
+
+Creating population of 30 individuals for generation 40...
+Calculating fitness for generation 40...
+Done!
+Generation 40 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+40,1,-1600.300,1723.0,4.368,3.118,712.7,NSFA39GAD,NSFA39GAD,NSFA39GAD,NSFA39,NSFA23GAD,NSFA455,NSFA23,NSFA23
+
+Creating population of 30 individuals for generation 41...
+Calculating fitness for generation 41...
+Done!
+Generation 41 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+41,4,-558.300,963.0,3.443,2.472,574.1,NSFA39GAD,NSFA39,NSFA39,NSFA23GAD,NSFA23GAD,NSFA23,NSFA23GAD,NSFA455GAD
+
+Creating population of 30 individuals for generation 42...
+Calculating fitness for generation 42...
+Done!
+Generation 42 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+42,4,-713.500,1757.0,3.454,2.488,889.9,NSFA455GAD,NSFA39GAD,NSFA455GAD,NSFA39GAD,NSFA23GAD,NSFA23,NSFA23GAD,NSFA455GAD
+
+Creating population of 30 individuals for generation 43...
+Calculating fitness for generation 43...
+Done!
+Generation 43 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+43,4,421.300,1149.0,2.481,1.787,757.9,NSFA23GAD,NSFA39,NSFA455GAD,NSFA455,NSFA23,NSFA39GAD,NSFA23,NSFA39GAD
+
+Creating population of 30 individuals for generation 44...
+Calculating fitness for generation 44...
+Done!
+Generation 44 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+44,2,679.400,1311.0,2.168,1.56,765.6,NSFA455,NSFA39,NSFA39,NSFA39,NSFA39GAD,NSFA23,NSFA39,NSFA39GAD
+
+Creating population of 30 individuals for generation 45...
+Calculating fitness for generation 45...
+Done!
+Generation 45 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+45,3,502.100,1164.0,2.349,1.691,728.3,NSFA39,NSFA39,NSFA23,NSFA39GAD,NSFA39,NSFA455GAD,NSFA39GAD,NSFA455
+
+Creating population of 30 individuals for generation 46...
+Calculating fitness for generation 46...
+Done!
+Generation 46 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+46,3,-1151.100,1931.0,3.787,2.727,902.9,NSFA39GAD,NSFA39GAD,NSFA39GAD,NSFA23GAD,NSFA455GAD,NSFA23GAD,NSFA455,NSFA39
+
+Creating population of 30 individuals for generation 47...
+Calculating fitness for generation 47...
+Done!
+Generation 47 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+47,3,725.800,974.0,2.102,1.507,742.8,NSFA23GAD,NSFA23GAD,NSFA455,NSFA23,NSFA455,NSFA39GAD,NSFA23GAD,NSFA455GAD
+
+Creating population of 30 individuals for generation 48...
+Calculating fitness for generation 48...
+Done!
+Generation 48 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+48,2,25.300,1160.0,2.963,2.132,761.7,NSFA39GAD,NSFA39,NSFA455,NSFA23,NSFA455GAD,NSFA23GAD,NSFA39GAD,NSFA23
+
+Creating population of 30 individuals for generation 49...
+Calculating fitness for generation 49...
+Done!
+Generation 49 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+49,2,-1264.100,1323.0,4.381,3.099,642.7,NSFA39GAD,NSFA39GAD,NSFA23,NSFA23,NSFA23,NSFA39GAD,NSFA455,NSFA23
+
+Creating population of 30 individuals for generation 50...
+Calculating fitness for generation 50...
+Done!
+Generation 50 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+50,4,-477.100,1562.0,3.34,2.41,838.9,NSFA39,NSFA39GAD,NSFA455GAD,NSFA23,NSFA455GAD,NSFA39,NSFA39,NSFA23GAD
+
+Creating population of 30 individuals for generation 51...
+Calculating fitness for generation 51...
+Done!
+Generation 51 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+51,4,-146.000,1324.0,3.197,2.301,809.4,NSFA39GAD,NSFA39,NSFA455GAD,NSFA39GAD,NSFA455,NSFA23,NSFA23GAD,NSFA455
+
+Creating population of 30 individuals for generation 52...
+Calculating fitness for generation 52...
+Done!
+Generation 52 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+52,4,-1622.800,1718.0,4.382,3.127,696.2,NSFA39GAD,NSFA39GAD,NSFA39GAD,NSFA23GAD,NSFA39,NSFA23,NSFA23GAD,NSFA23GAD
+
+Creating population of 30 individuals for generation 53...
+Calculating fitness for generation 53...
+Done!
+Generation 53 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+53,3,-1506.900,1292.0,4.664,3.287,602.9,NSFA39GAD,NSFA39GAD,NSFA39,NSFA23,NSFA23,NSFA23,NSFA23,NSFA455
+
+Creating population of 30 individuals for generation 54...
+Calculating fitness for generation 54...
+Done!
+Generation 54 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+54,4,-479.800,2157.0,2.74,1.986,936.8,NSFA23GAD,NSFA39GAD,NSFA39GAD,NSFA39GAD,NSFA39GAD,NSFA39,NSFA23GAD,NSFA39
+
+Creating population of 30 individuals for generation 55...
+Calculating fitness for generation 55...
+Done!
+Generation 55 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+55,4,-1074.000,1498.0,4.061,2.897,758.6,NSFA39GAD,NSFA455GAD,NSFA39GAD,NSFA39,NSFA23GAD,NSFA23,NSFA455,NSFA455
+
+Creating population of 30 individuals for generation 56...
+Calculating fitness for generation 56...
+Done!
+Generation 56 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+56,2,-777.800,1145.0,3.735,2.684,598.6,NSFA39,NSFA39GAD,NSFA23,NSFA23,NSFA23,NSFA23GAD,NSFA455GAD,NSFA23GAD
+
+Creating population of 30 individuals for generation 57...
+Calculating fitness for generation 57...
+Done!
+Generation 57 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+57,3,-724.100,2098.0,3.11,2.244,936.3,NSFA39GAD,NSFA39GAD,NSFA455GAD,NSFA39GAD,NSFA455GAD,NSFA23,NSFA39,NSFA39GAD
+
+Creating population of 30 individuals for generation 58...
+Calculating fitness for generation 58...
+Done!
+Generation 58 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+58,4,-835.200,1547.0,3.71,2.674,772.2,NSFA39,NSFA39GAD,NSFA39GAD,NSFA455,NSFA23,NSFA23GAD,NSFA455,NSFA455
+
+Creating population of 30 individuals for generation 59...
+Calculating fitness for generation 59...
+Done!
+Generation 59 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+59,4,-627.000,1774.0,3.325,2.395,886.0,NSFA39GAD,NSFA39GAD,NSFA455,NSFA23GAD,NSFA39GAD,NSFA39GAD,NSFA23,NSFA39
+
+Creating population of 30 individuals for generation 60...
+Calculating fitness for generation 60...
+Done!
+Generation 60 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+60,3,-1609.100,1723.0,4.364,3.115,700.5,NSFA39GAD,NSFA39GAD,NSFA39GAD,NSFA23GAD,NSFA39,NSFA23GAD,NSFA23GAD,NSFA39
+
+Creating population of 30 individuals for generation 61...
+Calculating fitness for generation 61...
+Done!
+Generation 61 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+61,0,-1630.500,1705.0,4.405,3.141,693.1,NSFA39GAD,NSFA39GAD,NSFA39GAD,NSFA23,NSFA23GAD,NSFA39,NSFA23GAD,NSFA39
+
+Creating population of 30 individuals for generation 62...
+Calculating fitness for generation 62...
+Done!
+Generation 62 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+62,4,-262.700,1412.0,3.193,2.302,779.7,NSFA455,NSFA39GAD,NSFA23,NSFA39GAD,NSFA455,NSFA23GAD,NSFA455,NSFA23GAD
+
+Creating population of 30 individuals for generation 63...
+Calculating fitness for generation 63...
+Done!
+Generation 63 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+63,2,-631.200,1230.0,3.671,2.635,690.2,NSFA39GAD,NSFA39,NSFA39GAD,NSFA23,NSFA455,NSFA39,NSFA455,NSFA23GAD
+
+Creating population of 30 individuals for generation 64...
+Calculating fitness for generation 64...
+Done!
+Generation 64 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+64,3,-1601.200,1719.0,4.376,3.123,714.0,NSFA39GAD,NSFA39GAD,NSFA39GAD,NSFA23GAD,NSFA23GAD,NSFA23,NSFA455,NSFA23
+
+Creating population of 30 individuals for generation 65...
+Calculating fitness for generation 65...
+Done!
+Generation 65 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+65,3,-223.100,1948.0,2.684,1.943,936.3,NSFA39,NSFA39GAD,NSFA39GAD,NSFA23GAD,NSFA455GAD,NSFA39GAD,NSFA455,NSFA39GAD
+
+Creating population of 30 individuals for generation 66...
+Calculating fitness for generation 66...
+Done!
+Generation 66 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+66,1,19.400,1838.0,2.53,1.824,935.8,NSFA39GAD,NSFA455,NSFA39GAD,NSFA39GAD,NSFA455GAD,NSFA455GAD,NSFA39,NSFA455GAD
+
+Creating population of 30 individuals for generation 67...
+Calculating fitness for generation 67...
+Done!
+Generation 67 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+67,3,332.000,1663.0,2.323,1.692,911.4,NSFA23GAD,NSFA455GAD,NSFA39,NSFA39GAD,NSFA39GAD,NSFA455GAD,NSFA23,NSFA23GAD
+
+Creating population of 30 individuals for generation 68...
+Calculating fitness for generation 68...
+Done!
+Generation 68 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+68,0,-265.600,1994.0,2.677,1.942,936.4,NSFA23,NSFA39GAD,NSFA455GAD,NSFA39GAD,NSFA39GAD,NSFA455,NSFA23,NSFA39
+
+Creating population of 30 individuals for generation 69...
+Calculating fitness for generation 69...
+Done!
+Generation 69 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+69,4,-402.300,2066.0,2.754,1.998,936.1,NSFA23GAD,NSFA39GAD,NSFA39GAD,NSFA39GAD,NSFA455GAD,NSFA39,NSFA39,NSFA455GAD
+
+Creating population of 30 individuals for generation 70...
+Calculating fitness for generation 70...
+Done!
+Generation 70 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+70,4,-1564.600,1290.0,4.694,3.308,569.8,NSFA39GAD,NSFA39GAD,NSFA39,NSFA23,NSFA23,NSFA39,NSFA23,NSFA23GAD
+
+Creating population of 30 individuals for generation 71...
+Calculating fitness for generation 71...
+Done!
+Generation 71 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+71,1,-362.000,1409.0,3.237,2.333,713.6,NSFA39GAD,NSFA23,NSFA39GAD,NSFA39GAD,NSFA23GAD,NSFA455,NSFA39,NSFA23GAD
+
+Creating population of 30 individuals for generation 72...
