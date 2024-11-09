@@ -3,30 +3,27 @@ import os
 import numpy as np
 import logging
 
-def evaluate(solution, input): #!TODO: Put parameters in docstring
+def evaluate(soln, input): #!TODO: Put parameters in docstring
     """
     This function will find the output parameters for the NuScale SMR based on the SMR database of loading pattern calculations
     and write them into a dictionary in the solution.parameters object
 
     Written by Cole Howard. 10/29/2024
     """
-    solutions = solution.chromosome
-    raise ValueError(solutions)
     #Each objective is stored as one index in a single array within the hdf5 file, so I am getting each specific value
-    for soln in solutions:    
-        objectives, BU = read_hdf5(soln) #TODO!: Add cost back in
-        soln.parameters['cycle_length'] = objectives[0]
-        soln.parameters['fdeltah'] = objectives[1]
-        soln.parameters['pinpowerpeaking'] = objectives[2]
-        soln.parameters['max_boron'] = objectives[3]
-        #solution.parameters['cycle_cost'] = cost
+    objectives, BU = read_hdf5(soln.chromosome) #TODO!: Add cost back in
+    soln.parameters["cycle_length"]["value"] = objectives[0]
+    soln.parameters["fdeltah"]["value"] = objectives[1]
+    soln.parameters["pinpowerpeaking"]["value"] = objectives[2]
+    soln.parameters["max_boron"]["value"] = objectives[3]
+    #solution.parameters['cycle_cost'] = cost
 
-        # Adding in burnup parameters in case it is used later on
-        soln.parameters['max_burnup'] = max(BU)
-        soln.parameters['min_burnup'] = min(BU)
-        soln.parameters['average_burnup'] = np.mean(BU)
+    # Adding in burnup parameters in case it is used later on
+    #soln.parameters["max_burnup"]["value"] = max(BU) #TODO!: Add burnup parameters to solution object
+    #soln.parameters["min_burnup"]["value"] = min(BU)
+    #soln.parameters["average_burnup"]["value"] = np.mean(BU)
 
-    return solutions
+    return soln
 
 def read_hdf5(soln):
     """
@@ -53,7 +50,6 @@ def read_hdf5(soln):
             individual.append(int(6))
         elif sol == 'NSFA455GAD':
             individual.append(int(7))
-    raise ValueError(soln)
     assembly_name = ''.join(map(str,individual))
     file_number = f'{individual[1]}' #The number in the hdf5 file is the same as the second number in the LP array for now, will change to first and second
     filepath = f"/cm/shared/databases/SMR_IPWR_DATABASE/Solutions_{file_number}.hdf5"

@@ -33,10 +33,10 @@ algorithm:
 assembly_options:
   reflectors:
     NSFA:
-      refl_type: None
+      refl_type: all
       serial: None
   blankets:
-    NSFA:
+    None:
       serial: None
   fuel: 
     NSFA23: 
