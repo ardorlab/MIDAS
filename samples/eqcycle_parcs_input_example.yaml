@@ -1,28 +1,31 @@
-## Optimizer Block
-optimization:
+## General Settings Block
+general:
+  debug_mode: True
   methodology: genetic_algorithm
   code_type: PARCS342
-  data_type: EQ cycle
+  calc_type: EQ cycle
   results_directory_name: output_files
-  population_size: 100
-  number_of_generations: 30
+
+## Optimizer Block
+optimization:
+  population_size: 30
+  number_of_generations: 100
   solution_symmetry: quarter #chromosome symmetry; octant NOT allowed for EQ cycle.
   objectives:
+    cycle_length:
+      goal: maximize
     max_boron:
       goal: less_than_target
-      target: 1300
-      weight: 1.0
+      target: 1600
+      weight: 0.5
     PinPowerPeaking:
       goal: less_than_target
-      weight: 400.0 
+      weight: 250.0
       target: 2.1
     FDeltaH:
       goal: less_than_target
       target: 1.48
-      weight: 600.0     
-    cycle_length:
-      goal: maximize
-      weight: 1.00
+      weight: 300.0
 
 ## Algorithm Settings
 algorithm:
@@ -125,4 +128,4 @@ parcs_data:
   pin_power_recon: False
   num_axial_nodes: 19
   axial_nodes: 16.12, 20.32, 15*25.739, 20.32, 16.12
-  boc_core_exposure: 10.0
+  boc_core_exposure: 14.0
