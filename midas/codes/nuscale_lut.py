@@ -51,7 +51,7 @@ def read_hdf5(soln):
         elif sol == 'NSFA455GAD':
             individual.append(int(7))
     assembly_name = ''.join(map(str,individual))
-    file_number = f'{individual[1]}' #The number in the hdf5 file is the same as the second number in the LP array for now, will change to first and second
+    file_number = f'{individual[0]}{individual[1]}' #The number in the hdf5 file is the same as the first and second number of the loading pattern
     filepath = f"/cm/shared/databases/SMR_IPWR_DATABASE/Solutions_{file_number}.hdf5"
 
     if not os.path.exists(filepath): #Check here to make sure the file being looked up actually exists
@@ -65,6 +65,7 @@ def read_hdf5(soln):
             objectives = assembly["Objectives"][:] #Store all objectives for that LP
             #cost = assembly["cost"] #Store cost of LP #TODO!: Add cost back in once new dataase is generated
             BU = assembly["BU"][:] #Store burnup for each assembly in the LP
+            hdf5_file.close()
             return objectives, BU
         else:
             raise KeyError(f'The assembly "{assembly_name}" was not found in the file Solutions_{file_number}.hdf5. Please check that the assembly map was typed correctly.')
