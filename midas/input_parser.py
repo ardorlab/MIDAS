@@ -35,26 +35,40 @@ def validate_input(keyword, value):
     """
     ## Initialize logging for the present file
     logger = logging.getLogger("MIDAS_logger")
+
+## General Settings Block ##
+    if keyword == 'debug_mode':
+        value = bool(value)
     
-## Optimization Block ##
-    if keyword == 'methodology':
+    elif keyword == 'results_directory_name':
+        value = Path(str(value).replace(' ','_'))
+    
+    elif keyword == 'set_seed':
+        if value:
+            value = int(value)
+    
+    elif keyword == 'clear_results':
+        value = str(value).lower().replace(' ','_')
+        #variations on "none" or "keep" are equivalent; "none" is the preferred variation.
+        if value not in ["all", "all_but_best", "none", "keep", "keep_all"]:
+            raise ValueError("Clear results request type is invalid or not supported.")
+    
+    elif keyword == 'optimizer':
         value = str(value).lower().replace(' ','_')
         if value not in ["genetic_algorithm"]:
-            raise ValueError("Requested methodology '" + self.methodology + "' invalid.")
+            raise ValueError("Requested optimizer name is invalid or not supported.")
     
     elif keyword == 'code_type':
         value = str(value).lower()
         if value not in ["parcs342"]:
             raise ValueError("Code types currently supported: PARCS342.")
     
-    elif keyword == 'data_type':
+    elif keyword == 'calc_type':
         value = str(value).lower().replace(' ','_')
         if value not in ["single_cycle","eq_cycle"]:
             raise ValueError("Data type not supported.")
     
-    elif keyword == 'results_directory_name':
-        value = Path(str(value).replace(' ','_'))
-    
+## Optimization Block ##
     elif keyword == 'population_size':
         try:
             value = value.lower().replace(' ','_')
@@ -75,13 +89,6 @@ def validate_input(keyword, value):
         value = str(value).lower().replace(' ','_')
         if value not in ['octant','quarter','full']:
             raise ValueError("Symmetry of the solution list must be octant, quarter, or full.")
-    
-    elif keyword == 'set_seed':
-        if value:
-            value = int(value)
-    
-    elif keyword == 'debug_mode':
-        value = bool(value)
     
     elif keyword == 'objectives':
         if isinstance(value, dict):
@@ -118,7 +125,7 @@ def validate_input(keyword, value):
                     if 'goal' not in new_item:
                         raise ValueError(f"'Goal' parameter missing for {key}.")
                     if 'weight' not in new_item:
-                        raise ValueError(f"'Weight' parameter missing for {key}.")
+                        new_item['weight'] = 1.0 #assume weight value
                     if new_item['goal'] in ['maximize','minimize']:
                         if 'target' in new_item:
                             logger.warning(f"Target provided for {key} with requested goal '{subitem}'. Target will be ignored.")
@@ -445,23 +452,31 @@ class Input_Parser():
         
         Written by Nicholas Rollins. 09/11/2024
         """
+    ## General Settings Block ##
+        try:
+            info = self.file_settings['general']
+        except KeyError:
+            info = None
+        
+        self.debug_mode = yaml_line_reader(info, 'debug_mode', False)
+        self.results_dir_name = yaml_line_reader(info, 'results_directory_name', 'output_files')
+        self.set_seed = yaml_line_reader(info, 'set_seed', None)
+        self.clear_results = yaml_line_reader(info, 'clear_results', 'all_but_best')
+        self.methodology = yaml_line_reader(info, 'optimizer', 'genetic_algorithm')
+        self.code_interface = yaml_line_reader(info, 'code_type', 'PARCS342')
+        self.calculation_type = yaml_line_reader(info, 'calc_type', 'single_cycle')
+
+        
     ## Optimization Block ##
         try:
             info = self.file_settings['optimization']
         except KeyError:
             info = None
         
-        self.methodology = yaml_line_reader(info, 'methodology', 'genetic_algorithm')
-        self.code_interface = yaml_line_reader(info, 'code_type', 'PARCS342')
-        self.calculation_type = yaml_line_reader(info, 'data_type', 'single_cycle')
-        self.results_dir_name = yaml_line_reader(info, 'results_directory_name', 'output_files')
         self.population_size = yaml_line_reader(info, 'population_size', 1)
         self.num_generations = yaml_line_reader(info, 'number_of_generations', 1)
         self.symmetry = yaml_line_reader(info, 'solution_symmetry', 'octant')
         self.objectives = yaml_line_reader(info, 'objectives', None)
-        #!TODO: should these be in a 'general' block?
-        self.set_seed = yaml_line_reader(info, 'set_seed', None)
-        self.debug_mode = yaml_line_reader(info, 'debug_mode', False)
         
     ## Algorithm Block ##
         try:
