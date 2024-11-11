@@ -349,9 +349,88 @@ def evaluate(solution, input):
             logging.debug(f"Job {solution.name} completed successfully.")
             ofile = solution.name + '.out'
             solution.parameters = get_results(solution.parameters, solution.name)
+        
         else: #job failed
-            logger.warning(f"Job {solution.name} has failed!")
-            solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+            if input.calculation_type in ['eq_cycle']: #!TODO: move this to a new function in this class
+                convergence_attempts = 0
+                boc_exp = input.boc_exposure
+                while convergence_attempts <= 3:
+                    convergence_attempts += 1
+                    # best cycle
+                    depfiles_list = []
+                    for file in os.listdir('./'):
+                        if '.parcs_cyc-' in file:
+                            depfiles_list.append(file)
+                    if os.path.getsize(depfiles_list[-1]) < 20000: #if file is too small the cycle didn't initialize
+                        lastcycle_dep = depfiles_list[-2]
+                        os.replace(depfiles_list[-2],'restart_exp.dep')
+                    else:
+                        lastcycle_dep = depfiles_list[-1]
+                        os.replace(depfiles_list[-1],'restart_exp.dep')
+                    os.system("rm *.parcs_cyc-*") #delete old cycle results in case they don't get overwritten
+                    if int(lastcycle_dep[-2:]) > 1:
+                        #restart from the new file
+                        logger.debug(f"Job {solution.name} has failed to converge {convergence_attempts} time(s). Retrying from cycle {int(lastcycle_dep[-2:])}...")
+                        with open(filename, 'r+') as file:
+                            lines = file.readlines()  # Read all lines
+                            for i, line in enumerate(lines):
+                                if line.strip().startswith("INP_HST"):
+                                    line = line.replace("'./boc_exp.dep' -2","'./restart_exp.dep' 1")
+                                    lines[i] = line # Update the line in the list
+                            # Move back to the start of the file and truncate to overwrite
+                            file.seek(0)
+                            file.writelines(lines)
+                            file.truncate()  # Ensures any remaining old content is removed if file size decreases
+                    else:
+                        #restart with new boc exposure
+                        boc_exp -= 3.0 #try a new boc exposure
+                        if boc_exp < 0.0:
+                            boc_exp += 13.0 #if boc exposure is too low, try a much larger value
+                        logger.debug(f"Job {solution.name} has failed to converge {convergence_attempts} time(s). Retrying with a BOC exposure of {boc_exp} GWd/MTU...")
+                        with open('boc_exp.dep',"w") as depfile:
+                            depfile.write("\n BEGIN STEP\n\n EXP 3D MAP 1.0E+00\n\n")
+                            columncount = 0
+                            for i in range(1,input.num_assemblies+1):
+                                ## write column headers
+                                if columncount == 0:
+                                    depfile.write(" k lb ")
+                                depfile.write(str(i).ljust(8))
+                                columncount += 1
+                                ## write rows for every 10 columns
+                                if columncount == 10:
+                                    depfile.write('\n')
+                                    for j in range(input.number_axial-2,0,-1): #iterate in reverse; assume 1 node each top and bottom reflectors.
+                                        depfile.write(' '+str(j).ljust(3))
+                                        for k in range(columncount):
+                                            depfile.write('{:.3f}'.format(boc_exp).rjust(8))
+                                        depfile.write('\n')
+                                    depfile.write('\n')
+                                    columncount = 0
+                            ## write rows for leftover columns
+                            if columncount!= 0:
+                                depfile.write('\n')
+                                for j in range(input.number_axial-2,0,-1): #iterate in reverse; assume 1 node each top and bottom reflectors.
+                                    depfile.write(' '+str(j).ljust(3))
+                                    for k in range(columncount):
+                                        depfile.write('{:.3f}'.format(boc_exp).rjust(8))
+                                    depfile.write('\n')
+                                depfile.write('\n')
+                            depfile.write(' END STEP\n')
+                    
+                    #try again with new starting point
+                    output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=walltime) #wait until calculation finishes
+                if 'Finished' in str(output): #job completed
+                    logger.debug(f"Job {solution.name} completed successfully.")
+                    ofile = solution.name + '.out'
+                    solution.parameters = get_results(solution.parameters, solution.name)
+                else:
+                    logger.warning(f"Job {solution.name} has failed!")
+                    solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+            
+            else: #standard execution pathway
+                logger.warning(f"Job {solution.name} has failed!")
+                solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+    
     except subprocess.TimeoutExpired: #job timed out
         os.system('rm -f {}.parcs_pin*'.format(solution.name))
         logger.error(f"Job {solution.name} has timed out!")
