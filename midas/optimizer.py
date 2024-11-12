@@ -108,10 +108,17 @@ class Optimizer():
         cwd = Path(os.getcwd())
         results_dir = cwd.joinpath(self.input.results_dir_name)
         if os.path.exists(results_dir):
+            logger.debug("Overwriting existing results directory...")
             rmtree(results_dir, ignore_errors=True)
             os.mkdir(results_dir)
         else:
             os.mkdir(results_dir)
+    
+    ## Delete old results file, if necessary, to avoid confusion
+        # this step is useful since the new results file won't be written until after Generation 0 is completed.
+        if os.path.exists("optimizer_results.csv"):
+            logger.debug("Removing existing 'optimizer_results.csv' results file...")
+            os.remove("optimizer_results.csv")
         
     ## Initialize beginning population
         logger.info("Generating initial population of %s individuals...", self.input.population_size)
@@ -164,9 +171,21 @@ class Optimizer():
         
         logger.info("Generation %s Best Individual:", self.generation.current)
         logger.info(', '.join(archive_header)+'\n'+best_soln_string+'\n')
+    
+    ## Clear solution files to save disk space
+        if self.input.clear_results == "all":
+            logger.info("Clearing solution files for Generation 0...")
+            os.system('rm -rf Gen_0_Indv_*')
+            logger.info("Done!\n")
+        elif self.input.clear_results == "all_but_best":
+            logger.info("Clearing all but best solution files for Generation 0...")
+            os.system(f'mv Gen_0_Indv_{best_soln_index} safeGen_0_Indv_{best_soln_index}')
+            os.system('rm -rf Gen_0_Indv_*')
+            os.system(f'mv safeGen_0_Indv_{best_soln_index} Gen_0_Indv_{best_soln_index}')
+            logger.info("Done!\n")
         
         
-## Iterate Over Generations  ## #!TODO: I believe selection is missing from this process?
+## Iterate Over Generations  ##
 
         for self.generation.current in range(1,self.generation.total):
         ## Create new generation
@@ -225,6 +244,18 @@ class Optimizer():
             
             logger.info("Generation %s Best Individual:", self.generation.current)
             logger.info(', '.join(archive_header)+'\n'+best_soln_string+'\n')
+            
+        ## Clear solution files to save disk space
+            if self.input.clear_results == "all":
+                logger.info(f"Clearing solution files for Generation {self.generation.current}...")
+                os.system(f'rm -rf Gen_{self.generation.current}_Indv_*')
+                logger.info("Done!\n")
+            elif self.input.clear_results == "all_but_best":
+                logger.info(f"Clearing all but best solution files for Generation {self.generation.current}...")
+                os.system(f'mv Gen_{self.generation.current}_Indv_{best_soln_index} safeGen_{self.generation.current}_Indv_{best_soln_index}')
+                os.system(f'rm -rf Gen_{self.generation.current}_Indv_*')
+                os.system(f'mv safeGen_{self.generation.current}_Indv_{best_soln_index} Gen_{self.generation.current}_Indv_{best_soln_index}')
+                logger.info("Done!\n")
         
 ## Optimization concluded
         #!TODO: do some wrap-up after the optimizer. Report best solution, statistics, etc.

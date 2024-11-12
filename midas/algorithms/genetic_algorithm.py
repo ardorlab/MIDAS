@@ -58,7 +58,7 @@ class Genetic_Algorithm():
     ## Container for holding new list of child chromosomes
         child_chromosome_list = []
         # preserve best performing parent in the next generation
-        child_chromosome_list.append(max(pop_list, key=lambda soln: soln.fitness_value))
+        child_chromosome_list.append(max(pop_list, key=lambda soln: soln.fitness_value).chromosome)
     
     ## Select individuals for mutation. The rest undergo crossover.
         mutation_list  = []
@@ -98,7 +98,7 @@ class Genetic_Algorithm():
     
     ## Check new population size
         while len(child_chromosome_list) > len(pop_list):
-            del child_chromosome_list[random.randint(1,len(child_chromosome_list))] # remove any random child to reduce population size (except first child)
+            del child_chromosome_list[random.randint(1,len(child_chromosome_list)-1)] # remove any random child to reduce population size (except first child)
         
         return child_chromosome_list
     
@@ -298,6 +298,7 @@ class GA_reproduction():
         chromosome_is_valid = False
         attempts = 0
         while not chromosome_is_valid:
+            new_soln = deepcopy(old_soln) #in the case of abortion, start from scratch.
             while new_soln == old_soln:
                 for i in range(num_mutations):
                     loc_to_mutate = random.randint(0, len(new_soln)-1) #choose a random gene
@@ -311,7 +312,7 @@ class GA_reproduction():
                                                                             LWR_core_parameters,new_soln)
             attempts += 1
             if attempts > 100000:
-                logger.error(f"Mutate-by-Gene has failed after 100,000 attempts; Parent will be restored. Consider relaxing the constraints on the input space.")
+                logger.error("Mutate-by-Gene has failed after 100,000 attempts; Parent will be restored. Consider relaxing the constraints on the input space.")
                 new_soln = deepcopy(old_soln)
 
         if input_obj.calculation_type in ["eq_cycle"]:
