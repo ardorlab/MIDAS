@@ -1,13 +1,13 @@
 ## Optimizer Block
-optimization:
-  methodology: bayesian_optimization
+general:
+  optimizer: bayesian_optimization
   code_type: nuscale_database
-  data_type: single cycle
   results_directory_name: output_files
+
+optimization:
   population_size: 30
   batch_size: 5
   number_of_generations: 300
-  solution_symmetry: octant #chromosome symmetry
   objectives:
     max_boron:
       goal: less_than_target
@@ -24,7 +24,6 @@ optimization:
     cycle_length:
       goal: maximize
       weight: 1.00
-
 ## Algorithm Settings
 algorithm:
   acquisition_function: gp_hedge
