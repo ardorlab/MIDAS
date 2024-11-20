@@ -11,6 +11,9 @@ from subprocess import STDOUT
 from midas.utils.optimizer_tools import Constrain_Input
 
 
+## Initialize logging for the present file
+logger = logging.getLogger("MIDAS_logger")
+
 ## Functions ##
 def evaluate(solution, input):
     """
@@ -18,8 +21,6 @@ def evaluate(solution, input):
     
     Updated by Nicholas Rollins. 10/03/2024
     """
-## Initialize logging for the present file
-    logger = logging.getLogger("MIDAS_logger")
     
 ## Create and move to unique directory for PARCS execution
     cwd = Path(os.getcwd())
@@ -347,86 +348,11 @@ def evaluate(solution, input):
     ## Get Results
         if 'Finished' in str(output): #job completed
             logging.debug(f"Job {solution.name} completed successfully.")
-            ofile = solution.name + '.out'
             solution.parameters = get_results(solution.parameters, solution.name)
         
         else: #job failed
-            if input.calculation_type in ['eq_cycle']: #!TODO: move this to a new function in this class
-                convergence_attempts = 0
-                boc_exp = input.boc_exposure
-                while convergence_attempts <= 3:
-                    convergence_attempts += 1
-                    # best cycle
-                    depfiles_list = []
-                    for file in os.listdir('./'):
-                        if '.parcs_cyc-' in file:
-                            depfiles_list.append(file)
-                    if os.path.getsize(depfiles_list[-1]) < 20000: #if file is too small the cycle didn't initialize
-                        lastcycle_dep = depfiles_list[-2]
-                        os.replace(depfiles_list[-2],'restart_exp.dep')
-                    else:
-                        lastcycle_dep = depfiles_list[-1]
-                        os.replace(depfiles_list[-1],'restart_exp.dep')
-                    os.system("rm *.parcs_cyc-*") #delete old cycle results in case they don't get overwritten
-                    if int(lastcycle_dep[-2:]) > 1:
-                        #restart from the new file
-                        logger.debug(f"Job {solution.name} has failed to converge {convergence_attempts} time(s). Retrying from cycle {int(lastcycle_dep[-2:])}...")
-                        with open(filename, 'r+') as file:
-                            lines = file.readlines()  # Read all lines
-                            for i, line in enumerate(lines):
-                                if line.strip().startswith("INP_HST"):
-                                    line = line.replace("'./boc_exp.dep' -2","'./restart_exp.dep' 1")
-                                    lines[i] = line # Update the line in the list
-                            # Move back to the start of the file and truncate to overwrite
-                            file.seek(0)
-                            file.writelines(lines)
-                            file.truncate()  # Ensures any remaining old content is removed if file size decreases
-                    else:
-                        #restart with new boc exposure
-                        boc_exp -= 3.0 #try a new boc exposure
-                        if boc_exp < 0.0:
-                            boc_exp += 13.0 #if boc exposure is too low, try a much larger value
-                        logger.debug(f"Job {solution.name} has failed to converge {convergence_attempts} time(s). Retrying with a BOC exposure of {boc_exp} GWd/MTU...")
-                        with open('boc_exp.dep',"w") as depfile:
-                            depfile.write("\n BEGIN STEP\n\n EXP 3D MAP 1.0E+00\n\n")
-                            columncount = 0
-                            for i in range(1,input.num_assemblies+1):
-                                ## write column headers
-                                if columncount == 0:
-                                    depfile.write(" k lb ")
-                                depfile.write(str(i).ljust(8))
-                                columncount += 1
-                                ## write rows for every 10 columns
-                                if columncount == 10:
-                                    depfile.write('\n')
-                                    for j in range(input.number_axial-2,0,-1): #iterate in reverse; assume 1 node each top and bottom reflectors.
-                                        depfile.write(' '+str(j).ljust(3))
-                                        for k in range(columncount):
-                                            depfile.write('{:.3f}'.format(boc_exp).rjust(8))
-                                        depfile.write('\n')
-                                    depfile.write('\n')
-                                    columncount = 0
-                            ## write rows for leftover columns
-                            if columncount!= 0:
-                                depfile.write('\n')
-                                for j in range(input.number_axial-2,0,-1): #iterate in reverse; assume 1 node each top and bottom reflectors.
-                                    depfile.write(' '+str(j).ljust(3))
-                                    for k in range(columncount):
-                                        depfile.write('{:.3f}'.format(boc_exp).rjust(8))
-                                    depfile.write('\n')
-                                depfile.write('\n')
-                            depfile.write(' END STEP\n')
-                    
-                    #try again with new starting point
-                    output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=walltime) #wait until calculation finishes
-                if 'Finished' in str(output): #job completed
-                    logger.debug(f"Job {solution.name} completed successfully.")
-                    ofile = solution.name + '.out'
-                    solution.parameters = get_results(solution.parameters, solution.name)
-                else:
-                    logger.warning(f"Job {solution.name} has failed!")
-                    solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
-            
+            if input.calculation_type in ['eq_cycle']:
+                solution.parameters = eq_cycle_convergenc(input, solution, filename, parcscmd, walltime) #iteratively try to find an intial guess that will converge
             else: #standard execution pathway
                 logger.warning(f"Job {solution.name} has failed!")
                 solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
@@ -585,3 +511,145 @@ def prepare_shuffling_map(input, chromosome):
                         soln_full_core_lattice[irow][jcol] = tags[idx]
     
     return soln_full_core_lattice
+
+def eq_cycle_convergenc(input, solution, filename, parcscmd, walltime):
+    boc_exp = input.boc_exposure
+    conv_list = [[],[]] #track convergence
+    skip_convwrite = False
+## fetch best cycle from previous attempt
+    depfiles_list = []
+    for file in os.listdir('./'):
+        if '.parcs_cyc-' in file:
+            depfiles_list.append(file)
+    if os.path.getsize(depfiles_list[-1]) < 20000: #if file is too small the cycle didn't initialize
+        lastcycle_dep = depfiles_list[-2]
+    else:
+        lastcycle_dep = depfiles_list[-1]
+## reattempt convergence
+    convergence_attempts = 0
+    while convergence_attempts < 8: # number of attempts to make
+        convergence_attempts += 1
+    ## fetch best cycle from previous attempt
+        depfiles_list = []
+        for file in os.listdir('./'):
+            if '.parcs_cyc-' in file:
+                depfiles_list.append(file)
+        if os.path.getsize(depfiles_list[-1]) < 20000: #if file is too small the cycle didn't initialize
+            lastcycle_dep = depfiles_list[-2]
+            os.replace(depfiles_list[-2],'restart_exp.dep')
+        else:
+            lastcycle_dep = depfiles_list[-1]
+            os.replace(depfiles_list[-1],'restart_exp.dep')
+        os.system("rm *.parcs_cyc-*") #delete old cycle results in case they don't get overwritten
+    ## Update convergence tracking list
+        if not skip_convwrite:
+            conv_list[0].append(float(boc_exp))
+            conv_list[1].append(int(lastcycle_dep[-2:]))
+        else:
+            skip_convwrite = False
+    ## decide restart pathway
+        if int(lastcycle_dep[-2:]) >= 5:
+            skip_convwrite = True
+            #restart from the new file
+            logger.debug(f"Job {solution.name} has failed to converge {convergence_attempts} time(s). Retrying from cycle {int(lastcycle_dep[-2:])}...")
+        ## edit inp file
+            with open(filename, 'r+') as file:
+                lines = file.readlines()  # Read all lines
+                for i, line in enumerate(lines):
+                    if line.strip().startswith("INP_HST"):
+                        line = line.replace("'./boc_exp.dep' -2","'./restart_exp.dep' 1")
+                        lines[i] = line # Update the line in the list
+                # Move back to the start of the file and truncate to overwrite
+                file.seek(0)
+                file.writelines(lines)
+                file.truncate()  # Ensures any remaining old content is removed if file size decreases
+        else:
+            #restart with new boc exposure
+            boc_exp = next_binary_search(conv_list) #try a new boc exposure
+            logger.debug(f"Job {solution.name} has failed to converge {convergence_attempts} time(s). Retrying with a BOC exposure of {boc_exp} GWd/MTU...")
+        ## rewrite boc_exp.dep file
+            with open('boc_exp.dep',"w") as depfile:
+                depfile.write("\n BEGIN STEP\n\n EXP 3D MAP 1.0E+00\n\n")
+                columncount = 0
+                for i in range(1,input.num_assemblies+1):
+                    ## write column headers
+                    if columncount == 0:
+                        depfile.write(" k lb ")
+                    depfile.write(str(i).ljust(8))
+                    columncount += 1
+                    ## write rows for every 10 columns
+                    if columncount == 10:
+                        depfile.write('\n')
+                        for j in range(input.number_axial-2,0,-1): #iterate in reverse; assume 1 node each top and bottom reflectors.
+                            depfile.write(' '+str(j).ljust(3))
+                            for k in range(columncount):
+                                depfile.write('{:.3f}'.format(boc_exp).rjust(8))
+                            depfile.write('\n')
+                        depfile.write('\n')
+                        columncount = 0
+                ## write rows for leftover columns
+                if columncount!= 0:
+                    depfile.write('\n')
+                    for j in range(input.number_axial-2,0,-1): #iterate in reverse; assume 1 node each top and bottom reflectors.
+                        depfile.write(' '+str(j).ljust(3))
+                        for k in range(columncount):
+                            depfile.write('{:.3f}'.format(boc_exp).rjust(8))
+                        depfile.write('\n')
+                    depfile.write('\n')
+                depfile.write(' END STEP\n')
+        ## edit inp file
+            with open(filename, 'r+') as file:
+                lines = file.readlines()  # Read all lines
+                for i, line in enumerate(lines):
+                    if line.strip().startswith("INP_HST"):
+                        line = line.replace("'./restart_exp.dep' 1","'./boc_exp.dep' -2")
+                        lines[i] = line # Update the line in the list
+                # Move back to the start of the file and truncate to overwrite
+                file.seek(0)
+                file.writelines(lines)
+                file.truncate()  # Ensures any remaining old content is removed if file size decreases
+        
+        #try again with new starting point
+        output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=walltime) #wait until calculation finishes
+    if 'Finished' in str(output): #job completed
+        logger.debug(f"Job {solution.name} completed successfully.")
+        solution.parameters = get_results(solution.parameters, solution.name)
+    else:
+        logger.warning(f"Job {solution.name} has failed!")
+        solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+    
+    return solution.parameters
+
+def next_binary_search(search_list):
+    """
+    Find the next value to try in a binary search.
+    
+    search_list = list; should contain 2 arrays, the first continuing the already tried
+                x values and the second should try the resulting y values.
+    
+    Written by Nicholas Rollins. 11/11/2024
+    """
+    #lower and upper bounds
+    lower_bound = 0.0
+    upper_bound = 25.0
+    
+    # Sort the lists by the elements of the first list
+    x_list, y_list = zip(*sorted(list(zip(search_list[0], search_list[1])), key=lambda a: a[0]))
+    if int(lower_bound) not in [int(x) for x in x_list]:
+        return lower_bound
+    elif int(upper_bound) not in [int(x) for x in x_list]:
+        return upper_bound
+
+    best_index = y_list.index(max(y_list))
+    x1 = x_list[best_index] # get best x from index of best y
+    if best_index == 0:
+        x2 = x_list[best_index+1]
+    elif best_index == len(x_list)-1:
+        x2 = x_list[best_index-1]
+    else:
+        x2 = x_list[best_index+1] if y_list[best_index+1] > y_list[best_index-1] else x_list[best_index-1]
+
+    if x1 >= x2:
+        return float(x1 - (x1-x2)/2)
+    else:
+        return float(x2 - (x2-x1)/2)
