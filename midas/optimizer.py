@@ -198,7 +198,7 @@ class Optimizer():
                     soln.parameters = self.population.archive['parameters'][soln_index]
                     inactive_solutions.append(soln)
                     self.population.current.remove(soln)
-                    logger.debug(f"Fitness value for solution '{soln.name}' will be taken from the archive.")
+                    logger.debug(f"Fitness value for solution '{soln.name}' will be taken from archive entry: {soln_index}.")
                 except ValueError:
                     continue #chromosome is unique, do nothing.
             
