@@ -6,8 +6,8 @@ general:
 
 optimization:
   population_size: 30
-  batch_size: 5
-  number_of_generations: 300
+  batch_size: 3
+  number_of_generations: 50
   objectives:
     max_boron:
       goal: less_than_target
