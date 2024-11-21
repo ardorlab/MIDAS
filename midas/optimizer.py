@@ -9,8 +9,10 @@ from itertools import repeat
 import csv
 
 from midas.algorithms import genetic_algorithm as GA
+from midas.algorithms import bayesian_optimization as BO
 from midas.utils import optimizer_tools as optools
 from midas.codes import parcs342
+from midas.codes import nuscale_lut
 
 
 ## Classes ##
@@ -32,6 +34,7 @@ class Optimizer():
         SA added by Johnny Klemes. 03/22/2020
         RL added by G. K. Delipe.  03/24/2023
         Updated by Nicholas Rollins. 09/11/2024
+        BO added by Cole Howard. 10/21/2024
         """
         methodology = self.input.methodology
         num_gene_combos = self.calculate_number_gene_combinations(self.input.genome)
@@ -42,9 +45,13 @@ class Optimizer():
         self.eval_func  = None
         if self.input.code_interface == "parcs342":
             self.eval_func  = parcs342.evaluate #assign, don't execute.
+        elif self.input.code_interface == "nuscale_database":
+            self.eval_func = nuscale_lut.evaluate
         
         if methodology == 'genetic_algorithm':
             self.algorithm = GA.Genetic_Algorithm(self.input)
+        elif methodology == 'bayesian_optimization':
+            self.algorithm = BO.Bayesian_Optimization(self.input)
         #!TODO: Add the other algorithms back in.
 
         return
