@@ -361,7 +361,6 @@ class Fitness(object):
         Written by Nicholas Rollins. 09/27/2024
         """
         fitness = 0.0
-        
         for param in parameters:
             pgoal = parameters[param]['goal']
             pweight = parameters[param]['weight']
