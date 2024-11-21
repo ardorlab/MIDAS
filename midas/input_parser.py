@@ -56,7 +56,7 @@ def validate_input(keyword, value):
     elif keyword == 'optimizer':
         value = str(value).lower().replace(' ','_')
         if value not in ["genetic_algorithm","bayesian_optimization"]:
-            raise ValueError("Requested methodology '" + self.methodology + "' invalid.")
+            raise ValueError("Requested methodology '" + value + "' invalid.")
     
     elif keyword == 'code_type':
         value = str(value).lower().replace(' ','_')
