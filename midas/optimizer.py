@@ -10,7 +10,7 @@ import csv
 
 from midas.algorithms import genetic_algorithm as GA
 from midas.utils import optimizer_tools as optools
-from midas.codes import parcs342
+from midas.codes import parcs342, parcs343
 
 
 ## Classes ##
@@ -41,7 +41,9 @@ class Optimizer():
         self.fitness    = optools.Fitness()
         self.eval_func  = None
         if self.input.code_interface == "parcs342":
-            self.eval_func  = parcs342.evaluate #assign, don't execute.
+            self.eval_func = parcs342.evaluate #assign, don't execute.
+        elif self.input.code_interface == "parcs343":
+            self.eval_func = parcs343.evaluate
         
         if methodology == 'genetic_algorithm':
             self.algorithm = GA.Genetic_Algorithm(self.input)
@@ -168,13 +170,13 @@ class Optimizer():
     ## Clear solution files to save disk space
         if self.input.clear_results == "all":
             logger.info("Clearing solution files for Generation 0...")
-            os.system('rm -rf Gen_0_Indv_*')
+            os.system(f'rm -rf ./{self.input.results_dir_name}/Gen_0_Indv_*')
             logger.info("Done!\n")
         elif self.input.clear_results == "all_but_best":
             logger.info("Clearing all but best solution files for Generation 0...")
-            os.system(f'mv Gen_0_Indv_{best_soln_index} safeGen_0_Indv_{best_soln_index}')
-            os.system('rm -rf Gen_0_Indv_*')
-            os.system(f'mv safeGen_0_Indv_{best_soln_index} Gen_0_Indv_{best_soln_index}')
+            os.system(f'mv ./{self.input.results_dir_name}/Gen_0_Indv_{best_soln_index} ./{self.input.results_dir_name}/safeGen_0_Indv_{best_soln_index}')
+            os.system(f'rm -rf ./{self.input.results_dir_name}/Gen_0_Indv_*')
+            os.system(f'mv ./{self.input.results_dir_name}/safeGen_0_Indv_{best_soln_index} ./{self.input.results_dir_name}/Gen_0_Indv_{best_soln_index}')
             logger.info("Done!\n")
         
         
@@ -241,13 +243,13 @@ class Optimizer():
         ## Clear solution files to save disk space
             if self.input.clear_results == "all":
                 logger.info(f"Clearing solution files for Generation {self.generation.current}...")
-                os.system(f'rm -rf Gen_{self.generation.current}_Indv_*')
+                os.system(f'rm -rf ./{self.input.results_dir_name}/Gen_{self.generation.current}_Indv_*')
                 logger.info("Done!\n")
             elif self.input.clear_results == "all_but_best":
                 logger.info(f"Clearing all but best solution files for Generation {self.generation.current}...")
-                os.system(f'mv Gen_{self.generation.current}_Indv_{best_soln_index} safeGen_{self.generation.current}_Indv_{best_soln_index}')
-                os.system(f'rm -rf Gen_{self.generation.current}_Indv_*')
-                os.system(f'mv safeGen_{self.generation.current}_Indv_{best_soln_index} Gen_{self.generation.current}_Indv_{best_soln_index}')
+                os.system(f'mv ./{self.input.results_dir_name}/Gen_{self.generation.current}_Indv_{best_soln_index} ./{self.input.results_dir_name}/safeGen_{self.generation.current}_Indv_{best_soln_index}')
+                os.system(f'rm -rf ./{self.input.results_dir_name}/Gen_{self.generation.current}_Indv_*')
+                os.system(f'mv ./{self.input.results_dir_name}/safeGen_{self.generation.current}_Indv_{best_soln_index} ./{self.input.results_dir_name}/Gen_{self.generation.current}_Indv_{best_soln_index}')
                 logger.info("Done!\n")
         
 ## Optimization concluded

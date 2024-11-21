@@ -60,8 +60,8 @@ def validate_input(keyword, value):
     
     elif keyword == 'code_type':
         value = str(value).lower()
-        if value not in ["parcs342"]:
-            raise ValueError("Code types currently supported: PARCS342.")
+        if value not in ["parcs342", "parcs343"]:
+            raise ValueError("Code types currently supported: PARCS342, PARCS343.")
     
     elif keyword == 'calc_type':
         value = str(value).lower().replace(' ','_')
@@ -514,7 +514,7 @@ class Input_Parser():
         
     ## Calculation Block ##
         try:
-            if self.code_interface == "parcs342":
+            if self.code_interface in ["parcs342","parcs343"]:
                 info = self.file_settings['parcs_data']
         except KeyError:
             info = None

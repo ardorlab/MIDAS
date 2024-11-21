@@ -247,7 +247,7 @@ class Prepare_Problem_Values():
                     if val is None:
                         full_core_locs[y,x] = "    "
                     elif val[0] == "R":
-                        if input_obj.code_interface == "parcs342":
+                        if input_obj.code_interface in ["parcs342","parcs343"]:
                             full_core_locs[y,x] = "   0"
                         else:
                             full_core_locs[y,x] = "    "
