@@ -3,7 +3,7 @@ import os
 import numpy as np
 import logging
 
-def evaluate(soln, input): #!TODO: Put parameters in docstring
+def evaluate(soln, input): #!TODO: Put parameters in docstring, implement burnup and cycle cost into MIDAS
     """
     This function will find the output parameters for the NuScale SMR based on the SMR database of loading pattern calculations
     and write them into a dictionary in the solution.parameters object
@@ -11,7 +11,7 @@ def evaluate(soln, input): #!TODO: Put parameters in docstring
     Written by Cole Howard. 10/29/2024
     """
     #Each objective is stored as one index in a single array within the hdf5 file, so I am getting each specific value
-    objectives, BU = read_hdf5(soln.chromosome) #TODO!: Add cost back in
+    objectives, BU = read_hdf5(soln.chromosome, input) #TODO!: Add cost back in
     soln.parameters["cycle_length"]["value"] = objectives[0]
     soln.parameters["fdeltah"]["value"] = objectives[1]
     soln.parameters["pinpowerpeaking"]["value"] = objectives[2]
@@ -25,7 +25,7 @@ def evaluate(soln, input): #!TODO: Put parameters in docstring
 
     return soln
 
-def read_hdf5(soln):
+def read_hdf5(soln, input): #TODO!: Comment code better
     """
     This function will search the hdf5 files containing the NuScale SMR database of loading patterns for the user-defined loading pattern,
     then return the parameters for that solution
@@ -36,20 +36,10 @@ def read_hdf5(soln):
 
     Written by Cole Howard. 10/29/2024
     """
-    individual = []
-    for sol in soln:
-        if sol == 'NSFA23':
-            individual.append(int(2))
-        elif sol == 'NSFA23GAD':
-            individual.append(int(3))
-        elif sol == 'NSFA39':
-            individual.append(int(4))
-        elif sol == 'NSFA39GAD':
-            individual.append(int(5))
-        elif sol == 'NSFA455':
-            individual.append(int(6))
-        elif sol == 'NSFA455GAD':
-            individual.append(int(7))
+    individual = [input.fa_options['fuel'][sol]['type'] for sol in soln if sol in input.fa_options['fuel']]
+    for ind in individual:
+        if int(ind) not in [2, 3, 4, 5, 6, 7]:
+            raise ValueError('"Type" under assembly options under "fuel" must be between 2-7. NuScale database only has these fuel types')
     assembly_name = ''.join(map(str,individual))
     file_number = f'{individual[0]}{individual[1]}' #The number in the hdf5 file is the same as the first and second number of the loading pattern
     filepath = f"/cm/shared/databases/SMR_IPWR_DATABASE/Solutions_{file_number}.hdf5"
