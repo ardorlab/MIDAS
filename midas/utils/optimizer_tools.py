@@ -1,12 +1,17 @@
 ## Import Block ##
 import math
 import random
+import logging
 import numpy as np
 from copy import deepcopy
 from midas.utils.problem_preparation import LWR_Core_Shapes
 """
 These are generic optimizer classes that are shared by all algorithms. #!TODO: can this be solved with the super().__init__ method?
 """
+
+
+## Initialize logging for the present file
+logger = logging.getLogger("MIDAS_logger")
 
 ## Classes ##
 class Population():
@@ -366,6 +371,9 @@ class Fitness(object):
             pgoal = parameters[param]['goal']
             pweight = parameters[param]['weight']
             pvalue = parameters[param]['value']
+            if not pvalue:
+                logger.error("No value was provided by MIDAS for the objective parameter '%s'. This is highly irregular.",param)
+            
             if pgoal == 'maximize':
                 fitness += pvalue*pweight
             elif pgoal == 'minimize':

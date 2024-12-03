@@ -7,6 +7,7 @@ from copy import deepcopy
 from multiprocessing import Pool
 from itertools import repeat
 import csv
+import pickle
 
 from midas.algorithms import genetic_algorithm as GA
 from midas.utils import optimizer_tools as optools
@@ -78,6 +79,8 @@ class Optimizer():
         
         #copy objectives and constraints from input
         soln.parameters = deepcopy(self.input.objectives)
+        for key in soln.parameters.keys():
+            soln.parameters[key]['value'] = None #placeholder to be filled by objective function.
         
         LWR_core_parameters = [self.input.nrow, self.input.ncol, self.input.symmetry]
         if chromosome:
@@ -88,7 +91,7 @@ class Optimizer():
 
         return soln
 
-    def main(self):
+    def main(self, restart=False):
         """
         Primary execution logic for the Optimizer class. The intention is for all 
         optimization jobs, regardless of algorithm, calculation type, or code model, 
@@ -99,86 +102,116 @@ class Optimizer():
     ## Initialize logging for the present file
         logger = logging.getLogger("MIDAS_logger")
         
+        if not restart:
     ## Create results directory and/or clear old
-        cwd = Path(os.getcwd())
-        results_dir = cwd.joinpath(self.input.results_dir_name)
-        if os.path.exists(results_dir):
-            logger.debug("Overwriting existing results directory...")
-            rmtree(results_dir, ignore_errors=True)
-            os.mkdir(results_dir)
-        else:
-            os.mkdir(results_dir)
-    
+            cwd = Path(os.getcwd())
+            results_dir = cwd.joinpath(self.input.results_dir_name)
+            if os.path.exists(results_dir):
+                logger.debug("Overwriting existing results directory...")
+                rmtree(results_dir, ignore_errors=True)
+                os.mkdir(results_dir)
+            else:
+                os.mkdir(results_dir)
+        
     ## Delete old results file, if necessary, to avoid confusion
-        # this step is useful since the new results file won't be written until after Generation 0 is completed.
-        if os.path.exists("optimizer_results.csv"):
-            logger.debug("Removing existing 'optimizer_results.csv' results file...")
-            os.remove("optimizer_results.csv")
-        
+            # this step is useful since the new results file won't be written until after Generation 0 is completed.
+            if os.path.exists("optimizer_results.csv"):
+                logger.debug("Removing existing 'optimizer_results.csv' results file...")
+                os.remove("optimizer_results.csv")
+            
     ## Initialize beginning population
-        logger.info("Generating initial population of %s individuals...", self.input.population_size)
-        self.population.current = []
-        for i in range(self.population.size):
-            self.population.current.append(self.generate_solution(f'Gen_0_Indv_{i}'))
-        
-        pool = Pool(processes=self.input.num_procs) #initialize parallel execution
-        
+            logger.info("Generating initial population of %s individuals...", self.input.population_size)
+            self.population.current = []
+            for i in range(self.population.size):
+                self.population.current.append(self.generate_solution(f'Gen_0_Indv_{i}'))
+            
+            pool = Pool(processes=self.input.num_procs) #initialize parallel execution
+            
     ## Evaluate fitness
-        logger.info("Calculating fitness for generation %s...", self.generation.current)
-        ## Execute and parse objective/constraint values
-        self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
-        ## Calculate fitness from objective/constriant values
-        for soln in self.population.current:
-            soln.fitness_value = self.fitness.calculate(soln.parameters)
-        logger.info("Done!")
-    
+            logger.info("Calculating fitness for generation %s...", self.generation.current)
+            ## Execute and parse objective/constraint values
+            self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
+            if 'cost_fuelcycle' in self.input.objectives.keys():
+                for soln in self.population.current:
+                    soln.parameters = get_fuelcycle_cost(soln)#!TODO: finish implementing fuel cycle cost.
+            
+            ## Calculate fitness from objective/constriant values
+            for soln in self.population.current:
+                soln.fitness_value = self.fitness.calculate(soln.parameters)
+            logger.info("Done!")
+        
     ## Archive initial results
-        for soln in self.population.current:
-            self.population.archive['solutions'].append(soln.chromosome)
-            self.population.archive['fitnesses'].append(soln.fitness_value)
-            self.population.archive['parameters'].append(soln.parameters)
+            for soln in self.population.current:
+                self.population.archive['solutions'].append(soln.chromosome)
+                self.population.archive['fitnesses'].append(soln.fitness_value)
+                self.population.archive['parameters'].append(soln.parameters)
+            
+            ## Only initialize the results file the first time.
+            archive_header = ["Generation","Individual","Fitness Value"]
+            for param in self.input.objectives.keys():
+                archive_header.append(str(param))
+            archive_header.append("Chromosome")
+            ## write output file
+            with open("optimizer_results.csv", 'w') as csvfile:
+                csvwriter = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
+                csvwriter.writerow(archive_header)
+            
+            best_soln_index = [s.fitness_value for s in self.population.current].index(max([s.fitness_value for s in self.population.current]))
+            for i in range(len(self.population.current)):
+                soln = self.population.current[i]
+                soln_result_list = [str(self.generation.current),str(i),'{0:.3f}'.format(soln.fitness_value)]
+                for param in soln.parameters.keys():
+                    soln_result_list.append('{0:.3f}'.format(soln.parameters[param]['value']))
+                for gene in soln.chromosome:
+                    soln_result_list.append(str(gene))
+                ## write to output file
+                with open("optimizer_results.csv", 'a') as csvfile:
+                    csvwriter = csv.writer(csvfile, delimiter=',')
+                    csvwriter.writerow(soln_result_list)
+                if i == best_soln_index:
+                    best_soln_string = ",".join(soln_result_list)
+            
+            
+            logger.info("Generation %s Best Individual:", self.generation.current)
+            logger.info(', '.join(archive_header)+'\n'+best_soln_string+'\n')
+            
+    ## Create restart file
+            logger.debug("Writing restart file %s...",self.input.job_name+".rst")
+            with open(self.input.job_name+".rst", "wb") as f: # Open in binary write mode
+                pickle.dump(self, f)
         
-        ## Only initialize the results file the first time.
-        archive_header = ["Generation","Individual","Fitness Value"]
-        for param in self.input.objectives.keys():
-            archive_header.append(str(param))
-        archive_header.append("Chromosome")
-        ## write output file
-        with open("optimizer_results.csv", 'w') as csvfile:
-            csvwriter = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
-            csvwriter.writerow(archive_header)
-        
-        best_soln_index = [s.fitness_value for s in self.population.current].index(max([s.fitness_value for s in self.population.current]))
-        for i in range(len(self.population.current)):
-            soln = self.population.current[i]
-            soln_result_list = [str(self.generation.current),str(i),'{0:.3f}'.format(soln.fitness_value)]
-            for param in soln.parameters.keys():
-                soln_result_list.append(str(soln.parameters[param]['value']))
-            for gene in soln.chromosome:
-                soln_result_list.append(str(gene))
-            ## write to output file
-            with open("optimizer_results.csv", 'a') as csvfile:
-                csvwriter = csv.writer(csvfile, delimiter=',')
-                csvwriter.writerow(soln_result_list)
-            if i == best_soln_index:
-                best_soln_string = ",".join(soln_result_list)
-        
-        
-        logger.info("Generation %s Best Individual:", self.generation.current)
-        logger.info(', '.join(archive_header)+'\n'+best_soln_string+'\n')
-    
     ## Clear solution files to save disk space
-        if self.input.clear_results == "all":
-            logger.info("Clearing solution files for Generation 0...")
-            os.system(f'rm -rf ./{self.input.results_dir_name}/Gen_0_Indv_*')
-            logger.info("Done!\n")
-        elif self.input.clear_results == "all_but_best":
-            logger.info("Clearing all but best solution files for Generation 0...")
-            os.system(f'mv ./{self.input.results_dir_name}/Gen_0_Indv_{best_soln_index} ./{self.input.results_dir_name}/safeGen_0_Indv_{best_soln_index}')
-            os.system(f'rm -rf ./{self.input.results_dir_name}/Gen_0_Indv_*')
-            os.system(f'mv ./{self.input.results_dir_name}/safeGen_0_Indv_{best_soln_index} ./{self.input.results_dir_name}/Gen_0_Indv_{best_soln_index}')
-            logger.info("Done!\n")
-        
+            if self.input.clear_results == "all":
+                logger.info("Clearing solution files for Generation 0...")
+                os.system(f'rm -rf ./{self.input.results_dir_name}/Gen_0_Indv_*')
+                logger.info("Done!\n")
+            elif self.input.clear_results == "all_but_best":
+                logger.info("Clearing all but best solution files for Generation 0...")
+                os.system(f'mv ./{self.input.results_dir_name}/Gen_0_Indv_{best_soln_index} ./{self.input.results_dir_name}/safeGen_0_Indv_{best_soln_index}')
+                os.system(f'rm -rf ./{self.input.results_dir_name}/Gen_0_Indv_*')
+                os.system(f'mv ./{self.input.results_dir_name}/safeGen_0_Indv_{best_soln_index} ./{self.input.results_dir_name}/Gen_0_Indv_{best_soln_index}')
+                logger.info("Done!\n")
+    
+## restart previous optimization routine ##
+        else:
+        ## Check that results files exist
+            cwd = Path(os.getcwd())
+            results_dir = cwd.joinpath(self.input.results_dir_name)
+            if not os.path.exists(results_dir):
+                logger.debug("Results directory is missing. Creating results directory...")
+                os.mkdir(results_dir)
+            if not os.path.exists("optimizer_results.csv"):
+                logger.debug("'optimizer_results.csv' results file is missing and will be recreated.")
+                archive_header = ["Generation","Individual","Fitness Value"]
+                for param in self.input.objectives.keys():
+                    archive_header.append(str(param))
+                archive_header.append("Chromosome")
+                ## write output file
+                with open("optimizer_results.csv", 'w') as csvfile:
+                    csvwriter = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
+                    csvwriter.writerow(archive_header)
+        ## Initialize optimization variables
+            pool = Pool(processes=self.input.num_procs) #initialize parallel execution
         
 ## Iterate Over Generations  ##
 
@@ -227,7 +260,7 @@ class Optimizer():
                 soln = self.population.current[i]
                 soln_result_list = [str(self.generation.current),str(i),'{0:.3f}'.format(soln.fitness_value)]
                 for param in soln.parameters.keys():
-                    soln_result_list.append(str(soln.parameters[param]['value']))
+                    soln_result_list.append('{0:.3f}'.format(soln.parameters[param]['value']))
                 for gene in soln.chromosome:
                     soln_result_list.append(str(gene))
                 ## write to output file
@@ -239,6 +272,11 @@ class Optimizer():
             
             logger.info("Generation %s Best Individual:", self.generation.current)
             logger.info(', '.join(archive_header)+'\n'+best_soln_string+'\n')
+            
+        ## Create restart file
+            logger.debug("Rewriting restart file %s...",self.input.job_name+".rst")
+            with open(self.input.job_name+".rst", "wb") as f: # Open in binary write mode
+                pickle.dump(self, f)
             
         ## Clear solution files to save disk space
             if self.input.clear_results == "all":

@@ -9,6 +9,7 @@ from pathlib import Path
 import subprocess
 from subprocess import STDOUT
 from midas.utils.optimizer_tools import Constrain_Input
+from midas_data import __parcs343exe__
 
 
 ## Initialize logging for the present file
@@ -337,7 +338,7 @@ def evaluate(solution, input):
         ofile.write(".")
 
 ## Run PARCS INPUT DECK #!TODO: separate the input writing and execution into two different functions that are called in sequence.
-    parcscmd = "/cm/shared/nuclearCodes/parcs-3.4.3/PARCS-v343_Exe/Executables/Linux/parcs-v343-linux2-intel-x64-debug.x" #!TODO: move this to a global or environmental variable
+    parcscmd = __parcs343exe__
     
     if input.calculation_type in ['eq_cycle']:
         walltime = 1800 #sec
@@ -431,7 +432,7 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
         if param in results_dict:
             parameters[param]['value'] = results_dict[param]["value"]
         else:
-            logger.warning(f"Parameter '{param}' not supported in PARCS342 results parsing.")
+            logger.warning(f"Parameter '{param}' not supported in PARCS343 results parsing.")
     
     return parameters
 
