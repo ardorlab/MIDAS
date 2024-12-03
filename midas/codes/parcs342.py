@@ -9,6 +9,7 @@ from pathlib import Path
 import subprocess
 from subprocess import STDOUT
 from midas.utils.optimizer_tools import Constrain_Input
+from midas_data import __parcs342exe__
 
 
 ## Initialize logging for the present file
@@ -337,7 +338,7 @@ def evaluate(solution, input):
         ofile.write(".")
 
 ## Run PARCS INPUT DECK #!TODO: separate the input writing and execution into two different functions that are called in sequence.
-    parcscmd = "/cm1/codes/parcs_342/Executables/Linux/parcs-v342-linux2-intel-x64-release.x" #!TODO: move this to a global or environmental variable
+    parcscmd = __parcs342exe__
     
     if input.calculation_type in ['eq_cycle']:
         walltime = 1800 #sec

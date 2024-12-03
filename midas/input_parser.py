@@ -99,7 +99,8 @@ def validate_input(keyword, value):
                 if new_key not in ['max_boron',
                                    'pinpowerpeaking',
                                    'fdeltah',
-                                   'cycle_length']:
+                                   'cycle_length',
+                                   'cost_fuelcycle']:
                     raise ValueError(f"Requested objective/constraint '{key}' not supported.")
                 new_item = {}
                 if isinstance(item, dict):
@@ -438,6 +439,7 @@ class Input_Parser():
     """
     def __init__(self, num_procs, inp_file):
         self.num_procs = int(num_procs)
+        self.job_name = ".".join(inp_file.split('.')[:-1])
         with open(inp_file) as f:
             try:
                 self.file_settings = yaml.safe_load(f)
