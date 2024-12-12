@@ -1,5 +1,6 @@
 import numpy as np
 from midas.utils.problem_preparation import LWR_Core_Shapes
+from midas.utils import optimizer_tools as optools
 """
     #!TODO: write docstring.
 """
@@ -8,11 +9,17 @@ from midas.utils.problem_preparation import LWR_Core_Shapes
 def get_fuelcycle_cost(soln, input):
     ## fetch the duplication multiplicity of each location when expanded to the full core.
     multdict = LWR_Core_Shapes.get_symmetry_multiplicity(input.nrow, input.ncol, input.symmetry)
+    
+    ## Interpret loading pattern from chromosome
+    if input.calculation_type == 'eq_cycle':
+        loading_pattern = optools.SS_decoder(soln.chromosome)
+    else:
+        loading_pattern = soln.chromosome
 
     ## calculate fuel cost for each FA (accounting for solution symmetry)
     fuelcycle_cost_total = 0.0 # USD
-    for i in range(len(soln.chromosome)):
-        FA_type = soln.chromosome[i]
+    for i in range(len(loading_pattern)):
+        FA_type = loading_pattern[i]
     
         x_p = input.fa_options['fuel'][FA_type]['enrichment'] # w.t.
         M_p = input.fa_options['fuel'][FA_type]['hm_loading'] # kg
