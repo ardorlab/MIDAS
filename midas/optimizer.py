@@ -12,6 +12,7 @@ import pickle
 from midas.algorithms import genetic_algorithm as GA
 from midas.utils import optimizer_tools as optools
 from midas.codes import parcs342, parcs343
+from midas.utils import LWR_fuelcyclecost
 
 
 ## Classes ##
@@ -133,7 +134,7 @@ class Optimizer():
             self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
             if 'cost_fuelcycle' in self.input.objectives.keys():
                 for soln in self.population.current:
-                    soln.parameters = get_fuelcycle_cost(soln)#!TODO: finish implementing fuel cycle cost.
+                    soln.parameters = LWR_fuelcyclecost.get_fuelcycle_cost(soln, self.input)
             
             ## Calculate fitness from objective/constriant values
             for soln in self.population.current:
@@ -194,28 +195,29 @@ class Optimizer():
     
 ## restart previous optimization routine ##
         else:
+        ## Initialize optimization variables
+            pool = Pool(processes=self.input.num_procs) #initialize parallel execution
+            archive_header = ["Generation","Individual","Fitness Value"]
+            for param in self.input.objectives.keys():
+                archive_header.append(str(param))
+            archive_header.append("Chromosome")
         ## Check that results files exist
             cwd = Path(os.getcwd())
             results_dir = cwd.joinpath(self.input.results_dir_name)
             if not os.path.exists(results_dir):
                 logger.debug("Results directory is missing. Creating results directory...")
                 os.mkdir(results_dir)
-            if not os.path.exists("optimizer_results.csv"):
+            if not os.path.exists(cwd.joinpath("optimizer_results.csv")):
                 logger.debug("'optimizer_results.csv' results file is missing and will be recreated.")
-                archive_header = ["Generation","Individual","Fitness Value"]
-                for param in self.input.objectives.keys():
-                    archive_header.append(str(param))
-                archive_header.append("Chromosome")
                 ## write output file
                 with open("optimizer_results.csv", 'w') as csvfile:
                     csvwriter = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
                     csvwriter.writerow(archive_header)
-        ## Initialize optimization variables
-            pool = Pool(processes=self.input.num_procs) #initialize parallel execution
         
 ## Iterate Over Generations  ##
 
-        for self.generation.current in range(1,self.generation.total):
+        for iter_gens in range(1,self.generation.total):
+            self.generation.current += 1
         ## Create new generation
             logger.info("Creating population of %s individuals for generation %s...", self.input.population_size, self.generation.current)
             new_chromosome_list = self.algorithm.reproduction(self.population.current)
@@ -240,6 +242,10 @@ class Optimizer():
             logger.info("Calculating fitness for generation %s...", self.generation.current)
             ## Execute and parse objective/constraint values
             self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
+            if 'cost_fuelcycle' in self.input.objectives.keys():
+                for soln in self.population.current:
+                    soln.parameters = LWR_fuelcyclecost.get_fuelcycle_cost(soln, self.input)
+            
             ## Calculate fitness from objective/constriant values
             for soln in self.population.current:
                 soln.fitness_value = self.fitness.calculate(soln.parameters)

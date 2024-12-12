@@ -80,14 +80,18 @@ def restart(args):
         # Load the object from the file
         optimizer = pickle.load(f)
     
+## Update logger level
+    if optimizer.input.debug_mode:
+        logger.setLevel(logging.DEBUG)
+    
 ## Seed the global RNG
     optimizer.input.set_seed = random.randrange(sys.maxsize) # generate an artibtrary RNG seed
     random.seed(optimizer.input.set_seed)
-    logger.info("Set global RNG Seed: %s", optimizer.input.set_seed)    
+    logger.info("Set global RNG Seed: %s", optimizer.input.set_seed)
     
 ## Execute
     logger.info("Restart Optimization...\n")
-    optimizer.main() #execute optimization through the algorithm class.
+    optimizer.main(restart=True) #execute optimization through the algorithm class.
     logger.info("\nOptimization completed.")
     
     return exitcode
