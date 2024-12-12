@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Current MIDAS version
 __version__ = "0.2.2"
 

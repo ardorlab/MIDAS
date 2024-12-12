@@ -262,7 +262,7 @@ def evaluate(solution, input):
     with open(filename,"a") as ofile:
         ofile.write("DEPL\n")
         if input.calculation_type == 'single_cycle':
-            ofile.write(f"      TIME_STP  {input.depl_steps}\n") #!TODO: parameterize this input.
+            ofile.write(f"      TIME_STP  {str(input.depl_steps).strip('[]')}\n") #!TODO: parameterize this input.
         ofile.write("      INP_HST   './boc_exp.dep' -2 1\n")
         ofile.write("      OUT_OPT   T  T  T  T  F\n")
         # Write reflector cross sections

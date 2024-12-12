@@ -233,7 +233,7 @@ class GA_reproduction():
                optools.Constrain_Input.check_constraints(genes_list,batches,LWR_core_parameters,\
                                                          [loc[0] for loc in child_two]):
                 chromosome_is_valid = True
-            if attempts > 1000:
+            if attempts > 10000:
                 raise ValueError("Crossover has failed after 1,000 attempts. Consider relaxing the constraints on the input space.")
                 
         if batches: #reload fuel in 'None' locations.
@@ -314,6 +314,7 @@ class GA_reproduction():
             if attempts > 100000:
                 logger.error("Mutate-by-Gene has failed after 100,000 attempts; Parent will be restored. Consider relaxing the constraints on the input space.")
                 new_soln = deepcopy(old_soln)
+                chromosome_is_valid = True #break out of while loop
 
         if input_obj.calculation_type in ["eq_cycle"]:
             #recreate child_chromosome

@@ -226,6 +226,12 @@ def validate_input(keyword, value):
                                     new_subsubkey =str(subsubkey).lower().replace(' ','_')
                                     if new_subsubkey == 'serial':
                                         new_subsubitem = str(subsubitem)
+                                    elif new_subsubkey == 'enrichment':
+                                        new_subsubitem = float(subsubitem)
+                                        if new_subsubitem >= 1.0:
+                                            new_subsubitem = new_subsubitem/100 #change weight percent to weight fraction
+                                    elif new_subsubkey == 'hm_loading':
+                                        new_subsubitem = float(subsubitem) # kg
                                     new_subitem[new_subsubkey] = new_subsubitem
                             else:
                                 raise ValueError("Requested blanket missing parameters.")
@@ -250,6 +256,12 @@ def validate_input(keyword, value):
                                         new_subsubitem = str(subsubitem)
                                     elif new_subsubkey == 'blanket':
                                         new_subsubitem = str(subsubitem)
+                                    elif new_subsubkey == 'enrichment':
+                                        new_subsubitem = float(subsubitem)
+                                        if new_subsubitem >= 1.0:
+                                            new_subsubitem = new_subsubitem/100 #change weight percent to weight fraction
+                                    elif new_subsubkey == 'hm_loading':
+                                        new_subsubitem = float(subsubitem) # kg
                                     new_subitem[new_subsubkey] = new_subsubitem
                             else:
                                 raise ValueError("Requested fuel type missing parameters.")
@@ -408,7 +420,7 @@ def validate_input(keyword, value):
         value = int(value)
     
     elif keyword == 'axial_nodes':
-        value = [a.strip(' ') for a in value.split(',')]
+        value = [a.strip() for a in value.strip().replace(', ',',').replace(' ',',').split(',')]
         new_value = []
         for node in value:
             if "*" in node:
@@ -424,8 +436,15 @@ def validate_input(keyword, value):
             raise ValueError("'boc_core_exposure' must be a real number.")
     
     elif keyword=='depletion_steps':
-        value = str(value)
-        #!TODO: change this to a more generic list of units and timesteps
+        value = [a.strip() for a in value.strip().replace(', ',',').replace(' ',',').split(',')]
+        new_value = []
+        for step in value:
+            if "*" in step:
+                s_step = step.split('*')
+                new_value.extend(int(s_step[0])*[float(s_step[1])])
+            else:
+                new_value.append(float(step))
+        return new_value
     
     return value
 
@@ -496,6 +515,15 @@ class Input_Parser():
         self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)
         if not self.fa_options:
             raise ValueError("Assembly options must be nested with reflectors, fuels, and/or blankets with their parameters.")
+        elif 'cost_fuelcycle' in self.objectives:
+            for key in self.fa_options['fuel'].keys():
+                if not 'enrichment' in self.fa_options['fuel'][key] and \
+                   not 'hm_loading' in self.fa_options['fuel'][key]:
+                    raise ValueError(f"Entry for 'enrichment' or 'HM_loading' missing for fuel type '{key}'. This is required by the 'cost_fuelcycle' objective.")
+            for key in self.fa_options['blankets'].keys():
+                if not 'enrichment' in self.fa_options['blankets'][key] and \
+                   not 'hm_loading' in self.fa_options['blankets'][key]:
+                    raise ValueError(f"Entry for 'enrichment' or 'HM_loading' missing for blanket type '{key}'. This is required by the 'cost_fuelcycle' objective.")
         
     ## Genome Block ##
         try:
@@ -538,8 +566,8 @@ class Input_Parser():
         self.th_fdbk = yaml_line_reader(info, 'th_fdbk', True)
         self.pin_power_recon = yaml_line_reader(info, 'pin_power_recon', True)
         self.number_axial = yaml_line_reader(info, 'num_axial_nodes', 19)
-        self.axial_nodes = yaml_line_reader(info, 'axial_nodes', "16.12, 20.32, 15*25.739, 20.32, 16.12")
+        self.axial_nodes = yaml_line_reader(info, 'axial_nodes', [16.12, "15*25.739", 16.12])
         self.boc_exposure = yaml_line_reader(info, 'boc_core_exposure', 0.0)
-        self.depl_steps = yaml_line_reader(info, 'depletion_steps', "1 1 6*30")
+        self.depl_steps = yaml_line_reader(info, 'depletion_steps', [1, 1, 30, 30, 30, 30, 30, 30])
         
         return

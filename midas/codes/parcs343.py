@@ -262,7 +262,7 @@ def evaluate(solution, input):
     with open(filename,"a") as ofile:
         ofile.write("DEPL\n")
         if input.calculation_type == 'single_cycle':
-            ofile.write(f"      TIME_STP  {input.depl_steps}\n") #!TODO: parameterize this input.
+            ofile.write(f"      TIME_STP  {str(input.depl_steps).strip('[]')}\n")
         ofile.write("      INP_HST   './boc_exp.dep' -2 1\n")
         ofile.write("      OUT_OPT   T  T  T  T  F\n")
         # Write reflector cross sections
@@ -300,9 +300,9 @@ def evaluate(solution, input):
             
             ofile.write("MCYCLE\n")
             ofile.write("    CYCLE_DEF   1\n")
-            ofile.write("      DEPL_STEP 1 1 17*30 18\n")
-            ofile.write("      POWER_LEV 21*100.0\n")
-            ofile.write("      BANK_SEQ  21*1\n\n")
+            ofile.write(f"      DEPL_STEP {str(input.depl_steps).strip('[]')}\n")
+            ofile.write(f"      POWER_LEV {len(input.depl_steps)+1}*100.0\n")
+            ofile.write(f"      BANK_SEQ  {len(input.depl_steps)+1}*1\n\n")
             
             ofile.write("    LOCATION   0\n")
             for x in range(input.full_core_locs.shape[0]):
@@ -432,7 +432,8 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
         if param in results_dict:
             parameters[param]['value'] = results_dict[param]["value"]
         else:
-            logger.warning(f"Parameter '{param}' not supported in PARCS343 results parsing.")
+            if param not in ['cost_fuelcycle']: #check whitelist
+                logger.warning(f"Parameter '{param}' not supported in PARCS343 results parsing.")
     
     return parameters
 
