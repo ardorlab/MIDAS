@@ -128,7 +128,7 @@ class GA_reproduction():
         Before crossover between chromosomes can be performed, the
         individuals in the population need to be paired off.
         
-        Written by Nicholas Rollins. 09/27/2024
+        Updated by Nicholas Rollins. 09/27/2024
         """
         first_mate_list  = []
         second_mate_list = []

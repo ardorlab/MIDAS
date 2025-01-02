@@ -12,7 +12,7 @@ def get_fuelcycle_cost(soln, input):
     
     ## Interpret loading pattern from chromosome
     if input.calculation_type == 'eq_cycle':
-        loading_pattern = optools.SS_decoder(soln.chromosome)
+        loading_pattern = optools.Constrain_Input.SS_decoder(soln.chromosome)
     else:
         loading_pattern = soln.chromosome
 
@@ -60,9 +60,15 @@ def calc_fuelcost(x_p, mass_product):
     S_enr = 3.0 # %/year
     S_fab = 3.0 # %/year
     
-    f_feed = 0.0 # w.t.
-    f_conv = 0.5 # w.t.
-    f_enr = 0.05 # w.t.
+    l_feed = 0.0 # w.t.
+    l_conv = 0.005 # w.t.
+    l_enr = 0.0005 # w.t.
+    l_fab = 0.0 # w.t.
+    
+    f_feed = (1 + l_conv)*(1 + l_fab)
+    f_conv = (1 + l_fab)
+    f_enr = (1 + l_fab)
+    f_fab = 1.0
     
     P_feed = 31.35 # USD/lb_U3O8
     P_conv = 5.00 # USD/kg_U3O8
