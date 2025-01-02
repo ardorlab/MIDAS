@@ -1,0 +1,35 @@
+
+ .----------------.  .----------------.  .----------------.  .----------------.  .----------------.   
+| .--------------. || .--------------. || .--------------. || .--------------. || .--------------. |  
+| | ____    ____ | || |     _____    | || |  ________    | || |      __      | || |    _______   | |  
+| ||_   \  /   _|| || |    |_   _|   | || | |_   ___ `.  | || |     /  \     | || |   /  ___  |  | |  
+| |  |   \/   |  | || |      | |     | || |   | |   `. \ | || |    / /\ \    | || |  |  (__ \_|  | |  
+| |  | |\  /| |  | || |      | |     | || |   | |    | | | || |   / ____ \   | || |   '.___`-.   | |  
+| | _| |_\/_| |_ | || |     _| |_    | || |  _| |___.' / | || | _/ /    \ \_ | || |  |`\____) |  | |  
+| ||_____||_____|| || |    |_____|   | || | |________.'  | || ||____|  |____|| || |  |_______.'  | |  
+| |              | || |              | || |              | || |              | || |              | |  
+| '--------------' || '--------------' || '--------------' || '--------------' || '--------------' |  
+ '----------------'  '----------------'  '----------------'  '----------------'  '----------------'  
+
+MIDAS Version 0.2.1
+
+
+====================================================================================================
+
+Parsed input file: /home/cahowar9/cahowar9/MIDAS/samples/bayes_opt/bayes_test.yaml
+Completed Optimizer assembly.
+Begin Optimization...
+
+Generating initial population of 30 individuals...
+Calculating fitness for generation 0...
+Done!
+Generation 0 Best Individual:
+Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
+0,0,572.400,1190.0,2.28,1.608,721.2,NSFA23GAD,NSFA23,NSFA23,NSFA39,NSFA455GAD,NSFA455GAD,NSFA23,NSFA39GAD
+
+Clearing all but best solution files for Generation 0...
+Done!
+
+
+Optimization completed.
+MIDAS execution completed.

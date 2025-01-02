@@ -55,13 +55,13 @@ def validate_input(keyword, value):
     
     elif keyword == 'optimizer':
         value = str(value).lower().replace(' ','_')
-        if value not in ["genetic_algorithm"]:
-            raise ValueError("Requested optimizer name is invalid or not supported.")
+        if value not in ["genetic_algorithm","bayesian_optimization"]:
+            raise ValueError("Requested methodology '" + value + "' invalid.")
     
     elif keyword == 'code_type':
-        value = str(value).lower()
-        if value not in ["parcs342", "parcs343"]:
-            raise ValueError("Code types currently supported: PARCS342, PARCS343.")
+        value = str(value).lower().replace(' ','_')
+        if value not in ["parcs342", "parcs343", "nuscale_database"]:
+            raise ValueError("Code types currently supported: PARCS342, PARCS343, NuScale_Database.")
     
     elif keyword == 'calc_type':
         value = str(value).lower().replace(' ','_')
@@ -84,6 +84,9 @@ def validate_input(keyword, value):
                 raise ValueError("Number of generations may be a positive number, or 'calculate_from_genes'.")
         except AttributeError:
                 value = int(value)
+
+    elif keyword == 'batch_size':
+        value = int(value)
     
     elif keyword == 'solution_symmetry':
         value = str(value).lower().replace(' ','_')
@@ -182,6 +185,20 @@ def validate_input(keyword, value):
             new_dict['final_rate'] = float(new_value[0])
         return new_dict
     
+    elif keyword == 'acquisition_function':
+        value = str(value).lower().replace(' ','_')
+        if value in ['expected_improvement','ei']:
+            value = "EI"
+        elif value in ['probability_of_improvement','pi']:
+            value = "PI"
+        elif value in ['lower_confidence_bound','lcb']:
+            value = "LCB"
+        elif value == 'gp_hedge':
+            value = "gp_hedge"
+        #Verification that valid acquisition function is specified
+        if value not in ["EI","PI","LCB","gp_hedge"]:
+            raise ValueError("Acquisition function not supported. Supported acquisition types are EI, PI, LCB, gp_hedge.")
+        
 ## Fuel Assembly Block ##
     elif keyword == 'assembly_options':
         if isinstance(value, dict):
@@ -496,6 +513,7 @@ class Input_Parser():
         
         self.population_size = yaml_line_reader(info, 'population_size', 1)
         self.num_generations = yaml_line_reader(info, 'number_of_generations', 1)
+        self.batch_size = yaml_line_reader(info, 'batch_size', 1)
         self.symmetry = yaml_line_reader(info, 'solution_symmetry', 'octant')
         self.objectives = yaml_line_reader(info, 'objectives', None)
         
@@ -510,10 +528,11 @@ class Input_Parser():
         self.reproducer = yaml_line_reader(info, 'reproducer', 'standard')
         self.mutation_type = yaml_line_reader(info, 'mutation_type', 'mutate_by_gene')
         self.mutation_rate = yaml_line_reader(info, 'mutation_rate', 0.5)
+        self.acquisition_function = yaml_line_reader(info, 'acquisition_function', 'gp_hedge')#!TODO: Come back to this
         
     ## Fuel Assembly Block ##
         self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)
-        if not self.fa_options:
+        if not self.fa_options and self.code_interface not in ['nuscale_database']:
             raise ValueError("Assembly options must be nested with reflectors, fuels, and/or blankets with their parameters.")
         elif 'cost_fuelcycle' in self.objectives:
             for key in self.fa_options['fuel'].keys():
@@ -546,12 +565,14 @@ class Input_Parser():
         try:
             if self.code_interface in ["parcs342","parcs343"]:
                 info = self.file_settings['parcs_data']
+            elif self.code_interface == "nuscale_database":
+                info = self.file_settings['nucale_data']
         except KeyError:
             info = None
         
         try:
             infomap = info['map']
-        except KeyError:
+        except:
             infomap = None
         
         self.nrow = yaml_line_reader(infomap, 'num_rows', 17)
