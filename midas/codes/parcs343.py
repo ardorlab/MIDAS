@@ -418,8 +418,8 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
                     excess_rho = (keff_list[i] - 1.0)*10**5 #pcm; excess reactivity
                     excess_boron = excess_rho/boron_worth #ppm
                     max_boron_corrected = 1800.0 + excess_boron
-                    if mboron > new_max_boron:
-                        new_max_boron = mboron
+                    if max_boron_corrected > new_max_boron:
+                        new_max_boron = max_boron_corrected
             results_dict["max_boron"]["value"] = new_max_boron
     
     else: #job has failed; fill parameters with absurdly negative values.
