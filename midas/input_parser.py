@@ -67,6 +67,24 @@ def validate_input(keyword, value):
         value = str(value).lower().replace(' ','_')
         if value not in ["single_cycle","eq_cycle"]:
             raise ValueError("Data type not supported.")
+        
+    elif keyword == 'termination_criteria':
+        if isinstance(value, dict):
+            new_dict = {}
+            for key, item in value.items():
+                new_key = str(key).lower()
+                if new_key =='method':
+                    new_item = str(item).lower()
+                    if new_item not in ['consecutive','spearman','none']:
+                        raise ValueError(f"Requested selection method '{item}' not supported.")
+                    
+                elif new_key =='termination_generations':
+                    new_item = int(item)
+
+                new_dict[new_key] = new_item
+             
+            return new_dict
+
     
 ## Optimization Block ##
     elif keyword == 'population_size':
@@ -143,7 +161,7 @@ def validate_input(keyword, value):
             raise ValueError("'Objectives' must be nested with objectives/constraints and their parameters.")
     
 ## Algorithm Block ##
-    elif keyword == 'selection':
+    elif keyword == 'algorithm':
         if isinstance(value, dict):
             new_dict = {}
             for key, item in value.items():
@@ -154,9 +172,19 @@ def validate_input(keyword, value):
                         raise ValueError(f"Requested fitness type '{item}' not supported.")
                 elif new_key =='method':
                     new_item = str(item).lower()
-                    if new_item not in ['tournament','roulette']:
+                    if new_item not in ['tournament','roulette','random','ktournament','truncation','sus']:
                         raise ValueError(f"Requested selection method '{item}' not supported.")
+                    
+                elif new_key == 'k':
+                    new_item = int(item)
+                    if new_item < 0:
+                        raise ValueError("k parameter must be greater than 1 and less than population_size")
+                
                 new_dict[new_key] = new_item
+
+            if not new_dict.get('k') and new_dict['method'] == 'ktournament':
+                raise ValueError("k parameter is missing from input while ktournament selection method is used, k is set to default value of 4.")
+                
             return new_dict
         else:
             raise ValueError("'Selection' must be nested with its parameters.")
@@ -184,6 +212,14 @@ def validate_input(keyword, value):
             new_dict['final_rate'] = float(new_value[0])
         return new_dict
     
+    elif keyword == 'crossover_rate':
+        value = float(value)
+        if value > 1:
+            raise ValueError("Crossover rate must be 1.0 or lower.")
+
+    elif keyword == 'elites':
+        value = int(value)
+
     elif keyword == 'acquisition_function':
         value = str(value).lower().replace(' ','_')
         if value in ['expected_improvement','ei']:
@@ -482,6 +518,8 @@ class Input_Parser():
         self.methodology = yaml_line_reader(info, 'optimizer', 'genetic_algorithm')
         self.code_interface = yaml_line_reader(info, 'code_type', 'PARCS342')
         self.calculation_type = yaml_line_reader(info, 'calc_type', 'single_cycle')
+        termination_criteria_default = {'method':'None','termination_generations':0}
+        self.termination_criteria = yaml_line_reader(info, 'termination_criteria', termination_criteria_default)
 
         
     ## Optimization Block ##
@@ -502,11 +540,13 @@ class Input_Parser():
         except KeyError:
             info = None
         
-        selection_default = {'fitness':'weighted','method':'roulette'}
+        selection_default = {'fitness':'weighted','method':'tournament'}
         self.selection = yaml_line_reader(info, 'selection', selection_default)
         self.reproducer = yaml_line_reader(info, 'reproducer', 'standard')
         self.mutation_type = yaml_line_reader(info, 'mutation_type', 'mutate_by_gene')
         self.mutation_rate = yaml_line_reader(info, 'mutation_rate', 0.5)
+        self.crossover_rate = yaml_line_reader(info, 'crossover_rate', 0.5)
+        self.elites = yaml_line_reader(info, 'elites', 0)
         self.acquisition_function = yaml_line_reader(info, 'acquisition_function', 'gp_hedge')#!TODO: Come back to this
         
     ## Fuel Assembly Block ##
