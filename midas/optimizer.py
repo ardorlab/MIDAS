@@ -24,6 +24,7 @@ class Optimizer():
     """
     def __init__(self, inp_lines):
         self.input = inp_lines
+        self.termination_criteria = Termination_Criteria()
     
     def build_optimizer(self):
         """
@@ -190,6 +191,7 @@ class Optimizer():
         for self.generation.current in range(1,self.generation.total):
         ## Create new generation
             logger.info("Creating population of %s individuals for generation %s...", self.input.population_size, self.generation.current)
+            self.input.curr_generation = self.generation.current
             new_chromosome_list = self.algorithm.reproduction(self.population.current)
             self.population.current = []
             for i in range(len(new_chromosome_list)):
@@ -257,7 +259,73 @@ class Optimizer():
                 os.system(f'mv safeGen_{self.generation.current}_Indv_{best_soln_index} Gen_{self.generation.current}_Indv_{best_soln_index}')
                 logger.info("Done!\n")
         
-## Optimization concluded
+            terminate = self.TC_methods(self.population.current, self.input.termination_criteria)
+            if terminate == True: 
+                logger.info("--Run terminated due to termination criteria being met--\n")
+                break
+
+
+        ## Optimization concluded
         #!TODO: do some wrap-up after the optimizer. Report best solution, statistics, etc.
     
         return
+    
+    def TC_methods(self, pop_list, TC):
+        """
+        Method for distributing to the requested Termination Criteria method.
+        
+        Written by Jake Mikouchi. 1/02/25
+        """
+        terminate = False
+
+        if TC['method'] == 'consecutive':
+            terminate = self.termination_criteria.consecutive(pop_list, TC['termination_generations'])
+        elif TC['method'] == 'spearman':
+            terminate = self.termination_criteria.spearman(pop_list, TC['termination_generations'])
+    
+        return terminate
+
+class Termination_Criteria():
+    """
+    This class contains all termination criteria (TC) availalble in MIDAS.
+    TC can be used with any optimation algorithm but was implamented specifically for use with GA.
+    TC works by terminating an optimization run after certain cririteria are met.
+    This can be used to save time and computational resources when an optimzation is failing to converge.
+
+    Written by Jake Mikouchi 1/2/25
+    """
+    
+    def __init__(self):
+        self.current_best_fitness = float('Nan')
+        self.previous_best_fitness = float('Nan')
+        self.consecutive_generations = float('Nan')
+        self.current_burnup = [0, 0, 0, 0, 0, 0]
+        self.previous_burnup = [0, 0, 0, 0, 0, 0]
+        self.terminate = False
+        pass
+
+    def consecutive(self, pop_list, termination_generations):
+        """
+        This Termination Criteria is meant to be very simple
+        If the Fitness does not increase over a set number of generations, the optimization will automatically stop
+        
+        Jake Mikouchi 2/28/24
+        """ 
+
+        self.previous_best_fitness = deepcopy(self.current_best_fitness)
+
+        for solution in pop_list:
+            if solution.fitness_value > self.current_best_fitness:
+                self.current_best_fitness = solution.fitness_value
+        
+        if self.current_best_fitness <= self.previous_best_fitness:
+            self.consecutive_generations += 1
+        else:
+            self.consecutive_generations = 0
+        
+        if self.consecutive_generations < termination_generations:
+            self.terminate = False
+        else:
+            self.terminate = True
+
+        return self.terminate
