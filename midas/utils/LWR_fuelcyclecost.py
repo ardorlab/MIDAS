@@ -46,9 +46,9 @@ def calc_fuelcost(x_p, mass_product):
 
     Written by Nicholas Rollins. 12/11/2024
     """
-    x_f = 0.711 # w.t.
+    x_f = 0.00711 # w.t.
     
-    x_t = 0.300 # w.t.
+    x_t = 0.00300 # w.t.
     
     a = 2.6 # lb_U3O8/kg_U; conversion factor of U feed
     
