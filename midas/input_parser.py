@@ -223,7 +223,7 @@ def validate_input(keyword, value):
                 new_key = str(key).lower()
                 if new_key == 'method':
                     new_item = str(item).lower().replace(' ','_')
-                    if new_item not in ['sequential', 'random_element', 'one_point', 'two_point']:
+                    if new_item not in ['uniform', 'random_element', 'one_point', 'two_point']:
                         raise ValueError(f"Requested crossover method '{item}' not supported.")
                 elif new_key =='crossover_rate':
                     new_item = float(item)
