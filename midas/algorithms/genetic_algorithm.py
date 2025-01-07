@@ -135,8 +135,8 @@ class Genetic_Algorithm():
         
         Written by Jake Mikouchi 1/5/2025
         """
-        if crossover['method'] == 'sequential':
-            child_one, child_two = GA_reproduction.sequential_crossover(mate_one, mate_two, 
+        if crossover['method'] == 'uniform':
+            child_one, child_two = GA_reproduction.uniform_crossover(mate_one, mate_two, 
                                                             crossover['crossover_rate'], 
                                                             LWR_core_parameters, genome, batches)
         elif crossover['method'] == 'random_element':
@@ -161,7 +161,7 @@ class GA_reproduction():
     Written by Nicholas Rollins. 09/27/2024
     """
     
-    def sequential_crossover(chromosome_one, chromosome_two, crossover_rate, LWR_core_parameters, genome, batches=None):
+    def uniform_crossover(chromosome_one, chromosome_two, crossover_rate, LWR_core_parameters, genome, batches=None):
         """
         Function for performing crossover of the mated solutions by swapping
         differing genes between the chromosomes. Edited as of 1/20/2020 to account
@@ -251,7 +251,7 @@ class GA_reproduction():
     def random_element_crossover(chromosome_one, chromosome_two, num_swaps, LWR_core_parameters, genome, batches=None):
         """
         genes are randomly selected within each chromosome to be swapped. 
-        This is intended to have greater randomness than sequential crossover and be better for problems with fewer number of genes (assemblies)
+        This is intended to have greater randomness than uniform crossover and be better for problems with fewer number of genes (assemblies)
         This method is not exactly "crossover", and is more a combination of crossover and mutation.
         This is because the position of swapped genes is not preserved in the chromosomes.
         Despite this, this method works quite well for loading patterns.
