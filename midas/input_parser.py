@@ -24,6 +24,7 @@ def yaml_line_reader(data,keyword,default):
     except:
         parsed_val = default
     parsed_val = validate_input(keyword, parsed_val)
+
     return parsed_val
 
 def validate_input(keyword, value):
@@ -67,24 +68,6 @@ def validate_input(keyword, value):
         value = str(value).lower().replace(' ','_')
         if value not in ["single_cycle","eq_cycle"]:
             raise ValueError("Data type not supported.")
-        
-    elif keyword == 'termination_criteria':
-        if isinstance(value, dict):
-            new_dict = {}
-            for key, item in value.items():
-                new_key = str(key).lower()
-                if new_key =='method':
-                    new_item = str(item).lower()
-                    if new_item not in ['consecutive','spearman','none']:
-                        raise ValueError(f"Requested selection method '{item}' not supported.")
-                    
-                elif new_key =='termination_generations':
-                    new_item = int(item)
-
-                new_dict[new_key] = new_item
-             
-            return new_dict
-
     
 ## Optimization Block ##
     elif keyword == 'population_size':
@@ -110,6 +93,27 @@ def validate_input(keyword, value):
         value = str(value).lower().replace(' ','_')
         if value not in ['octant','quarter','full']:
             raise ValueError("Symmetry of the solution list must be octant, quarter, or full.")
+        
+    elif keyword == 'termination_criteria':
+        if isinstance(value, dict):
+            new_dict = {}
+            for key, item in value.items():
+                new_key = str(key).lower()
+                if new_key =='method':
+                    new_item = str(item).lower()
+                    if new_item not in ['consecutive','spearman','none']:
+                        raise ValueError(f"Requested termination criteria method '{item}' not supported.")
+                    if new_item == 'spearman':
+                        logger.warning("Spearman rank requires burnup data for each assembly, currently only the NuScale look up table has this functionality")
+                    if 'termination_generations' not in value.keys():
+                        raise ValueError(f"'termination_generations' must be provided if termination criteria is requested in yaml file")
+                    
+                elif new_key =='termination_generations':
+                    new_item = int(item)
+
+                new_dict[new_key] = new_item
+             
+            return new_dict
     
     elif keyword == 'objectives':
         if isinstance(value, dict):
@@ -120,7 +124,8 @@ def validate_input(keyword, value):
                 if new_key not in ['max_boron',
                                    'pinpowerpeaking',
                                    'fdeltah',
-                                   'cycle_length']:
+                                   'cycle_length',
+                                   'assembly_burnup']:
                     raise ValueError(f"Requested objective/constraint '{key}' not supported.")
                 new_item = {}
                 if isinstance(item, dict):
@@ -137,8 +142,6 @@ def validate_input(keyword, value):
                                 raise ValueError(f"Requested objective/constraint goal '{subitem}' not supported.")
                         elif new_subkey == 'weight':
                             new_subitem = float(subitem)
-                            if not 0.0 < new_subitem:
-                                raise ValueError(f"Requested weight for {key} must be a positive non-zero real number.")
                         elif new_subkey == 'target':
                             new_subitem = float(subitem)
                         new_item[new_subkey] = new_subitem #save modified parameter
@@ -152,7 +155,7 @@ def validate_input(keyword, value):
                             logger.warning(f"Target provided for {key} with requested goal '{subitem}'. Target will be ignored.")
                     else:
                         if 'target' not in new_item:
-                            raise ValueError(f"'Target' parameter missing for {key}.")
+                            raise ValueError(f"'Target' parameter missing for {key}.")   
                 else:
                     raise ValueError("Requested objective/constraint must be nested with its applicable parameters.")
                 new_dict[new_key] = new_item #save modified objective/constraint
@@ -161,7 +164,7 @@ def validate_input(keyword, value):
             raise ValueError("'Objectives' must be nested with objectives/constraints and their parameters.")
     
 ## Algorithm Block ##
-    elif keyword == 'algorithm':
+    elif keyword == 'selection':
         if isinstance(value, dict):
             new_dict = {}
             for key, item in value.items():
@@ -173,17 +176,18 @@ def validate_input(keyword, value):
                 elif new_key =='method':
                     new_item = str(item).lower()
                     if new_item not in ['tournament','roulette','random','ktournament','truncation','sus']:
-                        raise ValueError(f"Requested selection method '{item}' not supported.")
-                    
+                        raise ValueError(f"Requested selection method '{item}' not supported.")         
                 elif new_key == 'k':
                     new_item = int(item)
                     if new_item < 0:
-                        raise ValueError("k parameter must be greater than 1 and less than population_size")
-                
+                        raise ValueError("k parameter must be greater than 1 and less than population_size")             
                 new_dict[new_key] = new_item
 
-            if not new_dict.get('k') and new_dict['method'] == 'ktournament':
-                raise ValueError("k parameter is missing from input while ktournament selection method is used, k is set to default value of 4.")
+            if 'k' not in new_dict.keys() and new_dict['method'] == 'ktournament':
+                new_key = 'k'
+                new_item = 4
+                new_dict[new_key] = new_item
+                logger.warning("'k' parameter is missing from input while ktournament selection method is used, k is set to default value of 4.")  
                 
             return new_dict
         else:
@@ -212,13 +216,35 @@ def validate_input(keyword, value):
             new_dict['final_rate'] = float(new_value[0])
         return new_dict
     
-    elif keyword == 'crossover_rate':
-        value = float(value)
-        if value > 1:
-            raise ValueError("Crossover rate must be 1.0 or lower.")
+    elif keyword == 'crossover':
+        if isinstance(value, dict):
+            new_dict = {}
+            for key, item in value.items():
+                new_key = str(key).lower()
+                if new_key == 'method':
+                    new_item = str(item).lower().replace(' ','_')
+                    if new_item not in ['sequential', 'random_element', 'one_point', 'two_point']:
+                        raise ValueError(f"Requested crossover method '{item}' not supported.")
+                elif new_key =='crossover_rate':
+                    new_item = float(item)
+                    if item > 1:
+                        raise ValueError("Crossover rate must be 1.0 or lower.")
+                    
+                elif new_key =='num_swaps':
+                    new_item = int(item)
+                    if item < 1:
+                        raise ValueError("num_swaps must be 1 or higher and an integer.")
+
+                new_dict[new_key] = new_item
+            
+            return new_dict
+        else:
+            raise ValueError("'crossover' must be nested with its parameters.")
 
     elif keyword == 'elites':
-        value = int(value)
+        value = float(value)
+        if value > 1.0 and value.is_integer() == False:
+            raise ValueError("'elites' value can either be between 0 and 1 to represent a percentage or an integer equal to or greater than 1 to represent a number of elites")
 
     elif keyword == 'acquisition_function':
         value = str(value).lower().replace(' ','_')
@@ -518,9 +544,6 @@ class Input_Parser():
         self.methodology = yaml_line_reader(info, 'optimizer', 'genetic_algorithm')
         self.code_interface = yaml_line_reader(info, 'code_type', 'PARCS342')
         self.calculation_type = yaml_line_reader(info, 'calc_type', 'single_cycle')
-        termination_criteria_default = {'method':'None','termination_generations':0}
-        self.termination_criteria = yaml_line_reader(info, 'termination_criteria', termination_criteria_default)
-
         
     ## Optimization Block ##
         try:
@@ -533,6 +556,8 @@ class Input_Parser():
         self.batch_size = yaml_line_reader(info, 'batch_size', 1)
         self.symmetry = yaml_line_reader(info, 'solution_symmetry', 'octant')
         self.objectives = yaml_line_reader(info, 'objectives', None)
+        termination_criteria_default = {'method':'None','termination_generations':0}
+        self.termination_criteria = yaml_line_reader(info, 'termination_criteria', termination_criteria_default)
         
     ## Algorithm Block ##
         try:
@@ -545,7 +570,8 @@ class Input_Parser():
         self.reproducer = yaml_line_reader(info, 'reproducer', 'standard')
         self.mutation_type = yaml_line_reader(info, 'mutation_type', 'mutate_by_gene')
         self.mutation_rate = yaml_line_reader(info, 'mutation_rate', 0.5)
-        self.crossover_rate = yaml_line_reader(info, 'crossover_rate', 0.5)
+        crossover_default = {'method':'sequential','crossover_rate': 0.5, 'num_swaps': 1}
+        self.crossover = yaml_line_reader(info, 'crossover', crossover_default)
         self.elites = yaml_line_reader(info, 'elites', 0)
         self.acquisition_function = yaml_line_reader(info, 'acquisition_function', 'gp_hedge')#!TODO: Come back to this
         
