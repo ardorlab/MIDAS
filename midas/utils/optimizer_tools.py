@@ -362,23 +362,26 @@ class Fitness(object):
         """
         fitness = 0.0
         for param in parameters:
-            pgoal = parameters[param]['goal']
-            pweight = parameters[param]['weight']
-            pvalue = parameters[param]['value']
-            if pgoal == 'maximize':
-                fitness += pvalue*pweight
-            elif pgoal == 'minimize':
-                fitness -= pvalue*pweight
-            elif pgoal == 'meet_target':
-                ptarget = parameters[param]['target']
-                fitness -= abs(ptarget - pvalue)*pweight
-            elif pgoal == 'greater_than_target':
-                ptarget = parameters[param]['target']
-                penalty = (ptarget - pvalue)*pweight if ptarget - pvalue > 0.0 else 0.0
-                fitness -= penalty
-            elif pgoal == 'less_than_target':
-                ptarget = parameters[param]['target']
-                penalty = (pvalue - ptarget)*pweight if pvalue - ptarget > 0.0 else 0.0
-                fitness -= penalty
+            if param in ["assembly_burnup"]:
+                pass
+            else:
+                pgoal = parameters[param]['goal']
+                pweight = parameters[param]['weight']
+                pvalue = parameters[param]['value']
+                if pgoal == 'maximize':
+                    fitness += pvalue*pweight
+                elif pgoal == 'minimize':
+                    fitness -= pvalue*pweight
+                elif pgoal == 'meet_target':
+                    ptarget = parameters[param]['target']
+                    fitness -= abs(ptarget - pvalue)*pweight
+                elif pgoal == 'greater_than_target':
+                    ptarget = parameters[param]['target']
+                    penalty = (ptarget - pvalue)*pweight if ptarget - pvalue > 0.0 else 0.0
+                    fitness -= penalty
+                elif pgoal == 'less_than_target':
+                    ptarget = parameters[param]['target']
+                    penalty = (pvalue - ptarget)*pweight if pvalue - ptarget > 0.0 else 0.0
+                    fitness -= penalty
         
         return fitness

@@ -3,25 +3,36 @@ import os
 import numpy as np
 import logging
 
+logger = logging.getLogger("MIDAS_logger")
+
 def evaluate(soln, input): #!TODO: Put parameters in docstring, implement burnup and cycle cost into MIDAS
     """
     This function will find the output parameters for the NuScale SMR based on the SMR database of loading pattern calculations
     and write them into a dictionary in the solution.parameters object
 
     Written by Cole Howard. 10/29/2024
+    updated by Jake Mikouchi. 1/3/25
     """
     #Each objective is stored as one index in a single array within the hdf5 file, so I am getting each specific value
     objectives, BU = read_hdf5(soln.chromosome, input) #TODO!: Add cost back in
-    soln.parameters["cycle_length"]["value"] = objectives[0]
-    soln.parameters["fdeltah"]["value"] = objectives[1]
-    soln.parameters["pinpowerpeaking"]["value"] = objectives[2]
-    soln.parameters["max_boron"]["value"] = objectives[3]
+
+    results_dict = {}
+    for res in ["cycle_length", "pinpowerpeaking", "fdeltah", "max_boron", "assembly_burnup"]:
+        results_dict[res] = {}
+        results_dict[res]['value'] = []
+
+    results_dict["cycle_length"]["value"] = objectives[0]
+    results_dict["fdeltah"]["value"] = objectives[1]
+    results_dict["pinpowerpeaking"]["value"] = objectives[2]
+    results_dict["max_boron"]["value"] = objectives[3]
+    results_dict["assembly_burnup"]["value"] = BU 
     #solution.parameters['cycle_cost'] = cost
 
-    # Adding in burnup parameters in case it is used later on
-    #soln.parameters["max_burnup"]["value"] = max(BU) #TODO!: Add burnup parameters to solution object
-    #soln.parameters["min_burnup"]["value"] = min(BU)
-    #soln.parameters["average_burnup"]["value"] = np.mean(BU)
+    for param in soln.parameters.keys():
+        if param in results_dict:
+            soln.parameters[param]['value'] = results_dict[param]["value"]
+        else:
+            logger.warning(f"Parameter '{param}' not supported in NuScale look up table results parsing.")
 
     return soln
 
