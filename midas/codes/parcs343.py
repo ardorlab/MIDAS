@@ -339,13 +339,8 @@ def evaluate(solution, input):
 
 ## Run PARCS INPUT DECK #!TODO: separate the input writing and execution into two different functions that are called in sequence.
     parcscmd = __parcs343exe__
-    
-    if input.calculation_type in ['eq_cycle']:
-        walltime = 1800 #sec
-    else:
-        walltime = 600 #sec
     try:
-        output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=walltime) #wait until calculation finishes
+        output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=input.code_walltime) #wait until calculation finishes
     ## Get Results
         if 'Finished' in str(output): #job completed
             logger.debug(f"Job {solution.name} completed successfully.")
