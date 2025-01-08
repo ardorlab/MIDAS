@@ -396,6 +396,11 @@ def validate_input(keyword, value):
                 raise ValueError(f"Decision variable '{keyword}' must be nested with parameter options and their parameters.")
     
 ## Calculation Block ##
+    elif keyword == 'exec_walltime':
+        value = int(value)
+        if value <= 0:
+            raise ValueError("'exec_walltime' must be a positive number, measured in seconds.")
+    
     elif keyword == 'num_rows':
         value = int(value)
     
@@ -575,6 +580,7 @@ class Input_Parser():
         except:
             infomap = None
         
+        self.code_walltime = yaml_line_reader(info, 'exec_walltime', 600)
         self.nrow = yaml_line_reader(infomap, 'num_rows', 17)
         self.ncol = yaml_line_reader(infomap, 'num_cols', 17)
         self.num_assemblies = yaml_line_reader(infomap, 'number_assemblies', 193)
