@@ -90,7 +90,7 @@ class Optimizer():
         for key in soln.parameters.keys():
             soln.parameters[key]['value'] = None #placeholder to be filled by objective function.
         
-        LWR_core_parameters = [self.input.nrow, self.input.ncol, self.input.symmetry]
+        LWR_core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies, self.input.symmetry]
         if chromosome:
             soln.chromosome = chromosome
         else: #generate random chromosome
