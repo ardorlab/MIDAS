@@ -405,14 +405,15 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
         results_dict["max_boron"]["value"] = max(boron_list)
         
         ## Correct Boron value if non-critical
-        if results_dict["max_boron"]["value"] == 1800.0: #!TODO: initial guess should be a variable. can this be read from output file?
-            new_max_boron = 0
+        sorted_boron = sorted(boron_list,reverse=True)
+        if sorted_boron[0] == sorted_boron[1]: #multiple values exceed maximum value in XS library, which is not reported by PARCS.
+            new_max_boron = sorted_boron[0] #initialize variable
             for i in range(len(boron_list)): #!TODO: I think this serves to line up boron_list with keff_list. Could be replaced by index()
-                if boron_list[i]== 1800.0:
-                    boron_worth = 10.0 #pcm/ppm
+                if boron_list[i]== sorted_boron[0]:
+                    boron_worth = 10.0 #pcm/ppm; assumed value.
                     excess_rho = (keff_list[i] - 1.0)*10**5 #pcm; excess reactivity
                     excess_boron = excess_rho/boron_worth #ppm
-                    max_boron_corrected = 1800.0 + excess_boron
+                    max_boron_corrected = sorted_boron[0] + excess_boron
                     if max_boron_corrected > new_max_boron:
                         new_max_boron = max_boron_corrected
             results_dict["max_boron"]["value"] = new_max_boron
@@ -440,11 +441,19 @@ def calc_cycle_length(efpd,boron,keff):
             if boron[i] > 0.1 and boron[i+1] == 0.1:
                 eoc1_ind = i
                 eco2_ind = i+1
-        dbor = abs(boron[eoc1_ind-1]-boron[eoc1_ind])
-        defpd = abs(efpd[eoc1_ind-1]-efpd[eoc1_ind])
-        def_dbor = defpd/dbor
-        eoc = efpd[eoc1_ind] + def_dbor*(boron[eoc1_ind]-0.1) #linear extrapolation to efpd at boron=0.1
-    elif boron[-1]==boron[0]==1800.0: #true boron exceeds initial guess #!TODO: this should be a parameterized boron guess value.
+                break
+        if eoc1_ind != 0:
+            dbor = abs(boron[eoc1_ind]-boron[eoc1_ind-1])
+            defpd = abs(efpd[eoc1_ind]-efpd[eoc1_ind-1])
+        else:
+            dbor = abs(boron[eco2_ind]-boron[eoc1_ind])
+            defpd = abs(efpd[eco2_ind]-efpd[eoc1_ind])
+        try:
+            def_dbor = defpd/dbor
+        except ZeroDivisionError:
+            def_dbor = 0.0
+        eoc = efpd[eoc1_ind] + def_dbor*(boron[eoc1_ind]-boron[eco2_ind]) #linear extrapolation to efpd at boron=0.1
+    elif boron[-1]==boron[0]: #true boron exceeds initial guess
         drho_dcb=10
         drho1 = (keff[-2]-1.0)*10**5
         dcb1 = drho1/drho_dcb
@@ -456,11 +465,11 @@ def calc_cycle_length(efpd,boron,keff):
         defpd = abs(efpd[-2]-efpd[-1])
         def_dbor = defpd/dbor
         eoc = efpd[-1] + def_dbor*(cb2-0.1)
-    else:
+    else: #EOC boron is greater than 0.1
         dbor = abs(boron[-2]-boron[-1])
         defpd = abs(efpd[-2]-efpd[-1])
-        def_dbor = defpd/dbor
-        eoc = efpd[-1] + def_dbor*(boron[-1]-0.1)
+        def_dbor = defpd/dbor #slope
+        eoc = efpd[-1] + def_dbor*(boron[-1]-0.1) #linear extrapolation
     return eoc
 
 def prepare_shuffling_map(input, chromosome):
