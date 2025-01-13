@@ -278,7 +278,7 @@ class GA_reproduction():
         ## Initialize logging for the present file
         logger = logging.getLogger("MIDAS_logger")
         
-        LWR_core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies, self.input.symmetry]
+        LWR_core_parameters = [input_obj.nrow, input_obj.ncol, input_obj.num_assemblies, input_obj.symmetry]
         
         if input_obj.calculation_type in ["eq_cycle"]:
             zone_chromosome = [loc[0] for loc in chromosome]

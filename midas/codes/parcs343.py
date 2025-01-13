@@ -357,6 +357,9 @@ def evaluate(solution, input):
         os.system('rm -f {}.parcs_pin*'.format(solution.name))
         logger.error(f"Job {solution.name} has timed out!")
         solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+    except subprocess.CalledProcessError as e: #PARCS returned an abort signal
+        logger.error(f"Job {solution.name} has failed with the following exception: {e}")
+        solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
     
     logger.debug(f"Returning to original working directory: {cwd}")
     os.chdir(cwd)
@@ -436,7 +439,7 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
 def calc_cycle_length(efpd,boron,keff):
     if boron[-1]==0.1: #boron went to zero before end of cycle.
         eoc1_ind = 0
-        eco2_ind = len(efpd)
+        eco2_ind = len(efpd)-1
         for i in range(len(efpd)):
             if boron[i] > 0.1 and boron[i+1] == 0.1:
                 eoc1_ind = i
