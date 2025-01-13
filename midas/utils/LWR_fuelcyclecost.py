@@ -2,16 +2,24 @@ import numpy as np
 from midas.utils.problem_preparation import LWR_Core_Shapes
 from midas.utils import optimizer_tools as optools
 """
-    #!TODO: write docstring.
+    Method for calculating the fuel cycle cost of an LWR loading pattern.
+    If the chromosome is formatted as a shuffling scheme, the full-core loading pattern is first extracted.
+    
+    Written by Nicholas Rollins. 12/11/2024
 """
 
 
 def get_fuelcycle_cost(soln, input):
+    """
+    Prepares and calls the necessary calculations for evaluating the LWR fuel cycle cost.
+    
+    Written by Nicholas Rollins. 12/11/2024
+    """
     ## fetch the duplication multiplicity of each location when expanded to the full core.
     multdict = LWR_Core_Shapes.get_symmetry_multiplicity(input.nrow, input.ncol, input.num_assemblies, input.symmetry)
     
     ## Interpret loading pattern from chromosome
-    if input.calculation_type == 'eq_cycle':
+    if input.calculation_type in ['eq_cycle']:
         loading_pattern = optools.Constrain_Input.SS_decoder(soln.chromosome)
     else:
         loading_pattern = soln.chromosome
