@@ -14,6 +14,7 @@ from midas.algorithms import bayesian_optimization as BO
 from midas.utils import optimizer_tools as optools
 from midas.codes import parcs342, parcs343
 from midas.utils import LWR_fuelcyclecost
+from midas.utils import LWR_averageenrichment
 from midas.codes import nuscale_lut
 
 
@@ -142,6 +143,9 @@ class Optimizer():
             if 'cost_fuelcycle' in self.input.objectives.keys():
                 for soln in self.population.current:
                     soln.parameters = LWR_fuelcyclecost.get_fuelcycle_cost(soln, self.input)
+            if 'av_fuelenrichment' in self.input.objectives.keys():
+                for soln in self.population.current:
+                    soln.parameters = LWR_averageenrichment.get_avfuelenrichment(soln, self.input)
             
             ## Calculate fitness from objective/constriant values
             for soln in self.population.current:
@@ -252,6 +256,9 @@ class Optimizer():
             if 'cost_fuelcycle' in self.input.objectives.keys():
                 for soln in self.population.current:
                     soln.parameters = LWR_fuelcyclecost.get_fuelcycle_cost(soln, self.input)
+            if 'av_fuelenrichment' in self.input.objectives.keys():
+                for soln in self.population.current:
+                    soln.parameters = LWR_averageenrichment.get_avfuelenrichment(soln, self.input)
             
             ## Calculate fitness from objective/constriant values
             for soln in self.population.current:

@@ -103,7 +103,8 @@ def validate_input(keyword, value):
                                    'pinpowerpeaking',
                                    'fdeltah',
                                    'cycle_length',
-                                   'cost_fuelcycle']:
+                                   'cost_fuelcycle',
+                                   'av_fuelenrichment']:
                     raise ValueError(f"Requested objective/constraint '{key}' not supported.")
                 new_item = {}
                 if isinstance(item, dict):
@@ -124,6 +125,18 @@ def validate_input(keyword, value):
                                 raise ValueError(f"Requested weight for {key} must be a positive non-zero real number.")
                         elif new_subkey == 'target':
                             new_subitem = float(subitem)
+                        elif new_subkey == 'settings':
+                            new_subitem = {}
+                            if isinstance(subitem, dict):
+                                for subsubkey, subsubitem in subitem.items():
+                                    new_subsubkey = str(subsubkey).lower().replace(' ','_')
+                                    new_subsubitem = str(subsubitem).lower().replace(' ','_')
+                                    if new_subsubkey == 'scope':
+                                        if new_subsubitem not in ['full_core','feed_batch_only'] and new_key == 'av_fuelenrichment':
+                                            raise ValueError(f"Requested setting '{subitem}' not supported for objective '{key}'.")
+                                new_subitem[new_subsubkey] = new_subsubitem
+                            else:
+                                raise ValueError(f"Requested settings for objective '{key}' must be nested with its applicable parameters.")
                         new_item[new_subkey] = new_subitem #save modified parameter
                     #check parameters logic
                     if 'goal' not in new_item:
@@ -136,6 +149,14 @@ def validate_input(keyword, value):
                     else:
                         if 'target' not in new_item:
                             raise ValueError(f"'Target' parameter missing for {key}.")
+                    
+                    if new_key == 'av_fuelenrichment':
+                        if new_item['settings']:
+                            if not new_item['settings']['scope']:
+                                new_item['settings']['scope'] = 'full_core' #default value
+                        else:
+                            new_item['settings']['scope'] = 'full_core' #default value
+                    
                 else:
                     raise ValueError("Requested objective/constraint must be nested with its applicable parameters.")
                 new_dict[new_key] = new_item #save modified objective/constraint
@@ -539,15 +560,16 @@ class Input_Parser():
         self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)
         if not self.fa_options and self.code_interface not in ['nuscale_database']:
             raise ValueError("Assembly options must be nested with reflectors, fuels, and/or blankets with their parameters.")
-        elif 'cost_fuelcycle' in self.objectives:
-            for key in self.fa_options['fuel'].keys():
-                if not 'enrichment' in self.fa_options['fuel'][key] and \
-                   not 'hm_loading' in self.fa_options['fuel'][key]:
-                    raise ValueError(f"Entry for 'enrichment' or 'HM_loading' missing for fuel type '{key}'. This is required by the 'cost_fuelcycle' objective.")
-            for key in self.fa_options['blankets'].keys():
-                if not 'enrichment' in self.fa_options['blankets'][key] and \
-                   not 'hm_loading' in self.fa_options['blankets'][key]:
-                    raise ValueError(f"Entry for 'enrichment' or 'HM_loading' missing for blanket type '{key}'. This is required by the 'cost_fuelcycle' objective.")
+        for param in ['cost_fuelcycle','av_fuelenrichment']:
+            if param in self.objectives:
+                for key in self.fa_options['fuel'].keys():
+                    if not 'enrichment' in self.fa_options['fuel'][key] and \
+                       not 'hm_loading' in self.fa_options['fuel'][key]:
+                        raise ValueError(f"Entry for 'enrichment' or 'HM_loading' missing for fuel type '{key}'. This is required by the '{param}' objective.")
+                for key in self.fa_options['blankets'].keys():
+                    if not 'enrichment' in self.fa_options['blankets'][key] and \
+                       not 'hm_loading' in self.fa_options['blankets'][key]:
+                        raise ValueError(f"Entry for 'enrichment' or 'HM_loading' missing for blanket type '{key}'. This is required by the '{param}' objective.")
         
     ## Genome Block ##
         try:
