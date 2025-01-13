@@ -8,7 +8,7 @@ from midas.utils import optimizer_tools as optools
 
 def get_fuelcycle_cost(soln, input):
     ## fetch the duplication multiplicity of each location when expanded to the full core.
-    multdict = LWR_Core_Shapes.get_symmetry_multiplicity(input.nrow, input.ncol, input.symmetry)
+    multdict = LWR_Core_Shapes.get_symmetry_multiplicity(input.nrow, input.ncol, input.num_assemblies, input.symmetry)
     
     ## Interpret loading pattern from chromosome
     if input.calculation_type == 'eq_cycle':
