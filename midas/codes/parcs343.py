@@ -9,7 +9,7 @@ from pathlib import Path
 import subprocess
 from subprocess import STDOUT
 from midas.utils.optimizer_tools import Constrain_Input
-from midas_data import __parcs342exe__
+from midas_data import __parcs343exe__
 
 
 ## Initialize logging for the present file
@@ -262,7 +262,7 @@ def evaluate(solution, input):
     with open(filename,"a") as ofile:
         ofile.write("DEPL\n")
         if input.calculation_type == 'single_cycle':
-            ofile.write(f"      TIME_STP  {str(input.depl_steps).strip('[]')}\n") #!TODO: parameterize this input.
+            ofile.write(f"      TIME_STP  {str(input.depl_steps).strip('[]')}\n")
         ofile.write("      INP_HST   './boc_exp.dep' -2 1\n")
         ofile.write("      OUT_OPT   T  T  T  T  F\n")
         # Write reflector cross sections
@@ -300,9 +300,9 @@ def evaluate(solution, input):
             
             ofile.write("MCYCLE\n")
             ofile.write("    CYCLE_DEF   1\n")
-            ofile.write("      DEPL_STEP 1 1 17*30 18\n")
-            ofile.write("      POWER_LEV 21*100.0\n")
-            ofile.write("      BANK_SEQ  21*1\n\n")
+            ofile.write(f"      DEPL_STEP {str(input.depl_steps).strip('[]')}\n")
+            ofile.write(f"      POWER_LEV {len(input.depl_steps)+1}*100.0\n")
+            ofile.write(f"      BANK_SEQ  {len(input.depl_steps)+1}*1\n\n")
             
             ofile.write("    LOCATION   0\n")
             for x in range(input.full_core_locs.shape[0]):
@@ -338,17 +338,12 @@ def evaluate(solution, input):
         ofile.write(".")
 
 ## Run PARCS INPUT DECK #!TODO: separate the input writing and execution into two different functions that are called in sequence.
-    parcscmd = __parcs342exe__
-    
-    if input.calculation_type in ['eq_cycle']:
-        walltime = 1800 #sec
-    else:
-        walltime = 600 #sec
+    parcscmd = __parcs343exe__
     try:
-        output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=walltime) #wait until calculation finishes
+        output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=input.code_walltime) #wait until calculation finishes
     ## Get Results
         if 'Finished' in str(output): #job completed
-            logging.debug(f"Job {solution.name} completed successfully.")
+            logger.debug(f"Job {solution.name} completed successfully.")
             solution.parameters = get_results(solution.parameters, solution.name)
         
         else: #job failed
@@ -361,6 +356,9 @@ def evaluate(solution, input):
     except subprocess.TimeoutExpired: #job timed out
         os.system('rm -f {}.parcs_pin*'.format(solution.name))
         logger.error(f"Job {solution.name} has timed out!")
+        solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+    except subprocess.CalledProcessError as e: #PARCS returned an abort signal
+        logger.error(f"Job {solution.name} has failed with the following exception: {e}")
         solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
     
     logger.debug(f"Returning to original working directory: {cwd}")
@@ -375,9 +373,6 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
     
     Updated by Nicholas Rollins. 09/27/2024
     """
-    ## Initialize logging for the present file
-    logger = logging.getLogger("MIDAS_logger")
-    
     ## Prepare container for results
     results_dict = {}
     for res in ["cycle_length", "pinpowerpeaking", "fdeltah", "max_boron"]:
@@ -413,14 +408,15 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
         results_dict["max_boron"]["value"] = max(boron_list)
         
         ## Correct Boron value if non-critical
-        if results_dict["max_boron"]["value"] == 1800.0: #!TODO: initial guess should be a variable. can this be read from output file?
-            new_max_boron = 0
+        sorted_boron = sorted(boron_list,reverse=True)
+        if sorted_boron[0] == sorted_boron[1]: #multiple values exceed maximum value in XS library, which is not reported by PARCS.
+            new_max_boron = sorted_boron[0] #initialize variable
             for i in range(len(boron_list)): #!TODO: I think this serves to line up boron_list with keff_list. Could be replaced by index()
-                if boron_list[i]== 1800.0:
-                    boron_worth = 10.0 #pcm/ppm
+                if boron_list[i]== sorted_boron[0]:
+                    boron_worth = 10.0 #pcm/ppm; assumed value.
                     excess_rho = (keff_list[i] - 1.0)*10**5 #pcm; excess reactivity
                     excess_boron = excess_rho/boron_worth #ppm
-                    max_boron_corrected = 1800.0 + excess_boron
+                    max_boron_corrected = sorted_boron[0] + excess_boron
                     if max_boron_corrected > new_max_boron:
                         new_max_boron = max_boron_corrected
             results_dict["max_boron"]["value"] = new_max_boron
@@ -435,23 +431,32 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
         if param in results_dict:
             parameters[param]['value'] = results_dict[param]["value"]
         else:
-            logger.warning(f"Parameter '{param}' not supported in PARCS342 results parsing.")
+            if param not in ['cost_fuelcycle']: #check whitelist
+                logger.warning(f"Parameter '{param}' not supported in PARCS343 results parsing.")
     
     return parameters
 
 def calc_cycle_length(efpd,boron,keff):
     if boron[-1]==0.1: #boron went to zero before end of cycle.
         eoc1_ind = 0
-        eco2_ind = len(efpd)
+        eco2_ind = len(efpd)-1
         for i in range(len(efpd)):
             if boron[i] > 0.1 and boron[i+1] == 0.1:
                 eoc1_ind = i
                 eco2_ind = i+1
-        dbor = abs(boron[eoc1_ind-1]-boron[eoc1_ind])
-        defpd = abs(efpd[eoc1_ind-1]-efpd[eoc1_ind])
-        def_dbor = defpd/dbor
-        eoc = efpd[eoc1_ind] + def_dbor*(boron[eoc1_ind]-0.1) #linear extrapolation to efpd at boron=0.1
-    elif boron[-1]==boron[0]==1800.0: #true boron exceeds initial guess #!TODO: this should be a parameterized boron guess value.
+                break
+        if eoc1_ind != 0:
+            dbor = abs(boron[eoc1_ind]-boron[eoc1_ind-1])
+            defpd = abs(efpd[eoc1_ind]-efpd[eoc1_ind-1])
+        else:
+            dbor = abs(boron[eco2_ind]-boron[eoc1_ind])
+            defpd = abs(efpd[eco2_ind]-efpd[eoc1_ind])
+        try:
+            def_dbor = defpd/dbor
+        except ZeroDivisionError:
+            def_dbor = 0.0
+        eoc = efpd[eoc1_ind] + def_dbor*(boron[eoc1_ind]-boron[eco2_ind]) #linear extrapolation to efpd at boron=0.1
+    elif boron[-1]==boron[0]: #true boron exceeds initial guess
         drho_dcb=10
         drho1 = (keff[-2]-1.0)*10**5
         dcb1 = drho1/drho_dcb
@@ -463,11 +468,11 @@ def calc_cycle_length(efpd,boron,keff):
         defpd = abs(efpd[-2]-efpd[-1])
         def_dbor = defpd/dbor
         eoc = efpd[-1] + def_dbor*(cb2-0.1)
-    else:
+    else: #EOC boron is greater than 0.1
         dbor = abs(boron[-2]-boron[-1])
         defpd = abs(efpd[-2]-efpd[-1])
-        def_dbor = defpd/dbor
-        eoc = efpd[-1] + def_dbor*(boron[-1]-0.1)
+        def_dbor = defpd/dbor #slope
+        eoc = efpd[-1] + def_dbor*(boron[-1]-0.1) #linear extrapolation
     return eoc
 
 def prepare_shuffling_map(input, chromosome):

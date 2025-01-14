@@ -79,7 +79,7 @@ class Genetic_Algorithm():
                 mutation_list.append(soln_to_move)
                 crossover_list.remove(soln_to_move)
     
-        LWR_core_parameters = [self.input.nrow, self.input.ncol, self.input.symmetry]
+        LWR_core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies, self.input.symmetry]
     ## Perform Crossover
         crossover_mates_lists = GA_reproduction.crossover_assign_mates(crossover_list)
         for mate_one, mate_two in zip(crossover_mates_lists[0], crossover_mates_lists[1]):
@@ -128,7 +128,7 @@ class GA_reproduction():
         Before crossover between chromosomes can be performed, the
         individuals in the population need to be paired off.
         
-        Written by Nicholas Rollins. 09/27/2024
+        Updated by Nicholas Rollins. 09/27/2024
         """
         first_mate_list  = []
         second_mate_list = []
@@ -233,8 +233,8 @@ class GA_reproduction():
                optools.Constrain_Input.check_constraints(genes_list,batches,LWR_core_parameters,\
                                                          [loc[0] for loc in child_two]):
                 chromosome_is_valid = True
-            if attempts > 1000:
-                raise ValueError("Crossover has failed after 1,000 attempts. Consider relaxing the constraints on the input space.")
+            if attempts > 10000:
+                raise ValueError("Crossover has failed after 10,000 attempts. Consider relaxing the constraints on the input space.")
                 
         if batches: #reload fuel in 'None' locations.
             child_one = optools.Constrain_Input.EQ_reload_fuel(genome,LWR_core_parameters,child_one)
@@ -278,7 +278,7 @@ class GA_reproduction():
         ## Initialize logging for the present file
         logger = logging.getLogger("MIDAS_logger")
         
-        LWR_core_parameters = [input_obj.nrow, input_obj.ncol, input_obj.symmetry]
+        LWR_core_parameters = [input_obj.nrow, input_obj.ncol, input_obj.num_assemblies, input_obj.symmetry]
         
         if input_obj.calculation_type in ["eq_cycle"]:
             zone_chromosome = [loc[0] for loc in chromosome]
@@ -312,8 +312,9 @@ class GA_reproduction():
                                                                             LWR_core_parameters,new_soln)
             attempts += 1
             if attempts > 100000:
-                logger.error("Mutate-by-Gene has failed after 100,000 attempts; Parent will be restored. Consider relaxing the constraints on the input space.")
+                logger.error("Mutate-by-Gene has failed after 100,000 attempts; the Individual will be restored. Consider relaxing the constraints on the input space.")
                 new_soln = deepcopy(old_soln)
+                chromosome_is_valid = True #break out of while loop
 
         if input_obj.calculation_type in ["eq_cycle"]:
             #recreate child_chromosome

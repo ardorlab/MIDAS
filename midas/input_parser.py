@@ -60,8 +60,8 @@ def validate_input(keyword, value):
     
     elif keyword == 'code_type':
         value = str(value).lower().replace(' ','_')
-        if value not in ["parcs342","nuscale_database"]:
-            raise ValueError("Code types currently supported: PARCS342, nuscale_database.")
+        if value not in ["parcs342", "parcs343", "nuscale_database"]:
+            raise ValueError("Code types currently supported: PARCS342, PARCS343, NuScale_Database.")
     
     elif keyword == 'calc_type':
         value = str(value).lower().replace(' ','_')
@@ -102,7 +102,9 @@ def validate_input(keyword, value):
                 if new_key not in ['max_boron',
                                    'pinpowerpeaking',
                                    'fdeltah',
-                                   'cycle_length']:
+                                   'cycle_length',
+                                   'cost_fuelcycle',
+                                   'av_fuelenrichment']:
                     raise ValueError(f"Requested objective/constraint '{key}' not supported.")
                 new_item = {}
                 if isinstance(item, dict):
@@ -123,6 +125,18 @@ def validate_input(keyword, value):
                                 raise ValueError(f"Requested weight for {key} must be a positive non-zero real number.")
                         elif new_subkey == 'target':
                             new_subitem = float(subitem)
+                        elif new_subkey == 'settings':
+                            new_subitem = {}
+                            if isinstance(subitem, dict):
+                                for subsubkey, subsubitem in subitem.items():
+                                    new_subsubkey = str(subsubkey).lower().replace(' ','_')
+                                    new_subsubitem = str(subsubitem).lower().replace(' ','_')
+                                    if new_subsubkey == 'scope':
+                                        if new_subsubitem not in ['full_core','feed_batch_only'] and new_key == 'av_fuelenrichment':
+                                            raise ValueError(f"Requested setting '{subitem}' not supported for objective '{key}'.")
+                                new_subitem[new_subsubkey] = new_subsubitem
+                            else:
+                                raise ValueError(f"Requested settings for objective '{key}' must be nested with its applicable parameters.")
                         new_item[new_subkey] = new_subitem #save modified parameter
                     #check parameters logic
                     if 'goal' not in new_item:
@@ -135,6 +149,15 @@ def validate_input(keyword, value):
                     else:
                         if 'target' not in new_item:
                             raise ValueError(f"'Target' parameter missing for {key}.")
+                    
+                    if new_key == 'av_fuelenrichment':
+                        if 'settings' in new_item:
+                            if 'scope' not in new_item['settings']:
+                                new_item['settings']['scope'] = 'full_core' #default value
+                        else:
+                            new_item['settings'] = {}
+                            new_item['settings']['scope'] = 'full_core' #default value
+                    
                 else:
                     raise ValueError("Requested objective/constraint must be nested with its applicable parameters.")
                 new_dict[new_key] = new_item #save modified objective/constraint
@@ -242,6 +265,12 @@ def validate_input(keyword, value):
                                     new_subsubkey =str(subsubkey).lower().replace(' ','_')
                                     if new_subsubkey == 'serial':
                                         new_subsubitem = str(subsubitem)
+                                    elif new_subsubkey == 'enrichment':
+                                        new_subsubitem = float(subsubitem)
+                                        if new_subsubitem >= 1.0:
+                                            new_subsubitem = new_subsubitem/100 #change weight percent to weight fraction
+                                    elif new_subsubkey == 'hm_loading':
+                                        new_subsubitem = float(subsubitem) # kg
                                     new_subitem[new_subsubkey] = new_subsubitem
                             else:
                                 raise ValueError("Requested blanket missing parameters.")
@@ -266,6 +295,12 @@ def validate_input(keyword, value):
                                         new_subsubitem = str(subsubitem)
                                     elif new_subsubkey == 'blanket':
                                         new_subsubitem = str(subsubitem)
+                                    elif new_subsubkey == 'enrichment':
+                                        new_subsubitem = float(subsubitem)
+                                        if new_subsubitem >= 1.0:
+                                            new_subsubitem = new_subsubitem/100 #change weight percent to weight fraction
+                                    elif new_subsubkey == 'hm_loading':
+                                        new_subsubitem = float(subsubitem) # kg
                                     new_subitem[new_subsubkey] = new_subsubitem
                             else:
                                 raise ValueError("Requested fuel type missing parameters.")
@@ -383,6 +418,11 @@ def validate_input(keyword, value):
                 raise ValueError(f"Decision variable '{keyword}' must be nested with parameter options and their parameters.")
     
 ## Calculation Block ##
+    elif keyword == 'exec_walltime':
+        value = int(value)
+        if value <= 0:
+            raise ValueError("'exec_walltime' must be a positive number, measured in seconds.")
+    
     elif keyword == 'num_rows':
         value = int(value)
     
@@ -424,7 +464,7 @@ def validate_input(keyword, value):
         value = int(value)
     
     elif keyword == 'axial_nodes':
-        value = [a.strip(' ') for a in value.split(',')]
+        value = [a.strip() for a in value.strip().replace(', ',',').replace(' ',',').split(',')]
         new_value = []
         for node in value:
             if "*" in node:
@@ -440,8 +480,15 @@ def validate_input(keyword, value):
             raise ValueError("'boc_core_exposure' must be a real number.")
     
     elif keyword=='depletion_steps':
-        value = str(value)
-        #!TODO: change this to a more generic list of units and timesteps
+        value = [a.strip() for a in value.strip().replace(', ',',').replace(' ',',').split(',')]
+        new_value = []
+        for step in value:
+            if "*" in step:
+                s_step = step.split('*')
+                new_value.extend(int(s_step[0])*[float(s_step[1])])
+            else:
+                new_value.append(float(step))
+        return new_value
     
     return value
 
@@ -455,6 +502,7 @@ class Input_Parser():
     """
     def __init__(self, num_procs, inp_file):
         self.num_procs = int(num_procs)
+        self.job_name = ".".join(inp_file.split('.')[:-1])
         with open(inp_file) as f:
             try:
                 self.file_settings = yaml.safe_load(f)
@@ -513,6 +561,16 @@ class Input_Parser():
         self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)
         if not self.fa_options and self.code_interface not in ['nuscale_database']:
             raise ValueError("Assembly options must be nested with reflectors, fuels, and/or blankets with their parameters.")
+        for param in ['cost_fuelcycle','av_fuelenrichment']:
+            if param in self.objectives:
+                for key in self.fa_options['fuel'].keys():
+                    if not 'enrichment' in self.fa_options['fuel'][key] and \
+                       not 'hm_loading' in self.fa_options['fuel'][key]:
+                        raise ValueError(f"Entry for 'enrichment' or 'HM_loading' missing for fuel type '{key}'. This is required by the '{param}' objective.")
+                for key in self.fa_options['blankets'].keys():
+                    if not 'enrichment' in self.fa_options['blankets'][key] and \
+                       not 'hm_loading' in self.fa_options['blankets'][key]:
+                        raise ValueError(f"Entry for 'enrichment' or 'HM_loading' missing for blanket type '{key}'. This is required by the '{param}' objective.")
         
     ## Genome Block ##
         try:
@@ -533,7 +591,7 @@ class Input_Parser():
         
     ## Calculation Block ##
         try:
-            if self.code_interface == "parcs342":
+            if self.code_interface in ["parcs342","parcs343"]:
                 info = self.file_settings['parcs_data']
             elif self.code_interface == "nuscale_database":
                 info = self.file_settings['nucale_data']
@@ -545,6 +603,7 @@ class Input_Parser():
         except:
             infomap = None
         
+        self.code_walltime = yaml_line_reader(info, 'exec_walltime', 600)
         self.nrow = yaml_line_reader(infomap, 'num_rows', 17)
         self.ncol = yaml_line_reader(infomap, 'num_cols', 17)
         self.num_assemblies = yaml_line_reader(infomap, 'number_assemblies', 193)
@@ -557,8 +616,8 @@ class Input_Parser():
         self.th_fdbk = yaml_line_reader(info, 'th_fdbk', True)
         self.pin_power_recon = yaml_line_reader(info, 'pin_power_recon', True)
         self.number_axial = yaml_line_reader(info, 'num_axial_nodes', 19)
-        self.axial_nodes = yaml_line_reader(info, 'axial_nodes', "16.12, 20.32, 15*25.739, 20.32, 16.12")
+        self.axial_nodes = yaml_line_reader(info, 'axial_nodes', [16.12, "15*25.739", 16.12])
         self.boc_exposure = yaml_line_reader(info, 'boc_core_exposure', 0.0)
-        self.depl_steps = yaml_line_reader(info, 'depletion_steps', "1 1 6*30")
+        self.depl_steps = yaml_line_reader(info, 'depletion_steps', [1, 1, 30, 30, 30, 30, 30, 30])
         
         return
