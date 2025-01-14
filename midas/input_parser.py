@@ -151,10 +151,11 @@ def validate_input(keyword, value):
                             raise ValueError(f"'Target' parameter missing for {key}.")
                     
                     if new_key == 'av_fuelenrichment':
-                        if new_item['settings']:
-                            if not new_item['settings']['scope']:
+                        if 'settings' in new_item:
+                            if 'scope' not in new_item['settings']:
                                 new_item['settings']['scope'] = 'full_core' #default value
                         else:
+                            new_item['settings'] = {}
                             new_item['settings']['scope'] = 'full_core' #default value
                     
                 else:
