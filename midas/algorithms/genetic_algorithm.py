@@ -67,7 +67,7 @@ class Genetic_Algorithm():
             crossover_list.append(soln_to_move)
     
     ## preserve core parameters 
-        LWR_core_parameters = [self.input.nrow, self.input.ncol, self.input.symmetry]
+        LWR_core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies, self.input.symmetry]
 
     ## TODO add selection method for quelling
 

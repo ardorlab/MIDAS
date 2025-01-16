@@ -368,6 +368,9 @@ class Fitness(object):
                 pgoal = parameters[param]['goal']
                 pweight = parameters[param]['weight']
                 pvalue = parameters[param]['value']
+                if not pvalue:
+                    logger.error("No value was provided by MIDAS for the objective parameter '%s'. This is highly irregular.",param)
+                
                 if pgoal == 'maximize':
                     fitness += pvalue*pweight
                 elif pgoal == 'minimize':
