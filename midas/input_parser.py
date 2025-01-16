@@ -125,7 +125,9 @@ def validate_input(keyword, value):
                                    'pinpowerpeaking',
                                    'fdeltah',
                                    'cycle_length',
-                                   'assembly_burnup']:
+                                   'assembly_burnup',
+                                   'cost_fuelcycle',
+                                   'av_fuelenrichment']:
                     raise ValueError(f"Requested objective/constraint '{key}' not supported.")
                 new_item = {}
                 if isinstance(item, dict):
@@ -155,7 +157,14 @@ def validate_input(keyword, value):
                             logger.warning(f"Target provided for {key} with requested goal '{subitem}'. Target will be ignored.")
                     else:
                         if 'target' not in new_item:
-                            raise ValueError(f"'Target' parameter missing for {key}.")   
+                            raise ValueError(f"'Target' parameter missing for {key}.")  
+                    if new_key == 'av_fuelenrichment':
+                        if 'settings' in new_item:
+                            if 'scope' not in new_item['settings']:
+                                new_item['settings']['scope'] = 'full_core' #default value
+                        else:
+                            new_item['settings'] = {}
+                            new_item['settings']['scope'] = 'full_core' #default value 
                 else:
                     raise ValueError("Requested objective/constraint must be nested with its applicable parameters.")
                 new_dict[new_key] = new_item #save modified objective/constraint
