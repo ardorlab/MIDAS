@@ -54,7 +54,7 @@ class Bayesian_Optimization():
 
         return dimension_space
     
-    def reproduction(self, generation):
+    def reproduction(self, generation, current_generation):
         """
         This function uses the ask and tell functions to update the prior distribution and generate another generation of points to sample from in conjunction
         with optimizer.py

@@ -27,8 +27,7 @@ class Genetic_Algorithm():
     Updated by Nicholas Rollins. 10/03/2024
     """
     def __init__(self, input):
-        self.input = input
-        
+        self.input = input        
         #!TODO: check this functionality and add it back in if necessary.
         '''if 'cleanup' in file_settings['optimization']:
             self.number_generations_post_cleanup = 2 #Arbitrarily chosen default.
@@ -43,52 +42,55 @@ class Genetic_Algorithm():
             from crudworks import CRUD_Predictor
             self.crud = CRUD_Predictor(file_settings)'''
     
-    def reproduction(self, pop_list): #!TODO: apply constraints.
+    def reproduction(self, pop_list, current_generation): #!TODO: apply constraints.
         """
         Generates a new generation of individuals by performing crossover and mutation 
         operations on the parents generation. These operations are performed on an ordered 
         list of parents, as biased by the selection method.
         
         Updated by Nicholas Rollins. 09/27/2024
+        updatde by Jake Mikouchi. 01/06/2025
         """
-    ## Perform selection process of parents
-        # Selection is established by biasing reproduction using an ordered list.
-        pop_list = self.selection_methods(pop_list, self.input.selection)
-
     ## Container for holding new list of child chromosomes
         child_chromosome_list = []
-        # preserve best performing parent in the next generation
-        child_chromosome_list.append(max(pop_list, key=lambda soln: soln.fitness_value).chromosome)
-    
-    ## Select individuals for mutation. The rest undergo crossover.
-        mutation_list  = []
+   
+    ## create list of solutions for crossover.
         crossover_list = []
         for soln in pop_list:
-            if random.random() < self.input.mutation_rate['initial_rate']: #!TODO: reapply variable mutation rates
-                mutation_list.append(soln.chromosome)
-            else:
-                crossover_list.append(soln.chromosome)
+            crossover_list.append(soln.chromosome)
+
+    # determine elites from previous generation if requested in input file
+        Elites = GA_reproduction.Determine_Elites(self, pop_list)
 
         if len(crossover_list)%2 == 1: #make sure there is an even number of individuals in the crossover list.
-            try:
-                soln_to_move = random.choice(mutation_list)
-                crossover_list.append(soln_to_move)
-                mutation_list.remove(soln_to_move)
-            except IndexError: # mutation_list could be empty.
-                soln_to_move = random.choice(crossover_list)
-                mutation_list.append(soln_to_move)
-                crossover_list.remove(soln_to_move)
-    
+            soln_to_move = random.choice(crossover_list)
+            crossover_list.append(soln_to_move)
+   
+    ## preserve core parameters 
         LWR_core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies, self.input.symmetry]
     ## Perform Crossover
-        crossover_mates_lists = GA_reproduction.crossover_assign_mates(crossover_list)
-        for mate_one, mate_two in zip(crossover_mates_lists[0], crossover_mates_lists[1]):
-            child_one, child_two = GA_reproduction.crossover(mate_one, mate_two, 
-                                                            self.input.mutation_rate['initial_rate'], 
-                                                            LWR_core_parameters, self.input.genome, self.input.batches) # default for 'batches' is None. #!TODO: this should be an adaptive mutation rate.
-            child_chromosome_list.extend([child_one, child_two])
-    
+        Num_children = int(self.input.population_size) - len(Elites)
+        while len(child_chromosome_list) < Num_children:
+            parents = self.selection_methods(pop_list, self.input.selection)
+            mate_one = parents[0]
+            mate_two = parents[1]
+            child_one, child_two = self.crossover_methods(mate_one, mate_two, 
+                                                            self.input.crossover, 
+                                                            LWR_core_parameters, self.input.genome, self.input.batches) 
+            if len(child_chromosome_list) == Num_children - 1: 
+                child_chromosome_list.append(random.choice([child_one,child_two]))
+            else:
+                child_chromosome_list.extend([child_one, child_two])
+
     ## Perform Mutation
+        curr_mutation_rate = GA_reproduction.linear_update(self.input.mutation_rate['initial_rate'], self.input.mutation_rate['final_rate'], 
+                                                           current_generation, self.input.num_generations)
+        mutation_list  = [] 
+        for soln in child_chromosome_list:
+            if random.random() < curr_mutation_rate:
+                mutation_list.append(soln)
+                child_chromosome_list.remove(soln)
+
         for chromosome in mutation_list:
             if self.input.mutation_type == "mutate_by_gene":
                 child = GA_reproduction.mutate_by_gene(self.input, chromosome)
@@ -96,10 +98,9 @@ class Genetic_Algorithm():
                 raise ValueError("Requested mutation type not recognized.")
             child_chromosome_list.append(child)
     
-    ## Check new population size
-        while len(child_chromosome_list) > len(pop_list):
-            del child_chromosome_list[random.randint(1,len(child_chromosome_list)-1)] # remove any random child to reduce population size (except first child)
-        
+    ## add elites into population
+        child_chromosome_list.extend(Elites)
+
         return child_chromosome_list
     
     def selection_methods(self, pop_list, method):
@@ -107,14 +108,47 @@ class Genetic_Algorithm():
         Method for distributing to the requested GA selection method.
         
         Written by Nicholas Rollins. 10/08/2024
+        updated by Jake Mikouchi. 12/24/2024
         """
-        if method == 'roulette':
-            pop_list = GA_selection.roulette(pop_list, len(pop_list)) #assume unchanging population size 
-        elif method == 'tournament':
-            pop_list = GA_selection.tournament(pop_list, len(pop_list)) #assume unchanging population size 
+
+        ## TODO modify selection methods for use in queling
+        if method["method"] == 'roulette':
+            pop_list = GA_selection.roulette(pop_list, 2) #assume no quelling (only selecting parents) 
+        elif method["method"] == 'tournament':
+            pop_list = GA_selection.tournament(pop_list, 2) #assume no quelling (only selecting parents) 
+        elif method["method"] == 'ktournament':
+            pop_list = GA_selection.ktournament(pop_list, 2, method) #assume no quelling (only selecting parents) 
+        elif method["method"] == 'truncation':
+            pop_list = GA_selection.truncation(pop_list, 2) #assume no quelling (only selecting parents) 
+        elif method["method"] == 'sus':
+            pop_list = GA_selection.sus(pop_list, 2) #assume no quelling (only selecting parents) 
+        elif method["method"] == 'random':
+            pop_list = GA_selection.random(pop_list, 2) #assume no quelling (only selecting parents) 
         return pop_list
+    
+    def crossover_methods(self, mate_one, mate_two, crossover, LWR_core_parameters, genome, batches):
+        """
+        Method for distributing to the requested GA crossover method.
+        
+        Written by Jake Mikouchi 1/5/2025
+        """
+        if crossover['method'] == 'uniform':
+            child_one, child_two = GA_reproduction.uniform_crossover(mate_one, mate_two, 
+                                                            crossover['crossover_rate'], 
+                                                            LWR_core_parameters, genome, batches)
+        elif crossover['method'] == 'random_element':
+            child_one, child_two = GA_reproduction.random_element_crossover(mate_one, mate_two, 
+                                                            crossover['num_swaps'], 
+                                                            LWR_core_parameters, genome, batches)
+        elif crossover['method'] == 'one_point':
+            child_one, child_two = GA_reproduction.one_point_crossover(mate_one, mate_two, 
+                                                            LWR_core_parameters, genome, batches)
+        elif crossover['method'] == 'two_point':
+            child_one, child_two = GA_reproduction.two_point_crossover(mate_one, mate_two, 
+                                                            LWR_core_parameters, genome, batches)
 
-
+        return child_one, child_two
+    
 class GA_reproduction():
     """
     Functions for performing reproduction of chromosomes using GA
@@ -123,41 +157,8 @@ class GA_reproduction():
     
     Written by Nicholas Rollins. 09/27/2024
     """
-    def crossover_assign_mates(crossover_list,SS_decode=False):
-        """
-        Before crossover between chromosomes can be performed, the
-        individuals in the population need to be paired off.
-        
-        Updated by Nicholas Rollins. 09/27/2024
-        """
-        first_mate_list  = []
-        second_mate_list = []
-        while len(crossover_list) > 0:
-            parent_one = random.choice(crossover_list)
-
-            partner_similarities = -1
-            for suitor in crossover_list:
-                if not suitor is parent_one:
-                    if SS_decode:
-                        parent_one_zones = [loc[0] for loc in parent_one]
-                        suitor_zones = [loc[0] for loc in suitor]
-                        new_suitor_similarities = GA_reproduction.check_intersection(parent_one_zones, suitor_zones)
-                    else:
-                        new_suitor_similarities = GA_reproduction.check_intersection(parent_one, suitor)
-                    if new_suitor_similarities > partner_similarities:
-                        parent_two = suitor[:]
-                        partner_similarities = new_suitor_similarities
-
-            crossover_list.remove(parent_one)
-            if parent_two in crossover_list:
-                crossover_list.remove(parent_two)
-
-            first_mate_list.append(parent_one)
-            second_mate_list.append(parent_two)
-        
-        return (first_mate_list, second_mate_list)
     
-    def crossover(chromosome_one, chromosome_two, mutation_rate, LWR_core_parameters, genome, batches=None):
+    def uniform_crossover(chromosome_one, chromosome_two, crossover_rate, LWR_core_parameters, genome, batches=None):
         """
         Function for performing crossover of the mated solutions by swapping
         differing genes between the chromosomes. Edited as of 1/20/2020 to account
@@ -168,13 +169,14 @@ class GA_reproduction():
                 The first genome that is to undergo crossover.
             chromosome_two: list
                 The second geneome that is to undergo crossover.
-            mutation_rate: float
-                The percent of solutions that undergo mutation. Used here to
-                determine the number of genes that are swapped.
+            crossover_rate: float
+                Used here to determine the number of genes that are swapped.
 
         Written by Brian Andersen. 8/29/2019
+        Updated by Jake Mikouchi 12/24/2024
         """
         difference_positions = GA_reproduction.return_different_positions(chromosome_one, chromosome_two)
+
         genes_list = list(genome.keys())
         if batches:
             genes_list = list(batches.keys())
@@ -187,7 +189,7 @@ class GA_reproduction():
             position_count = 0
             for i, j in zip(chromosome_one, chromosome_two):
                 if position_count in difference_positions:
-                    if random.random() < mutation_rate:
+                    if random.random() < crossover_rate:
                         if batches:
                             if i[0] != j[0]: #batches don't match.
                                 #constrain input for child_one and child_two
@@ -242,6 +244,136 @@ class GA_reproduction():
 
         return child_one, child_two
     
+
+    def random_element_crossover(chromosome_one, chromosome_two, num_swaps, LWR_core_parameters, genome, batches=None):
+        """
+        genes are randomly selected within each chromosome to be swapped. 
+        This is intended to have greater randomness than uniform crossover and be better for problems with fewer number of genes (assemblies)
+        This method is not exactly "crossover", and is more a combination of crossover and mutation.
+        This is because the position of swapped genes is not preserved in the chromosomes.
+        Despite this, this method works quite well for loading patterns.
+
+        Written by Jake Mikouci. 1/05/25
+        """
+
+        genes_list = list(genome.keys())
+        if batches:
+            genes_list = list(batches.keys())
+
+        # creates list of potential positions to be swapped
+        chromosome_elements = [i for i in range(len(chromosome_one))]
+        # list to store genes which have already been swapped
+        c1_swapped_elements = []
+        c2_swapped_elements = []
+
+        child_one = deepcopy(chromosome_one)
+        child_two = deepcopy(chromosome_two)
+        for i in range(num_swaps):
+
+            c1_gene = float("Nan")
+            c2_gene = float("Nan")
+            child1_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, genome, LWR_core_parameters, 
+                                                            child_one+chromosome_one[len(child_one):])
+            child2_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, genome, LWR_core_parameters, 
+                                                            child_two+chromosome_two[len(child_two):])
+
+            attempts = 0
+            chromosome_is_valid = False
+            # selects genes to be swapped and ensures that children are valid solutions
+            while chromosome_is_valid == False:
+                c1_gene_position = random.choice(chromosome_elements)
+                while c1_gene_position in c1_swapped_elements:
+                    c1_gene_position = random.choice(chromosome_elements)
+                c1_gene = child_one[c1_gene_position]
+
+                c2_gene_position = random.choice(chromosome_elements)
+                while c2_gene_position in c2_swapped_elements:
+                    c2_gene_position = random.choice(chromosome_elements)
+                c2_gene = child_two[c2_gene_position]
+
+                attempts += 1
+                if optools.Constrain_Input.check_constraints(genes_list,batches,LWR_core_parameters,\
+                                                         [loc[0] for loc in child_one]) and \
+                   optools.Constrain_Input.check_constraints(genes_list,batches,LWR_core_parameters,\
+                                                         [loc[0] for loc in child_two]):
+                    chromosome_is_valid = True
+                if attempts > 1000:
+                    raise ValueError("Crossover has failed after 1,000 attempts. Consider relaxing the constraints on the input space.")
+                
+
+            # swaps genes
+            child_one[c1_gene_position] = c2_gene
+            child_two[c2_gene_position] = c1_gene
+
+            # stores positions that have been previously swapped
+            c1_swapped_elements.append(c1_gene_position)
+            c2_swapped_elements.append(c2_gene_position)
+            
+        return child_one, child_two
+
+    def one_point_crossover(chromosome_one, chromosome_two, LWR_core_parameters, genome, batches=None):
+        """
+        the entire gene sequence of chromosome_one and chromosome_two is split and grafted at a single random point
+        This method preserves gene positions within the chromosome, however this is not ideal for loading patterns.
+        This is due to the spatial dependence of assemblies in loading patterns. 
+
+        Written by Jake Mikouchi. 1/05/25
+        """
+        genes_list = list(genome.keys())
+        if batches:
+            genes_list = list(batches.keys())
+
+        # creates list of potential positions to be swapped
+        chromosome_elements = [i for i in range(len(chromosome_one))]
+        # selects position to be swapped
+        crossover_position = random.choice(chromosome_elements)
+
+        child_one_seq_a = chromosome_one[:crossover_position]
+        child_one_seq_b = chromosome_one[crossover_position:]
+        child_two_seq_a = chromosome_two[:crossover_position]
+        child_two_seq_b = chromosome_two[crossover_position:]
+
+        # creates children with swapped genes
+        child_one = child_one_seq_a + child_two_seq_b
+        child_two = child_two_seq_a + child_one_seq_b
+
+        return child_one, child_two
+
+    def two_point_crossover(chromosome_one, chromosome_two, LWR_core_parameters, genome, batches=None):
+        """
+        the entire gene sequence of chromosome_one and chromosome_two is split and grafted at a single random point on each sequence
+
+        Written by Jake Mikouchi. 1/05/25
+        """
+        genes_list = list(genome.keys())
+        if batches:
+            genes_list = list(batches.keys())
+
+        # creates list of potential positions to be swapped
+        chromosome_elements = [i for i in range(len(chromosome_one))]
+        # selects both position to be swapped
+        crossover_position_1 = 0
+        crossover_position_2 = 0
+        while crossover_position_1 == crossover_position_2:
+            crossover_position_1 = random.choice(chromosome_elements)
+            crossover_position_2 = random.choice(chromosome_elements)
+
+        crossover_positions = sorted([crossover_position_1, crossover_position_2])
+
+        child_one_seq_a = chromosome_one[:crossover_positions[0]]
+        child_one_seq_b = chromosome_one[crossover_positions[0]:crossover_positions[1]]
+        child_one_seq_c = chromosome_one[crossover_positions[1]:]
+
+        child_two_seq_a = chromosome_two[:crossover_positions[0]]
+        child_two_seq_b = chromosome_two[crossover_positions[0]:crossover_positions[1]]
+        child_two_seq_c = chromosome_two[crossover_positions[1]:]
+
+        # creates children with swapped genes
+        child_one = child_one_seq_a + child_two_seq_b + child_one_seq_c
+        child_two = child_two_seq_a + child_one_seq_b + child_two_seq_c
+
+        return child_one, child_two
+
     @staticmethod
     def check_intersection(list_one, list_two):
         """
@@ -328,6 +460,40 @@ class GA_reproduction():
 
         return child_chromosome
 
+    def linear_update(initial_rate, final_rate, current_generation, num_generations):
+        """
+        linearly updates the mutation rate at a given generation
+        
+        written by Jake Mikouchi. 12/21/2024
+        """
+        curr_rate = initial_rate + ((final_rate - initial_rate) / num_generations) * (current_generation + 1)
+
+        return curr_rate
+    
+    def Determine_Elites(self, pop_list):
+        """
+        Determines the best solutions (elites) of the previous generation and stores them
+        The elites are used to ensure that "good genes" are maintained in the population
+
+        written by Jake Mikouchi 12/31/24 
+        """
+        if self.input.elites < 1.0:
+            Num_Elites = round(self.input.elites * self.input.population_size)
+        elif self.input.elites > 1.0:
+            Num_Elites = int(self.input.elites)
+
+        Elites = []
+
+        if Num_Elites > 0:
+            pop_list.sort(key=lambda x: x.fitness_value, reverse=True)
+            for i in pop_list:
+                if i.chromosome not in Elites:
+                    Elites.append(i.chromosome)
+                if len(Elites) >= Num_Elites:
+                    break
+
+        return Elites
+
 
 class GA_selection():
     """
@@ -360,7 +526,7 @@ class GA_selection():
             value = value*probability_sum
             for j, solution in enumerate(unused_solutions):
                 if selection_probability['low_bound'][j] <= value <= selection_probability['up_bound'][j]:
-                    winners.append(solution)
+                    winners.append(solution.chromosome)
                     unused_solutions.remove(solution)
 
             # if we run out of parents, continue from a fresh list
@@ -392,12 +558,14 @@ class GA_selection():
             two = random.choice(unused_solutions)
             while one == two:
                 two = random.choice(unused_solutions)
-            if one.fitness > two.fitness:
-                winners.append(one)
+            if one.fitness_value > two.fitness_value:
+                winners.append(one.chromosome)
                 used_solutions.append(two)
+                unused_solutions.remove(one)
             else:
-                winners.append(two)
+                winners.append(two.chromosome)
                 used_solutions.append(one)
+                unused_solutions.remove(two)
 
             if len(unused_solutions) < 2:
                 if len(used_solutions) > 2:
@@ -407,7 +575,113 @@ class GA_selection():
                     unused_solutions = deepcopy(pop_list)
                     used_solutions = []
 
-            unused_solutions.remove(one)
-            unused_solutions.remove(two)
+        return winners
+    
+    def ktournament(pop_list, desired_pop_size, method):
+        """
+        k-way tournament selection
+        places k random solutions in a tournament. The solution with the highest fitness is added to the winners.
+        The tournament size can be anything as long as its < len(pop_list)
+        Jake Mikouchi 12/27/24
+        """
+        kway = method['k']
+        unused_solutions = deepcopy(pop_list)
+        winners = []
+
+        for i in range(desired_pop_size):
+            ksols = random.choices(unused_solutions, k=kway)
+            ksolsfit = [i.fitness_value for i in ksols]
+
+            winners.append(ksols[ksolsfit.index(max(ksolsfit))].chromosome)
+            unused_solutions.remove(ksols[ksolsfit.index(max(ksolsfit))])
+
+            if len(unused_solutions) < 2:
+                if len(winners) > 2:
+                    unused_solutions = used_solutions
+                    used_solutions = []
+                else:
+                    unused_solutions = deepcopy(pop_list)
+                    used_solutions = []
+
+        return winners
+    
+    
+    def truncation(pop_list, desired_pop_size):
+        """
+        Truncation Selection
+        orders the population list by fitness in descending order. The top performers are then chosen as the winner.
+        This method is rarely used due to the lack of randomness, and because of this it tends to perform worse than other selection methods.
+        Truncation selection is sometimes refered to as "elitism selection"
+        Jake Mikouchi 5/10/24
+        """
+        unused_solutions = deepcopy(pop_list)
+        winners = []
+        unused_solutions_fitness = [i.fitness_value for i in unused_solutions]
+
+        for i in range(0, len(unused_solutions_fitness)):
+            for j in range(i+1, len(unused_solutions_fitness)):
+                if unused_solutions_fitness[i] <= unused_solutions_fitness[j]:
+                    unused_solutions_fitness[i], unused_solutions_fitness[j] = unused_solutions_fitness[j],unused_solutions_fitness[i]
+                    unused_solutions[i], unused_solutions[j] = unused_solutions[j],unused_solutions[i]
+
+        for i in unused_solutions:
+            if i.chromosome not in winners:
+                winners.append(i.chromosome)
+            if len(winners) >= desired_pop_size:
+                break
+
+        return winners
+    
+    def sus(pop_list, desired_pop_size):
+        """
+        stochastic universal sampling (SUS)
+        SUS uses a single random value to sample all of the solutions by choosing them at evenly spaced intervals.
+        Jake Mikouchi 5/10/24
+        """
+        unused_solutions = pop_list[:]
+        winners = []
+
+        # orders all solutions in by fitness
+        unused_solutions_fitness = [i.fitness_value for i in unused_solutions]
+        for i in range(0, len(unused_solutions_fitness)):
+            for j in range(i+1, len(unused_solutions_fitness)):
+                if unused_solutions_fitness[i] <= unused_solutions_fitness[j]:
+                    unused_solutions_fitness[i], unused_solutions_fitness[j] = unused_solutions_fitness[j],unused_solutions_fitness[i]
+                    unused_solutions[i], unused_solutions[j] = unused_solutions[j],unused_solutions[i]
+
+
+        while len(winners) < desired_pop_size:
+            # calculates average fitness of all solutions
+            average_unused_solutions_fitness = sum(unused_solutions_fitness) / len(unused_solutions_fitness)
+            # calculates alpha and delta parameters
+            alpha = random.uniform(0,1)
+            delta = average_unused_solutions_fitness * alpha
+            Sum = unused_solutions_fitness[0]
+
+            for i in range(len(unused_solutions)):
+                if delta < Sum:
+                    winners.append(unused_solutions[i].chromosome)
+                    unused_solutions.remove(unused_solutions[i])
+                    unused_solutions_fitness.remove(unused_solutions_fitness[i])
+                    delta = delta + average_unused_solutions_fitness
+                    break
+
+                else: 
+                    Sum += unused_solutions_fitness[i]
+
+        return winners
+
+    def random(pop_list, desired_pop_size):
+        """
+        Randomly selects the next set of parents
+        Written by Jake Mikouchi 12/27/24
+        """
+
+        unused_solutions = deepcopy(pop_list)
+        winners = []
+        for i in range(desired_pop_size):
+            random_index = random.randint(0, len(unused_solutions)-1)
+            winners.append(unused_solutions[random_index].chromosome)
+            unused_solutions.pop(random_index)
 
         return winners
