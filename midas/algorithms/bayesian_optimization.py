@@ -24,7 +24,6 @@ class Bayesian_Optimization:
         self.dimensions = self.parse_dimensions()  # List of length D, each an array of categories
         self.population = []       # Stores categorical points
         self.fitness_values = []   # Stores fitness values
-        self.gp = None             # Initialize Gaussian Process model
         self.random_state = np.random.RandomState(random_state) #Initialize random state used throughout problem
 
         # Precompute the total number of binary features
@@ -37,6 +36,21 @@ class Bayesian_Optimization:
 
         #Noise for the GP model
         self.noise = noise
+
+        #Define kernel function being used by GP as Matern
+        kernel = Matern(
+            length_scale=1.0,
+            length_scale_bounds=(1e-4, 1e4),
+            nu=self.input.kernel_smoothness
+        )
+
+        #Define GP being used
+        self.gp = GaussianProcessRegressor(
+            kernel=kernel,
+            alpha=self.noise,
+            n_restarts_optimizer=5,
+            random_state=self.random_state
+        )
 
     def parse_dimensions(self):
         """
@@ -146,22 +160,7 @@ class Bayesian_Optimization:
         scaled_fitness = self.scaler_y.fit_transform(
             np.array(self.fitness_values).reshape(-1, 1)
         ).ravel()
-        #Only initialize kernel and GP at beginning of optimization
-        if self.gp == None:
-            #Define kernel function being used by GP as Matern
-            kernel = Matern(
-                length_scale=1.0,
-                length_scale_bounds=(1e-4, 1e4),
-                nu=self.input.kernel_smoothness
-            )
-
-            #Define GP being used
-            self.gp = GaussianProcessRegressor(
-                kernel=kernel,
-                alpha=self.noise,
-                n_restarts_optimizer=5,
-                random_state=self.random_state
-            )
+            
         #Fit GP model with most recent population/fitness data
         self.gp.fit(scaled_population, scaled_fitness)
 
@@ -266,7 +265,8 @@ class Bayesian_Optimization:
     def get_new_points(self, kappa, n_restarts):
         """
         Use L-BFGS-B in a continuous space to find a candidate
-        that maximizes/minimizes an acquisition function.
+        that maximizes/minimizes an acquisition function,
+        then convert it into a categorical vector
 
         Written by Cole Howard. 1/1/2025
         """
@@ -287,6 +287,7 @@ class Bayesian_Optimization:
         bounds = [(0, 1)] * self.total_features
 
         best_x = None
+        #Initialize the best acq func value as positive inf so that lower values will replace it until the lowest value
         best_fun = float('inf')
         #Minimize the acquisition function with random restarts
         for _ in range(n_restarts):
@@ -326,5 +327,4 @@ class Bayesian_Optimization:
                 n_restarts=5
             )
             candidates.append(candidate)
-
         return candidates
