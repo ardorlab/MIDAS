@@ -173,7 +173,10 @@ class Optimizer():
                 soln = self.population.current[i]
                 soln_result_list = [str(self.generation.current),str(i),'{0:.3f}'.format(soln.fitness_value)]
                 for param in soln.parameters.keys():
-                    soln_result_list.append('{0:.3f}'.format(soln.parameters[param]['value']))
+                    if param == 'av_fuelenrichment':
+                        soln_result_list.append('{0:.3f}'.format(100*soln.parameters[param]['value'])) #convert w.t. to wo%
+                    else:
+                        soln_result_list.append('{0:.3f}'.format(soln.parameters[param]['value']))
                 for gene in soln.chromosome:
                     soln_result_list.append(str(gene))
                 ## write to output file
@@ -280,7 +283,10 @@ class Optimizer():
                 soln = self.population.current[i]
                 soln_result_list = [str(self.generation.current),str(i),'{0:.3f}'.format(soln.fitness_value)]
                 for param in soln.parameters.keys():
-                    soln_result_list.append('{0:.3f}'.format(soln.parameters[param]['value']))
+                    if param == 'av_fuelenrichment':
+                        soln_result_list.append('{0:.3f}'.format(100*soln.parameters[param]['value'])) #convert w.t. to wo%
+                    else:
+                        soln_result_list.append('{0:.3f}'.format(soln.parameters[param]['value']))
                 for gene in soln.chromosome:
                     soln_result_list.append(str(gene))
                 ## write to output file

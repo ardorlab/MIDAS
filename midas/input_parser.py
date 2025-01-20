@@ -567,10 +567,11 @@ class Input_Parser():
                     if not 'enrichment' in self.fa_options['fuel'][key] and \
                        not 'hm_loading' in self.fa_options['fuel'][key]:
                         raise ValueError(f"Entry for 'enrichment' or 'HM_loading' missing for fuel type '{key}'. This is required by the '{param}' objective.")
-                for key in self.fa_options['blankets'].keys():
-                    if not 'enrichment' in self.fa_options['blankets'][key] and \
-                       not 'hm_loading' in self.fa_options['blankets'][key]:
-                        raise ValueError(f"Entry for 'enrichment' or 'HM_loading' missing for blanket type '{key}'. This is required by the '{param}' objective.")
+                if 'blankets' in self.fa_options:
+                    for key in self.fa_options['blankets'].keys():
+                        if not 'enrichment' in self.fa_options['blankets'][key] and \
+                           not 'hm_loading' in self.fa_options['blankets'][key]:
+                            raise ValueError(f"Entry for 'enrichment' or 'HM_loading' missing for blanket type '{key}'. This is required by the '{param}' objective.")
         
     ## Genome Block ##
         try:
