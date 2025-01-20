@@ -1,12 +1,17 @@
 ## Import Block ##
 import math
 import random
+import logging
 import numpy as np
 from copy import deepcopy
 from midas.utils.problem_preparation import LWR_Core_Shapes
 """
 These are generic optimizer classes that are shared by all algorithms. #!TODO: can this be solved with the super().__init__ method?
 """
+
+
+## Initialize logging for the present file
+logger = logging.getLogger("MIDAS_logger")
 
 ## Classes ##
 class Population():
@@ -181,8 +186,9 @@ class Constrain_Input():
         ## fetch the duplication multiplicity of each location when expanded to the full core.
         num_rows = LWR_core_parameters[0]
         num_cols = LWR_core_parameters[1]
-        symmetry = LWR_core_parameters[2]
-        multdict = LWR_Core_Shapes.get_symmetry_multiplicity(num_rows, num_cols, symmetry)
+        num_FA   = LWR_core_parameters[2]
+        symmetry = LWR_core_parameters[3]
+        multdict = LWR_Core_Shapes.get_symmetry_multiplicity(num_rows, num_cols, num_FA, symmetry)
         
         ## if chromosome represents a shuffling scheme, not a loading pattern, the LP needs to be extracted first.
         valid_genes_list = []
@@ -221,8 +227,9 @@ class Constrain_Input():
             ## fetch the duplication multiplicity of each location when expanded to the full core.
             num_rows = LWR_core_parameters[0]
             num_cols = LWR_core_parameters[1]
-            symmetry = LWR_core_parameters[2]
-            multdict = LWR_Core_Shapes.get_symmetry_multiplicity(num_rows, num_cols, symmetry)
+            num_FA   = LWR_core_parameters[2]
+            symmetry = LWR_core_parameters[3]
+            multdict = LWR_Core_Shapes.get_symmetry_multiplicity(num_rows, num_cols, num_FA, symmetry)
             
             ## make sure that quantities of each gene type appearing in the solution are allowed.
             for gene in genes_list:
@@ -281,8 +288,9 @@ class Constrain_Input():
         ## fetch the duplication multiplicity of each location when expanded to the full core.
         num_rows = LWR_core_parameters[0]
         num_cols = LWR_core_parameters[1]
-        symmetry = LWR_core_parameters[2]
-        multdict = LWR_Core_Shapes.get_symmetry_multiplicity(num_rows, num_cols, symmetry)
+        num_FA   = LWR_core_parameters[2]
+        symmetry = LWR_core_parameters[3]
+        multdict = LWR_Core_Shapes.get_symmetry_multiplicity(num_rows, num_cols, num_FA, symmetry)
         
         ## Assemble list of gene options for each batch.
         gene_options_dict = {}
@@ -362,23 +370,28 @@ class Fitness(object):
         """
         fitness = 0.0
         for param in parameters:
-            pgoal = parameters[param]['goal']
-            pweight = parameters[param]['weight']
-            pvalue = parameters[param]['value']
-            if pgoal == 'maximize':
-                fitness += pvalue*pweight
-            elif pgoal == 'minimize':
-                fitness -= pvalue*pweight
-            elif pgoal == 'meet_target':
-                ptarget = parameters[param]['target']
-                fitness -= abs(ptarget - pvalue)*pweight
-            elif pgoal == 'greater_than_target':
-                ptarget = parameters[param]['target']
-                penalty = (ptarget - pvalue)*pweight if ptarget - pvalue > 0.0 else 0.0
-                fitness -= penalty
-            elif pgoal == 'less_than_target':
-                ptarget = parameters[param]['target']
-                penalty = (pvalue - ptarget)*pweight if pvalue - ptarget > 0.0 else 0.0
-                fitness -= penalty
-        
+            if param in ["assembly_burnup"]:
+                pass
+            else:
+                pgoal = parameters[param]['goal']
+                pweight = parameters[param]['weight']
+                pvalue = parameters[param]['value']
+                if not pvalue:
+                    logger.error("No value was provided by MIDAS for the objective parameter '%s'. This is highly irregular.",param)
+                
+                if pgoal == 'maximize':
+                    fitness += pvalue*pweight
+                elif pgoal == 'minimize':
+                    fitness -= pvalue*pweight
+                elif pgoal == 'meet_target':
+                    ptarget = parameters[param]['target']
+                    fitness -= abs(ptarget - pvalue)*pweight
+                elif pgoal == 'greater_than_target':
+                    ptarget = parameters[param]['target']
+                    penalty = (ptarget - pvalue)*pweight if ptarget - pvalue > 0.0 else 0.0
+                    fitness -= penalty
+                elif pgoal == 'less_than_target':
+                    ptarget = parameters[param]['target']
+                    penalty = (pvalue - ptarget)*pweight if pvalue - ptarget > 0.0 else 0.0
+                    fitness -= penalty
         return fitness

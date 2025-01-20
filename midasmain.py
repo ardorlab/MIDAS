@@ -10,11 +10,14 @@ import logging
 import logging.config
 from copy import deepcopy
 import random
+import pickle
 import midas_data
 from midas.input_parser import  Input_Parser
 from midas.optimizer import Optimizer
 from midas.utils.problem_preparation import Prepare_Problem_Values as prep_inp
 from midas.utils.decorators import error_handler, timer, profiler
+
+
 # # # # # # # # # # #
 # Define Functions  #
 # # # # # # # # # # #
@@ -24,23 +27,20 @@ def Parse_Args():
     
     Updated by Nicholas Rollins. 10/03/2024
     """
-    input_help_message = 'Input file containing all the information'
-    input_help_message += 'needed to perform the optimization routine.'  
-    input_help_message += '\n Input file extension needs to be a '
-    input_help_message += '.yaml file.'
+    input_help_message = 'Input file containing all the information needed to perform the optimization routine.\n'
+    input_help_message += ' Input file extension needs to be a .yaml file.'
 
-    cpu_help_message = 'Number of cpus wanted for solving the optimization '
-    cpu_help_message += 'problem.'
+    cpu_help_message = 'Number of cpus wanted for solving the optimization problem.'
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--input',help=input_help_message,
-                        required=True,type=str)
+                        required=False,type=str,default=None)
     parser.add_argument('--cpus',help=cpu_help_message,
-                        required=True,type=int)
-    parser.add_argument('--test',help="Used to test changes to the optimization algorithms.",
-                    required=False,type=bool)
-    parser.add_argument('--restart',help="Used to restart the optimization after pauses.",
-                   required=False,type=bool)
+                        required=False,type=int,default=1)
+    #!parser.add_argument('--test',help="Used to test changes to the optimization algorithms.",
+    #!                    required=False,type=bool,default=None) #!TODO: this option is not in use.
+    parser.add_argument('--restart',help="A valid '.rst' MIDAS restart file name, used to continue a previous optimization routine.",
+                        required=False,type=str,default=None)
 
     return parser.parse_args()
 
@@ -60,22 +60,52 @@ class Formatter(logging.Formatter): #!TODO: It might be cleaner to move this to 
 @error_handler
 @timer
 @profiler
-def main():
+def restart(args):
+    """
+    Secondary execution pathway for MIDAS optimization allowing the 
+    calculation to continue from a previously completed iteration.
+    
+    Written by Nicholas Rollins. 11/26/2024
+    """
+    exitcode = 0
+    
+## Print MIDAS header
+    logger.info(midas_data.__logo__)
+    logger.info("MIDAS Version %s\n\n", midas_data.__version__)
+    logger.info("====================================================================================================\n")
+    
+## Open the restart file in binary read mode
+    logger.info("Reading restart file %s...\n", args.restart)
+    with open(args.restart, "rb") as f:
+        # Load the object from the file
+        optimizer = pickle.load(f)
+    
+## Update logger level
+    if optimizer.input.debug_mode:
+        logger.setLevel(logging.DEBUG)
+    
+## Seed the global RNG
+    optimizer.input.set_seed = random.randrange(sys.maxsize) # generate an artibtrary RNG seed
+    random.seed(optimizer.input.set_seed)
+    logger.info("Set global RNG Seed: %s", optimizer.input.set_seed)
+    
+## Execute
+    logger.info("Restart Optimization...\n")
+    optimizer.main(restart=True) #execute optimization through the algorithm class.
+    logger.info("\nOptimization completed.")
+    
+    return exitcode
+
+@error_handler
+@timer
+@profiler
+def main(args):
     """
     Primary execution pathway for MIDAS optimization.
     
     Written by Nicholas Rollins. 10/08/2024
     """
     exitcode = 0
-
-## Set global variables and settings
-    #!TODO: read global variables from external file.
-    #!global midas_rng_seed = 
-
-## Read command line arguments
-    args = Parse_Args()
-    if not '.yaml' in args.input:
-        raise ValueError("Input File needs to be a valid .yaml file")
 
 ## Print MIDAS header
     logger.info(midas_data.__logo__)
@@ -87,10 +117,12 @@ def main():
 ## Prepare input values for writing
     inp_lines = prep_inp.prepare_cycle(inp_lines)
     logger.info("Parsed input file: %s", str(args.input))
-
-## Seed the global RNG (if requested)
-    if inp_lines.set_seed:
-        random.seed(inp_lines.set_seed)
+    
+## Seed the global RNG
+    if not inp_lines.set_seed:
+        inp_lines.set_seed = random.randrange(sys.maxsize) # generate an artibtrary RNG seed
+    random.seed(inp_lines.set_seed)
+    logger.info("Set global RNG Seed: %s", inp_lines.set_seed)
 
 ## Update logger level
     if inp_lines.debug_mode:
@@ -127,10 +159,21 @@ if __name__ == "__main__":
     logger.addHandler(filehandler)
     logger.addHandler(consolehandler)
     
+    #Read command line arguments
+    args = Parse_Args()
+    if args.input and not '.yaml' in args.input:
+        raise ValueError("Input File needs to be a valid '.yaml' file.")
+    if args.restart and not '.rst' in args.restart:
+        raise ValueError("Restart File needs to be a valid '.rst' file.")
+    if not args.input and not args.restart: #no execution type specified
+        raise NameError("One of the following arguments is required: '--input', '--restart'.")
+    
 
-    #Execute MIDAS
-
-    exitcode = main()
+    if not args.restart: # Execute MIDAS optimization
+        exitcode = main(args)
+    
+    else: # perform restart
+        exitcode = restart(args)
 
     
     #Clean up
