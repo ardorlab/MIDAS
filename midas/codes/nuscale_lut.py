@@ -1,6 +1,5 @@
 import h5py
 import os
-import numpy as np
 import logging
 
 ## Initialize logging for the present file
@@ -12,6 +11,7 @@ def evaluate(solution, input):
     and write them into a dictionary in the solution.parameters object
 
     Written by Cole Howard. 10/29/2024
+    updated by Jake Mikouchi. 1/3/25
     """
     #Each objective is stored as one index in a single array within the hdf5 file, so I am getting each specific value
     objectives, BU, cost = read_hdf5(solution.chromosome, input)
@@ -24,9 +24,7 @@ def evaluate(solution, input):
     new_dict["cycle_cost"] = cost
 
     # Adding in burnup parameters
-    new_dict["max_burnup"] = np.max(BU)
-    new_dict["min_burnup"] = np.min(BU)
-    new_dict["average_burnup"] = np.mean(BU)
+    new_dict["assembly_burnup"] = BU
 
     #Only give the optimizer the parameters which were included in the input file
     for key in new_dict:
