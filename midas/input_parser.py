@@ -85,9 +85,7 @@ def validate_input(keyword, value):
                 raise ValueError("Number of generations may be a positive number, or 'calculate_from_genes'.")
         except AttributeError:
                 value = int(value)
-
-    elif keyword == 'batch_size':
-        value = int(value)
+    
     
     elif keyword == 'solution_symmetry':
         value = str(value).lower().replace(' ','_')
@@ -126,7 +124,7 @@ def validate_input(keyword, value):
                                    'fdeltah',
                                    'cycle_length',
                                    'assembly_burnup',
-                                   'cost_fuelcycle',
+                                   'cycle_cost',
                                    'av_fuelenrichment']:
                     raise ValueError(f"Requested objective/constraint '{key}' not supported.")
                 new_item = {}
@@ -270,16 +268,22 @@ def validate_input(keyword, value):
     elif keyword == 'acquisition_function':
         value = str(value).lower().replace(' ','_')
         if value in ['expected_improvement','ei']:
-            value = "EI"
+            value = 'EI'
         elif value in ['probability_of_improvement','pi']:
-            value = "PI"
+            value = 'PI'
         elif value in ['lower_confidence_bound','lcb']:
-            value = "LCB"
-        elif value == 'gp_hedge':
-            value = "gp_hedge"
+            value = 'LCB'
+        elif value in ['upper_confidence_bound','ucb']:
+            value = 'UCB'
         #Verification that valid acquisition function is specified
-        if value not in ["EI","PI","LCB","gp_hedge"]:
-            raise ValueError("Acquisition function not supported. Supported acquisition types are EI, PI, LCB, gp_hedge.")
+        if value not in ['EI','PI','LCB','UCB']:
+            raise ValueError("Acquisition function not supported. Supported acquisition types are EI, PI, UCB, LCB.")
+    
+    elif keyword == 'exploration_exploitation_factor':
+        value = float(value)
+    
+    elif keyword == 'kernel_smoothness_factor':
+        value = float(value)
         
 ## Fuel Assembly Block ##
     elif keyword == 'assembly_options':
@@ -599,7 +603,6 @@ class Input_Parser():
         
         self.population_size = yaml_line_reader(info, 'population_size', 1)
         self.num_generations = yaml_line_reader(info, 'number_of_generations', 1)
-        self.batch_size = yaml_line_reader(info, 'batch_size', 1)
         self.symmetry = yaml_line_reader(info, 'solution_symmetry', 'octant')
         self.objectives = yaml_line_reader(info, 'objectives', None)
         termination_criteria_default = {'method':'None','termination_generations':0}
@@ -619,7 +622,13 @@ class Input_Parser():
         crossover_default = {'method':'sequential','crossover_rate': 0.5, 'num_swaps': 1}
         self.crossover = yaml_line_reader(info, 'crossover', crossover_default)
         self.elites = yaml_line_reader(info, 'elites', 0)
-        self.acquisition_function = yaml_line_reader(info, 'acquisition_function', 'gp_hedge')#!TODO: Come back to this
+        acquisition_function = yaml_line_reader(info, 'acquisition_function', 'LCB')
+        #LCB and UCB acquisition functions will benefit more from an EE factor, and other acq functions may be better with a value of zero here
+        if self.acquisition_function in ['LCB','UCB']:
+            self.exploration_exploitation_factor = yaml_line_reader(info, 'exploration_exploitation_factor', 1.96)
+        else:
+            self.exploration_exploitation_factor = yaml_line_reader(info, 'exploration_exploitation_factor', 0)
+        self.kernel_smoothness = yaml_line_reader(info, 'kernel_smoothness_factor', 0.5)
         
     ## Fuel Assembly Block ##
         self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)
@@ -683,5 +692,21 @@ class Input_Parser():
         self.axial_nodes = yaml_line_reader(info, 'axial_nodes', [16.12, "15*25.739", 16.12])
         self.boc_exposure = yaml_line_reader(info, 'boc_core_exposure', 0.0)
         self.depl_steps = yaml_line_reader(info, 'depletion_steps', [1, 1, 30, 30, 30, 30, 30, 30])
-        
+        #NuScale database verification block
+        if self.code_interface == 'nuscale_database':
+            #Force octant symmetry for NuScale database
+            if self.symmetry != 'octant':
+                logging.warning(f'Core symmetry has been changed from {self.symmetry} to octant. NuScale database only supports octant symmetry.')
+                self.symmetry == 'octant'
+            
+            #Verify assembly map length for each parameter in input file
+            for parameter in self.genome:
+                if len(self.genome[parameter]['map']) != 8:
+                    raise ValueError(f'Parameter {parameter} has a map length of {len(parameter['map'])}, but needs length of 8')
+            
+            #Verify that the type parameter for each assembly is between 2-7, as these are the only assemblies available
+            for assembly in self.fa_options['fuel']:
+                if int(self.fa_options['fuel'][assembly]['type']) not in [2, 3, 4, 5, 6, 7]:
+                    raise ValueError(f'Assembly {assembly} parameter "type" is incorrect. For NuScale database, types 2-7 exist')
+                
         return
