@@ -616,7 +616,7 @@ class Input_Parser():
         self.reproducer = yaml_line_reader(info, 'reproducer', 'standard')
         self.mutation_type = yaml_line_reader(info, 'mutation_type', 'mutate_by_gene')
         self.mutation_rate = yaml_line_reader(info, 'mutation_rate', 0.5)
-        crossover_default = {'method':'sequential','crossover_rate': 0.5, 'num_swaps': 1}
+        crossover_default = {'method':'one_point','crossover_rate': 0.5, 'num_swaps': 1}
         self.crossover = yaml_line_reader(info, 'crossover', crossover_default)
         self.elites = yaml_line_reader(info, 'elites', 0)
         self.acquisition_function = yaml_line_reader(info, 'acquisition_function', 'gp_hedge')#!TODO: Come back to this

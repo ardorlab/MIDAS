@@ -60,7 +60,7 @@ class Genetic_Algorithm():
             crossover_list.append(soln.chromosome)
 
     # determine elites from previous generation if requested in input file
-        Elites = GA_reproduction.Determine_Elites(self, pop_list)
+        Elites = GA_reproduction.Determine_Elites(self.input.elites, self.input.population_size, deepcopy(pop_list))
 
         if len(crossover_list)%2 == 1: #make sure there is an even number of individuals in the crossover list.
             soln_to_move = random.choice(crossover_list)
@@ -435,18 +435,19 @@ class GA_reproduction():
                 for i in range(num_mutations):
                     loc_to_mutate = random.randint(0, len(new_soln)-1) #choose a random gene
                     old_gene = new_soln[loc_to_mutate]
-                    gene_options = optools.Constrain_Input.calc_gene_options(all_genes_list, all_gene_options, LWR_core_parameters, old_soln) #constraint input
+                    gene_options = optools.Constrain_Input.calc_gene_options(all_genes_list, all_gene_options,\
+                                                                                LWR_core_parameters, old_soln) #constraint input
                     new_gene = random.choice(gene_options)
                     if new_gene != old_gene:
                         if all_gene_options[new_gene]['map'][loc_to_mutate] == 1:
                             new_soln[loc_to_mutate] = new_gene
             chromosome_is_valid = optools.Constrain_Input.check_constraints(all_genes_list,all_gene_options,\
                                                                             LWR_core_parameters,new_soln)
-            attempts += 1
-            if attempts > 100000:
-                logger.error("Mutate-by-Gene has failed after 100,000 attempts; the Individual will be restored. Consider relaxing the constraints on the input space.")
-                new_soln = deepcopy(old_soln)
-                chromosome_is_valid = True #break out of while loop
+            if not chromosome_is_valid:
+                attempts += 1
+                if attempts > 100000:
+                    logger.error("Mutate-by-Gene has failed after 100,000 attempts; the Individual will be restored. Consider relaxing the constraints on the input space.")
+                    return chromosome
 
         if input_obj.calculation_type in ["eq_cycle"]:
             #recreate child_chromosome
@@ -470,25 +471,26 @@ class GA_reproduction():
 
         return curr_rate
     
-    def Determine_Elites(self, pop_list):
+    def Determine_Elites(elites_requested, population_size, pop_list):
         """
         Determines the best solutions (elites) of the previous generation and stores them
         The elites are used to ensure that "good genes" are maintained in the population
 
         written by Jake Mikouchi 12/31/24 
         """
-        if self.input.elites < 1.0:
-            Num_Elites = round(self.input.elites * self.input.population_size)
-        elif self.input.elites > 1.0:
-            Num_Elites = int(self.input.elites)
+        # Calculate number of elites (requested as either a quantity or percent of the population)
+        if elites_requested < 1.0:
+            Num_Elites = round(elites_requested * population_size)
+        elif elites_requested > 1.0:
+            Num_Elites = int(elites_requested)
 
+        # Save the most fit individuals as Elites
         Elites = []
-
         if Num_Elites > 0:
             pop_list.sort(key=lambda x: x.fitness_value, reverse=True)
-            for i in pop_list:
-                if i.chromosome not in Elites:
-                    Elites.append(i.chromosome)
+            for soln in pop_list:
+                if soln.chromosome not in Elites:
+                    Elites.append(soln.chromosome)
                 if len(Elites) >= Num_Elites:
                     break
 

@@ -221,36 +221,32 @@ class Constrain_Input():
         
         Written by Nicholas Rollins. 10/15/2024
         """
-        if not genome:
+        if not genome: #! this implies that there are no constraints, but also no valid choices?
             return True
-        else:
-            ## fetch the duplication multiplicity of each location when expanded to the full core.
-            num_rows = LWR_core_parameters[0]
-            num_cols = LWR_core_parameters[1]
-            num_FA   = LWR_core_parameters[2]
-            symmetry = LWR_core_parameters[3]
-            multdict = LWR_Core_Shapes.get_symmetry_multiplicity(num_rows, num_cols, num_FA, symmetry)
-            
-            ## make sure that quantities of each gene type appearing in the solution are allowed.
-            for gene in genes_list:
-                if genome[gene]['constraint']:
-                    ctype = genome[gene]['constraint']['type']
-                    cvalue = genome[gene]['constraint']['value']
-                    gene_counts = LWR_Core_Shapes.count_in_LP(multdict,solution)
-                    if gene not in gene_counts:
-                        gene_counts[gene] = 0
+        
+        ## fetch the duplication multiplicity of each location when expanded to the full core.
+        num_rows = LWR_core_parameters[0]
+        num_cols = LWR_core_parameters[1]
+        num_FA   = LWR_core_parameters[2]
+        symmetry = LWR_core_parameters[3]
+        multdict = LWR_Core_Shapes.get_symmetry_multiplicity(num_rows, num_cols, num_FA, symmetry)
+        
+        ## make sure that quantities of each gene type appearing in the solution are allowed.
+        gene_counts = LWR_Core_Shapes.count_in_LP(multdict,solution)
+        for gene in genes_list:
+            if genome[gene]['constraint']:
+                ctype = genome[gene]['constraint']['type']
+                cvalue = genome[gene]['constraint']['value']
+                if gene not in gene_counts:
+                    gene_counts[gene] = 0
+                if ctype == 'max_quantity': #quantity of gene type must be less than the max allowed quantity.
+                    if gene_counts[gene] > cvalue:
+                        return False
+                elif ctype == 'less_than_variable': #quantity of gene type must be less than the quantity of the target variable.
                     if cvalue not in gene_counts:
                         gene_counts[cvalue] = 0
-                    if ctype == 'max_quantity':
-                        #only include option if less than the max quantity have been already used.
-                        if not gene_counts[gene] <= cvalue:
-                            return False
-                    elif ctype == 'less_than_variable':
-                        #only include option if fewer than the target option have been already used.
-                        if not gene_counts[gene] <= gene_counts[cvalue]:
-                            return False
-                else:
-                    continue
+                    if gene_counts[gene] > gene_counts[cvalue]:
+                        return False
             
         return True #if you haven't exited with "False" by this point, all constraints were passed.
     
@@ -318,6 +314,8 @@ class Constrain_Input():
             
             if not chromosome[i][1]: #location is missing a FA
             ## choose valid loading option before continuing.
+                if not gene_options_dict[batch_num]:
+                    raise ValueError(f"Failed to reload fuel; no source locations available for unassigned location of batch {batch_num}.\n{chromosome}")
                 valid = False
                 attempt = 0
                 while not valid:
