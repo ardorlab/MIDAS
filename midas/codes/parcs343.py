@@ -431,7 +431,7 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
         if param in results_dict:
             parameters[param]['value'] = results_dict[param]["value"]
         else:
-            if param not in ['cost_fuelcycle']: #check whitelist
+            if param not in ['cost_fuelcycle','av_fuelenrichment']: #check whitelist
                 logger.warning(f"Parameter '{param}' not supported in PARCS343 results parsing.")
     
     return parameters
