@@ -622,7 +622,7 @@ class Input_Parser():
         crossover_default = {'method':'one_point','crossover_rate': 0.5, 'num_swaps': 1}
         self.crossover = yaml_line_reader(info, 'crossover', crossover_default)
         self.elites = yaml_line_reader(info, 'elites', 0)
-        acquisition_function = yaml_line_reader(info, 'acquisition_function', 'LCB')
+        self.acquisition_function = yaml_line_reader(info, 'acquisition_function', 'LCB')
         #LCB and UCB acquisition functions will benefit more from an EE factor, and other acq functions may be better with a value of zero here
         if self.acquisition_function in ['LCB','UCB']:
             self.exploration_exploitation_factor = yaml_line_reader(info, 'exploration_exploitation_factor', 1.96)
@@ -692,6 +692,7 @@ class Input_Parser():
         self.axial_nodes = yaml_line_reader(info, 'axial_nodes', [16.12, "15*25.739", 16.12])
         self.boc_exposure = yaml_line_reader(info, 'boc_core_exposure', 0.0)
         self.depl_steps = yaml_line_reader(info, 'depletion_steps', [1, 1, 30, 30, 30, 30, 30, 30])
+        
         #NuScale database verification block
         if self.code_interface == 'nuscale_database':
             #Force octant symmetry for NuScale database
@@ -702,11 +703,12 @@ class Input_Parser():
             #Verify assembly map length for each parameter in input file
             for parameter in self.genome:
                 if len(self.genome[parameter]['map']) != 8:
-                    raise ValueError(f'Parameter {parameter} has a map length of {len(parameter['map'])}, but needs length of 8')
+                    map_length = len(parameter['map'])
+                    raise ValueError(f'Parameter {parameter} has a map length of {map_length}, but needs length of 8.')
             
             #Verify that the type parameter for each assembly is between 2-7, as these are the only assemblies available
             for assembly in self.fa_options['fuel']:
                 if int(self.fa_options['fuel'][assembly]['type']) not in [2, 3, 4, 5, 6, 7]:
-                    raise ValueError(f'Assembly {assembly} parameter "type" is incorrect. For NuScale database, types 2-7 exist')
+                    raise ValueError(f'Assembly {assembly} parameter "type" is incorrect. For NuScale database, types 2-7 exist.')
                 
         return
