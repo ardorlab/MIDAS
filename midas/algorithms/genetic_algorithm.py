@@ -49,7 +49,7 @@ class Genetic_Algorithm():
         list of parents, as biased by the selection method.
         
         Updated by Nicholas Rollins. 09/27/2024
-        updatde by Jake Mikouchi. 01/06/2025
+        Updated by Jake Mikouchi. 01/06/2025
         """
     ## Container for holding new list of child chromosomes
         child_chromosome_list = []
@@ -130,7 +130,7 @@ class Genetic_Algorithm():
         """
         Method for distributing to the requested GA crossover method.
         
-        Written by Jake Mikouchi 1/5/2025
+        Written by Jake Mikouchi. 1/5/2025
         """
         if crossover['method'] == 'uniform':
             child_one, child_two = GA_reproduction.uniform_crossover(mate_one, mate_two, 
@@ -184,6 +184,9 @@ class GA_reproduction():
         chromosome_is_valid = False
         attempts = 0
         while not chromosome_is_valid:
+            if attempts > 10000:
+                raise ValueError("Uniform Crossover has failed after 10,000 attempts. Consider relaxing the constraints on the input space.")
+            
             child_one = []
             child_two = []
             position_count = 0
@@ -230,14 +233,18 @@ class GA_reproduction():
                 position_count += 1
                 
             attempts += 1
-            if optools.Constrain_Input.check_constraints(genes_list,batches,LWR_core_parameters,\
-                                                         [loc[0] for loc in child_one]) and \
-               optools.Constrain_Input.check_constraints(genes_list,batches,LWR_core_parameters,\
-                                                         [loc[0] for loc in child_two]):
-                chromosome_is_valid = True
-            if attempts > 10000:
-                raise ValueError("Crossover has failed after 10,000 attempts. Consider relaxing the constraints on the input space.")
-                
+            # final check for adherence to input constraints
+            if batches:
+                if optools.Constrain_Input.check_constraints(genes_list,batches,LWR_core_parameters,\
+                                                             [loc[0] for loc in child_one]) and \
+                   optools.Constrain_Input.check_constraints(genes_list,batches,LWR_core_parameters,\
+                                                             [loc[0] for loc in child_two]):
+                    chromosome_is_valid = True
+            else:
+                if optools.Constrain_Input.check_constraints(genes_list,genome,LWR_core_parameters,child_one) and \
+                   optools.Constrain_Input.check_constraints(genes_list,genome,LWR_core_parameters,child_two):
+                    chromosome_is_valid = True
+
         if batches: #reload fuel in 'None' locations.
             child_one = optools.Constrain_Input.EQ_reload_fuel(genome,LWR_core_parameters,child_one)
             child_two = optools.Constrain_Input.EQ_reload_fuel(genome,LWR_core_parameters,child_two)
@@ -254,6 +261,7 @@ class GA_reproduction():
         Despite this, this method works quite well for loading patterns.
 
         Written by Jake Mikouci. 1/05/25
+        Updated by Nicholas Rollins. 1/21/25
         """
 
         genes_list = list(genome.keys())
@@ -262,6 +270,7 @@ class GA_reproduction():
 
         # creates list of potential positions to be swapped
         chromosome_elements = [i for i in range(len(chromosome_one))]
+        
         # list to store genes which have already been swapped
         c1_swapped_elements = []
         c2_swapped_elements = []
@@ -269,45 +278,82 @@ class GA_reproduction():
         child_one = deepcopy(chromosome_one)
         child_two = deepcopy(chromosome_two)
         for i in range(num_swaps):
-
-            c1_gene = float("Nan")
-            c2_gene = float("Nan")
-            child1_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, genome, LWR_core_parameters, 
-                                                            child_one+chromosome_one[len(child_one):])
-            child2_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, genome, LWR_core_parameters, 
-                                                            child_two+chromosome_two[len(child_two):])
-
             attempts = 0
             chromosome_is_valid = False
             # selects genes to be swapped and ensures that children are valid solutions
             while chromosome_is_valid == False:
+                if attempts > 1000:
+                    raise ValueError("Random Element Crossover has failed after 1,000 attempts. Consider relaxing the constraints on the input space.")
+            
+                # select random novel position in each chromosome
                 c1_gene_position = random.choice(chromosome_elements)
+                c2_gene_position = random.choice(chromosome_elements)
+                antihang = 0
                 while c1_gene_position in c1_swapped_elements:
                     c1_gene_position = random.choice(chromosome_elements)
-                c1_gene = child_one[c1_gene_position]
-
-                c2_gene_position = random.choice(chromosome_elements)
+                    antihang += 1
+                    if antihang > 1000:
+                        raise ValueError("Random Element Crossover has failed to select a novel location after 1,000 attempts.")
                 while c2_gene_position in c2_swapped_elements:
                     c2_gene_position = random.choice(chromosome_elements)
-                c2_gene = child_two[c2_gene_position]
+                    antihang += 1
+                    if antihang > 2000:
+                        raise ValueError("Random Element Crossover has failed to select a novel location after 1,000 attempts.")
 
-                attempts += 1
+            
+            if batches:
+                # only consider valid gene options
+                child1_zone = [loc[0] for loc in child_one+chromosome_one[len(child_one):]] #!TODO: why do we extend the child chromosome with the original in this way? This doesn't appear to do anything.
+                child2_zone = [loc[0] for loc in child_two+chromosome_two[len(child_two):]]
+                child1_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, batches, 
+                                                                             LWR_core_parameters, child1_zone)
+                child2_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, batches, 
+                                                                             LWR_core_parameters, child2_zone)
+                # swaps genes
+                if child2_zone[c2_gene_position] in child1_gene_opts and \
+                   child1_zone[c1_gene_position] in child2_gene_opts:
+                    child_one[c1_gene_position] = (child_two[c2_gene_position][0],None)
+                    child_two[c2_gene_position] = (child_one[c1_gene_position][0],None)
+                else:
+                    attempts += 1
+                    continue
+                    
+            else:
+                # only consider valid gene options
+                child1_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, genome, LWR_core_parameters, 
+                                                                child_one+chromosome_one[len(child_one):])
+                child2_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, genome, LWR_core_parameters, 
+                                                                child_two+chromosome_two[len(child_two):])
+
+                # swaps genes
+                if child_two[c2_gene_position] in child1_gene_opts and \
+                   child_one[c1_gene_position] in child2_gene_opts:
+                    child_one[c1_gene_position] = deepcopy(child_two[c2_gene_position])
+                    child_two[c2_gene_position] = deepcopy(child_one[c1_gene_position])
+                else:
+                    attempts += 1
+                    continue
+
+            # stores positions that have been previously swapped
+            c1_swapped_elements.append(c1_gene_position)
+            c2_swapped_elements.append(c2_gene_position)
+
+            attempts += 1
+            # final check for adherence to input constraints
+            if batches:
                 if optools.Constrain_Input.check_constraints(genes_list,batches,LWR_core_parameters,\
                                                          [loc[0] for loc in child_one]) and \
                    optools.Constrain_Input.check_constraints(genes_list,batches,LWR_core_parameters,\
                                                          [loc[0] for loc in child_two]):
                     chromosome_is_valid = True
-                if attempts > 1000:
-                    raise ValueError("Crossover has failed after 1,000 attempts. Consider relaxing the constraints on the input space.")
-                
-
-            # swaps genes
-            child_one[c1_gene_position] = c2_gene
-            child_two[c2_gene_position] = c1_gene
-
-            # stores positions that have been previously swapped
-            c1_swapped_elements.append(c1_gene_position)
-            c2_swapped_elements.append(c2_gene_position)
+            else:
+                if optools.Constrain_Input.check_constraints(genes_list,genome,LWR_core_parameters,child_one) and \
+                   optools.Constrain_Input.check_constraints(genes_list,genome,LWR_core_parameters,child_two):
+                    chromosome_is_valid = True
+            
+        if batches: #reload fuel in 'None' locations and resolve conflicts.
+            child_one = optools.Constrain_Input.EQ_reload_fuel(genome,LWR_core_parameters,child_one)
+            child_two = optools.Constrain_Input.EQ_reload_fuel(genome,LWR_core_parameters,child_two)
             
         return child_one, child_two
 
@@ -318,24 +364,46 @@ class GA_reproduction():
         This is due to the spatial dependence of assemblies in loading patterns. 
 
         Written by Jake Mikouchi. 1/05/25
+        Updated by Nicholas Rollins. 1/21/25
         """
         genes_list = list(genome.keys())
         if batches:
             genes_list = list(batches.keys())
-
-        # creates list of potential positions to be swapped
-        chromosome_elements = [i for i in range(len(chromosome_one))]
+        
         # selects position to be swapped
-        crossover_position = random.choice(chromosome_elements)
+        crossover_position = random.choice(range(len(chromosome_one)))
+        
+        attempts = 0
+        chromosome_is_valid = False
+        while chromosome_is_valid == False:
+            if attempts > 100000:
+                raise ValueError("One Point Crossover has failed after 100,000 attempts. Consider relaxing the constraints on the input space.")
 
-        child_one_seq_a = chromosome_one[:crossover_position]
-        child_one_seq_b = chromosome_one[crossover_position:]
-        child_two_seq_a = chromosome_two[:crossover_position]
-        child_two_seq_b = chromosome_two[crossover_position:]
+            child_one_seq_a = chromosome_one[:crossover_position]
+            child_one_seq_b = chromosome_one[crossover_position:]
+            child_two_seq_a = chromosome_two[:crossover_position]
+            child_two_seq_b = chromosome_two[crossover_position:]
 
-        # creates children with swapped genes
-        child_one = child_one_seq_a + child_two_seq_b
-        child_two = child_two_seq_a + child_one_seq_b
+            # creates children with swapped genes
+            child_one = child_one_seq_a + child_two_seq_b
+            child_two = child_two_seq_a + child_one_seq_b
+            
+            attempts += 1
+            # final check for adherence to input constraints
+            if batches:
+                if optools.Constrain_Input.check_constraints(genes_list,batches,LWR_core_parameters,\
+                                                         [loc[0] for loc in child_one]) and \
+                   optools.Constrain_Input.check_constraints(genes_list,batches,LWR_core_parameters,\
+                                                         [loc[0] for loc in child_two]):
+                    chromosome_is_valid = True
+            else:
+                if optools.Constrain_Input.check_constraints(genes_list,genome,LWR_core_parameters,child_one) and \
+                   optools.Constrain_Input.check_constraints(genes_list,genome,LWR_core_parameters,child_two):
+                    chromosome_is_valid = True
+
+        if batches: #reload fuel in 'None' locations and resolve conflicts.
+            child_one = optools.Constrain_Input.EQ_reload_fuel(genome,LWR_core_parameters,child_one)
+            child_two = optools.Constrain_Input.EQ_reload_fuel(genome,LWR_core_parameters,child_two)
 
         return child_one, child_two
 
@@ -348,29 +416,56 @@ class GA_reproduction():
         genes_list = list(genome.keys())
         if batches:
             genes_list = list(batches.keys())
-
+        
         # creates list of potential positions to be swapped
         chromosome_elements = [i for i in range(len(chromosome_one))]
-        # selects both position to be swapped
-        crossover_position_1 = 0
-        crossover_position_2 = 0
-        while crossover_position_1 == crossover_position_2:
+
+        attempts = 0
+        chromosome_is_valid = False
+        while chromosome_is_valid == False:
+            if attempts > 1000:
+                raise ValueError("Two Point Crossover has failed after 1,000 attempts. Consider relaxing the constraints on the input space.")
+            
+            # selects both position to be swapped
             crossover_position_1 = random.choice(chromosome_elements)
             crossover_position_2 = random.choice(chromosome_elements)
+            antihang = 0
+            while crossover_position_1 == crossover_position_2:
+                crossover_position_1 = random.choice(chromosome_elements)
+                crossover_position_2 = random.choice(chromosome_elements)
+                antihang += 1
+                if antihang > 1000:
+                    raise ValueError("Two Point Crossover has failed to select distint locations for splitting after 1,000 attempts.")
+            crossover_positions = sorted([crossover_position_1, crossover_position_2])
 
-        crossover_positions = sorted([crossover_position_1, crossover_position_2])
+            child_one_seq_a = chromosome_one[:crossover_positions[0]]
+            child_one_seq_b = chromosome_one[crossover_positions[0]:crossover_positions[1]]
+            child_one_seq_c = chromosome_one[crossover_positions[1]:]
 
-        child_one_seq_a = chromosome_one[:crossover_positions[0]]
-        child_one_seq_b = chromosome_one[crossover_positions[0]:crossover_positions[1]]
-        child_one_seq_c = chromosome_one[crossover_positions[1]:]
+            child_two_seq_a = chromosome_two[:crossover_positions[0]]
+            child_two_seq_b = chromosome_two[crossover_positions[0]:crossover_positions[1]]
+            child_two_seq_c = chromosome_two[crossover_positions[1]:]
 
-        child_two_seq_a = chromosome_two[:crossover_positions[0]]
-        child_two_seq_b = chromosome_two[crossover_positions[0]:crossover_positions[1]]
-        child_two_seq_c = chromosome_two[crossover_positions[1]:]
-
-        # creates children with swapped genes
-        child_one = child_one_seq_a + child_two_seq_b + child_one_seq_c
-        child_two = child_two_seq_a + child_one_seq_b + child_two_seq_c
+            # creates children with swapped genes
+            child_one = child_one_seq_a + child_two_seq_b + child_one_seq_c
+            child_two = child_two_seq_a + child_one_seq_b + child_two_seq_c
+            
+            attempts += 1
+            # final check for adherence to input constraints
+            if batches:
+                if optools.Constrain_Input.check_constraints(genes_list,batches,LWR_core_parameters,\
+                                                         [loc[0] for loc in child_one]) and \
+                   optools.Constrain_Input.check_constraints(genes_list,batches,LWR_core_parameters,\
+                                                         [loc[0] for loc in child_two]):
+                    chromosome_is_valid = True
+            else:
+                if optools.Constrain_Input.check_constraints(genes_list,genome,LWR_core_parameters,child_one) and \
+                   optools.Constrain_Input.check_constraints(genes_list,genome,LWR_core_parameters,child_two):
+                    chromosome_is_valid = True
+            
+        if batches: #reload fuel in 'None' locations and resolve conflicts.
+            child_one = optools.Constrain_Input.EQ_reload_fuel(genome,LWR_core_parameters,child_one)
+            child_two = optools.Constrain_Input.EQ_reload_fuel(genome,LWR_core_parameters,child_two)
 
         return child_one, child_two
 
