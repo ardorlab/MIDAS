@@ -85,7 +85,7 @@ def evaluate(solution, input):
             if fueltype[1] == label:
                 tag = fueltype[0]
         if not tag:
-            raise ValueError("FA label not found in tag_list.")
+            raise ValueError(f"FA label '{label}' not found in fuel types ({input.tag_list['fuel']}).")
         soln_core_dict[loc]['Value'] = tag
     #!for loc, label in soln_refl_locations.items(): #!TODO: create a way to specify reflector locs for multiple radial refls.
 
@@ -433,7 +433,7 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
         if param in results_dict:
             parameters[param]['value'] = results_dict[param]["value"]
         else:
-            if param not in ['cost_fuelcycle', 'av_fuelenrichment']: #check whitelist
+            if param not in ['cost_fuelcycle','av_fuelenrichment']: #check whitelist
                 logger.warning(f"Parameter '{param}' not supported in PARCS343 results parsing.")
     
     return parameters

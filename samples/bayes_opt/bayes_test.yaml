@@ -5,9 +5,8 @@ general:
   results_directory_name: output_files
 
 optimization:
-  population_size: 30
-  batch_size: 3
-  number_of_generations: 50
+  population_size: 20
+  number_of_generations: 400
   objectives:
     max_boron:
       goal: less_than_target
@@ -15,23 +14,31 @@ optimization:
       weight: 1.0
     PinPowerPeaking:
       goal: less_than_target
-      weight: 400.0 
+      weight: 800.0 
       target: 2.1
     FDeltaH:
       goal: less_than_target
       target: 1.48
-      weight: 600.0     
+      weight: 800.0     
     cycle_length:
       goal: maximize
-      weight: 1.00
+      weight: 1.0
+    cycle_cost:
+      goal: minimize
+      weight: 0.000001
+    max_burnup:
+      goal: minimize
+      weight: 1.0
+
 ## Algorithm Settings
 algorithm:
-  acquisition_function: gp_hedge
+  acquisition_function: lcb
+  exploration_exploitation_factor: 1.96
 
 ## Fuel Assembly Parts
 assembly_options:
   reflectors:
-    NSFA:
+    NSFA: 
       refl_type: all
       serial: None
   blankets:
