@@ -557,6 +557,40 @@ def validate_input(keyword, value):
     return value
 
 
+def write_recursive(data,file,indent_level=0,visited=None):
+    """
+    Recursively writes a dictionary structure to a file, while 
+    avoiding circular references
+
+    Parameters:
+        data: Dictionary structure, which can have nested dictionaries
+        file: The file that the function writes to
+
+    Written by Mitch Edney. 1/20/2025
+
+    """
+    
+    if visited is None:
+        visited = set()
+
+    if id(data) in visited:
+        file.write(f"{' ' * indent_level}Circular reference detected, skipping...\n")
+        return
+
+    visited.add(id(data))
+
+    indent = ' ' * indent_level
+
+    for key, value in data.items():
+
+        if isinstance(value, dict):
+            file.write(f"{indent}{key}:\n")
+            write_recursive(value,file,indent_level + 2,visited)
+
+        else:
+            file.write(f"{indent}{key}: {value}\n")
+
+
 class Input_Parser():
     """
     Centralized class for parsing user-supplied input arguments from the 
@@ -573,6 +607,70 @@ class Input_Parser():
             except yaml.parser.ParserError:
                 raise yaml.parser.ParserError("Trouble reading the '.yaml' input file. Please check the integrity of the input, including the consistency of spaces!")
         
+        ## Initialize Default Values ##
+
+        ## General Settings ##
+
+        self.debug_mode = False
+        self.results_dir_name = 'output_files'
+        self.set_seed = None
+        self.clear_results = 'all_but_best'
+        self.methodology = 'genetic_algorithm'
+        self.code_interface = 'PARCS342'
+        self.calculation_type = 'single_cycle'
+
+        ## Optimization Block ##
+
+        self.population_size = 1
+        self.num_generations = 1
+        self.symmetry = 'octant'
+        self.objectives = None
+        termination_criteria_default = {'method':'None','termination_generations':0}
+        self.termination_criteria = termination_criteria_default
+
+        ## Algorithm Block ##
+
+        selection_default = {'fitness':'weighted','method':'tournament'}
+        self.selection = selection_default
+        self.reproducer = 'standard'
+        self.mutation_type = 'mutate_by_gene'
+        self.mutation_rate = 0.5
+        crossover_default = {'method':'one_point','crossover_rate': 0.5, 'num_swaps': 1}
+        self.crossover = crossover_default
+        self.elites = 0
+        self.acquisition_function = 'LCB'
+        self.exploration_exploitation_factor = 1.96
+        self.kernel_smoothness = 0.5
+
+        ## Fuel Assembly Block ##
+
+        self.fa_options = None
+    
+        ## Genome Block ##
+
+        self.genome = None
+        self.batches = None
+
+        ## Calculation Block ##
+
+        self.code_walltime = 600
+        self.nrow = 17
+        self.ncol = 17
+        self.num_assemblies = 193
+        self.map_size = 'full'
+        self.xs_lib = '../../'
+        self.xs_extension = ''
+        self.power = 3800.0
+        self.flow = 18231.89
+        self.inlet_temp = 565.0
+        self.th_fdbk = True
+        self.pin_power_recon = True
+        self.number_axial = 19
+        self.axial_nodes = "16.12, 15*25.739, 16.12"
+        self.boc_exposure = 0.0
+        self.depl_steps = "1 1 6*30"
+
+
         self.parse_input_data()
     
     def parse_input_data(self):
@@ -587,13 +685,14 @@ class Input_Parser():
         except KeyError:
             info = None
         
-        self.debug_mode = yaml_line_reader(info, 'debug_mode', False)
-        self.results_dir_name = yaml_line_reader(info, 'results_directory_name', 'output_files')
-        self.set_seed = yaml_line_reader(info, 'set_seed', None)
-        self.clear_results = yaml_line_reader(info, 'clear_results', 'all_but_best')
-        self.methodology = yaml_line_reader(info, 'optimizer', 'genetic_algorithm')
-        self.code_interface = yaml_line_reader(info, 'code_type', 'PARCS342')
-        self.calculation_type = yaml_line_reader(info, 'calc_type', 'single_cycle')
+        self.debug_mode = yaml_line_reader(info, 'debug_mode', self.debug_mode)
+        self.results_dir_name = yaml_line_reader(info, 'results_directory_name', self.results_dir_name)
+        self.set_seed = yaml_line_reader(info, 'set_seed', self.set_seed)
+        self.clear_results = yaml_line_reader(info, 'clear_results', self.clear_results)
+        self.methodology = yaml_line_reader(info, 'optimizer', self.methodology)
+        self.code_interface = yaml_line_reader(info, 'code_type', self.code_interface)
+        self.calculation_type = yaml_line_reader(info, 'calc_type', self.calculation_type)
+
         
     ## Optimization Block ##
         try:
@@ -601,12 +700,11 @@ class Input_Parser():
         except KeyError:
             info = None
         
-        self.population_size = yaml_line_reader(info, 'population_size', 1)
-        self.num_generations = yaml_line_reader(info, 'number_of_generations', 1)
-        self.symmetry = yaml_line_reader(info, 'solution_symmetry', 'octant')
-        self.objectives = yaml_line_reader(info, 'objectives', None)
-        termination_criteria_default = {'method':'None','termination_generations':0}
-        self.termination_criteria = yaml_line_reader(info, 'termination_criteria', termination_criteria_default)
+        self.population_size = yaml_line_reader(info, 'population_size', self.population_size)
+        self.num_generations = yaml_line_reader(info, 'number_of_generations', self.num_generations)
+        self.symmetry = yaml_line_reader(info, 'solution_symmetry', self.symmetry)
+        self.objectives = yaml_line_reader(info, 'objectives', self.objectives)
+        self.termination_criteria = yaml_line_reader(info, 'termination_criteria', self.termination_criteria)
         
     ## Algorithm Block ##
         try:
@@ -614,24 +712,23 @@ class Input_Parser():
         except KeyError:
             info = None
         
-        selection_default = {'fitness':'weighted','method':'tournament'}
-        self.selection = yaml_line_reader(info, 'selection', selection_default)
-        self.reproducer = yaml_line_reader(info, 'reproducer', 'standard')
-        self.mutation_type = yaml_line_reader(info, 'mutation_type', 'mutate_by_gene')
-        self.mutation_rate = yaml_line_reader(info, 'mutation_rate', 0.5)
-        crossover_default = {'method':'one_point','crossover_rate': 0.5, 'num_swaps': 1}
-        self.crossover = yaml_line_reader(info, 'crossover', crossover_default)
-        self.elites = yaml_line_reader(info, 'elites', 0)
-        acquisition_function = yaml_line_reader(info, 'acquisition_function', 'LCB')
+        self.selection = yaml_line_reader(info, 'selection', self.selection)
+        self.reproducer = yaml_line_reader(info, 'reproducer', self.reproducer)
+        self.mutation_type = yaml_line_reader(info, 'mutation_type', self.mutation_type)
+        self.mutation_rate = yaml_line_reader(info, 'mutation_rate', self.mutation_rate)
+        self.crossover = yaml_line_reader(info, 'crossover', self.crossover)
+        self.elites = yaml_line_reader(info, 'elites', self.elites)
+        self.acquisition_function = yaml_line_reader(info, 'acquisition_function', self.acquisition_function)
         #LCB and UCB acquisition functions will benefit more from an EE factor, and other acq functions may be better with a value of zero here
         if self.acquisition_function in ['LCB','UCB']:
-            self.exploration_exploitation_factor = yaml_line_reader(info, 'exploration_exploitation_factor', 1.96)
+            self.exploration_exploitation_factor = yaml_line_reader(info, 'exploration_exploitation_factor', self.exploration_exploitation_factor)
         else:
             self.exploration_exploitation_factor = yaml_line_reader(info, 'exploration_exploitation_factor', 0)
-        self.kernel_smoothness = yaml_line_reader(info, 'kernel_smoothness_factor', 0.5)
+        self.kernel_smoothness = yaml_line_reader(info, 'kernel_smoothness_factor', self.kernel_smoothness)
+
         
     ## Fuel Assembly Block ##
-        self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)
+        self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', self.fa_options)
         if not self.fa_options and self.code_interface not in ['nuscale_database']:
             raise ValueError("Assembly options must be nested with reflectors, fuels, and/or blankets with their parameters.")
         for param in ['cost_fuelcycle','av_fuelenrichment']:
@@ -651,8 +748,8 @@ class Input_Parser():
         except KeyError:
             info = None
         
-        self.genome = yaml_line_reader(info, 'parameters', None)
-        self.batches = yaml_line_reader(info, 'batches', None)
+        self.genome = yaml_line_reader(info, 'parameters', self.genome)
+        self.batches = yaml_line_reader(info, 'batches', self.batches)
         #check that decision variable options are valid.
         if not self.genome:
             raise ValueError("'Parameters' must be specified in Decision Variables.")
@@ -676,23 +773,24 @@ class Input_Parser():
         except:
             infomap = None
         
-        self.code_walltime = yaml_line_reader(info, 'exec_walltime', 600)
-        self.nrow = yaml_line_reader(infomap, 'num_rows', 17)
-        self.ncol = yaml_line_reader(infomap, 'num_cols', 17)
-        self.num_assemblies = yaml_line_reader(infomap, 'number_assemblies', 193)
-        self.map_size = yaml_line_reader(infomap, 'core_symmetry', 'full')
-        self.xs_lib = yaml_line_reader(info, 'xs_library_path', '../../') #as a relative path, this assumes the needed cross sections are in the base directory for the job.
-        self.xs_extension = yaml_line_reader(info, 'xs_extension', '')
-        self.power = yaml_line_reader(info, 'power', 3800.0)
-        self.flow = yaml_line_reader(info, 'flow', 18231.89)
-        self.inlet_temp = yaml_line_reader(info, 'inlet_temperature', 565.0)
-        self.th_fdbk = yaml_line_reader(info, 'th_fdbk', True)
-        self.pin_power_recon = yaml_line_reader(info, 'pin_power_recon', True)
-        self.number_axial = yaml_line_reader(info, 'num_axial_nodes', 19)
-        self.axial_nodes = yaml_line_reader(info, 'axial_nodes', [16.12, "15*25.739", 16.12])
-        self.boc_exposure = yaml_line_reader(info, 'boc_core_exposure', 0.0)
-        self.depl_steps = yaml_line_reader(info, 'depletion_steps', [1, 1, 30, 30, 30, 30, 30, 30])
-        #NuScale database verification block
+        self.nrow = yaml_line_reader(infomap, 'num_rows', self.nrow)
+        self.ncol = yaml_line_reader(infomap, 'num_cols', self.ncol)
+        self.num_assemblies = yaml_line_reader(infomap, 'number_assemblies', self.num_assemblies)
+        self.map_size = yaml_line_reader(infomap, 'core_symmetry', self.map_size)
+        self.xs_lib = yaml_line_reader(info, 'xs_library_path', self.xs_lib) #as a relative path, this assumes the needed cross sections are in the base directory for the job.
+        self.xs_extension = yaml_line_reader(info, 'xs_extension', self.xs_extension)
+        self.power = yaml_line_reader(info, 'power', self.power)
+        self.flow = yaml_line_reader(info, 'flow', self.flow)
+        self.inlet_temp = yaml_line_reader(info, 'inlet_temperature', self.inlet_temp)
+        self.th_fdbk = yaml_line_reader(info, 'th_fdbk', self.th_fdbk)
+        self.pin_power_recon = yaml_line_reader(info, 'pin_power_recon', self.pin_power_recon)
+        self.number_axial = yaml_line_reader(info, 'num_axial_nodes', self.number_axial)
+        self.axial_nodes = yaml_line_reader(info, 'axial_nodes', self.axial_nodes)
+        self.boc_exposure = yaml_line_reader(info, 'boc_core_exposure', self.boc_exposure)
+        self.depl_steps = yaml_line_reader(info, 'depletion_steps', self.depl_steps)
+
+    ## NuScale database verification block ##
+
         if self.code_interface == 'nuscale_database':
             #Force octant symmetry for NuScale database
             if self.symmetry != 'octant':
@@ -708,5 +806,116 @@ class Input_Parser():
             for assembly in self.fa_options['fuel']:
                 if int(self.fa_options['fuel'][assembly]['type']) not in [2, 3, 4, 5, 6, 7]:
                     raise ValueError(f'Assembly {assembly} parameter "type" is incorrect. For NuScale database, types 2-7 exist')
-                
+
+        
         return
+
+    def create_echo_file(self):
+        """
+        Generates an echo file of designated MIDAS input values. A dictionary with
+        all relevant input values are assigned to their appropriate keywords in a dictionary.
+        The function ends by creating the echo.txt file and calling the write_recursive function 
+        to generate the contents onto the text file
+
+        Parameters:
+            self: Input_Parser() object
+
+        Written by Mitch Edney. 1/20/2025
+
+        """
+
+        ofile = {}
+
+    ## General Settings Block ##
+
+        block = "General_Inputs"
+        ofile.setdefault(block, {})
+
+        ofile[block]['debug_mode'] = self.debug_mode
+        ofile[block]['results_dir_name'] = self.results_dir_name
+        ofile[block]['set_seed'] = self.set_seed
+        ofile[block]['clear_results'] = self.clear_results
+        ofile[block]['optimizer'] = self.methodology
+        ofile[block]['code_type'] = self.code_interface
+        ofile[block]['calc_type'] = self.calculation_type
+
+
+    ## Optimization Block ##
+
+        block = "Optimization_Inputs"
+        ofile.setdefault(block, {})
+
+        ofile[block]['population_size'] = self.population_size
+        ofile[block]['number_of_generations'] = self.num_generations
+        ofile[block]['solution_symmetry'] = self.symmetry
+        ofile[block]['objectives'] = self.objectives
+        ofile[block]['termination_criteria'] = self.termination_criteria
+        
+
+    ## Algorithm Block ##
+        
+        block = "Algorithm_Inputs"
+        ofile.setdefault(block, {})
+
+        if self.methodology == 'genetic_algorithm':
+            ofile[block]['selection'] = self.selection
+            ofile[block]['reproducer'] = self.reproducer
+            ofile[block]['mutation_type'] = self.mutation_type
+            ofile[block]['mutation_rate'] = self.mutation_rate
+            ofile[block]['crossover'] = self.crossover
+            ofile[block]['elites'] = self.elites
+
+        if self.methodology == "bayesian_optimization":
+            ofile[block]['acquisition_function'] = self.acquisition_function
+            ofile[block]['exploration_exploitation_factor'] = self.exploration_exploitation_factor
+            ofile[block]['kernel_smoothness_factor'] = self.kernel_smoothness
+
+    ## Fuel Assembly Block ##
+        
+        ofile.setdefault("Fuel_Assembly", {})
+        ofile["Fuel_Assembly"]['assembly_options'] = self.fa_options
+
+
+    ## Genome Block ##
+
+        block = "Genome_Inputs"
+        ofile.setdefault(block, {})
+        
+        ofile[block]['parameters'] = self.genome
+        ofile[block]['batches'] = self.batches
+        
+    ## Calculation Block ##
+        
+        if self.code_interface in ["parcs342","parcs343"]:
+
+            block = 'parcs_data'
+            ofile.setdefault(block, {})
+
+            ofile[block]['exec_walltime'] = self.code_walltime
+            ofile[block]['num_rows'] = self.nrow
+            ofile[block]['num_cols'] = self.ncol
+            ofile[block]['number_assemblies'] = self.num_assemblies
+            ofile[block]['core_symmetry'] = self.map_size
+            ofile[block]['xs_library_path'] = self.xs_lib
+            ofile[block]['xs_extension'] = self.xs_extension
+            ofile[block]['power'] = self.power
+            ofile[block]['flow'] = self.flow
+            ofile[block]['inlet_temperature'] = self.inlet_temp
+            ofile[block]['th_fdbk'] = self.th_fdbk
+            ofile[block]['pin_power_recon'] = self.pin_power_recon
+            ofile[block]['num_axial_nodes'] = self.number_axial
+            ofile[block]['axial_nodes'] = self.axial_nodes
+            ofile[block]['boc_core_exposure'] = self.boc_exposure
+            ofile[block]['depletion_steps'] = self.depl_steps
+
+        if self.code_interface == "nuscale_database":
+
+            block = 'nuscale_data'
+            ofile.setdefault(block, {})
+
+        # Open and write designated inputs to a text file
+
+        with open("echo.txt", "w") as file:
+            file.write("Designated MIDAS input values for simulations and optimization: \n\n")
+            write_recursive(ofile, file)
+
