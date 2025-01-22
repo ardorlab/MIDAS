@@ -303,21 +303,21 @@ class Bayesian_Optimization:
         candidate = self.binary_vector_to_categorical(best_binary)
         return candidate
 
-    def reproduction(self, generation):
+    def reproduction(self, pop_list, current_generation):
         """
-        Takes in the current generation and their respective fitness values, and uses Bayesian Optimization to 
+        Takes in the current population and their respective fitness values, and uses Bayesian Optimization to 
         suggest the next points.
 
         Written by Cole Howard. 1/1/2025
 
         Parameters:
-            generation: object
-                The current generation object containing the list of individuals and their fitness values
+            pop_list: object
+                The current population.current list containing the list of individuals and their fitness values
         """
-        pop_list = [soln.chromosome for soln in generation]
+        chromosome_list = [soln.chromosome for soln in pop_list]
         #Invert incoming fitness because BO is a minimization tool and MIDAS prefers a maximum fitness
-        fitness_list = [-1 * soln.fitness_value for soln in generation]
-        self.tell(pop_list, fitness_list) #Fit the new data to the surrogate model
+        fitness_list = [-1 * soln.fitness_value for soln in pop_list]
+        self.tell(chromosome_list, fitness_list) #Fit the new data to the surrogate model
 
         candidates = []
         #Create the batch of candidate points for the next generation

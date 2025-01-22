@@ -85,7 +85,7 @@ def evaluate(solution, input):
             if fueltype[1] == label:
                 tag = fueltype[0]
         if not tag:
-            raise ValueError("FA label not found in tag_list.")
+            raise ValueError(f"FA label '{label}' not found in fuel types ({input.tag_list['fuel']}).")
         soln_core_dict[loc]['Value'] = tag
     #!for loc, label in soln_refl_locations.items(): #!TODO: create a way to specify reflector locs for multiple radial refls.
 
@@ -150,6 +150,7 @@ def evaluate(solution, input):
         ofile.write("      EPS_ERF     0.010\n")
         ofile.write("      EPS_ANM     0.000001\n")
         ofile.write("      NLUPD_SS    5 5 1\n")
+##!        ofile.write("      N_ITERS_SS  4 1000\n") #!TODO: parameterize this input card.
         ofile.write("\n")
         ofile.write("!******************************************************************************\n\n")
     
