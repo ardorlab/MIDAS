@@ -254,6 +254,7 @@ class Constrain_Input():
         """
         Extracts the encoded loading pattern from a chromosome 
         that represents a shuffling scheme.
+        #!TODO: I believe this currently works under EQ cycle assumptions.
         
         Written by Nicholas Rollins. 10/14/2024
         """
@@ -261,12 +262,16 @@ class Constrain_Input():
         for i in range(len(chromosome)):
             gene = chromosome[i][1]
             feed_fuel = False
+            antihang = 0
             while not feed_fuel:
                 if isinstance(gene, int): #FA is an index, implying reloaded fuel.
                     gene = chromosome[gene][1]
+                    antihang += 1
                 else:
                     decoded_LP[i] = gene
                     feed_fuel = True
+                if antihang > 100:
+                    raise ValueError("SS_decoder has discovered a circular dependency in a malformed shuffling scheme. This is highly irregular.")
         return decoded_LP
 
     def EQ_reload_fuel(genome, LWR_core_parameters, chromosome):
@@ -315,7 +320,7 @@ class Constrain_Input():
             if not chromosome[i][1]: #location is missing a FA
             ## choose valid loading option before continuing.
                 if not gene_options_dict[batch_num]:
-                    raise ValueError(f"Failed to reload fuel; no source locations available for unassigned location of batch {batch_num}.\n{chromosome}")
+                    raise ValueError(f"Failed to reload fuel; no source locations available for unassigned location of batch {batch_num}.\n{chromosome}") #!TODO: remove chromosome printout?
                 valid = False
                 attempt = 0
                 while not valid:
@@ -328,7 +333,7 @@ class Constrain_Input():
                     elif multdict[i] <= multdict[gene]:
                         valid = True
                     if attempt > 1000:
-                        raise ValueError("Failed to reload fuel in shuffling scheme.")
+                        raise ValueError(f"Failed to reload fuel in shuffling scheme after 1,000 attempts for unassigned location of batch {batch_num}.\n{chromosome}") #!TODO: remove chromosome printout?
                     
                 chromosome[i] = (chromosome[i][0],gene)
                 if batch_num != 0:
