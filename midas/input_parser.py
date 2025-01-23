@@ -622,7 +622,7 @@ class Input_Parser():
         crossover_default = {'method':'one_point','crossover_rate': 0.5, 'num_swaps': 1}
         self.crossover = yaml_line_reader(info, 'crossover', crossover_default)
         self.elites = yaml_line_reader(info, 'elites', 0)
-        acquisition_function = yaml_line_reader(info, 'acquisition_function', 'LCB')
+        self.acquisition_function = yaml_line_reader(info, 'acquisition_function', 'LCB')
         #LCB and UCB acquisition functions will benefit more from an EE factor, and other acq functions may be better with a value of zero here
         if self.acquisition_function in ['LCB','UCB']:
             self.exploration_exploitation_factor = yaml_line_reader(info, 'exploration_exploitation_factor', 1.96)
