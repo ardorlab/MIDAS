@@ -142,16 +142,19 @@ def evaluate(solution, input):
     with open(filename,"a") as ofile:
         ofile.write("PARAM\n")
         ofile.write("      LSOLVER     1 1 20\n")
-        ofile.write("      NODAL_KERN  NEMMG\n")
+        if input.th_fdbk:
+            ofile.write("      NODAL_KERN  HYBRID\n")
+        else:
+            ofile.write("      NODAL_KERN  NEMMG\n")
         ofile.write("      CMFD        2\n")
         ofile.write("      DECUSP      2\n")
         ofile.write("      INIT_GUESS  0\n")
-        ofile.write("      CONV_SS     1.e-6 5.e-5 1.e-3 0.001\n")
-        ofile.write("      EPS_ERF     0.010\n")
+        ofile.write("      CONV_SS     1.e-6 5.e-5 1.e-3\n")
+        #!ofile.write("      EPS_ERF     0.010\n")
         ofile.write("      EPS_ANM     0.000001\n")
-        ofile.write("      NLUPD_SS    5 5 1\n")
-        if input.th_fdbk:
-            ofile.write("      N_ITERS_SS  4 1000\n")
+        ofile.write("      NLUPD_SS    3 5 1\n")
+        #!if input.th_fdbk:
+        #!    ofile.write("      N_ITERS_SS  4 1000\n")
         ofile.write("\n")
         ofile.write("!******************************************************************************\n\n")
     
@@ -252,9 +255,9 @@ def evaluate(solution, input):
                                                              np.round(input.flow/input.num_assemblies,4)))
             ofile.write("      HGAP     11356.0\n") #!TODO:check this value, should it be parameterized?
             ofile.write("      N_RING   6\n")
-            ofile.write("      THMESH_X       9*1\n")
-            ofile.write("      THMESH_Y       9*1\n")
-            ofile.write("      THMESH_Z       1 2 3 4 5 6 7 8 9 10 11 12\n")
+            ofile.write(f"      THMESH_X       {dim_size[0]}*1\n")
+            ofile.write(f"      THMESH_Y       {dim_size[1]}*1\n")
+            ofile.write(f"      THMESH_Z       {str([x+1 for x in range(input.number_axial)]).strip('[]').replace(',','')}\n")
         else:
             ofile.write("      UNIF_TH   0.740    626.85     {}\n".format(np.round(input.inlet_temp-273.15,2))) #!TODO: how to deal with av. fuel temp?
         ofile.write("\n")
