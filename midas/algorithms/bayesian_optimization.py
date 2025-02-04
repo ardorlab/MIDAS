@@ -325,14 +325,14 @@ class Bayesian_Optimization:
 
     def reproduction(self, generation, gen):
         """
-        Takes in the current generation and their respective fitness values, and uses Bayesian Optimization to 
+        Takes in the current population and their respective fitness values, and uses Bayesian Optimization to 
         suggest the next points.
 
         Written by Cole Howard. 1/1/2025
 
         Parameters:
-            generation: object
-                The current generation object containing the list of individuals and their fitness values
+            pop_list: object
+                The current population.current list containing the list of individuals and their fitness values
         """
         self.iterations = gen
         pop_list = [soln.chromosome for soln in generation]

@@ -640,10 +640,11 @@ class Input_Parser():
                     if not 'enrichment' in self.fa_options['fuel'][key] and \
                        not 'hm_loading' in self.fa_options['fuel'][key]:
                         raise ValueError(f"Entry for 'enrichment' or 'HM_loading' missing for fuel type '{key}'. This is required by the '{param}' objective.")
-                for key in self.fa_options['blankets'].keys():
-                    if not 'enrichment' in self.fa_options['blankets'][key] and \
-                       not 'hm_loading' in self.fa_options['blankets'][key]:
-                        raise ValueError(f"Entry for 'enrichment' or 'HM_loading' missing for blanket type '{key}'. This is required by the '{param}' objective.")
+                if 'blankets' in self.fa_options:
+                    for key in self.fa_options['blankets'].keys():
+                        if not 'enrichment' in self.fa_options['blankets'][key] and \
+                           not 'hm_loading' in self.fa_options['blankets'][key]:
+                            raise ValueError(f"Entry for 'enrichment' or 'HM_loading' missing for blanket type '{key}'. This is required by the '{param}' objective.")
         
     ## Genome Block ##
         try:
@@ -692,6 +693,7 @@ class Input_Parser():
         self.axial_nodes = yaml_line_reader(info, 'axial_nodes', [16.12, "15*25.739", 16.12])
         self.boc_exposure = yaml_line_reader(info, 'boc_core_exposure', 0.0)
         self.depl_steps = yaml_line_reader(info, 'depletion_steps', [1, 1, 30, 30, 30, 30, 30, 30])
+        
         #NuScale database verification block
         if self.code_interface == 'nuscale_database':
             #Force octant symmetry for NuScale database
@@ -702,11 +704,12 @@ class Input_Parser():
             #Verify assembly map length for each parameter in input file
             for parameter in self.genome:
                 if len(self.genome[parameter]['map']) != 8:
-                    raise ValueError(f'Parameter {parameter} has a map length of {len(parameter['map'])}, but needs length of 8')
+                    map_length = len(parameter['map'])
+                    raise ValueError(f'Parameter {parameter} has a map length of {map_length}, but needs length of 8.')
             
             #Verify that the type parameter for each assembly is between 2-7, as these are the only assemblies available
             for assembly in self.fa_options['fuel']:
                 if int(self.fa_options['fuel'][assembly]['type']) not in [2, 3, 4, 5, 6, 7]:
-                    raise ValueError(f'Assembly {assembly} parameter "type" is incorrect. For NuScale database, types 2-7 exist')
+                    raise ValueError(f'Assembly {assembly} parameter "type" is incorrect. For NuScale database, types 2-7 exist.')
                 
         return

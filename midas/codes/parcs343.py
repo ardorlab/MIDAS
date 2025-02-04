@@ -85,7 +85,7 @@ def evaluate(solution, input):
             if fueltype[1] == label:
                 tag = fueltype[0]
         if not tag:
-            raise ValueError("FA label not found in tag_list.")
+            raise ValueError(f"FA label '{label}' not found in fuel types ({input.tag_list['fuel']}).")
         soln_core_dict[loc]['Value'] = tag
     #!for loc, label in soln_refl_locations.items(): #!TODO: create a way to specify reflector locs for multiple radial refls.
 
@@ -142,14 +142,19 @@ def evaluate(solution, input):
     with open(filename,"a") as ofile:
         ofile.write("PARAM\n")
         ofile.write("      LSOLVER     1 1 20\n")
-        ofile.write("      NODAL_KERN  NEMMG\n")
+        if input.th_fdbk:
+            ofile.write("      NODAL_KERN  HYBRID\n")
+        else:
+            ofile.write("      NODAL_KERN  NEMMG\n")
         ofile.write("      CMFD        2\n")
         ofile.write("      DECUSP      2\n")
         ofile.write("      INIT_GUESS  0\n")
-        ofile.write("      CONV_SS     1.e-6 5.e-5 1.e-3 0.001\n")
-        ofile.write("      EPS_ERF     0.010\n")
+        ofile.write("      CONV_SS     1.e-6 5.e-5 1.e-3\n")
+        #!ofile.write("      EPS_ERF     0.010\n")
         ofile.write("      EPS_ANM     0.000001\n")
-        ofile.write("      NLUPD_SS    5 5 1\n")
+        ofile.write("      NLUPD_SS    3 5 1\n")
+        #!if input.th_fdbk:
+        #!    ofile.write("      N_ITERS_SS  4 1000\n")
         ofile.write("\n")
         ofile.write("!******************************************************************************\n\n")
     
@@ -250,9 +255,9 @@ def evaluate(solution, input):
                                                              np.round(input.flow/input.num_assemblies,4)))
             ofile.write("      HGAP     11356.0\n") #!TODO:check this value, should it be parameterized?
             ofile.write("      N_RING   6\n")
-            ofile.write("      THMESH_X       9*1\n")
-            ofile.write("      THMESH_Y       9*1\n")
-            ofile.write("      THMESH_Z       1 2 3 4 5 6 7 8 9 10 11 12\n")
+            ofile.write(f"      THMESH_X       {dim_size[0]}*1\n")
+            ofile.write(f"      THMESH_Y       {dim_size[1]}*1\n")
+            ofile.write(f"      THMESH_Z       {str([x+1 for x in range(input.number_axial)]).strip('[]').replace(',','')}\n")
         else:
             ofile.write("      UNIF_TH   0.740    626.85     {}\n".format(np.round(input.inlet_temp-273.15,2))) #!TODO: how to deal with av. fuel temp?
         ofile.write("\n")
@@ -348,7 +353,7 @@ def evaluate(solution, input):
         
         else: #job failed
             if input.calculation_type in ['eq_cycle']:
-                solution.parameters = eq_cycle_convergenc(input, solution, filename, parcscmd, walltime) #iteratively try to find an intial guess that will converge
+                solution.parameters = eq_cycle_convergence(input, solution, filename, parcscmd, input.code_walltime) #iteratively try to find an intial guess that will converge
             else: #standard execution pathway
                 logger.warning(f"Job {solution.name} has failed!")
                 solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
@@ -518,7 +523,7 @@ def prepare_shuffling_map(input, chromosome):
     
     return soln_full_core_lattice
 
-def eq_cycle_convergenc(input, solution, filename, parcscmd, walltime):
+def eq_cycle_convergence(input, solution, filename, parcscmd, walltime):
     boc_exp = input.boc_exposure
     conv_list = [[],[]] #track convergence
     skip_convwrite = False
@@ -527,6 +532,8 @@ def eq_cycle_convergenc(input, solution, filename, parcscmd, walltime):
     for file in os.listdir('./'):
         if '.parcs_cyc-' in file:
             depfiles_list.append(file)
+    if not depfiles_list:
+        raise ValueError("PARCS failed without generating any depletion results.")
     if os.path.getsize(depfiles_list[-1]) < 20000: #if file is too small the cycle didn't initialize
         lastcycle_dep = depfiles_list[-2]
     else:
