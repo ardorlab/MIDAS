@@ -4,7 +4,9 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import Matern
 from scipy.optimize import minimize
+import logging
 
+logger = logging.getLogger("MIDAS_logger")
 class Bayesian_Optimization:
     """
     Class for performing Bayesian Optimization using a Gaussian Process surrogate
@@ -38,7 +40,7 @@ class Bayesian_Optimization:
         self.noise = noise
 
         #Define kernel function being used by GP as Matern
-        kernel = Matern(
+        self.kernel = Matern(
             length_scale=1.0,
             length_scale_bounds=(1e-4, 1e4),
             nu=self.input.kernel_smoothness
@@ -46,11 +48,15 @@ class Bayesian_Optimization:
 
         #Define GP being used
         self.gp = GaussianProcessRegressor(
-            kernel=kernel,
+            kernel=self.kernel,
             alpha=self.noise,
             n_restarts_optimizer=5,
             random_state=self.random_state
         )
+
+        self.iterations = 0
+        self.hyperparams = []
+        self.hyperparam_convergence = False
 
     def parse_dimensions(self):
         """
@@ -163,6 +169,20 @@ class Bayesian_Optimization:
             
         #Fit GP model with most recent population/fitness data
         self.gp.fit(scaled_population, scaled_fitness)
+        hyperparameters = self.gp.kernel_.get_params()
+        lengthscale = hyperparameters['length_scale']
+        self.hyperparams.append(lengthscale)
+        if self.iterations>=10 and self.hyperparam_convergence == False:
+            if abs((self.hyperparams[self.iterations-1]-self.hyperparams[self.iterations-9])/self.hyperparams[self.iterations-9]) <= 0.01:
+                self.hyperparam_convergence = True
+                logger.info("Hyperparameters have met convergence criteria; Hyperparameter fitting is now turned off")
+                self.kernel = Matern(length_scale = self.hyperparams[self.iterations-1])
+                self.gp = GaussianProcessRegressor(
+                kernel=self.kernel,
+                alpha=self.noise,
+                optimizer=None,
+                random_state=self.random_state
+        )
 
     def tell(self, pop_list, fitness_list):
         """
@@ -303,7 +323,7 @@ class Bayesian_Optimization:
         candidate = self.binary_vector_to_categorical(best_binary)
         return candidate
 
-    def reproduction(self, generation):
+    def reproduction(self, generation, gen):
         """
         Takes in the current generation and their respective fitness values, and uses Bayesian Optimization to 
         suggest the next points.
@@ -314,10 +334,12 @@ class Bayesian_Optimization:
             generation: object
                 The current generation object containing the list of individuals and their fitness values
         """
+        self.iterations = gen
         pop_list = [soln.chromosome for soln in generation]
         #Invert incoming fitness because BO is a minimization tool and MIDAS prefers a maximum fitness
         fitness_list = [-1 * soln.fitness_value for soln in generation]
-        self.tell(pop_list, fitness_list) #Fit the new data to the surrogate model
+        if gen <= 100:
+            self.tell(pop_list, fitness_list) #Fit the new data to the surrogate model
 
         candidates = []
         #Create the batch of candidate points for the next generation
