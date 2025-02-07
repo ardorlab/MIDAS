@@ -113,7 +113,6 @@ class Bayesian_Optimization:
             num_bits = self.binary_dims[i]
             binary_rep = [int(x) for x in f"{idx:0{num_bits}b}"]
             binary_vector.extend(binary_rep)
-
         return np.array(binary_vector, dtype=float)
 
     def binary_vector_to_categorical(self, binary_vector):
@@ -173,7 +172,7 @@ class Bayesian_Optimization:
         lengthscale = hyperparameters['length_scale']
         self.hyperparams.append(lengthscale)
         if self.iterations>=10 and self.hyperparam_convergence == False:
-            if abs((self.hyperparams[self.iterations-1]-self.hyperparams[self.iterations-9])/self.hyperparams[self.iterations-9]) <= 0.01:
+            if abs((self.hyperparams[self.iterations-1]-self.hyperparams[self.iterations-9])/self.hyperparams[self.iterations-9]) <= self.input.kernel_hyperparam_conv:
                 self.hyperparam_convergence = True
                 logger.info("Hyperparameters have met convergence criteria; Hyperparameter fitting is now turned off")
                 self.kernel = Matern(length_scale = self.hyperparams[self.iterations-1])
@@ -338,7 +337,7 @@ class Bayesian_Optimization:
         pop_list = [soln.chromosome for soln in generation]
         #Invert incoming fitness because BO is a minimization tool and MIDAS prefers a maximum fitness
         fitness_list = [-1 * soln.fitness_value for soln in generation]
-        if gen <= 100:
+        if gen <= self.input.surrogate_fitting_off:
             self.tell(pop_list, fitness_list) #Fit the new data to the surrogate model
 
         candidates = []

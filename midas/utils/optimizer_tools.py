@@ -4,6 +4,9 @@ import random
 import logging
 import numpy as np
 from copy import deepcopy
+import csv
+import matplotlib.pyplot as plt
+import os
 from midas.utils.problem_preparation import LWR_Core_Shapes
 """
 These are generic optimizer classes that are shared by all algorithms. #!TODO: can this be solved with the super().__init__ method?
@@ -398,3 +401,164 @@ class Fitness(object):
                     penalty = (pvalue - ptarget)*pweight if pvalue - ptarget > 0.0 else 0.0
                     fitness -= penalty
         return fitness
+
+class Solution_Reporting():
+    """
+    Class used to find and report best solution, optimization statistics, etc.
+
+    Written by Cole Howard. 2/3/2025
+    """
+    def __init__(self):
+        self.info = {}  # Dictionary to store all row information
+        self.statistics = {} #Dictionary to store problem statistics
+        self.generations = []
+
+    def best_solution_information(self, filename):
+        """
+        Function used to parse output CSV file, store all data in a dictionary, and report best solution
+
+        Written by Cole Howard. 2/3/2025
+        """
+        with open(filename, 'r') as file:
+            reader = csv.reader(file)
+            header = next(reader)  # Read the header row
+            max_value = float('-inf')
+            max_row = None
+
+            for row in reader:
+                try:
+                    # Get the value in the fitness column
+                    third_value = float(row[2])
+                    
+                    # Store the entire row info in self.info grouped by generation
+                    generation = f"Gen_{row[0]}"  # Format generation key
+                    individual = f"Ind_{row[1]}"  # Format individual key
+                    row_data = {}
+                    chromosome_start_index = header.index('Chromosome')
+                    
+                    for i, key_name in enumerate(header[:chromosome_start_index]):
+                        if key_name not in ['Generation', 'Individual']:
+                            try:
+                                row_data[key_name] = float(row[i]) if '.' in row[i] else int(row[i])
+                            except ValueError:
+                                row_data[key_name] = row[i]
+                    
+                    # Store all chromosome values from the start index to the end of the row
+                    row_data['Chromosome'] = row[chromosome_start_index:]
+                    
+                    if generation not in self.info:
+                        self.info[generation] = {}
+                    self.info[generation][individual] = row_data  # Store row under generation -> individual
+
+                    # Check if it's the highest value so far
+                    if third_value > max_value:
+                        max_value = third_value
+                        max_row = row
+                except (ValueError, IndexError):
+                    continue
+
+        if max_row:
+            result = {}
+            chromosome_start_index = header.index('Chromosome')
+
+            for i, key in enumerate(header[:chromosome_start_index]):
+                try:
+                    result[key] = float(max_row[i]) if '.' in max_row[i] else int(max_row[i])
+                except ValueError:
+                    result[key] = max_row[i]
+
+            result['Chromosome'] = max_row[chromosome_start_index:]
+            return result
+        else:
+            return None
+    
+    def optimization_statistics(self):
+        """
+        Function to calculate average fitness, max fitness, and standard deviation of fitness per generation
+        and store within a dictionary.
+
+        Written by Cole Howard. 2/3/2025
+        """
+        for gen_key, individuals in self.info.items():
+            fitness_values = []
+            
+            for individual_data in individuals.values():
+                if 'Fitness Value' in individual_data:
+                    fitness_values.append(individual_data['Fitness Value'])
+            
+            if fitness_values:
+                self.statistics[gen_key] = {
+                    'Average_Fitness': np.mean(fitness_values),
+                    'Max_Fitness': np.max(fitness_values),
+                    'Std_Fitness': np.std(fitness_values)
+                }
+        #Get generations as an array to plot with
+        self.generations = sorted([int(x.split('_')[1]) for x in self.statistics.keys()])
+        return self.statistics
+    
+    def plot_optimization_statistics(self):
+        #Store fitness statistics as arrays to plot with
+        avg_fitness = [self.statistics[f'Gen_{gen}']["Average_Fitness"] for gen in self.generations]
+        max_fitness = [self.statistics[f'Gen_{gen}']["Max_Fitness"] for gen in self.generations]
+        std_fitness = [self.statistics[f'Gen_{gen}']["Std_Fitness"] for gen in self.generations]
+
+        #Plot average fitness per generation
+        plt.figure()
+        plt.plot(self.generations, avg_fitness)
+        plt.xlabel("Generation")
+        plt.ylabel("Average Fitness Value")
+        plt.title("Average Fitness per Generation")
+        plt.grid()
+        #Delete the plot if it already exists
+        if os.path.exists("average_fitness_plot.png"):
+            os.remove("average_fitness_plot.png")
+        plt.savefig("average_fitness_plot.png")
+        plt.close()
+
+        #Plot max fitness per generation
+        plt.figure()
+        plt.plot(self.generations, max_fitness)
+        plt.xlabel("Generation")
+        plt.ylabel("Maximum Fitness Value")
+        plt.title("Maximum Fitness per Generation")
+        plt.grid()
+        #Delete the plot if it already exists
+        if os.path.exists("max_fitness_plot.png"):
+            os.remove("max_fitness_plot.png")
+        plt.savefig("max_fitness_plot.png")
+        plt.close()
+
+        #Plot standard deviation of fitness per generation
+        plt.figure()
+        plt.plot(self.generations, std_fitness)
+        plt.xlabel("Generation")
+        plt.ylabel("Fitness Value Standard Deviation")
+        plt.title("Standard Deviation of the Fitness per Generation")
+        plt.grid()
+        #Delete the plot if it already exists
+        if os.path.exists("std_fitness_plot.png"):
+            os.remove("std_fitness_plot.png")
+        plt.savefig("std_fitness_plot.png")
+        plt.close()
+
+    def plot_optimization_convergence(self):
+        """Plot convergence by tracking the best fitness up to each generation."""
+        best_fitness_values = []
+        best_so_far = float('-inf')
+        
+        for gen in self.generations:
+            if 'Max_Fitness' in self.statistics[f'Gen_{gen}']:
+                best_so_far = max(best_so_far, self.statistics[f'Gen_{gen}']['Max_Fitness'])
+                best_fitness_values.append(best_so_far)
+        
+        plt.figure()
+        plt.plot(self.generations, best_fitness_values)
+        plt.xlabel("Generation")
+        plt.ylabel("Best Fitness")
+        plt.title("Optimization Convergence")
+        plt.grid()
+        #Delete the plot if it already exists
+        if os.path.exists("convergence_plot.png"):
+            os.remove("convergence_plot.png")
+        plt.savefig("convergence_plot.png")  # Save the plot
+        plt.show()
