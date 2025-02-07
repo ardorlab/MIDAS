@@ -722,9 +722,9 @@ class Input_Parser():
         self.th_fdbk = yaml_line_reader(info, 'th_fdbk', True)
         self.pin_power_recon = yaml_line_reader(info, 'pin_power_recon', True)
         self.number_axial = yaml_line_reader(info, 'num_axial_nodes', 19)
-        #self.axial_nodes = yaml_line_reader(info, 'axial_nodes', [16.12, "15*25.739", 16.12])
+        self.axial_nodes = yaml_line_reader(info, 'axial_nodes', [16.12, "15*25.739", 16.12])
         self.boc_exposure = yaml_line_reader(info, 'boc_core_exposure', 0.0)
-        #self.depl_steps = yaml_line_reader(info, 'depletion_steps', [1, 1, 30, 30, 30, 30, 30, 30])
+        self.depl_steps = yaml_line_reader(info, 'depletion_steps', [1, 1, 30, 30, 30, 30, 30, 30])
         
         #NuScale database verification block
         if self.code_interface == 'nuscale_database':

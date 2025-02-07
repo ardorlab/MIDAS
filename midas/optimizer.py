@@ -371,10 +371,6 @@ class Optimizer():
         for key in last_gen_data:
             logger.info(f'{key}: {last_gen_data[key]}')
         
-        #Making sure statistics file doesn't exist
-        if os.path.exists('optimization_statistics.csv'):
-            os.remove('optimization_statistics.csv')
-        
         #Create output statistics file
         with open('optimization_statistics.csv','w') as file:
             file.write('Generation, Average Fitness, Maximum Fitness, Standard Deviation of Fitness\n')
