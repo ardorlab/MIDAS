@@ -137,3 +137,6 @@ ppo*
 a2c*
 error.txt
 output.txt
+*optimizer_results.csv
+*output_files/
+*.out
