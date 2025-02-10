@@ -356,7 +356,35 @@ class Optimizer():
                 break
 
         ## Optimization concluded
-        #!TODO: do some wrap-up after the optimizer. Report best solution, statistics, etc.
+        # Report best solution information in output file
+        optimization_information = optools.Solution_Reporting()
+        best_solution_info = optimization_information.best_solution_information("optimizer_results.csv")
+        logger.info("Best solution found in optimization: \n")
+        for key in best_solution_info:
+            logger.info(f'{key}: {best_solution_info[key]}')
+        
+        statistics = optimization_information.optimization_statistics()
+        last_gen_key = max(statistics.keys(), key=lambda x: int(x.split('_')[1]))  # Extracts last generation key
+        last_gen_data = statistics[last_gen_key]  # Retrieves the statistics for that generation
+        #Print statistics of last generation to output file
+        logger.info("\nStatistics for last generation: \n")
+        for key in last_gen_data:
+            logger.info(f'{key}: {last_gen_data[key]}')
+        
+        #Create output statistics file
+        with open('optimization_statistics.csv','w') as file:
+            file.write('Generation, Average Fitness, Maximum Fitness, Standard Deviation of Fitness\n')
+            for gen in statistics:
+                avg_fit = statistics[gen]['Average_Fitness']
+                max_fit = statistics[gen]['Average_Fitness']
+                std_fit = statistics[gen]['Std_Fitness']
+                file.write(f'{int(gen.split('_')[1])},{avg_fit},{max_fit},{std_fit}\n')
+        #Plot statistics info if user turned on plot
+        if self.input.statistics_plots:
+            optimization_information.plot_optimization_statistics()
+        #Plot convergence if user turned on convergence
+        if self.input.convergence_plot:
+            optimization_information.plot_optimization_convergence()
     
         return
     
