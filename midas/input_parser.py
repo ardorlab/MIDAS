@@ -9,6 +9,9 @@ Created by Nicholas Rollins. 09/11/2024
 """
 
 
+## Initialize logging for the present file
+logger = logging.getLogger("MIDAS_logger")
+
 ## Classes ##
 def yaml_line_reader(data,keyword,default):
     """
@@ -34,8 +37,6 @@ def validate_input(keyword, value):
     
     Written by Nicholas Rollins. 10/03/2024
     """
-    ## Initialize logging for the present file
-    logger = logging.getLogger("MIDAS_logger")
 
 ## General Settings Block ##
     if keyword == 'debug_mode':
@@ -61,8 +62,8 @@ def validate_input(keyword, value):
     
     elif keyword == 'code_type':
         value = str(value).lower().replace(' ','_')
-        if value not in ["parcs342", "parcs343", "nuscale_database"]:
-            raise ValueError("Code types currently supported: PARCS342, PARCS343, NuScale_Database.")
+        if value not in ["parcs342", "parcs343", "nuscale_database", "trace50p5"]:
+            raise ValueError("Code types currently supported: PARCS342, PARCS343, NuScale_Database, TRACE50p5.")
     
     elif keyword == 'calc_type':
         value = str(value).lower().replace(' ','_')
@@ -125,7 +126,10 @@ def validate_input(keyword, value):
                                    'cycle_length',
                                    'assembly_burnup',
                                    'cycle_cost',
-                                   'av_fuelenrichment']:
+                                   'av_fuelenrichment',
+                                   'maxcladtemp',
+                                   'maxfueltemp',
+                                   'maxgapq']:
                     raise ValueError(f"Requested objective/constraint '{key}' not supported.")
                 new_item = {}
                 if isinstance(item, dict):
@@ -482,6 +486,7 @@ def validate_input(keyword, value):
                 raise ValueError(f"Decision variable '{keyword}' must be nested with parameter options and their parameters.")
     
 ## Calculation Block ##
+    ## PARCS DATA ##
     elif keyword == 'exec_walltime':
         value = int(value)
         if value <= 0:
@@ -528,10 +533,11 @@ def validate_input(keyword, value):
         value = int(value)
     
     elif keyword == 'axial_nodes':
-        value = [a.strip() for a in value.strip().replace(', ',',').replace(' ',',').split(',')]
+        if isinstance(value, str):
+            value = [a.strip() for a in value.strip().replace(', ',',').replace(' ',',').split(',')]
         new_value = []
         for node in value:
-            if "*" in node:
+            if "*" in str(node):
                 new_value.append(str(node)) #shorthand for repeated floats (e.g. 15*25.739) are left as strings to be evaluated elsewhere.
             else:
                 new_value.append(float(node))
@@ -544,15 +550,47 @@ def validate_input(keyword, value):
             raise ValueError("'boc_core_exposure' must be a real number.")
     
     elif keyword=='depletion_steps':
-        value = [a.strip() for a in value.strip().replace(', ',',').replace(' ',',').split(',')]
+        if isinstance(value, str):
+            value = [a.strip() for a in value.strip().replace(', ',',').replace(' ',',').split(',')]
         new_value = []
         for step in value:
-            if "*" in step:
+            if "*" in str(step):
                 s_step = step.split('*')
                 new_value.extend(int(s_step[0])*[float(s_step[1])])
             else:
                 new_value.append(float(step))
         return new_value
+    
+    ## TRACE DATA ##
+    elif keyword == 'initialize_code':
+        value = str(value).lower().replace(' ','_')
+        if value not in ["parcs343"]:
+            raise ValueError("Requested code for initializing TRACE calculation not supported. Supported codes include: PARCS343.")
+    
+    elif keyword == 'ss_input_file':
+        value = Path(str(value))
+        if not value.exists():
+            raise ValueError(f"Could not locate TRACE steady-state input file: '{value}'.")
+    
+    elif keyword == 'tr_input_file':
+        if value:
+            value = Path(str(value))
+            if not value.exists():
+                raise ValueError(f"Could not locate TRACE transient input file: '{value}'.")
+        else:
+            value = None
+    
+    elif keyword == 'maptab_file':
+        value = Path(str(value))
+        if not value.exists():
+            raise ValueError(f"Could not locate MAPTAB file for TRACE-PARCS coupling: '{value}'.")
+    
+    elif keyword == 'ss_power_fraction':
+        value = float(value)
+        if value < 0.0:
+            value *= -1
+        if value <= 1.0:
+            value *= 100 #change from fraction to percent
     
     return value
 
@@ -592,7 +630,7 @@ class Input_Parser():
         self.set_seed = yaml_line_reader(info, 'set_seed', None)
         self.clear_results = yaml_line_reader(info, 'clear_results', 'all_but_best')
         self.methodology = yaml_line_reader(info, 'optimizer', 'genetic_algorithm')
-        self.code_interface = yaml_line_reader(info, 'code_type', 'PARCS342')
+        self.code_interface = yaml_line_reader(info, 'code_type', 'PARCS343')
         self.calculation_type = yaml_line_reader(info, 'calc_type', 'single_cycle')
         
     ## Optimization Block ##
@@ -664,25 +702,32 @@ class Input_Parser():
                 raise ValueError(f"Decision variable option '{key}' not found in the list of fuel types under 'assembly_options'.")
         
     ## Calculation Block ##
+        info = None; THinfo = None; infomap = None # initialize info variables
         try:
             if self.code_interface in ["parcs342","parcs343"]:
                 info = self.file_settings['parcs_data']
             elif self.code_interface == "nuscale_database":
                 info = self.file_settings['nucale_data']
+            elif self.code_interface == "trace50p5": #multiphysics calcs must first be initialized in neutronics code.
+                try:
+                    info = self.file_settings['parcs_data']
+                except KeyError:
+                    pass
+                THinfo = self.file_settings['trace_data']
+            try:
+                infomap = info['map']
+            except KeyError:
+                pass
         except KeyError:
-            info = None
+            pass
         
-        try:
-            infomap = info['map']
-        except:
-            infomap = None
-        
+        # PARCS input block
         self.code_walltime = yaml_line_reader(info, 'exec_walltime', 600)
         self.nrow = yaml_line_reader(infomap, 'num_rows', 17)
         self.ncol = yaml_line_reader(infomap, 'num_cols', 17)
         self.num_assemblies = yaml_line_reader(infomap, 'number_assemblies', 193)
         self.map_size = yaml_line_reader(infomap, 'core_symmetry', 'full')
-        self.xs_lib = yaml_line_reader(info, 'xs_library_path', '../../') #as a relative path, this assumes the needed cross sections are in the base directory for the job.
+        self.xs_lib = yaml_line_reader(info, 'xs_library_path', '../../') #!TODO: interpret this path relative to the MIDAS job base dir, not opt indv base dir.
         self.xs_extension = yaml_line_reader(info, 'xs_extension', '')
         self.power = yaml_line_reader(info, 'power', 3800.0)
         self.flow = yaml_line_reader(info, 'flow', 18231.89)
@@ -693,6 +738,13 @@ class Input_Parser():
         self.axial_nodes = yaml_line_reader(info, 'axial_nodes', [16.12, "15*25.739", 16.12])
         self.boc_exposure = yaml_line_reader(info, 'boc_core_exposure', 0.0)
         self.depl_steps = yaml_line_reader(info, 'depletion_steps', [1, 1, 30, 30, 30, 30, 30, 30])
+        
+        # TRACE input block #!TODO: these lines are all just placeholders and need to be completed.
+        self.init_code = yaml_line_reader(THinfo, 'initialize_code', 'PARCS343')
+        self.inp_template_ss = yaml_line_reader(THinfo, 'ss_input_file', './trace_ss.inp')
+        self.inp_maptabfile = yaml_line_reader(THinfo, 'maptab_file', './TRACE-PARCS.map')
+        self.ss_powerfraction = yaml_line_reader(THinfo, 'ss_power_fraction', 100)
+        self.inp_template_tr = yaml_line_reader(THinfo, 'tr_input_file', None)
         
         #NuScale database verification block
         if self.code_interface == 'nuscale_database':
