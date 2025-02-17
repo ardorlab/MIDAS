@@ -9,14 +9,15 @@ from itertools import repeat
 import csv
 import pickle
 
-from midas.algorithms import genetic_algorithm as GA
-from midas.algorithms import bayesian_optimization as BO
 from midas.utils import optimizer_tools as optools
-from midas.codes import parcs342, parcs343
 from midas.utils import LWR_fuelcyclecost
 from midas.utils import LWR_averageenrichment
-from midas.codes import nuscale_lut
 from midas.utils import termination_criteria as TC
+from midas.algorithms import genetic_algorithm as GA
+from midas.algorithms import bayesian_optimization as BO
+from midas.codes import parcs342, parcs343
+from midas.codes import nuscale_lut
+from midas.codes import trace50p5
 
 
 ## Classes ##
@@ -47,13 +48,16 @@ class Optimizer():
         self.population = optools.Population(self.input.population_size, num_gene_combos)
         self.generation = optools.Generation(self.input.num_generations, num_gene_combos)
         self.fitness    = optools.Fitness()
-        self.eval_func  = None
         if self.input.code_interface == "parcs342":
             self.eval_func = parcs342.evaluate #assign, don't execute.
         elif self.input.code_interface == "parcs343":
             self.eval_func = parcs343.evaluate
         elif self.input.code_interface == "nuscale_database":
             self.eval_func = nuscale_lut.evaluate
+        elif self.input.code_interface == "trace50p5":
+            self.eval_func = trace50p5.evaluate
+        else:
+            raise ValueError(f"Could not identify eval_func for code type '{self.input.code_interface}'. This is highly irregular.")
         
         if methodology == 'genetic_algorithm':
             self.algorithm = GA.Genetic_Algorithm(self.input)

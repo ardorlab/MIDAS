@@ -18,7 +18,7 @@ logger = logging.getLogger("MIDAS_logger")
 ## Functions ##
 def evaluate(solution, input):
     """
-    #!TODO: write docstring.
+    Interface used to run PARCSv343 calculations.
     
     Updated by Nicholas Rollins. 10/03/2024
     """
@@ -142,7 +142,7 @@ def evaluate(solution, input):
     with open(filename,"a") as ofile:
         ofile.write("PARAM\n")
         ofile.write("      LSOLVER     1 1 20\n")
-        if input.th_fdbk:
+        if input.th_fdbk: #!TODO: temporary solution. This should be replaced with an actual parameter for the kernal.
             ofile.write("      NODAL_KERN  HYBRID\n")
         else:
             ofile.write("      NODAL_KERN  NEMMG\n")
@@ -348,7 +348,7 @@ def evaluate(solution, input):
         output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=input.code_walltime) #wait until calculation finishes
     ## Get Results
         if 'Finished' in str(output): #job completed
-            logger.debug(f"Job {solution.name} completed successfully.")
+            logger.debug(f"Job {solution.name} completed successfully in PARCSv343.")
             solution.parameters = get_results(solution.parameters, solution.name)
         
         else: #job failed
