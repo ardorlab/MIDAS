@@ -1,11 +1,12 @@
 ## Import Block ##
-import os, sys #!sys for debugging
+import os
 import gc
 import logging
 import shutil
 import numpy as np
 from copy import deepcopy
 from pathlib import Path
+from time import sleep
 import subprocess
 from subprocess import STDOUT
 from midas.utils.optimizer_tools import Constrain_Input
@@ -267,6 +268,9 @@ def evaluate(solution, input): #!TODO: this doesn't include the initial PARCS ca
             if not input.inp_template_tr: #steady-state calc ONLY.
                 logger.debug(f"Job {solution.name} completed successfully in TRACEv50p5.")
                 solution.parameters = get_results(solution.parameters, solution.name)
+                logger.debug(f"Returning to original working directory: {cwd}")
+                os.chdir(cwd)
+                gc.collect()
                 return solution
             else:
                 ss_completed = True #continue on to transient calc.
@@ -274,16 +278,25 @@ def evaluate(solution, input): #!TODO: this doesn't include the initial PARCS ca
             ss_completed = False
             logger.warning(f"Job {solution.name} has failed!")
             solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+            logger.debug(f"Returning to original working directory: {cwd}")
+            os.chdir(cwd)
+            gc.collect()
             return solution
     except subprocess.TimeoutExpired: #job timed out
         ss_completed = False
         logger.error(f"Job {solution.name} has timed out!")
         solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+        logger.debug(f"Returning to original working directory: {cwd}")
+        os.chdir(cwd)
+        gc.collect()
         return solution
     except subprocess.CalledProcessError as e: #TRACE returned an abort signal
         ss_completed = False
         logger.error(f"Job {solution.name} has failed with the following exception: {e}")
         solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+        logger.debug(f"Returning to original working directory: {cwd}")
+        os.chdir(cwd)
+        gc.collect()
         return solution
     
     if ss_completed:
@@ -631,54 +644,11 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
     """
     ## Prepare container for results
     results_dict = {}
-    for res in ["cycle_length", "pinpowerpeaking", "fdeltah", "max_boron", "maxcladtemp", "maxfueltemp", "maxgapq"]:
+    for res in ["maxcladtemp", "maxfueltemp", "maxgapq"]:
         results_dict[res] = {}
         results_dict[res]['value'] = 0.0
         
     if not job_failed:
-    ## Read initial state PARCS file for parsing
-        with open(filename + ".parcs_dpl", "r") as ofile:
-            filestr = ofile.read()
-        
-        ## Split file by section
-        res_str = filestr.split('===============================================================================')
-        res_str = res_str[-1].split('_______________________________________________________________________________')
-        res_str = res_str[0].split('\n')
-        
-        ## Parse raw values by timestep
-        efpd_list = []; boron_list = []; keff_list = []; fq_list = []; fdh_list = []
-        for i in range(2, len(res_str)-1):
-            res_val=res_str[i].split()
-            
-            efpd_list.append(float(res_val[9]))
-            boron_list.append(float(res_val[14]))
-            keff_list.append(float(res_val[2]))
-            fq_list.append(float(res_val[7]))
-            fdh_list.append(float(res_val[6]))
-        
-        ## Unload file contents to clean up memory
-        del filestr, res_str, res_val
-        
-        ## Save results to dict
-        results_dict["cycle_length"]["value"] = calc_cycle_length(efpd_list,boron_list,keff_list)
-        results_dict["pinpowerpeaking"]["value"] = max(fq_list)
-        results_dict["fdeltah"]["value"] = max(fdh_list)
-        results_dict["max_boron"]["value"] = max(boron_list)
-        
-        ## Correct Boron value if non-critical
-        sorted_boron = sorted(boron_list,reverse=True)
-        if sorted_boron[0] == sorted_boron[1]: #multiple values exceed maximum value in XS library, which is not reported by PARCS.
-            new_max_boron = sorted_boron[0] #initialize variable
-            for i in range(len(boron_list)): #!TODO: I think this serves to line up boron_list with keff_list. Could be replaced by index()
-                if boron_list[i]== sorted_boron[0]:
-                    boron_worth = 10.0 #pcm/ppm; assumed value.
-                    excess_rho = (keff_list[i] - 1.0)*10**5 #pcm; excess reactivity
-                    excess_boron = excess_rho/boron_worth #ppm
-                    max_boron_corrected = sorted_boron[0] + excess_boron
-                    if max_boron_corrected > new_max_boron:
-                        new_max_boron = max_boron_corrected
-            results_dict["max_boron"]["value"] = new_max_boron
-        
     ## Read TRACE transient file for parsing
         cold_temp = 562.95 #K; CZP temperature (such as in the radial reflectors) #!TODO: this should be parameterized.
         split_center_row = True #!TODO: this should be parameterized.
@@ -823,10 +793,6 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
     
     
     else: #job has failed; fill parameters with absurdly negative values.
-        results_dict["cycle_length"]["value"] = 0.0
-        results_dict["pinpowerpeaking"]["value"] = 10.0 #F_q
-        results_dict["fdeltah"]["value"] = 10.0
-        results_dict["max_boron"]["value"] = 10000
         results_dict["maxcladtemp"]["value"] = 2000 #K
         results_dict["maxfueltemp"]["value"] = 2000 #K
         results_dict["maxgapq"]["value"] = 1E6 #W/m^2
@@ -835,47 +801,8 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
     for param in parameters.keys():
         if param in results_dict:
             parameters[param]['value'] = results_dict[param]["value"]
-        else:
-            if param not in ['cost_fuelcycle','av_fuelenrichment']: #check whitelist
-                logger.warning(f"Parameter '{param}' not supported in TRACE50p5 results parsing.")
+        #!else: #!TODO: is this practical? It would need to have all the PARCS parameters whitelisted as well.
+        #!    if param not in ['cost_fuelcycle','av_fuelenrichment']: #check whitelist
+        #!        logger.warning(f"Parameter '{param}' not supported in TRACE50p5 results parsing.")
     
     return parameters
-
-def calc_cycle_length(efpd,boron,keff):
-    if boron[-1]==0.1: #boron went to zero before end of cycle.
-        eoc1_ind = 0
-        eco2_ind = len(efpd)-1
-        for i in range(len(efpd)):
-            if boron[i] > 0.1 and boron[i+1] == 0.1:
-                eoc1_ind = i
-                eco2_ind = i+1
-                break
-        if eoc1_ind != 0:
-            dbor = abs(boron[eoc1_ind]-boron[eoc1_ind-1])
-            defpd = abs(efpd[eoc1_ind]-efpd[eoc1_ind-1])
-        else:
-            dbor = abs(boron[eco2_ind]-boron[eoc1_ind])
-            defpd = abs(efpd[eco2_ind]-efpd[eoc1_ind])
-        try:
-            def_dbor = defpd/dbor
-        except ZeroDivisionError:
-            def_dbor = 0.0
-        eoc = efpd[eoc1_ind] + def_dbor*(boron[eoc1_ind]-boron[eco2_ind]) #linear extrapolation to efpd at boron=0.1
-    elif boron[-1]==boron[0]: #true boron exceeds initial guess
-        drho_dcb=10
-        drho1 = (keff[-2]-1.0)*10**5
-        dcb1 = drho1/drho_dcb
-        cb1= boron[-2] + dcb1
-        drho2 = (keff[-1]-1.0)*10**5
-        dcb2 = drho2/drho_dcb
-        cb2= boron[-1] + dcb2
-        dbor = abs(cb1-cb2)
-        defpd = abs(efpd[-2]-efpd[-1])
-        def_dbor = defpd/dbor
-        eoc = efpd[-1] + def_dbor*(cb2-0.1)
-    else: #EOC boron is greater than 0.1
-        dbor = abs(boron[-2]-boron[-1])
-        defpd = abs(efpd[-2]-efpd[-1])
-        def_dbor = defpd/dbor #slope
-        eoc = efpd[-1] + def_dbor*(boron[-1]-0.1) #linear extrapolation
-    return eoc

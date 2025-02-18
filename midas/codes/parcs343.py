@@ -435,9 +435,9 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
     for param in parameters.keys():
         if param in results_dict:
             parameters[param]['value'] = results_dict[param]["value"]
-        else:
-            if param not in ['cost_fuelcycle','av_fuelenrichment']: #check whitelist
-                logger.warning(f"Parameter '{param}' not supported in PARCS343 results parsing.")
+        #!else: #!TODO: is this practical? It would need to have all the TRACE parameters whitelisted as well.
+        #!    if param not in ['cost_fuelcycle','av_fuelenrichment']: #check whitelist
+        #!        logger.warning(f"Parameter '{param}' not supported in PARCS343 results parsing.")
     
     return parameters
 
@@ -625,7 +625,7 @@ def eq_cycle_convergence(input, solution, filename, parcscmd, walltime):
         #try again with new starting point
         output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=walltime) #wait until calculation finishes
     if 'Finished' in str(output): #job completed
-        logger.debug(f"Job {solution.name} completed successfully.")
+        logger.debug(f"Job {solution.name} completed successfully in PARCSv343.")
         solution.parameters = get_results(solution.parameters, solution.name)
     else:
         logger.warning(f"Job {solution.name} has failed!")
