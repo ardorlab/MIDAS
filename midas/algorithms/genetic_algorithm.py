@@ -519,7 +519,7 @@ class GA_selection():
             # the probability of selecting an individual is weighted by its fitness
             for solution in unused_solutions:
                 selection_probability['low_bound'].append(probability_sum)
-                probability_sum += solution.fitness
+                probability_sum += solution.fitness_value
                 selection_probability['up_bound'].append(probability_sum)
 
             value = random.random()
