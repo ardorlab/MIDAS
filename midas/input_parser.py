@@ -510,6 +510,13 @@ def validate_input(keyword, value):
                 raise ValueError(f"Decision variable '{keyword}' must be nested with parameter options and their parameters.")
     
 ## Calculation Block ##
+    elif keyword == 'core_type':
+        value = str(value).upper()
+        if value not in ["PWR", "BWR"]:
+            raise ValueError(f"Requested core type '{value}' not supported.")
+        if value == "bwr":
+            logger.warning("functionality for BWR optimization is still under development")
+
     elif keyword == 'exec_walltime':
         value = int(value)
         if value <= 0:
