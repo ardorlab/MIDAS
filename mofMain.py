@@ -16,7 +16,7 @@ from midas.algorithms import random_solutions as RS
 from midas.applications.ncsu_lattice import Simulate_Lattice
 from midas.applications import ncsu_core
 from midas.utils import fitness
-from midas.applications import parcs_332
+from midas.applications import parcs_332, parcs_343
 
 
 class Optimization_Factory(object):
@@ -185,6 +185,8 @@ class Optimization_Factory(object):
             solution_type = parcs_332.MCycle_Grouped_Loading_Pattern_Solution
         elif data_type_string.lower() == "mcycle_inventory_loading_pattern_parcs332":
             solution_type = parcs_332.MCycle_Inventory_Loading_Pattern_Solution
+        elif data_type_string.lower() == "mcycle_inventory_loading_pattern_parcs343":
+            solution_type = parcs_343.MCycle_Inventory_Loading_Pattern_Solution
         elif data_type_string.lower() == "loading_patternsimple_parcs332":
             solution_type = parcs_332.Loading_PatternSimple_Solution
         elif data_type_string.lower() == "fixed_loading_pattern":
