@@ -716,6 +716,7 @@ class Input_Parser():
         except:
             infomap = None
         
+        self.core_type = yaml_line_reader(info, 'core_type', "PWR")
         self.code_walltime = yaml_line_reader(info, 'exec_walltime', 600)
         self.nrow = yaml_line_reader(infomap, 'num_rows', 17)
         self.ncol = yaml_line_reader(infomap, 'num_cols', 17)
