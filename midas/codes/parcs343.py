@@ -120,7 +120,8 @@ def evaluate(solution, input):
             ofile.write("      TH_FDBK    F\n")
         ofile.write("      CORE_POWER 100.0\n")
         ofile.write("      CORE_TYPE  PWR\n")
-        ofile.write("      PPM        1000 1.0 1800.0 10.0\n") #!TODO: this should be a parameterized boron guess value.
+        if input.core_type == "PWR":
+            ofile.write("      PPM        1000 1.0 1800.0 10.0\n") #!TODO: this should be a parameterized boron guess value.
         ofile.write("      DEPLETION  T  1.0E-5 T\n")
         if input.calculation_type in ['eq_cycle']:
             ofile.write("      MULT_CYC   T  F\n") #v3.4.2 specific line to enable the MCYCLE block
