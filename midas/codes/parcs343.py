@@ -119,16 +119,20 @@ def evaluate(solution, input):
         else:
             ofile.write("      TH_FDBK    F\n")
         ofile.write("      CORE_POWER 100.0\n")
-        ofile.write("      CORE_TYPE  PWR\n")
+        ofile.write(f"      CORE_TYPE  {input.core_type}\n")
         if input.core_type == "PWR":
             ofile.write("      PPM        1000 1.0 1800.0 10.0\n") #!TODO: this should be a parameterized boron guess value.
         ofile.write("      DEPLETION  T  1.0E-5 T\n")
         if input.calculation_type in ['eq_cycle']:
             ofile.write("      MULT_CYC   T  F\n") #v3.4.2 specific line to enable the MCYCLE block
         ofile.write("      TREE_XS    T  {}  T  T  F  F  T  F  F  F  T  F  T  T  T  F  F \n".format(int(len(list_unique_xs))))
-        ofile.write("      BANK_POS   100 100 100 100 100 100\n")
+        if input.core_type == "PWR":
+            ofile.write("      BANK_POS   100 100 100 100 100 100\n")
         ofile.write("      XE_SM      1 1 1 1\n")
-        ofile.write("      SEARCH     PPM\n")
+        if input.core_type == "PWR":
+            ofile.write("      SEARCH     PPM\n")
+        elif input.core_type == "BWR":
+            ofile.write("      SEARCH     KEFF 0.997\n")
         ofile.write("      XS_EXTRAP  1.0 0.3\n")
         if input.pin_power_recon:
             ofile.write("      PIN_POWER  T\n")
