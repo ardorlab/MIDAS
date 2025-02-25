@@ -141,9 +141,9 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             for j in range(self.ncol):
                 core_id.append((i-8,j-8))
         core_id=np.array(core_id).reshape((self.nrow,self.ncol,2))
-        if self.symmetry == 'quarter':
+        if self.symmetry[0] == 'quarter':
             self.symmetry_axes = ((8,8),(8,16),(16,8))
-            core, fuel = self.quarter_core(core_map,core_id)
+            core, fuel = self.quarter_core(core_map,core_id,sym_type=self.symmetry[1])
             self.core_dict['core']= {
                 'C1': copy.deepcopy(core),
                 'C2':copy.deepcopy(core),
@@ -154,7 +154,7 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                 'C2':copy.deepcopy(fuel),
                 'C3':copy.deepcopy(fuel)
             }
-        elif self.symmetry == 'octant':
+        elif self.symmetry[0] == 'octant':
             self.symmetry_axes = ((8,8),(16,16),(16,8))
             core, fuel = self.octant_core(core_map,core_id)
             self.core_dict['core']= {
@@ -169,7 +169,7 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             }
         else:
             raise ValueError(
-                f"The selected symmetry ({self.symmetry}) is not valid."
+                f"The selected symmetry ({self.symmetry[0]}) is not valid."
             )
         return(core_map, core_id)
 
@@ -199,7 +199,7 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                full_core['C3'][skey]=value['Value'] 
         return(full_core)
 
-    def quarter_core(self,core_map,core_id):
+    def quarter_core(self,core_map,core_id, sym_type='mirror'):
         """
         Generates the quarter core symmetry map.
 
@@ -223,31 +223,49 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             col_iter = np.arange(sym_center[1],sym_horizontal[1]-1,-1)
 
         core_dict={}
-        for irow in row_iter:
+        
+        # Center assembly
+        dict_value={'Symmetric_Assemblies':[],
+                            'Value': None}
+        irow = row_iter[0]
+        icol = col_iter[0]
+        core_dict[core_map[irow,icol]] = dict_value
+        
+        for irow in row_iter[1:]:
             for icol in col_iter:
                 dict_value={'Symmetric_Assemblies':[],
                             'Value': None}
-                if (irow,icol) == sym_center:
-                    pass
-                elif irow == sym_horizontal[0] and icol != sym_center[1]:                 
+                if icol == sym_vertical[1]:                 
                     idy = core_id[irow,icol][0]
                     idx = core_id[irow,icol][1]
-                    idxy_1= np.where((core_id[:,:,0] == idy) & (core_id[:,:,1] == -idx))
-                    dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0]]
-                elif icol == sym_vertical[1] and irow != sym_center[0]:
-                    idy = core_id[irow,icol][0]
-                    idx = core_id[irow,icol][1]
-                    idxy_1= np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == idx))
-                    dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0]]
+                    if sym_type == 'mirror':
+                        idxy_1= np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == idx))
+                        idxy_2= np.where((core_id[:,:,0] == idx) & (core_id[:,:,1] == idy))
+                        idxy_3= np.where((core_id[:,:,0] == idx) & (core_id[:,:,1] == -idy))
+                    elif sym_type == 'rotational':
+                        idxy_1= np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == idx))
+                        idxy_2= np.where((core_id[:,:,0] == idx) & (core_id[:,:,1] == idy))
+                        idxy_3= np.where((core_id[:,:,0] == idx) & (core_id[:,:,1] == -idy))
+                    else:
+                        raise ValueError(f"The selected symmetry ({sym_type}) is not valid.")
+                    dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0], core_map[idxy_2][0], core_map[idxy_3][0]]
                 else:
                     idy = core_id[irow,icol][0]
                     idx = core_id[irow,icol][1]
-                    idxy_1= np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == idx))
-                    idxy_2= np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == -idx))
-                    idxy_3= np.where((core_id[:,:,0] == idy) & (core_id[:,:,1] == -idx))
+                    if sym_type == 'mirror':
+                        idxy_1= np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == idx))
+                        idxy_2= np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == -idx))
+                        idxy_3= np.where((core_id[:,:,0] == idy) & (core_id[:,:,1] == -idx))
+                    elif sym_type == 'rotational':
+                        idxy_1= np.where((core_id[:,:,0] == idx) & (core_id[:,:,1] == -idy))
+                        idxy_2= np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == -idx))
+                        idxy_3= np.where((core_id[:,:,0] == idy) & (core_id[:,:,1] == -idx))
+                    else:
+                        raise ValueError(f"The selected symmetry ({sym_type}) is not valid.")
                     dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0], core_map[idxy_2][0], core_map[idxy_3][0]]
                 core_dict[core_map[irow,icol]] = dict_value
-                fuel_dict = self.extract_fuel(core_dict)
+        fuel_dict = self.extract_fuel(core_dict)
+        import pdb; pdb.set_trace()
         return(core_dict,fuel_dict)
         
     def octant_core(self, core_map, core_id):
@@ -330,316 +348,7 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             else:
                 fuel_dict[key]=value
         return(fuel_dict)
-
-    def random_design(self):
-        """
-        Generates a random design following the constraints in the inventory.
-
-        Parameters: None
-
-        Written by Gregory Delipei 7/13/2022
-        """
-
-        # Initialization
-
-        avail_locations=list(self.core_dict['fuel'].keys())
-        assembly_types = list(self.core_dict['Inventory'].keys())
-
-        for iass in assembly_types:
-            self.core_dict['Inventory'][iass]['In_Desing'] = 0
-
-        assembly_types_group = copy.deepcopy(assembly_types)
-        avail_locations_group = copy.deepcopy(avail_locations)
-        maxiter=10000 # maximum iterations to avoid infinite loop.
-        nfuel, nfuel_sym, nrefl, nrefl_sym = self.compute_fa_number()
-        total_fuel = nfuel
-        total=0
-
-        # Select randomly the fuel assemblies with exact limits in the inventory groups
-        for key, value in self.core_dict['Inventory_Groups'].items():
-            total_group=0
-            if value['Limit']=='Exact':
-                niter=0
-                while total_group != value['Limit_Value'] and niter<maxiter:
-                    avail_choices = []
-                    for iloc in avail_locations_group:
-                        for iass in value['Values']:
-                            proposed_choice = (iloc, iass)
-                            symmetry_multiplier = len(self.core_dict['fuel'][iloc]['Symmetric_Assemblies'])+1
-                            if (total_group + symmetry_multiplier <= value['Limit_Value']) and (self.core_dict['Inventory'][iass]['In_Design'] <= self.core_dict['Inventory'][iass]['Max_Limit']-symmetry_multiplier):
-                                avail_choices.append(proposed_choice)
-                    # Re-iterate if the selected random filling strategy cannot meet the inventory limits.
-                    if len(avail_choices)==0:
-                        total_group=0
-                        niter +=1
-                        avail_locations_group = copy.deepcopy(avail_locations)
-                        for iass in assembly_types_group:
-                            self.core_dict['Inventory'][iass]['In_Design'] = 0
-                        print(f"New Exact Filling Strategy - {niter}")
-                        continue
-
-                    sampled_choice = random.choice(avail_choices)
-                    sloc = sampled_choice[0]
-                    sass = sampled_choice[1]
-                    self.core_dict['fuel'][sloc]['Value']=sass
-                    self.core_dict['core'][sloc]['Value']=sass
-                    symmetry_multiplier = len(self.core_dict['fuel'][sloc]['Symmetric_Assemblies'])+1
-                    self.core_dict['Inventory'][sass]['In_Design']+= symmetry_multiplier
-                    avail_locations_group.remove(sloc)
-                    total_group+=symmetry_multiplier
-
-                # Update the remaining available quantities for the next inventory groups
-                for iass in value['Values']:
-                    assembly_types_group.remove(iass)
-                avail_locations = copy.deepcopy(avail_locations_group)
-                assembly_types=copy.deepcopy(assembly_types_group)
-                total+=total_group
-        
-        # Select randomly the fuel assemblies without exact limits in the inventory groups
-        niter=0
-        while total != total_fuel and niter<maxiter:
-            avail_choices = []
-            for iloc in avail_locations:
-                for key, value in self.core_dict['Inventory_Groups'].items(): 
-                    if value['Limit']!='Exact':
-                        subtotal = 0
-                        for iass in value["Values"]:
-                            subtotal+=self.core_dict['Inventory'][iass]['In_Design']
-                        for iass in value["Values"]:
-                            proposed_choice = (iloc, iass)
-                            symmetry_multiplier = len(self.core_dict['fuel'][iloc]['Symmetric_Assemblies'])+1
-                            if (self.core_dict['Inventory'][iass]['In_Design'] <= self.core_dict['Inventory'][iass]['Max_Limit']-symmetry_multiplier) and (subtotal <=value['Limit_Value']-symmetry_multiplier):
-                                avail_choices.append(proposed_choice)
-      
-            # Re-iterate if the selected random filling strategy cannot meet the inventory limits.
-            if len(avail_choices)==0:
-                total=total_group
-                niter +=1
-                avail_locations = copy.deepcopy(avail_locations_group)
-                for iass in assembly_types:
-                    self.core_dict['Inventory'][iass]['In_Desing'] = 0
-                print(f"New Filling Strategy - {niter}")
-                continue
-            sampled_choice = random.choice(avail_choices)
-            sloc = sampled_choice[0]
-            sass = sampled_choice[1]
-            self.core_dict['fuel'][sloc]['Value']=sass
-            self.core_dict['core'][sloc]['Value']=sass
-            symmetry_multiplier = len(self.core_dict['fuel'][sloc]['Symmetric_Assemblies'])+1
-            self.core_dict['Inventory'][sass]['In_Design']+= symmetry_multiplier
-            avail_locations.remove(sloc)
-            total+=symmetry_multiplier
-
-        return
-    
-    def action(self,act):
-        """
-        Performs an action on the current design and updates it.
-
-        Parameters: 
-            - act: Dictionary with the action options.
-
-        Written by Gregory Delipei 7/14/2022
-        """
-        avail_actions = self.get_actions()
-        action_location = act['Location']
-        action = act['Value']
-        act_bounds = np.linspace(self.action_lower,self.action_upper,nact+1)
-
-        if action in avail_actions[action_type][action_location]:
-            if action_type =='Exchange':
-                loc_value = self.core_dict['core'][action_location]['Value']
-                action_value = self.core_dict['core'][action]['Value']
-                self.core_dict['core'][action_location]['Value'] = action_value
-                self.core_dict['fuel'][action_location]['Value'] = action_value
-                self.core_dict['core'][action]['Value'] = loc_value
-                self.core_dict['fuel'][action]['Value'] = loc_value
-            elif action_type=='Change':
-                loc_value = self.core_dict['core'][action_location]['Value']
-                loc_symmetry=len(self.core_dict['fuel'][action_location]['Symmetric_Assemblies'])+1
-                self.core_dict['core'][action_location]['Value'] = action
-                self.core_dict['fuel'][action_location]['Value'] = action
-                self.core_dict['Inventory'][loc_value]['In_Design']-=loc_symmetry
-                self.core_dict['Inventory'][action]['In_Design']+=loc_symmetry
-        else:
-            raise ValueError(
-                f"The selected action is not valid."
-            )
-        return
-
-    def mapaction(self,mact):
-        """
-        Performs an action on the current design and updates it.
-
-        Parameters: 
-            - act: Dictionary with the action options.
-
-        Written by Gregory Delipei 7/14/2022
-        """
-        avail_actions = self.get_actions()
-        state = {}
-        for key_cycle, values_cycle in self.core_dict["fuel"].items():
-            state_values = []
-            for key, value in values_cycle.items():
-                avail_choices = []
-                loc_value = self.core_dict['fuel'][key_cycle][key]['Value']
-                state_values.append(loc_value)
-            state[key_cycle] = state_values
-        action_mvalue = mact['Value']
-        action_cycle, action_location = mact['Location']
-        action_cycle = 'C' + str(action_cycle)
-        loc_actions=avail_actions['Map'][action_cycle][action_location]
-        action_space = mact['Space']
-        cmap = mact['Action_Map']
-        for key,value in loc_actions.items():
-            if action_space=="continuous":
-                bounds = value['Bounds']
-                if bounds[0]<=action_mvalue<bounds[1]:
-                    action_type = value['Type']
-                    action = value['Value']
-                if action_mvalue==bounds[1]==1:
-                    action_type = value['Type']
-                    action = value['Value']
-            elif action_space == "discrete":
-                if cmap[value['Value']]==action_mvalue:
-                    action = value['Value']
-                    if action in state[action_cycle] and action != self.core_dict['fuel'][action_cycle][action_location]['Value'] and action[0:2] !="FE":
-                        action_type = 'Exchange'
-                        for key_loc, value_loc in self.core_dict["fuel"][action_cycle].items():
-                            if value_loc['Value'] == action:
-                                action_exchange_loc = key_loc
-                    else:
-                        action_type = 'Change'
-                    
-        if action in avail_actions['Actions'][action_cycle][action_location]:
-            if action_type =='Exchange':
-                loc_value = self.core_dict['core'][action_cycle][action_location]['Value']
-                action_value = self.core_dict['core'][action_cycle][action_exchange_loc]['Value']
-                self.core_dict['core'][action_cycle][action_location]['Value'] = action_value
-                self.core_dict['fuel'][action_cycle][action_location]['Value'] = action_value
-                self.core_dict['core'][action_cycle][action_exchange_loc]['Value'] = loc_value
-                self.core_dict['fuel'][action_cycle][action_exchange_loc]['Value'] = loc_value
-            elif action_type=='Change':
-                loc_value = self.core_dict['core'][action_cycle][action_location]['Value']
-                loc_symmetry=len(self.core_dict['fuel'][action_cycle][action_location]['Symmetric_Assemblies'])+1
-                self.core_dict['core'][action_cycle][action_location]['Value'] = action
-                self.core_dict['fuel'][action_cycle][action_location]['Value'] = action
-                self.core_dict['Inventory'][loc_value]['In_Design']-=loc_symmetry
-                self.core_dict['Inventory'][action]['In_Design']+=loc_symmetry
-            new_state = {}
-            for key_cycle, values_cycle in self.core_dict['fuel'].items():
-                new_state_cycle = {}
-                for key, value in values_cycle.items():
-                    new_state_cycle[key]=value['Value']
-                new_state[key_cycle] = new_state_cycle
-            self.set_state(new_state)
-        else:
-            raise ValueError(
-                f"The selected action is not valid."
-            )
-        return
-
-    def get_actions(self):
-        """
-        Extracts all possible actions in a dictionary.
-
-        Parameters: None
-
-        Written by Gregory Delipei 7/14/2022
-        """
-
-        # Available actions for every cycle are all assemblies in the inventory
-        act = {}
-        state = {}
-        nact=len(self.core_dict['Inventory'].keys())
-        for key_cycle, values_cycle in self.core_dict["fuel"].items():
-            act_val = {}
-            state_values = []
-            for key, value in values_cycle.items():
-                avail_choices = []
-                loc_value = self.core_dict['fuel'][key_cycle][key]['Value']
-                state_values.append(loc_value)
-                for key_inv,value_inv in  self.core_dict['Inventory'].items(): 
-                    avail_choices.append(key_inv)
-                act_val[key] = avail_choices
-            state[key_cycle] = state_values
-            act[key_cycle]=act_val
-
-        # Create mapping from [0,1] to action and type of action
-        map_act = {}
-        for key_cycle, values_cycle in self.core_dict["fuel"].items():
-            map_act_cycle = {}
-            for key, value in values_cycle.items():
-                act_bounds = np.linspace(self.action_lower,self.action_upper,nact+1)
-                it = 0
-                mdict={}
-                for i in range(len(act[key_cycle][key])):
-                    it+=1
-                    adict={}
-                    adict['Bounds'] = np.array([act_bounds[it-1],act_bounds[it]])
-                    val_act = act[key_cycle][key][i]
-                    if val_act[0:2] != 'FE' and val_act in state[key_cycle]:
-                        adict['Type'] = 'Exchange'
-                    else:
-                        adict['Type'] = 'Change'
-                    adict['Value'] = val_act
-                    mdict['Act'+str(it)] = adict
-                map_act_cycle[key]=mdict
-            map_act[key_cycle]=map_act_cycle
-                
-        act_dict={'Actions': act,
-                  'Map': map_act}
-        return(act_dict)
-
-    def get_mapstate(self,cmap,observation_type):
-        """
-        Gets the current state in a normalized format.
-
-        Parameters: None
-
-        Written by Gregory Delipei 7/14/2022
-        """
-        ncycles = len(self.core_dict['fuel'].keys())
-        ncass =  len(self.core_dict['fuel']['C1'].keys())
-        nass = ncycles*ncass
-        if observation_type=='continuous':
-            mstate=np.zeros(nass,dtype=np.int8)
-        elif observation_type=='multi_discrete':
-            mstate=np.zeros(nass+1,dtype=np.int8)
-        it=0
-        for key_cycle, value_cycle in self.core_dict['fuel'].items():
-            for key, value in value_cycle.items():
-                mstate[it]=cmap[value['Value']]
-                it+=1
-        return(mstate)
-
-    def get_inventory_group(self,iass):
-        """
-        Get in which group an assembly belongs to.
-
-        Parameters: None
-
-        Written by Gregory Delipei 7/14/2022
-        """
-        igroup = None
-        for key,value in self.core_dict['Inventory_Groups'].items():
-            if iass in value['Values']:
-                igroup = key
-        return(igroup)
-    
-    def get_group_indesign(self,group):
-        """
-        Get in which group an assembly belongs to.
-
-        Parameters: None
-
-        Written by Gregory Delipei 7/14/2022
-        """
-        sum_in = 0
-        for iass in self.core_dict['Inventory_Groups'][group]['Values']:
-            sum_in += self.core_dict['Inventory'][iass]['In_Design']
-        return(sum_in)
-
+ 
     def plot_design(self,filepath):
         """
         Plot current loading pattern design.
@@ -699,52 +408,6 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
         plt.savefig(filepath,bbox_inches='tight',dpi=300) 
         plt.close(fig)
 
-    def compute_fa_number(self):
-        """
-        Computes the total number of fuel/reflector assemblies in the core with and without symmetry.
-
-        Parameters: None
-
-        Written by Gregory Delipei 7/14/2022
-        """
-        nfuel=0
-        nfuel_sym=0
-        nrefl = 0
-        nrefl_sym = 0
-        for key, value in self.core_dict['core'].items():
-            symmetry_multiplier = len(self.core_dict['core'][key]['Symmetric_Assemblies'])+1
-            if key is None:
-                continue
-            elif key[0]=='R':
-                nrefl_sym+=1
-                nrefl+=symmetry_multiplier
-            else:
-                nfuel_sym+=1
-                nfuel+=symmetry_multiplier
-        return(nfuel,nfuel_sym,nrefl,nrefl_sym)
-
-        return
-    
-    def set_state(self,state):
-        
-        for key,value in self.core_dict['Inventory'].items():
-            nvalue = value['In_Design']=0
-            self.core_dict['Inventory'][key] = value
-
-        for key_cycle, values_cycle in state.items():
-            for key, value in values_cycle.items():
-                symmetry_multiplier = len(self.core_dict['fuel'][key_cycle][key]['Symmetric_Assemblies'])+1
-                self.core_dict['fuel'][key_cycle][key]['Value']=value
-                self.core_dict['core'][key_cycle][key]['Value']=value
-                self.core_dict['Inventory'][value]['In_Design']+=symmetry_multiplier
-        return
-
-    def get_state(self):
-        state={}
-        for key, value in self.core_dict['fuel'].items():
-            state[key]=value['Value']
-        return(state)
-    
     def genes_in_group(self,chromosome_map,group_name):
         """
         Returns a list of the genes in the chosen group
@@ -961,63 +624,6 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                         no_gene_found = False
                         no_valid_solution = True
 
-    def new_generate_initial_fixed(self,chromosome_map,gene_groups):
-        """
-        Generates initial solution when only speciific number of assemblies may be used.
-
-        Written by Brian Andersen 3/15/2020. Last edited 11/20/2020
-        """
-        #above here is the old code
-        chromosome_length = None
-        chromosome_list = list(chromosome_map.keys())
-        if 'symmetry_list' in chromosome_list:
-            chromosome_list.remove('symmetry_list')
-
-        for chromosome in chromosome_list:
-            if chromosome_length is None:
-                chromosome_length = len(chromosome_map[chromosome]['map'])
-            elif len(chromosome_map[chromosome]['map']) == chromosome_length:
-                pass
-            else:
-                raise ValueError("Chromosome Maps are of unequal length")
-
-        no_genome_found = True
-        while no_genome_found:
-            attempts = 0
-            self.my_group = copy.deepcopy(gene_groups)
-            self.genome = [None]*chromosome_length
-            unfilled_spaces = list(range(chromosome_length))
-            while unfilled_spaces:  
-                space_number = random.randint(0,len(unfilled_spaces)-1)
-                group_name = None
-                while not group_name:
-                    random_group = random.choice(list(self.my_group.keys()))
-                    if self.my_group[random_group] > 0:
-                        group_name = random_group
-                available_gene_list = self.genes_in_group(chromosome_map,group_name)
-                space = unfilled_spaces[space_number]
-                gene = random.choice(available_gene_list)
-                gene_is_ok = self.is_gene_ok(chromosome_map,gene,space)
-                if gene_is_ok:
-                    self.genome[space] = gene
-                    unfilled_spaces.remove(space)
-                    if space in chromosome_map['symmetry_list']:
-                        self.my_group[chromosome_map[gene]['gene_group']] -= 2
-                    else:
-                        self.my_group[chromosome_map[gene]['gene_group']] -= 1             
-                else:
-                    attempts += 1
-                if attempts == 100:
-                    break
-
-            bad_gene_list = []
-            for i,gene in enumerate(self.genome):
-                if not gene:
-                    bad_gene_list.append(i)
-
-            if not bad_gene_list:
-                no_genome_found = False                
-
     def get_clength(self,efpd,boron,keff):
         if 0.1 in boron:
             eoc1_ind = 0
@@ -1074,85 +680,6 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                         max_boron = mboron
             res = max_boron
         return(res)
-
-    def get_pin_power(self,filepath):
-        start = time.time()
-        print('Reading of Pin Powers')
-        npx=17
-        npy=17
-        npin = npx*npy
-        nbu = 17
-        nz=16
-        nasb = self.compute_nasb()
-        pp_mat = np.zeros((nbu,nasb,nz,npin))
-        for iasb in range(nasb):
-            pinfile = filepath + ".parcs_pin" + str(iasb+1).zfill(3)
-            ofile = open(pinfile, "r")
-            filestr = ofile.read()
-            ofile.close()
-            asbstr = filestr.split('  Case:')
-            for i in range(1,len(asbstr)):
-                asb_line =asbstr[i].split('\n')
-                ibu=int(asb_line[0][0:4])-1
-                iz_val = int(asb_line[0][66:68])
-                if iz_val == 0:
-                    continue
-                else:
-                    iz = iz_val-2
-                    pp_str = asb_line[2:2+npy]
-                    for iy in range(npy):
-                        for ix in range(npx):
-                            pp_id = iy*npx + ix 
-                            try:
-                                pp_mat[ibu,iasb,iz,pp_id] = float(pp_str[iy][(7*ix + 8):(7*ix + 14)])
-                            except:
-                                print("Non physical peaking factors")
-                                pp_mat[ibu,iasb,iz,pp_id] = 10.0
-
-        end = time.time()
-        print('Pin Power Duration = {} s'.format(end-start))
-        return(pp_mat)
-
-    def get_asb_power(self,filepath):
-        start = time.time()
-        print('Reading of Assembly Powers')
-        ofile = open(filepath+".parcs_dep", "r")
-        filestr = ofile.read()
-        ofile.close()
-        bustr=filestr.split(" RPF 3D MAP")
-        nbu= len(bustr)-1
-        nz_str = bustr[0].split(' RPF 1D MAP')[1].split('\n')
-        nrefl=2
-        nz = len(nz_str)-4-nrefl
-        ztag = np.arange(2,nz+1 + 1)
-        nasb = self.compute_nasb()
-        asb_mat = np.zeros((nbu,nasb,nz))
-        for ibu in range(nbu):
-            ibustr = bustr[ibu+1].split(' EXP 2D MAP')[0]
-            asb_str = ibustr.split(' k lb')
-            iasb=0
-            for ik in range(1,len(asb_str)):
-                asb_line=asb_str[ik].split('\n')
-                for iz in range(1,len(asb_line)):
-                    asb_val=asb_line[iz].split()
-                    if len(asb_val)>0:
-                        if int(asb_val[0]) in ztag:
-                            zid = int(asb_val[0])-2
-                            asb_count = 0
-                            for ia in range(1,len(asb_val)):
-                                val = float(asb_val[ia])
-                                if  val !=0.0:
-                                    asb_id = iasb + asb_count
-                                    asb_mat[ibu,asb_id,zid]=val
-                                    asb_count+=1
-                                else:
-                                    continue
-                    else:
-                        continue
-                iasb += asb_count
-        end = time.time()
-        print('Assembly Power Duration = {} s'.format(end-start))
-        return(asb_mat)
 
     def get_lcoe(self):
         
@@ -1657,7 +1184,7 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
         Read 2D and 3D burnup from PARCS .dep output files
         Some geometry predefined parameters are required.
         '''
-        nfa=len(self.core_dict['fuel']['C1'].keys())
+        nfa=56
         bu_2d=np.zeros(nfa)
         txt = Path(ofile).read_text()
         txt_dep = txt.split('   PT')[-1].split('EXP 2D MAP')[1].split('EXP 1D MAP')[0]
@@ -1707,7 +1234,11 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                         ifass +=1
                         val = float(line_dep[j])
                         bu_3d[ifass-1, iz]=val
-        return((bu_2d, bu_3d))
+
+        # filter symmetric quarter core assemblies
+        bu_2d_filtered = self.get_quarter_symmetry_values(bu_2d)
+        bu_3d_filtered = self.get_quarter_symmetry_values(bu_3d,axis=0)
+        return((bu_2d_filtered, bu_3d_filtered))
     
     def get_alldep(self,ofile):
         '''
@@ -2081,6 +1612,23 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
         pickle.dump( rdict, open( dts_fpath, "wb" ) )
         return
     
+    def set_poor_results(self, ncyc=None):
+        '''
+        A function that assigns bad results to the parameters in purpose
+        '''
+        if ncyc is None:
+            self.parameters['max_boron']['value']=np.random.uniform(0,10)
+            self.parameters['PinPowerPeaking']['value']=np.random.uniform(10,20)
+            self.parameters['FDeltaH']['value']=np.random.uniform(10,20)
+            self.parameters['cycle_length']['value'] =  np.random.uniform(5000,10000) 
+            self.parameters["lcoe"]['value'] = np.random.uniform(100,200) 
+        else:
+            self.cycle_parameters['C'+str(ncyc)] = {}
+            self.cycle_parameters['C'+str(ncyc)]["cycle_length"] = np.random.uniform(0,10)
+            self.cycle_parameters['C'+str(ncyc)]["PinPowerPeaking"] = np.random.uniform(10,20)
+            self.cycle_parameters['C'+str(ncyc)]["FDeltaH"]= np.random.uniform(10,20)
+            self.cycle_parameters['C'+str(ncyc)]["max_boron"] = np.random.uniform(5000,10000) 
+
     def run_cycle(self,fuel_loc,c0_assb,cycle_lp,rdir,ncyc=1):
         pwd = Path(os.getcwd())
         run_directory = pwd / rdir
@@ -2316,11 +1864,7 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             else:
                 if ncyc==1:
                     self.cycle_parameters = {}
-                self.cycle_parameters['C'+str(ncyc)] = {}
-                self.cycle_parameters['C'+str(ncyc)]["cycle_length"] = np.random.uniform(0,10)
-                self.cycle_parameters['C'+str(ncyc)]["PinPowerPeaking"] = np.random.uniform(10,20)
-                self.cycle_parameters['C'+str(ncyc)]["FDeltaH"]= np.random.uniform(10,20)
-                self.cycle_parameters['C'+str(ncyc)]["max_boron"] = np.random.uniform(5000,10000) 
+                self.set_poor_results(cycle=ncyc)
                 os.system('rm -f ./*')
 
         except subprocess.TimeoutExpired:
@@ -2329,11 +1873,7 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             os.system('rm -f {}.parcs_pin*'.format(fname))
             if ncyc==1:
                     self.cycle_parameters = {}
-            self.cycle_parameters['C'+str(ncyc)] = {}
-            self.cycle_parameters['C'+str(ncyc)]["cycle_length"]= np.random.uniform(0,10)
-            self.cycle_parameters['C'+str(ncyc)]["PinPowerPeaking"] = np.random.uniform(10,20)
-            self.cycle_parameters['C'+str(ncyc)]["FDeltaH"] = np.random.uniform(10,20)
-            self.cycle_parameters['C'+str(ncyc)]["max_boron"] = np.random.uniform(5000,10000)
+            self.set_poor_results(cycle=ncyc)
             os.system('rm -f ./*')
 
         print('{} cycle {} calculation is done at {}!'.format(self.name,ncyc,os.getcwd()))
@@ -2410,7 +1950,27 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
         print('finished collecting garbage...')
         print('exiting cycle evaluate...')
         return()
-        
+
+    def get_quarter_symmetry_values(self,values,axis=None):
+        exclude_indices = [1,2,3,4,5,6,7]
+        values = np.array(values)
+        values_quarter = np.delete(values, exclude_indices,axis=axis)
+        return(values_quarter)
+
+    def get_parcs_cycle_lp(self,values):
+        include_indices = [0,1,9,17,25,32,39,45,
+                           1,2,3,4,5,6,7,8,
+                           9,10,11,12,13,14,15,16,
+                           17,18,19,20,21,22,23,24,
+                           25,26,27,28,29,30,31,
+                           32,33,34,35,36,37,38,
+                           39,40,41,42,43,44,
+                           45,46,47,48]
+        parcs_values = []
+        for i in range(len(include_indices)):
+            parcs_values.append(values[include_indices[i]])
+        return(parcs_values)
+
     def evaluate(self):
         """
         Redirects to the appropriate evaluate function
@@ -2478,13 +2038,8 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             if c_lp is None:
                 if ncycle==1:
                     self.cycle_parameters = {}
-                self.parameters['max_boron']['value']=np.random.uniform(0,10)
-                self.parameters['PinPowerPeaking']['value']=np.random.uniform(10,20)
-                self.parameters['FDeltaH']['value']=np.random.uniform(10,20)
-                self.parameters['cycle_length']['value'] =  np.random.uniform(5000,10000) 
-                self.parameters["lcoe"]['value'] = np.random.uniform(100,200) 
-                self.parameters["lcoe"]['value'] = np.random.uniform(100,200) 
 
+                set_poor_results
                 reload_inv_path = 'inv_dts.p'
                 discharge_inv_path = 'dinv_dts.p'
                 pickle.dump( self.reload_inventory, open( reload_inv_path, "wb" ) )
@@ -2564,7 +2119,8 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                     val = int(line_txt[j])
                     if val != 10:
                         cyc0_assemblies.append(val)
-
+            
+            cyc0_assemblies = self.get_quarter_symmetry_values(cyc0_assemblies)
             nfa=len(cyc0_assemblies)
             bu_file = pwd / self.name
             bu_file = bu_file / 'mcyc_exp.dep'
@@ -2599,12 +2155,7 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             c1_genome = self.genome
             c1_lp = self.getlp_from_genome(c1_genome,c1_ass_groups,fuel_locations,'C'+str(ncycle))
             if c1_lp is None:
-                self.parameters['max_boron']['value']=np.random.uniform(0,10)
-                self.parameters['PinPowerPeaking']['value']=np.random.uniform(10,20)
-                self.parameters['FDeltaH']['value']=np.random.uniform(10,20)
-                self.parameters['cycle_length']['value'] =  np.random.uniform(5000,10000) 
-                self.parameters["lcoe"]['value'] = np.random.uniform(100,200) 
-
+                self.set_poor_results()
                 reload_inv_path = 'inv_dts.p'
                 discharge_inv_path = 'dinv_dts.p'
                 pickle.dump( self.reload_inventory, open( reload_inv_path, "wb" ) )
@@ -2633,6 +2184,7 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                 else:
                     pass
 
+            parcs_c1_lp = self.get_parcs_cycle_lp(c1_lp)
             floc = 0
             for i in range(len(c1_lp)):
                 cyc_tag = 'C' + str(ncycle) 
@@ -2657,10 +2209,11 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                     itag = int(iasb[2:])
                 cyc1_assemblies.append(itag)
 
+            parcs_c1_assemblies = self.get_parcs_cycle_lp(cyc1_assemblies)
             if RUN_ML:
                 self.run_ml_cycle(fuel_locations,cyc1_assemblies,c1_lp,cycle_dir,ncyc=ncycle)
             else:
-                self.run_cycle(fuel_locations,cyc1_assemblies,c1_lp,cycle_dir,ncyc=ncycle)
+                self.run_cycle(fuel_locations,parcs_c1_assemblies,parcs_c1_lp,cycle_dir,ncyc=ncycle)
 
             if 'initial' in self.name and self.cycle_parameters['C'+str(ncycle)]["max_boron"] > 5000:
                 print('Re-run initial case due to non-convergence')
@@ -2682,6 +2235,7 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
         self.parameters['FDeltaH']['value']=self.cycle_parameters['C'+str(ncycle)]['FDeltaH']
         self.parameters['cycle_length']['value'] =  self.cycle_parameters['C'+str(ncycle)]['cycle_length']    
         self.get_lcoe_cycle(ncycle)
+        import pdb; pdb.set_trace()
 
         # Store Results 
         if 'options' in self.settings:
