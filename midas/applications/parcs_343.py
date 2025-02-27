@@ -1605,7 +1605,7 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                 del self.reload_inventory[key]
         return
 
-    def store_cycle(self,opt,ftag,cycle_lp,ncyc):
+    def store_cycle(self,opt,ftag,cycle_lp,bu2d_eoc,ncyc):
         '''
         Store cycle depletion results in a binary dictionary (ldts.p or hdts.p)
         Two options: 
@@ -1640,7 +1640,8 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             lp.append(lp_val)
         rdict['LP_XS']=np.array(xs_type)
         rdict['LP_TYPE']=np.array(fuel_type)
-        rdict['LP_BU2D']=np.array(burnup_2d)
+        rdict['LP_BU2D_BOC']=np.array(burnup_2d)
+        rdict['LP_BU2D_EOC']=np.array(bu2d_eoc)
         rdict['LP_ASB']=np.array(cycle_lp)
         rdict['LP_FUEL']=np.array(lp)
         if opt == 'heavy':
@@ -1878,15 +1879,18 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             if 'Finished' in str(output):
                 ofile = fname + '.out'
                 self.get_cycle_results(fname,ncyc)
-                # Store Optionally 
-                if 'options' in self.settings:
-                    if 'store' in self.settings['options']:
-                        store_op = self.settings['options']['store']
-                        self.store_cycle(store_op,fname,cycle_lp,ncyc)
+                
 
                 ## update reload inventory
                 bu_2d, bu_3d=self.get_burnup(fname+'.parcs_dep',FULL_CORE=True)
                 reac = self.get_reac(c0_assb,bu_2d)
+
+                # Store Optionally 
+                if 'options' in self.settings:
+                    if 'store' in self.settings['options']:
+                        store_op = self.settings['options']['store']
+                        self.store_cycle(store_op,fname,cycle_lp,bu_2d,ncyc)
+
                 for i in range(len(cycle_lp)):
                     iasb = cycle_lp[i]
                     if iasb in self.reload_inventory:
