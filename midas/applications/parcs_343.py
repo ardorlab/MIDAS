@@ -259,13 +259,12 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                     elif sym_type == 'rotational':
                         idxy_1= np.where((core_id[:,:,0] == idx) & (core_id[:,:,1] == -idy))
                         idxy_2= np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == -idx))
-                        idxy_3= np.where((core_id[:,:,0] == idy) & (core_id[:,:,1] == -idx))
+                        idxy_3= np.where((core_id[:,:,0] == -idx) & (core_id[:,:,1] == idy))
                     else:
                         raise ValueError(f"The selected symmetry ({sym_type}) is not valid.")
                     dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0], core_map[idxy_2][0], core_map[idxy_3][0]]
                 core_dict[core_map[irow,icol]] = dict_value
         fuel_dict = self.extract_fuel(core_dict)
-        import pdb; pdb.set_trace()
         return(core_dict,fuel_dict)
         
     def octant_core(self, core_map, core_id):
@@ -502,7 +501,7 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
         
         map_id=np.array(chromosome_map[chromosome_list[0]]['map'] )
         nfa = map_id[map_id > 0].shape[0]
-        nfa_reload = int(56/len(burnt_fuel_list))
+        nfa_reload = int(49/len(burnt_fuel_list))
         fuel_types =  ['Fresh', 'Burnt']
         loc_tag = list(self.core_dict['fuel']['C1'].keys())
         loc_dict = self.core_dict['fuel']['C1']
@@ -932,6 +931,7 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                     'Disposal_Time': cycle_param['EFPD']*cycle_param['Batches']/365.25}
 
         as_values=list(self.full_core['C'+str(ncycle)].values())
+        as_values = [x[0] for x in as_values]
         for i in range(len(as_values)):
             elt = as_values[i]
             if elt in self.core_dict['fuel']['C'+str(ncycle)]:
@@ -1179,13 +1179,23 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
         print('Fresh feed: {}, {}, {}'.format(feed1,feed2, feed3))
         return(new_genome)
 
-    def get_burnup(self,ofile):
+    def get_burnup(self,ofile,FULL_CORE=False):
         '''
         Read 2D and 3D burnup from PARCS .dep output files
         Some geometry predefined parameters are required.
         '''
         nfa=56
-        bu_2d=np.zeros(nfa)
+        if FULL_CORE:
+            nfa=193
+        bu_2d=[]
+        full2quarter_indices = [97,  98,  99, 100, 101, 102, 103, 104,
+                                112, 113, 114, 115, 116, 117, 118, 119,
+                                127, 128, 129, 120, 131, 132, 133, 134,
+                                142, 143, 144, 145, 146, 147, 148, 149,
+                                156, 157, 158, 159, 160, 161, 162,
+                                169, 170, 171, 172, 173, 174, 175,
+                                181, 182, 183, 184, 185, 186,
+                                190, 191, 192, 193]
         txt = Path(ofile).read_text()
         txt_dep = txt.split('   PT')[-1].split('EXP 2D MAP')[1].split('EXP 1D MAP')[0]
         txt_dep=txt_dep.split('\n')
@@ -1197,14 +1207,37 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             for j in range(1,len(line_dep)):
                 val = float(line_dep[j])
                 if val > 0.0:
-                    bu_2d[counter]=val
-                    counter+=1
+                    bu_2d.append(val)
                 else:
                     pass
         
+        bu_2d = np.array(bu_2d)
+        if FULL_CORE:
+            new_bu2d = []
+            for i in range(len(full2quarter_indices)):
+                new_bu2d.append(bu_2d[full2quarter_indices[i]-1])
+            bu_2d = new_bu2d
+
         z_id=[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29]
         nz=len(z_id)
         refl_id=[9,18,27,36,44,45,53,60,61,66,67,68,69,70,71,72,73]
+        if FULL_CORE:
+            refl_id=[1,2,3,4,5,6,7,8,9,10,11,12,
+                     20,21,22,23,24,
+                     36,37,38,
+                     52,53,54,
+                     68,69,70,
+                     86,87,
+                     103,104,
+                     120,121,
+                     137,138,
+                     154,155,
+                     171,172,
+                     188,189,190,
+                     204,205,206,
+                     220,221,222,
+                     234,235,236,237,238,
+                     246,247,248,249,250,251,252,253,254,255,256,257]
         bu_3d=np.zeros((nfa,nz))
         txt = Path(ofile).read_text()
         txt_dep = txt.split('   PT')[-1].split('EXP 3D MAP')[1].split(' I_D 2D MAP')[0]
@@ -1234,7 +1267,12 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                         ifass +=1
                         val = float(line_dep[j])
                         bu_3d[ifass-1, iz]=val
-
+        
+        if FULL_CORE:
+            new_bu3d = np.zeros((56,nz))
+            for i in range(len(full2quarter_indices)):
+                new_bu3d[i,:] = bu_3d[full2quarter_indices[i]-1,:]
+            bu_3d = new_bu3d
         # filter symmetric quarter core assemblies
         bu_2d_filtered = self.get_quarter_symmetry_values(bu_2d)
         bu_3d_filtered = self.get_quarter_symmetry_values(bu_3d,axis=0)
@@ -1481,7 +1519,15 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             val = True
         return(val)
 
-    def write_exp(self,exp_file,cycle_lp):
+    def write_exp(self,exp_file,ncyc):
+        full_core_lp = []
+        for iy in range(self.core_lattice.shape[0]):
+            for ix in range(self.core_lattice.shape[1]):
+                loc = self.core_lattice[iy,ix]
+                if loc != "00" and loc[0] != "R":
+                    full_core_lp.append(loc)
+                else:
+                    pass
         with open(exp_file,"w") as ofile:             
             ofile.write("\n")
             ofile.write(" BEGIN STEP\n")
@@ -1491,7 +1537,7 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             asb_counter = 0
             ncol = 10
             nz=28
-            nblocks = int(len(cycle_lp)/ncol)
+            nblocks = int(len(full_core_lp)/ncol)
             for nb in range(nblocks):
                 ofile.write(" k lb")
                 for nc in range(1,ncol+1):
@@ -1504,7 +1550,8 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                     ofile.write("  ")
                     for nc in range(ncol):
                         iasb = asb_counter + nc
-                        fasb = cycle_lp[iasb]
+                        iloc = full_core_lp[iasb]
+                        fasb = self.full_core['C'+str(ncyc)][iloc][0]
                         if fasb in self.reload_inventory:
                             val = self.reload_inventory[fasb]['BU3D'][iz]
                         else:
@@ -1514,9 +1561,9 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                     ofile.write("\n")
                 asb_counter+=nc+1
                 ofile.write("\n")
-            if asb_counter<len(cycle_lp):
+            if asb_counter<len(full_core_lp):
                 ofile.write(" k lb")
-                for nc in range(asb_counter+1,len(cycle_lp)+1):
+                for nc in range(asb_counter+1,len(full_core_lp)+1):
                    ofile.write('{:7d}'.format(nc)) 
                    ofile.write(" ")
                 ofile.write("\n")
@@ -1524,9 +1571,10 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                     zid = nz-iz
                     ofile.write('{:3d}'.format(zid))
                     ofile.write("  ")
-                    for nc in range(asb_counter+1,len(cycle_lp)+1):
+                    for nc in range(asb_counter+1,len(full_core_lp)+1):
                         iasb = nc-1
-                        fasb = cycle_lp[iasb]
+                        iloc = full_core_lp[iasb]
+                        fasb = self.full_core['C'+str(ncyc)][iloc][0]
                         if fasb in self.reload_inventory:
                             val = self.reload_inventory[fasb]['BU3D'][iz]
                         else:
@@ -1638,10 +1686,13 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             shutil.rmtree(run_directory, ignore_errors=True)
             os.makedirs(run_directory)
         
+        self.update_core_lp(cycle_lp,c0_assb,fuel_loc,ncyc)
+
         cdir = self.library
         exp_file = 'cyc_exp.dep' 
         dist_file = run_directory / exp_file
-        self.write_exp(dist_file,cycle_lp)
+        self.write_exp(dist_file,ncyc)
+        
         
         os.chdir(run_directory)
         print('{} cycle {} calculation starts at {}!'.format(self.name,ncyc,os.getcwd()))
@@ -1653,7 +1704,7 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             for y in range(core_cycle_lattice.shape[1]):
                 loc = core_cycle_lattice[x,y]
                 if loc != "00" and loc[0] != "R":
-                    sel_asb=self.full_core['C'+str(ncyc)][loc]
+                    sel_asb=self.full_core['C'+str(ncyc)][loc][0]
                     if sel_asb in self.reload_inventory:
                         asb_type = self.reload_inventory[sel_asb]['TYPE']
                         fresh_ass = 'FE' + str(asb_type)
@@ -1662,14 +1713,17 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                         fresh_ass = sel_asb
                         xs_val = self.core_dict['Inventory'][fresh_ass]['Cross_Section']
                     xs_array_cycle[x,y] = xs_val
-                    pincal_loc[x,y]=1
+                    if loc in self.core_dict['fuel']['C'+str(ncyc)] or loc in ['H09','H10','H11','H12','H13','H14','H15']:
+                        pincal_loc[x,y]=1
+                    else:
+                        pincal_loc[x,y]=0
                 elif loc[0] == "R":
                     xs_array_cycle[x,y] = None
                     pincal_loc[x,y]=0
                 elif loc == "00":
                     xs_array_cycle[x,y] = None
                     pincal_loc[x,y]=np.nan
-
+        
         xs_unique_cycle = np.unique(xs_array_cycle)
         xs_unique_cycle = np.delete(xs_unique_cycle, np.argwhere(xs_unique_cycle == 'None'))
         xs_forced_cycle = np.array([self.core_dict['Inventory']['FE461']['Cross_Section'],
@@ -1726,21 +1780,25 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
 
         with open(filename,"a") as ofile:             
             ofile.write("GEOM\n")
-            ofile.write("     GEO_DIM 9 9 30 1 1\n")
+            ofile.write("     GEO_DIM 17 17 30 1 1\n")
             ofile.write("     RAD_CONF\n")
-            ofile.write('     {}  {}  {}  {}  {}  {}  {}  {}  10\n'.format(c0_assb[0],c0_assb[1],c0_assb[2],c0_assb[3],c0_assb[4],c0_assb[5],c0_assb[6],c0_assb[7]))
-            ofile.write('     {}  {}  {}  {}  {}  {}  {}  {}  10\n'.format(c0_assb[8],c0_assb[9],c0_assb[10],c0_assb[11],c0_assb[12],c0_assb[13],c0_assb[14],c0_assb[15]))
-            ofile.write('     {}  {}  {}  {}  {}  {}  {}  {}  10\n'.format(c0_assb[16],c0_assb[17],c0_assb[18],c0_assb[19],c0_assb[20],c0_assb[21],c0_assb[22],c0_assb[23])) 
-            ofile.write('     {}  {}  {}  {}  {}  {}  {}  {}  10\n'.format(c0_assb[24],c0_assb[25],c0_assb[26],c0_assb[27],c0_assb[28],c0_assb[29],c0_assb[30],c0_assb[31])) 
-            ofile.write('     {}  {}  {}  {}  {}  {}  {}  10   10\n'.format(c0_assb[32],c0_assb[33],c0_assb[34],c0_assb[35],c0_assb[36],c0_assb[37],c0_assb[38])) 
-            ofile.write('     {}  {}  {}  {}  {}  {}  {}  10   00 \n'.format(c0_assb[39],c0_assb[40],c0_assb[41],c0_assb[42],c0_assb[43],c0_assb[44],c0_assb[45]))
-            ofile.write('     {}  {}  {}  {}  {}  {}  10   10   00\n'.format(c0_assb[46],c0_assb[47],c0_assb[48],c0_assb[49],c0_assb[50],c0_assb[51]))
-            ofile.write('     {}  {}  {}  {}  10   10   10   00   00\n'.format(c0_assb[52],c0_assb[53],c0_assb[54],c0_assb[55]))
-            ofile.write("     10   10   10   10   10   00   00   00   00\n")
-            ofile.write("     GRID_X      1*10.75 8*21.50\n")
-            ofile.write("     NEUTMESH_X  1*1 8*1\n")
-            ofile.write("     GRID_Y      1*10.75 8*21.50\n")
-            ofile.write("     NEUTMESH_Y  1*1 8*1\n")
+            for iy in range(self.core_lattice.shape[0]):
+                ofile.write('     ')
+                for ix in range(self.core_lattice.shape[1]):
+                    iloc = self.core_lattice[iy,ix]
+                    if iloc == '00':
+                        value = '00 '
+                    elif iloc[0] == 'R':
+                        value = '10 '
+                    else:
+                        value = str(self.full_core['C'+str(ncyc)][iloc][1])
+                    ofile.write(value + '  ')
+                ofile.write('\n')
+            ofile.write('\n')
+            ofile.write("     GRID_X      17*21.50\n")
+            ofile.write("     NEUTMESH_X  17*1\n")
+            ofile.write("     GRID_Y      17*21.50\n")
+            ofile.write("     NEUTMESH_Y  17*1\n")
             ofile.write("     GRID_Z      30.48 15.24 10.16 5.08 22*13.85455 5.08 10.16 15.24 30.48\n")            
             ofile.write("     ASSY_TYPE   10   1*2   28*2    1*2 REFL\n")
             for i in range(xs_unique_cycle.shape[0]):
@@ -1750,16 +1808,16 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                     ofile.write("     ASSY_TYPE   {}   1*1 1*4  1*4 24*{} 1*4 1*4  1*3 FUEL\n".format(tag_unique_cycle[i],xs_ref[i]))
             ofile.write("\n")
 
-            ofile.write("     boun_cond   0 2 0 2 2 2\n")
-            ofile.write("     SYMMETRY 4\n")
-
+            ofile.write("     boun_cond   2 2 2 2 2 2\n")
             ofile.write("     PINCAL_LOC\n")
             for x in range(pincal_loc.shape[0]):
                 ofile.write("      ")
                 for y in range(pincal_loc.shape[1]):
                     val = pincal_loc[x,y]
                     if np.isnan(val):
-                        pass
+                        val = ' '
+                        ofile.write(val)
+                        ofile.write("  ")
                     else:
                         ofile.write(str(int(pincal_loc[x,y])))
                         ofile.write("  ")
@@ -1785,8 +1843,8 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             ofile.write("     FLOW_COND    {}  {}\n".format(np.round(self.inlet_temperature-273.15,2),np.round(self.flow/193,4)))
             ofile.write("     HGAP     10000.0\n")
             ofile.write("     N_RING   6\n")
-            ofile.write("     THMESH_X       9*1\n")
-            ofile.write("     THMESH_Y       9*1\n")
+            ofile.write("     THMESH_X       17*1\n")
+            ofile.write("     THMESH_Y       17*1\n")
             ofile.write("     THMESH_Z       1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30\n")
             ofile.write("\n")
             ofile.write("!******************************************************************************\n\n")
@@ -1811,17 +1869,15 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
         # Run PARCS INPUT DECK
         
         parcscmd = "/cm/shared/nuclearCodes/parcs-3.4.3/PARCS-v343_Exe/Executables/Linux/parcs-v343-linux2-intel-x64-release.x"
-
         print('Execute PARCS')
         print('Running in process')
         try:
             #
-            output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=120)
+            output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=180)
             # Get Results
             if 'Finished' in str(output):
                 ofile = fname + '.out'
                 self.get_cycle_results(fname,ncyc)
-
                 # Store Optionally 
                 if 'options' in self.settings:
                     if 'store' in self.settings['options']:
@@ -1829,7 +1885,7 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                         self.store_cycle(store_op,fname,cycle_lp,ncyc)
 
                 ## update reload inventory
-                bu_2d, bu_3d=self.get_burnup(fname+'.parcs_dep')
+                bu_2d, bu_3d=self.get_burnup(fname+'.parcs_dep',FULL_CORE=True)
                 reac = self.get_reac(c0_assb,bu_2d)
                 for i in range(len(cycle_lp)):
                     iasb = cycle_lp[i]
@@ -1860,11 +1916,12 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                 os.system('rm -f {}.parcs_out'.format(fname))
                 os.system('rm -f {}.parcs_sum'.format(fname))
                 os.system('rm -f {}.parcs_xml'.format(fname))
+                os.system('rm -f {}.parcs_rst'.format(fname))
                 #os.system('rm -f cyc_exp.dep')
             else:
                 if ncyc==1:
                     self.cycle_parameters = {}
-                self.set_poor_results(cycle=ncyc)
+                self.set_poor_results(ncyc=ncyc)
                 os.system('rm -f ./*')
 
         except subprocess.TimeoutExpired:
@@ -1872,8 +1929,8 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             
             os.system('rm -f {}.parcs_pin*'.format(fname))
             if ncyc==1:
-                    self.cycle_parameters = {}
-            self.set_poor_results(cycle=ncyc)
+                self.cycle_parameters = {}
+            self.set_poor_results(ncyc=ncyc)
             os.system('rm -f ./*')
 
         print('{} cycle {} calculation is done at {}!'.format(self.name,ncyc,os.getcwd()))
@@ -1957,19 +2014,20 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
         values_quarter = np.delete(values, exclude_indices,axis=axis)
         return(values_quarter)
 
-    def get_parcs_cycle_lp(self,values):
-        include_indices = [0,1,9,17,25,32,39,45,
-                           1,2,3,4,5,6,7,8,
-                           9,10,11,12,13,14,15,16,
-                           17,18,19,20,21,22,23,24,
-                           25,26,27,28,29,30,31,
-                           32,33,34,35,36,37,38,
-                           39,40,41,42,43,44,
-                           45,46,47,48]
-        parcs_values = []
-        for i in range(len(include_indices)):
-            parcs_values.append(values[include_indices[i]])
-        return(parcs_values)
+    def update_core_lp(self,asb_values,asb_types,fuel_locations,ncycle):
+        '''
+        Function that updates the whole core loading pattern information based on a list of values in symmetry
+        '''
+        
+        cyc_tag = 'C' + str(ncycle) 
+            
+        for i in range(len(fuel_locations)):
+            self.core_dict['fuel'][cyc_tag][fuel_locations[i]]['Value']=[asb_values[i], asb_types[i]]
+            self.core_dict['core'][cyc_tag][fuel_locations[i]]['Value']=[asb_values[i], asb_types[i]]
+
+        self.full_core = self.get_full_core()
+        self.core_lattice = self.get_full_lattice()
+        return()
 
     def evaluate(self):
         """
@@ -2039,7 +2097,8 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                 if ncycle==1:
                     self.cycle_parameters = {}
 
-                set_poor_results
+                self.set_poor_results(ncyc=ncycle)
+                self.set_poor_results()
                 reload_inv_path = 'inv_dts.p'
                 discharge_inv_path = 'dinv_dts.p'
                 pickle.dump( self.reload_inventory, open( reload_inv_path, "wb" ) )
@@ -2155,6 +2214,9 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             c1_genome = self.genome
             c1_lp = self.getlp_from_genome(c1_genome,c1_ass_groups,fuel_locations,'C'+str(ncycle))
             if c1_lp is None:
+                if ncycle==1:
+                    self.cycle_parameters = {}
+                self.set_poor_results(ncyc=ncycle)
                 self.set_poor_results()
                 reload_inv_path = 'inv_dts.p'
                 discharge_inv_path = 'dinv_dts.p'
@@ -2184,21 +2246,7 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                 else:
                     pass
 
-            parcs_c1_lp = self.get_parcs_cycle_lp(c1_lp)
-            floc = 0
-            for i in range(len(c1_lp)):
-                cyc_tag = 'C' + str(ncycle) 
-                self.lp_dict[cyc_tag][fuel_locations[i]]=c1_lp[i]
-                self.core_dict['fuel'][cyc_tag][fuel_locations[i]]['Value']=c1_lp[i]
-                self.core_dict['core'][cyc_tag][fuel_locations[i]]['Value']=c1_lp[i]
-
-            self.full_core = self.get_full_core()
-        
-            if self.map_size == 'quarter':
-                self.core_lattice = self.get_quarter_lattice()
-            else:
-                self.core_lattice = self.get_full_lattice()
-        
+           
             cycle_dir = 'c' + str(ncycle)
             cyc1_assemblies = []
             for i in range(len(c1_lp)):
@@ -2209,11 +2257,10 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                     itag = int(iasb[2:])
                 cyc1_assemblies.append(itag)
 
-            parcs_c1_assemblies = self.get_parcs_cycle_lp(cyc1_assemblies)
             if RUN_ML:
                 self.run_ml_cycle(fuel_locations,cyc1_assemblies,c1_lp,cycle_dir,ncyc=ncycle)
             else:
-                self.run_cycle(fuel_locations,parcs_c1_assemblies,parcs_c1_lp,cycle_dir,ncyc=ncycle)
+                self.run_cycle(fuel_locations,cyc1_assemblies,c1_lp,cycle_dir,ncyc=ncycle)
 
             if 'initial' in self.name and self.cycle_parameters['C'+str(ncycle)]["max_boron"] > 5000:
                 print('Re-run initial case due to non-convergence')
@@ -2235,7 +2282,6 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
         self.parameters['FDeltaH']['value']=self.cycle_parameters['C'+str(ncycle)]['FDeltaH']
         self.parameters['cycle_length']['value'] =  self.cycle_parameters['C'+str(ncycle)]['cycle_length']    
         self.get_lcoe_cycle(ncycle)
-        import pdb; pdb.set_trace()
 
         # Store Results 
         if 'options' in self.settings:
