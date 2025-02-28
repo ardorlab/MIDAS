@@ -1121,7 +1121,6 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
         feed = self.feed_counter(new_genome)
         print('Number of tries: {}'.format(ncount))
         print('Fresh feed: {}'.format(feed))
-        import pdb; pdb.set_trace()
         return(new_genome)
 
     def reproduce_mcycle(self):
