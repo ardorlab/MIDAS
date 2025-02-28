@@ -973,6 +973,8 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
         boron =[]
         fq=[]
         fdh=[]
+        fxy=[]
+        fxyz=[]
         keff = []
         read_bool  = False
         ofile = open(filepath + ".parcs_dpl", "r")
@@ -983,6 +985,8 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
         res_str = res_str[0].split('\n')
         for i in range(2, len(res_str)-1):
             res_val=res_str[i].split()
+            fxy.append(float(res_val[6]))
+            fxyz.append(float(res_val[7]))
             efpd.append(float(res_val[9]))
             boron.append(float(res_val[14]))
             keff.append(float(res_val[2]))
@@ -995,6 +999,8 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
         self.cycle_parameters['C'+str(ncyc)]["cycle_length"]= self.get_clength(efpd,boron,keff)       
         self.cycle_parameters['C'+str(ncyc)]["PinPowerPeaking"] = max(fq)
         self.cycle_parameters['C'+str(ncyc)]["FDeltaH"] = max(fdh)
+        self.cycle_parameters['C'+str(ncyc)]["FXY"] = max(fxy)
+        self.cycle_parameters['C'+str(ncyc)]["FXYZ"] = max(fxyz)
         self.cycle_parameters['C'+str(ncyc)]["max_boron"]= max(boron)
         if self.cycle_parameters['C'+str(ncyc)]["max_boron"] == 1800.0:
             max_boron =0
@@ -1676,6 +1682,8 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             self.cycle_parameters['C'+str(ncyc)]["cycle_length"] = np.random.uniform(0,10)
             self.cycle_parameters['C'+str(ncyc)]["PinPowerPeaking"] = np.random.uniform(10,20)
             self.cycle_parameters['C'+str(ncyc)]["FDeltaH"]= np.random.uniform(10,20)
+            self.cycle_parameters['C'+str(ncyc)]["FXY"] = np.random.uniform(10,20)
+            self.cycle_parameters['C'+str(ncyc)]["FXYZ"]= np.random.uniform(10,20)
             self.cycle_parameters['C'+str(ncyc)]["max_boron"] = np.random.uniform(5000,10000) 
 
     def run_cycle(self,fuel_loc,c0_assb,cycle_lp,rdir,ncyc=1):
