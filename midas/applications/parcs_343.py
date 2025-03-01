@@ -1196,7 +1196,7 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
         bu_2d=[]
         full2quarter_indices = [97,  98,  99, 100, 101, 102, 103, 104,
                                 112, 113, 114, 115, 116, 117, 118, 119,
-                                127, 128, 129, 120, 131, 132, 133, 134,
+                                127, 128, 129, 130, 131, 132, 133, 134,
                                 142, 143, 144, 145, 146, 147, 148, 149,
                                 156, 157, 158, 159, 160, 161, 162,
                                 169, 170, 171, 172, 173, 174, 175,
@@ -1702,7 +1702,6 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
         dist_file = run_directory / exp_file
         self.write_exp(dist_file,ncyc)
         
-        
         os.chdir(run_directory)
         print('{} cycle {} calculation starts at {}!'.format(self.name,ncyc,os.getcwd()))
 
@@ -2098,8 +2097,21 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             else:
                 self.discharge_inventory = {}
             self.cycle_parameters = {}
-            self.reload_inventory_counter = len(self.reload_inventory) + len(self.discharge_inventory)
+            self.reload_inventory_counter = 0
+            for key in self.reload_inventory.keys():
+                key_id = int(key[3:])
+                if key_id > self.reload_inventory_counter:
+                    self.reload_inventory_counter = key_id
+            
             c_ass_groups = self.rank_assb()
+            
+            # same_asb = []
+
+            # inv_keys=list(self.reload_inventory.keys())
+            # for i in range(len(inv_keys)):
+            #     for key,value in self.reload_inventory.items():
+            #         if key != inv_keys[i] and value['BU3D'][5] == self.reload_inventory[inv_keys[i]]['BU3D'][5]:
+            #             same_asb.append([inv_keys[i], key])
 
             self.lp_dict = {}
             self.lp_dict['C'+str(ncycle)]={}
@@ -2108,7 +2120,6 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             if c_lp is None:
                 if ncycle==1:
                     self.cycle_parameters = {}
-
                 self.set_poor_results(ncyc=ncycle)
                 self.set_poor_results()
                 reload_inv_path = 'inv_dts.p'
@@ -2140,20 +2151,6 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                 else:
                     pass
 
-            floc = 0
-            for i in range(len(c_lp)):
-                cyc_tag = 'C'+str(ncycle) 
-                self.lp_dict[cyc_tag][fuel_locations[i]]=c_lp[i]
-                self.core_dict['fuel'][cyc_tag][fuel_locations[i]]['Value']=c_lp[i]
-                self.core_dict['core'][cyc_tag][fuel_locations[i]]['Value']=c_lp[i]
-            
-            self.full_core = self.get_full_core()
-            
-            if self.map_size == 'quarter':
-                self.core_lattice = self.get_quarter_lattice()
-            else:
-                self.core_lattice = self.get_full_lattice()
-
             cycle_dir = 'c' + str(ncycle)
             cyc_assemblies = []
             for i in range(len(c_lp)):
@@ -2164,14 +2161,19 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                     itag = int(iasb[2:])
                 cyc_assemblies.append(itag)
             
-            self.run_cycle(fuel_locations,cyc_assemblies,c_lp,cycle_dir,ncyc=ncycle)
+            if RUN_ML:
+                self.run_ml_cycle(fuel_locations,cyc_assemblies,c_lp,cycle_dir,ncyc=ncycle)
+            else:
+                self.run_cycle(fuel_locations,cyc_assemblies,c_lp,cycle_dir,ncyc=ncycle)
+
             if 'initial' in self.name and self.cycle_parameters['C'+str(ncycle)]["max_boron"] > 5000:
                 print('Re-run initial case due to non-convergence')
                 self.generate_initial(self.settings['genome']['chromosomes'])
                 os.chdir(pwd)
                 self.evaluate()
                 return()
-
+             
+            self.clean_inventory()
             if 'design_limits' in self.settings['genome']:
                 if 'reload_burnup' in self.settings['genome']['design_limits']:
                     max_bu = self.settings['genome']['design_limits']['reload_burnup']
