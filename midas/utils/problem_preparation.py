@@ -60,9 +60,17 @@ class Problem_Preparation_Tools():
         ncols = input_obj.ncol
         
         core_id = []
+        # if nrows % 2 == 0: # find symetric locations for cores with even number of rows and cols (BWRS)
+        #     for i in range(nrows,-1,-1): #iterate over row numbers in reverse
+        #         for j in range(ncols+1):
+        #             # if i-np.floor(nrows/2) != 0 and j-np.floor(ncols/2) != 0:
+                    # core_id.append((i-np.floor(nrows/2),j-np.floor(ncols/2))) 
+
+        # else: 
         for i in range(nrows-1,-1,-1): #iterate over row numbers in reverse
             for j in range(ncols):
-                core_id.append((i-8,j-8))
+                core_id.append((i-np.floor(nrows/2),j-np.floor(ncols/2)))
+
         core_id = np.array(core_id).reshape((nrows,ncols,2))
         
         core_sym_map = Problem_Preparation_Tools.symmetric_core(input_obj.symmetry,nrows,ncols,core_map,core_id)
@@ -72,6 +80,7 @@ class Problem_Preparation_Tools():
     def symmetric_core(symmetry,nrows,ncols,core_map,core_id):
         """
         Generates the symmetric core map.
+        Handles even cores (BWR) and odd cores (PWR) separately
 
         Parameters: 
            - core_map: an e.g. 17x17 numpy array with the fuel assembly location names.
@@ -80,6 +89,7 @@ class Problem_Preparation_Tools():
 
         Written by Gregory Delipei 7/12/2022
         Updated by Nicholas Rollins. 10/04/2024
+        Updated by Jake Mikouchi 3/2/25
         """
         #!TODO: I think this assumes only one layer of radial reflectors.
         sym_center   = (np.floor(nrows/2),np.floor(ncols/2)) #x,y-coordinates for centerpoint of symmetry
@@ -92,79 +102,151 @@ class Problem_Preparation_Tools():
         row_iter = np.arange(sym_center[0],sym_vertical[0]+1,1)
         col_iter = np.arange(sym_center[1],sym_corner[1]+1,1)
         
-        ## Link locations across symmetry zones (e.g. quadrants or octants)
-        if symmetry == 'quarter':
-            core_dict={}
-            for irow in row_iter:
-                for icol in col_iter:
-                    dict_value={'Symmetric_Assemblies':[],
-                                'Value': None}
-                    if (irow,icol) == sym_center:
+        if nrows % 2 == 0: # find symetric locations for cores with even number of rows and cols (BWRS)
+            if symmetry == 'quarter':
+                core_dict={}
+                for irow in row_iter:
+                    for icol in col_iter:
+                        dict_value={'Symmetric_Assemblies':[], 'Value': None}
+
+                        # finds assembly location relative to center assembly
                         irow = int(irow); icol = int(icol)
-                        pass
-                    elif irow == sym_corner[0] and icol != sym_center[1]:  
-                        continue
-                    elif icol == sym_vertical[1] and irow != sym_center[0]:
-                        irow = int(irow); icol = int(icol)
-                        idy = core_id[irow,icol][0]
-                        idx = core_id[irow,icol][1]
-                        idxy_1 = np.where((core_id[:,:,0] == idx) & (core_id[:,:,1] == -idy))
-                        idxy_2 = np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == idx))
-                        idxy_3 = np.where((core_id[:,:,0] == idx) & (core_id[:,:,1] == idy))
+                        true_row_center = nrows / 2 
+                        true_col_center = ncols / 2 
+                        row_diff = irow - true_row_center 
+                        col_diff = icol - true_col_center 
+                        # 0s and 1s account for no true center in BWRs
+                        idxy_1 = (np.array([int(true_col_center + col_diff + 0)]), np.array([int(true_row_center - row_diff - 1)]))  
+                        idxy_2 = (np.array([int(true_col_center - row_diff - 1)]), np.array([int(true_row_center - col_diff - 1)])) 
+                        idxy_3 = (np.array([int(true_col_center - col_diff - 1)]), np.array([int(true_row_center + row_diff + 0)]))
+                                
                         dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0], core_map[idxy_2][0], core_map[idxy_3][0]]
-                    else:
-                        irow = int(irow); icol = int(icol)
-                        idy = core_id[irow,icol][0]
-                        idx = core_id[irow,icol][1]
-                        idxy_1 = np.where((core_id[:,:,0] == idx) & (core_id[:,:,1] == -idy))
-                        idxy_2 = np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == -idx))
-                        idxy_3 = np.where((core_id[:,:,0] == -idx) & (core_id[:,:,1] == idy))
-                        dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0], core_map[idxy_2][0], core_map[idxy_3][0]]
-                    if core_map[irow,icol]: #skip empty locations
-                        core_dict[core_map[irow,icol]] = dict_value
-        elif symmetry == 'octant':
-            core_dict={}
-            for irow in row_iter:
-                for icol in col_iter:
-                    if icol>irow:
-                        continue
-                    dict_value={'Symmetric_Assemblies':[],
-                                'Value': None}
-                    if (irow,icol) == sym_center:
-                        irow = int(irow); icol = int(icol)
-                        pass
-                    elif icol == sym_vertical[1] and irow != sym_center[0]:
-                        irow = int(irow); icol = int(icol)
-                        idy = core_id[irow,icol][0]
-                        idx = core_id[irow,icol][1]
-                        idxy_1= np.where((core_id[:,:,0] == idx) & (core_id[:,:,1] == -idy))
-                        idxy_2= np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == idx))
-                        idxy_3= np.where((core_id[:,:,0] == idx) & (core_id[:,:,1] == idy))
-                        dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0], core_map[idxy_2][0], core_map[idxy_3][0]]
-                    elif icol == irow and irow != sym_center[0]:
-                        irow = int(irow); icol = int(icol)
-                        idy = core_id[irow,icol][0]
-                        idx = core_id[irow,icol][1]
-                        idxy_1= np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == idx))
-                        idxy_2= np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == -idx))
-                        idxy_3= np.where((core_id[:,:,0] == idy)  & (core_id[:,:,1] == -idx))
-                        dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0], core_map[idxy_2][0], core_map[idxy_3][0]]
-                    else:
-                        irow = int(irow); icol = int(icol)
-                        idy = core_id[irow,icol][0]
-                        idx = core_id[irow,icol][1]
-                        idxy_1= np.where((core_id[:,:,0] == -idx) & (core_id[:,:,1] == -idy))
-                        idxy_2= np.where((core_id[:,:,0] == idx) & (core_id[:,:,1] == -idy))
-                        idxy_3= np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == idx))
-                        idxy_4= np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == -idx))
-                        idxy_5= np.where((core_id[:,:,0] == idx) & (core_id[:,:,1] == idy))
-                        idxy_6= np.where((core_id[:,:,0] == -idx) & (core_id[:,:,1] == idy))
-                        idxy_7= np.where((core_id[:,:,0] == idy) & (core_id[:,:,1] == -idx))
-                        dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0], core_map[idxy_2][0], core_map[idxy_3][0], core_map[idxy_4][0],
-                                                              core_map[idxy_5][0], core_map[idxy_6][0], core_map[idxy_7][0]]
-                    if core_map[irow,icol]: #skip empty locations
-                        core_dict[core_map[irow,icol]] = dict_value
-        
+
+                        if core_map[irow,icol]: #skip empty locations
+                            core_dict[core_map[irow,icol]] = dict_value
+
+            if symmetry == 'octant':
+                core_dict={}
+                for irow in row_iter:
+                    for icol in col_iter:
+                        if irow == icol:
+                            dict_value={'Symmetric_Assemblies':[], 'Value': None}
+                            
+                            # finds assembly location relative to center assembly
+                            irow = int(irow); icol = int(icol)
+                            true_row_center = nrows / 2 
+                            true_col_center = ncols / 2 
+                            row_diff = irow - true_row_center 
+                            col_diff = icol - true_col_center 
+                            # 0s and 1s account for no true center in BWRs
+                            idxy_1 = (np.array([int(true_col_center + col_diff + 0)]), np.array([int(true_row_center - row_diff - 1)]))  
+                            idxy_2 = (np.array([int(true_col_center - row_diff - 1)]), np.array([int(true_row_center - col_diff - 1)])) 
+                            idxy_3 = (np.array([int(true_col_center - col_diff - 1)]), np.array([int(true_row_center + row_diff + 0)]))
+                                    
+                            dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0], core_map[idxy_2][0], core_map[idxy_3][0]]
+
+                            if core_map[irow,icol]: #skip empty locations
+                                core_dict[core_map[irow,icol]] = dict_value
+                        if irow > icol:
+                            dict_value={'Symmetric_Assemblies':[], 'Value': None}
+
+                            # finds assembly location relative to center assembly
+                            irow = int(irow); icol = int(icol)
+                            true_row_center = nrows / 2 
+                            true_col_center = ncols / 2 
+                            row_diff = irow - true_row_center 
+                            col_diff = icol - true_col_center 
+                            # 0s and 1s account for no true center in BWRs
+                            idxy_1 = (np.array([int(true_col_center + col_diff + 0)]), np.array([int(true_row_center + row_diff + 0)]))
+                            idxy_2 = (np.array([int(true_col_center - row_diff - 1)]), np.array([int(true_row_center + col_diff + 0)]))
+                            idxy_3 = (np.array([int(true_col_center - col_diff - 1)]), np.array([int(true_row_center + row_diff + 0)]))
+                            idxy_4 = (np.array([int(true_col_center - col_diff -1)]), np.array([int(true_row_center - row_diff -1 )]))
+                            idxy_5 = (np.array([int(true_col_center - row_diff -1)]), np.array([int(true_row_center - col_diff -1 )]))
+                            idxy_6 = (np.array([int(true_col_center + row_diff + 0)]), np.array([int(true_row_center - col_diff - 1)]))
+                            idxy_7 = (np.array([int(true_col_center + col_diff - 0)]), np.array([int(true_row_center - row_diff - 1)]))
+                                    
+                            dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0], core_map[idxy_2][0], core_map[idxy_3][0], core_map[idxy_4][0], core_map[idxy_5][0], core_map[idxy_6][0], core_map[idxy_7][0]]
+
+                            if core_map[irow,icol]: #skip empty locations
+                                core_dict[core_map[irow,icol]] = dict_value
+
+
+
+        else: # find symetric locations for cores with odd number of rows and cols (PWRS)
+            ## Link locations across symmetry zones (e.g. quadrants or octants)
+            if symmetry == 'quarter':
+                core_dict={}
+                for irow in row_iter:
+                    for icol in col_iter:
+                        dict_value={'Symmetric_Assemblies':[],
+                                    'Value': None}
+                        if (irow,icol) == sym_center:
+                            irow = int(irow); icol = int(icol)
+                            pass
+                        elif irow == sym_corner[0] and icol != sym_center[1]:  
+                            continue
+                        elif icol == sym_vertical[1] and irow != sym_center[0]:
+                            irow = int(irow); icol = int(icol)
+                            idy = core_id[irow,icol][0]
+                            idx = core_id[irow,icol][1]
+                            idxy_1 = np.where((core_id[:,:,0] == idx) & (core_id[:,:,1] == -idy))
+                            idxy_2 = np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == idx))
+                            idxy_3 = np.where((core_id[:,:,0] == idx) & (core_id[:,:,1] == idy))
+                            dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0], core_map[idxy_2][0], core_map[idxy_3][0]]
+                        else:
+                            irow = int(irow); icol = int(icol)
+                            idy = core_id[irow,icol][0]
+                            idx = core_id[irow,icol][1]
+                            idxy_1 = np.where((core_id[:,:,0] == idx) & (core_id[:,:,1] == -idy))
+                            idxy_2 = np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == -idx))
+                            idxy_3 = np.where((core_id[:,:,0] == -idx) & (core_id[:,:,1] == idy))
+
+                            dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0], core_map[idxy_2][0], core_map[idxy_3][0]]
+                        if core_map[irow,icol]: #skip empty locations
+                            core_dict[core_map[irow,icol]] = dict_value
+            elif symmetry == 'octant':
+                core_dict={}
+                for irow in row_iter:
+                    for icol in col_iter:
+                        if icol>irow:
+                            continue
+                        dict_value={'Symmetric_Assemblies':[],
+                                    'Value': None}
+                        if (irow,icol) == sym_center:
+                            irow = int(irow); icol = int(icol)
+                            pass
+                        elif icol == sym_vertical[1] and irow != sym_center[0]:
+                            irow = int(irow); icol = int(icol)
+                            idy = core_id[irow,icol][0]
+                            idx = core_id[irow,icol][1]
+                            idxy_1= np.where((core_id[:,:,0] == idx) & (core_id[:,:,1] == -idy))
+                            idxy_2= np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == idx))
+                            idxy_3= np.where((core_id[:,:,0] == idx) & (core_id[:,:,1] == idy))
+                            dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0], core_map[idxy_2][0], core_map[idxy_3][0]]
+                        elif icol == irow and irow != sym_center[0]:
+                            irow = int(irow); icol = int(icol)
+                            idy = core_id[irow,icol][0]
+                            idx = core_id[irow,icol][1]
+                            idxy_1= np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == idx))
+                            idxy_2= np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == -idx))
+                            idxy_3= np.where((core_id[:,:,0] == idy)  & (core_id[:,:,1] == -idx))
+                            dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0], core_map[idxy_2][0], core_map[idxy_3][0]]
+                        else:
+                            irow = int(irow); icol = int(icol)
+                            idy = core_id[irow,icol][0]
+                            idx = core_id[irow,icol][1]
+                            idxy_1= np.where((core_id[:,:,0] == -idx) & (core_id[:,:,1] == -idy))
+                            idxy_2= np.where((core_id[:,:,0] == idx) & (core_id[:,:,1] == -idy))
+                            idxy_3= np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == idx))
+                            idxy_4= np.where((core_id[:,:,0] == -idy) & (core_id[:,:,1] == -idx))
+                            idxy_5= np.where((core_id[:,:,0] == idx) & (core_id[:,:,1] == idy))
+                            idxy_6= np.where((core_id[:,:,0] == -idx) & (core_id[:,:,1] == idy))
+                            idxy_7= np.where((core_id[:,:,0] == idy) & (core_id[:,:,1] == -idx))
+                            dict_value['Symmetric_Assemblies'] = [core_map[idxy_1][0], core_map[idxy_2][0], core_map[idxy_3][0], core_map[idxy_4][0],
+                                                                core_map[idxy_5][0], core_map[idxy_6][0], core_map[idxy_7][0]]
+                        if core_map[irow,icol]: #skip empty locations
+                            core_dict[core_map[irow,icol]] = dict_value
+
         return core_dict
 
 
