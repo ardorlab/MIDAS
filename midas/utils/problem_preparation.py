@@ -60,13 +60,6 @@ class Problem_Preparation_Tools():
         ncols = input_obj.ncol
         
         core_id = []
-        # if nrows % 2 == 0: # find symetric locations for cores with even number of rows and cols (BWRS)
-        #     for i in range(nrows,-1,-1): #iterate over row numbers in reverse
-        #         for j in range(ncols+1):
-        #             # if i-np.floor(nrows/2) != 0 and j-np.floor(ncols/2) != 0:
-                    # core_id.append((i-np.floor(nrows/2),j-np.floor(ncols/2))) 
-
-        # else: 
         for i in range(nrows-1,-1,-1): #iterate over row numbers in reverse
             for j in range(ncols):
                 core_id.append((i-np.floor(nrows/2),j-np.floor(ncols/2)))
