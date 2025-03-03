@@ -510,6 +510,16 @@ def validate_input(keyword, value):
                 raise ValueError(f"Decision variable '{keyword}' must be nested with parameter options and their parameters.")
     
 ## Calculation Block ##
+    elif keyword == 'core_type':
+        value = str(value).upper()
+        if value not in ["PWR", "BWR"]:
+            raise ValueError(f"Requested core type '{value}' not supported. \n          Supported values include: PWR, BWR")
+        if value == "bwr":
+            logger.warning("functionality for BWR optimization is still under development")
+            #TODO BWR parcs input generator
+            #TODO core flow optimization
+            #TODO control blade sequence optimization
+
     elif keyword == 'exec_walltime':
         value = int(value)
         if value <= 0:
@@ -709,6 +719,7 @@ class Input_Parser():
         except:
             infomap = None
         
+        self.core_type = yaml_line_reader(info, 'core_type', "PWR")
         self.code_walltime = yaml_line_reader(info, 'exec_walltime', 600)
         self.nrow = yaml_line_reader(infomap, 'num_rows', 17)
         self.ncol = yaml_line_reader(infomap, 'num_cols', 17)
