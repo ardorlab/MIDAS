@@ -339,6 +339,8 @@ class Bayesian_Optimization:
         fitness_list = [-1 * soln.fitness_value for soln in pop_list]
         if self.iterations <= self.input.surrogate_fitting_off:
             self.tell(chromosome_list, fitness_list) #Fit the new data to the surrogate model
+        elif self.iterations == self.input.surrogate_fitting_off+1:
+            logger.info("Max generation for surrogate update reached; Surrogate is no longer being updated")
 
         candidates = []
         #Create the batch of candidate points for the next generation
