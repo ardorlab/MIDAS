@@ -70,6 +70,24 @@ def validate_input(keyword, value):
         if value not in ["single_cycle","eq_cycle"]:
             raise ValueError("Data type not supported.")
     
+    elif keyword == 'statistics_plots':
+        value = str(value).lower().replace(' ','')
+        if value == 'true':
+            value = True
+        elif value == 'false':
+            value = False
+        else:
+            raise ValueError("statistics_plots only takes true or false as entries")
+    
+    elif keyword == 'convergence_plot':
+        value = str(value).lower().replace(' ','')
+        if value == 'true':
+            value = True
+        elif value == 'false':
+            value = False
+        else:
+            raise ValueError("convergence_plot only takes true or false as entries")
+    
 ## Optimization Block ##
     elif keyword == 'population_size':
         try:
@@ -288,6 +306,16 @@ def validate_input(keyword, value):
     
     elif keyword == 'kernel_smoothness_factor':
         value = float(value)
+    
+    elif keyword == 'hyperparameter_convergence_criteria':
+        value = float(value)
+        if value <0:
+            raise ValueError('Hyperparameter convergence criteria must be positive.')
+    
+    elif keyword == 'surrogate_off_generation':
+        value = int(value)
+        if value < 0:
+            raise ValueError('Generation for turning the surrogate model fitting off must be greater than 0.')
         
 ## Fuel Assembly Block ##
     elif keyword == 'assembly_options':
@@ -487,6 +515,15 @@ def validate_input(keyword, value):
     
 ## Calculation Block ##
     ## PARCS DATA ##
+    elif keyword == 'core_type':
+        value = str(value).upper()
+        if value not in ["PWR", "BWR"]:
+            raise ValueError(f"Requested core type '{value}' not supported. \n          Supported values include: PWR, BWR")
+        if value == "bwr":
+            logger.warning("functionality for BWR optimization is still under development")
+            #TODO BWR parcs input generator
+            #TODO core flow optimization
+            #TODO control blade sequence optimization
     elif keyword == 'exec_walltime':
         value = int(value)
         if value <= 0:
@@ -632,6 +669,8 @@ class Input_Parser():
         self.methodology = yaml_line_reader(info, 'optimizer', 'genetic_algorithm')
         self.code_interface = yaml_line_reader(info, 'code_type', 'PARCS343')
         self.calculation_type = yaml_line_reader(info, 'calc_type', 'single_cycle')
+        self.statistics_plots = yaml_line_reader(info, 'statistics_plots', True)
+        self.convergence_plot = yaml_line_reader(info, 'convergence_plot', True)
         
     ## Optimization Block ##
         try:
@@ -667,6 +706,8 @@ class Input_Parser():
         else:
             self.exploration_exploitation_factor = yaml_line_reader(info, 'exploration_exploitation_factor', 0)
         self.kernel_smoothness = yaml_line_reader(info, 'kernel_smoothness_factor', 0.5)
+        self.kernel_hyperparam_conv = yaml_line_reader(info, 'hyperparameter_convergence_criteria', 0.01)
+        self.surrogate_fitting_off = yaml_line_reader(info, 'surrogate_off_generation', int(self.num_generations/2))
         
     ## Fuel Assembly Block ##
         self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)
@@ -722,6 +763,7 @@ class Input_Parser():
             pass
         
         # PARCS input block
+        self.core_type = yaml_line_reader(info, 'core_type', "PWR")
         self.code_walltime = yaml_line_reader(info, 'exec_walltime', 600)
         self.nrow = yaml_line_reader(infomap, 'num_rows', 17)
         self.ncol = yaml_line_reader(infomap, 'num_cols', 17)
