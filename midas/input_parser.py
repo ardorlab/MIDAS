@@ -507,7 +507,7 @@ def validate_input(keyword, value):
             raise ValueError("Requested core symmetry (used for printing) not valid.")
     
     elif keyword == 'xs_library_path':
-        value = Path(str(value))
+        value = Path('../../') / Path(str(value))
     
     elif keyword == 'xs_extension':
         value = str(value).split('.')[-1] #this supports both e.g. ".exe" and "exe".
@@ -568,9 +568,12 @@ def validate_input(keyword, value):
             raise ValueError("Requested code for initializing TRACE calculation not supported. Supported codes include: PARCS343.")
     
     elif keyword == 'ss_input_file':
-        value = Path(str(value))
-        if not value.exists():
-            raise ValueError(f"Could not locate TRACE steady-state input file: '{value}'.")
+        if value:
+            value = Path(str(value))
+            if not value.exists():
+                raise ValueError(f"Could not locate TRACE steady-state input file: '{value}'.")
+        else:
+            value = None
     
     elif keyword == 'tr_input_file':
         if value:
@@ -581,9 +584,12 @@ def validate_input(keyword, value):
             value = None
     
     elif keyword == 'maptab_file':
-        value = Path(str(value))
-        if not value.exists():
-            raise ValueError(f"Could not locate MAPTAB file for TRACE-PARCS coupling: '{value}'.")
+        if value:
+            value = Path(str(value))
+            if not value.exists():
+                raise ValueError(f"Could not locate MAPTAB file for TRACE-PARCS coupling: '{value}'.")
+        else:
+            value = None
     
     elif keyword == 'ss_power_fraction':
         value = float(value)
@@ -727,7 +733,7 @@ class Input_Parser():
         self.ncol = yaml_line_reader(infomap, 'num_cols', 17)
         self.num_assemblies = yaml_line_reader(infomap, 'number_assemblies', 193)
         self.map_size = yaml_line_reader(infomap, 'core_symmetry', 'full')
-        self.xs_lib = yaml_line_reader(info, 'xs_library_path', '../../') #!TODO: interpret this path relative to the MIDAS job base dir, not opt indv base dir.
+        self.xs_lib = yaml_line_reader(info, 'xs_library_path', './')
         self.xs_extension = yaml_line_reader(info, 'xs_extension', '')
         self.power = yaml_line_reader(info, 'power', 3800.0)
         self.flow = yaml_line_reader(info, 'flow', 18231.89)
@@ -740,9 +746,14 @@ class Input_Parser():
         self.depl_steps = yaml_line_reader(info, 'depletion_steps', [1, 1, 30, 30, 30, 30, 30, 30])
         
         # TRACE input block #!TODO: these lines are all just placeholders and need to be completed.
+        if self.code_interface == "trace50p5":
+            TRACE_file_defaults = {'templatefile':'./trace_ss.inp', 'maptabfile':'./TRACE-PARCS.map'}
+        else:
+            TRACE_file_defaults = {'templatefile':None, 'maptabfile':None}
+        
         self.init_code = yaml_line_reader(THinfo, 'initialize_code', 'PARCS343')
-        self.inp_template_ss = yaml_line_reader(THinfo, 'ss_input_file', './trace_ss.inp')
-        self.inp_maptabfile = yaml_line_reader(THinfo, 'maptab_file', './TRACE-PARCS.map')
+        self.inp_template_ss = yaml_line_reader(THinfo, 'ss_input_file', TRACE_file_defaults['templatefile'])
+        self.inp_maptabfile = yaml_line_reader(THinfo, 'maptab_file', TRACE_file_defaults['maptabfile'])
         self.ss_powerfraction = yaml_line_reader(THinfo, 'ss_power_fraction', 100)
         self.inp_template_tr = yaml_line_reader(THinfo, 'tr_input_file', None)
         
