@@ -1602,13 +1602,16 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                 del self.reload_inventory[key]
         return
 
-    def update_discharge_inventory(self,max_bu):
-        keys = list(self.reload_inventory.keys())
-        for key in keys:
-            idict = self.reload_inventory[key]
-            if idict['BU2D']>=max_bu:
-                self.discharge_inventory[key]=idict
-                del self.reload_inventory[key]
+    def update_discharge_inventory(self):
+        if 'design_limits' in self.settings['genome']:
+                if 'reload_burnup' in self.settings['genome']['design_limits']:
+                    max_bu = self.settings['genome']['design_limits']['reload_burnup']
+                    keys = list(self.reload_inventory.keys())
+                    for key in keys:
+                        idict = self.reload_inventory[key]
+                        if idict['BU2D']>=max_bu:
+                            self.discharge_inventory[key]=idict
+                            del self.reload_inventory[key]
         return
 
     def store_cycle(self,opt,ftag,cycle_lp,bu2d_eoc,ncyc):
@@ -1879,9 +1882,10 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
         parcscmd = "/cm/shared/nuclearCodes/parcs-3.4.3/PARCS-v343_Exe/Executables/Linux/parcs-v343-linux2-intel-x64-release.x"
         print('Execute PARCS')
         print('Running in process')
+        RUN = True
         try:
             #
-            output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=180)
+            output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=240)
             # Get Results
             if 'Finished' in str(output):
                 ofile = fname + '.out'
@@ -1912,7 +1916,8 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                         idict['TYPE']=c0_assb[i]
                         idict['QTY']= len(self.core_dict['fuel']['C'+str(ncyc)][fuel_loc[i]]['Symmetric_Assemblies']) + 1
                         idict['LOC'+str(ncyc)]=fuel_loc[i]
-                        self.reload_inventory_counter +=1 
+                        self.reload_inventory_counter +=1
+                        idict['HIST'] = ['ASB'+str(self.reload_inventory_counter)]
                         self.reload_inventory['ASB'+str(self.reload_inventory_counter)] = idict
                 
                 # Clean
@@ -1934,6 +1939,7 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                     self.cycle_parameters = {}
                 self.set_poor_results(ncyc=ncyc)
                 os.system('rm -f ./*')
+                RUN = False
 
         except subprocess.TimeoutExpired:
             print('Timed out - killing')
@@ -1943,13 +1949,14 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                 self.cycle_parameters = {}
             self.set_poor_results(ncyc=ncyc)
             os.system('rm -f ./*')
+            RUN = False
 
         print('{} cycle {} calculation is done at {}!'.format(self.name,ncyc,os.getcwd()))
         os.chdir(pwd)
         gc.collect()  
         print('finished collecting garbage...')
         print('exiting cycle evaluate...')
-        return()
+        return(RUN)
 
     def run_ml_cycle(self,fuel_loc,c0_assb,cycle_lp,rdir,ncyc=1):
         pwd = Path(os.getcwd())
@@ -2122,10 +2129,6 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                     self.cycle_parameters = {}
                 self.set_poor_results(ncyc=ncycle)
                 self.set_poor_results()
-                reload_inv_path = 'inv_dts.p'
-                discharge_inv_path = 'dinv_dts.p'
-                pickle.dump( self.reload_inventory, open( reload_inv_path, "wb" ) )
-                pickle.dump( self.discharge_inventory, open( discharge_inv_path, "wb" ) )
                 os.system('rm -f mcyc_exp.dep')
                 os.chdir(pwd)
                 print('{} calculation is skipped'.format(self.name))
@@ -2146,6 +2149,10 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                     isym = len(self.core_dict['fuel']['C'+str(ncycle)][iloc]['Symmetric_Assemblies']) + 1
                     new_value['LOC'+str(ncycle)] = iloc
                     new_value['QTY'] = isym
+                    if 'HIST' in new_value:
+                        new_value['HIST'].append(new_key)
+                    else:
+                        new_value['HIST'] = [key]
                     self.reload_inventory[new_key] = new_value
                     c_lp[i] = new_key
                 else:
@@ -2162,22 +2169,10 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                 cyc_assemblies.append(itag)
             
             if RUN_ML:
-                self.run_ml_cycle(fuel_locations,cyc_assemblies,c_lp,cycle_dir,ncyc=ncycle)
+                RUN=self.run_ml_cycle(fuel_locations,cyc_assemblies,c_lp,cycle_dir,ncyc=ncycle)
             else:
-                self.run_cycle(fuel_locations,cyc_assemblies,c_lp,cycle_dir,ncyc=ncycle)
+                RUN=self.run_cycle(fuel_locations,cyc_assemblies,c_lp,cycle_dir,ncyc=ncycle)
 
-            if 'initial' in self.name and self.cycle_parameters['C'+str(ncycle)]["max_boron"] > 5000:
-                print('Re-run initial case due to non-convergence')
-                self.generate_initial(self.settings['genome']['chromosomes'])
-                os.chdir(pwd)
-                self.evaluate()
-                return()
-             
-            self.clean_inventory()
-            if 'design_limits' in self.settings['genome']:
-                if 'reload_burnup' in self.settings['genome']['design_limits']:
-                    max_bu = self.settings['genome']['design_limits']['reload_burnup']
-                    self.update_discharge_inventory(max_bu)
         else:
             ## Get initial fuel assembly types and burnup
             cyc0_assemblies = []
@@ -2215,8 +2210,10 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                 idict['LOC2']='OUT'
                 idict['LOC3']='OUT'
                 self.reload_inventory_counter +=1 
+                idict['HIST'] = ['ASB'+str(self.reload_inventory_counter)]
                 self.reload_inventory['ASB'+str(self.reload_inventory_counter)] = idict
             
+            self.update_discharge_inventory()
             ## Group assemblies by reactivity
 
             c1_ass_groups = self.rank_assb()
@@ -2232,10 +2229,6 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                     self.cycle_parameters = {}
                 self.set_poor_results(ncyc=ncycle)
                 self.set_poor_results()
-                reload_inv_path = 'inv_dts.p'
-                discharge_inv_path = 'dinv_dts.p'
-                pickle.dump( self.reload_inventory, open( reload_inv_path, "wb" ) )
-                pickle.dump( self.discharge_inventory, open( discharge_inv_path, "wb" ) )
                 os.system('rm -f mcyc_exp.dep')
                 os.chdir(pwd)
                 print('{} calculation is skipped'.format(self.name))
@@ -2255,12 +2248,12 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                     isym = len(self.core_dict['fuel']['C'+str(ncycle)][iloc]['Symmetric_Assemblies']) + 1
                     new_value['LOC'+str(ncycle)] = iloc
                     new_value['QTY'] = isym
+                    new_value['HIST'].append(new_key)
                     self.reload_inventory[new_key] = new_value
                     c1_lp[i] = new_key
                 else:
                     pass
 
-           
             cycle_dir = 'c' + str(ncycle)
             cyc1_assemblies = []
             for i in range(len(c1_lp)):
@@ -2272,22 +2265,19 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
                 cyc1_assemblies.append(itag)
 
             if RUN_ML:
-                self.run_ml_cycle(fuel_locations,cyc1_assemblies,c1_lp,cycle_dir,ncyc=ncycle)
+                RUN=self.run_ml_cycle(fuel_locations,cyc1_assemblies,c1_lp,cycle_dir,ncyc=ncycle)
             else:
-                self.run_cycle(fuel_locations,cyc1_assemblies,c1_lp,cycle_dir,ncyc=ncycle)
+                RUN=self.run_cycle(fuel_locations,cyc1_assemblies,c1_lp,cycle_dir,ncyc=ncycle)
 
-            if 'initial' in self.name and self.cycle_parameters['C'+str(ncycle)]["max_boron"] > 5000:
-                print('Re-run initial case due to non-convergence')
-                self.generate_initial(self.settings['genome']['chromosomes'])
-                os.chdir(pwd)
-                self.evaluate()
-                return()
+        if 'initial' in self.name and RUN == False:
+            print('Re-run initial case due to non-convergence')
+            self.generate_initial(self.settings['genome']['chromosomes'])
+            os.chdir(pwd)
+            self.evaluate()
+            return()
              
-            self.clean_inventory()
-            if 'design_limits' in self.settings['genome']:
-                if 'reload_burnup' in self.settings['genome']['design_limits']:
-                    max_bu = self.settings['genome']['design_limits']['reload_burnup']
-                    self.update_discharge_inventory(max_bu)
+        self.clean_inventory()
+        self.update_discharge_inventory()
 
         # Get Single-Cycle Results
 
@@ -2297,23 +2287,24 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
         self.parameters['cycle_length']['value'] =  self.cycle_parameters['C'+str(ncycle)]['cycle_length']    
         self.get_lcoe_cycle(ncycle)
 
-        # Store Results 
-        if 'options' in self.settings:
-            if 'store' in self.settings['options']:
-                opt = self.settings['options']['store']
-                dts_fpath = "ldts.p" if opt=='light' else "hdts.p" 
-                if dts_fpath in os.listdir('./c' + str(ncycle) + '/'):
-                    c_dts = pickle.load(open( './c' + str(ncycle) + '/' + dts_fpath, "rb" ) )
-                    rdict = {}
-                    rdict['C'+str(ncycle)] = c_dts
-                    for key, value in self.parameters.items():
-                        rdict[key]= value['value']
-                    pickle.dump( rdict, open( dts_fpath, "wb" ) )
-                    os.system('rm -f {}'.format( './c' + str(ncycle) + '/' + dts_fpath))
-        reload_inv_path = 'inv_dts.p'
-        discharge_inv_path = 'dinv_dts.p'
-        pickle.dump( self.reload_inventory, open( reload_inv_path, "wb" ) )
-        pickle.dump( self.discharge_inventory, open( discharge_inv_path, "wb" ) )
+        # Store Results
+        if RUN:
+            if 'options' in self.settings:
+                if 'store' in self.settings['options']:
+                    opt = self.settings['options']['store']
+                    dts_fpath = "ldts.p" if opt=='light' else "hdts.p" 
+                    if dts_fpath in os.listdir('./c' + str(ncycle) + '/'):
+                        c_dts = pickle.load(open( './c' + str(ncycle) + '/' + dts_fpath, "rb" ) )
+                        rdict = {}
+                        rdict['C'+str(ncycle)] = c_dts
+                        for key, value in self.parameters.items():
+                            rdict[key]= value['value']
+                        pickle.dump( rdict, open( dts_fpath, "wb" ) )
+                        os.system('rm -f {}'.format( './c' + str(ncycle) + '/' + dts_fpath))
+            reload_inv_path = 'inv_dts.p'
+            discharge_inv_path = 'dinv_dts.p'
+            pickle.dump( self.reload_inventory, open( reload_inv_path, "wb" ) )
+            pickle.dump( self.discharge_inventory, open( discharge_inv_path, "wb" ) )
         os.system('rm -f mcyc_exp.dep')
         os.chdir(pwd)
         print('{} calculation is done at {}!'.format(self.name,os.getcwd()))
@@ -2443,10 +2434,7 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             self.evaluate()
             return()
         
-        if 'design_limits' in self.settings['genome']:
-            if 'reload_burnup' in self.settings['genome']['design_limits']:
-                max_bu = self.settings['genome']['design_limits']['reload_burnup']
-                self.update_discharge_inventory(max_bu)
+        self.update_discharge_inventory()
         
         # Cycle 2 Calculation
 
@@ -2500,10 +2488,7 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             self.evaluate()
             return()
 
-        if 'design_limits' in self.settings['genome']:
-            if 'reload_burnup' in self.settings['genome']['design_limits']:
-                max_bu = self.settings['genome']['design_limits']['reload_burnup']
-                self.update_discharge_inventory(max_bu)
+        self.update_discharge_inventory()
 
         # Cycle 3 Calculation
 
@@ -2557,10 +2542,7 @@ class MCycle_Inventory_Loading_Pattern_Solution(Solution):
             os.chdir(pwd)
             self.evaluate()
 
-        if 'design_limits' in self.settings['genome']:
-            if 'reload_burnup' in self.settings['genome']['design_limits']:
-                max_bu = self.settings['genome']['design_limits']['reload_burnup']
-                self.update_discharge_inventory(max_bu)
+        self.update_discharge_inventory()
 
         # Get MultiCycle Results
         
