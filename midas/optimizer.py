@@ -18,6 +18,7 @@ from midas.algorithms import bayesian_optimization as BO
 from midas.codes import parcs342, parcs343
 from midas.codes import nuscale_lut
 from midas.codes import trace50p5
+from midas.codes import polaris624
 
 
 ## Classes ##
@@ -56,6 +57,8 @@ class Optimizer():
             self.eval_func = nuscale_lut.evaluate
         elif self.input.code_interface == "trace50p5":
             self.eval_func = trace50p5.evaluate
+        elif self.input.code_interface == "polaris624":
+            self.eval_func = polaris624.evaluate
         else:
             raise ValueError(f"Could not identify eval_func for code type '{self.input.code_interface}'. This is highly irregular.")
         
@@ -382,7 +385,7 @@ class Optimizer():
                 avg_fit = statistics[gen]['Average_Fitness']
                 max_fit = statistics[gen]['Average_Fitness']
                 std_fit = statistics[gen]['Std_Fitness']
-                file.write(f'{int(gen.split('_')[1])},{avg_fit},{max_fit},{std_fit}\n')
+                file.write(f"{int(gen.split('_')[1])},{avg_fit},{max_fit},{std_fit}\n")
         #Plot statistics info if user turned on plot
         if self.input.statistics_plots:
             optimization_information.plot_optimization_statistics()

@@ -64,6 +64,8 @@ class Generation(): #!TODO: an object for holding two integers is silly; fold th
 class Solution():
     """
     This is the generic solution class to represent solutions in the optimization.
+    "generate_initial" is the filtering function allowing for multiple generation approaches
+    to be taken, based on the calculation type.
 
     Parameters: None
 
@@ -91,8 +93,10 @@ class Solution():
             return self.LP_chromosome(genome, LWR_core_parameters)
         elif calc_type == 'eq_cycle':
             return self.EQ_chromosome(genome, batches, LWR_core_parameters)
+        elif calc_type == 'lattice_physics':
+            return self.lat_chromosome(genome,LWR_core_parameters[3])
         else:
-            return None
+            raise ValueError("Calculation Type not recognized; potential solution not generated.")
     
     def LP_chromosome(self,genome,LWR_core_parameters):
         genes_list = list(genome.keys())
@@ -103,9 +107,18 @@ class Solution():
         chromosome = []
         for i in range(max(chromosome_length)):
                 gene_options = Constrain_Input.calc_gene_options(genes_list, genome, LWR_core_parameters, chromosome)
-                gene = random.choice(gene_options)
-                if genome[gene]['map'][i]: #check that the selected gene option is viable at this location.
-                    chromosome.append(gene)
+                invalid = True
+                antihang = 0
+                while invalid:
+                    antihang +=1
+                    if antihang > 1000:
+                        raise ValueError("Random solution generation failed after 1000 attempts. Check the variables maps and constraints.")
+                    gene = random.choice(gene_options)
+                    if genome[gene]['map'][i]: #check that the selected gene option is viable at this location.
+                        chromosome.append(gene)
+                        invalid = False
+                    else:
+                        gene_options.remove(gene)
         
         return chromosome
     
@@ -169,6 +182,35 @@ class Solution():
         chromosome = Constrain_Input.EQ_reload_fuel(genome,LWR_core_parameters,chromosome)
         
         return chromosome
+    
+    def lat_chromosome(self,genome,symmetry):
+        """
+        Generates an initial solution for the rod configuration for a lattice physics calculation.
+        
+        Written by Nicholas Rollins. 03/10/2025
+        """
+        genes_list = list(genome.keys())
+        chromosome_length = []
+        for gene in genes_list:
+            chromosome_length.append(len(genome[gene]['map']))
+        
+        chromosome = []
+        for i in range(max(chromosome_length)):
+                gene_options = Constrain_Input.calc_lat_gene_options(genes_list, genome, symmetry, chromosome)
+                invalid = True
+                antihang = 0
+                while invalid:
+                    antihang +=1
+                    if antihang > 1000:
+                        raise ValueError("Random solution generation failed after 1000 attempts. Check the variables maps and constraints.")
+                    gene = random.choice(gene_options)
+                    if genome[gene]['map'][i]: #check that the selected gene option is viable at this location.
+                        chromosome.append(gene)
+                        invalid = False
+                    else:
+                        gene_options.remove(gene)
+        
+        return chromosome
 
 
 class Constrain_Input():
@@ -193,7 +235,7 @@ class Constrain_Input():
         symmetry = LWR_core_parameters[3]
         multdict = LWR_Core_Shapes.get_symmetry_multiplicity(num_rows, num_cols, num_FA, symmetry)
         
-        ## if chromosome represents a shuffling scheme, not a loading pattern, the LP needs to be extracted first.
+        ## if chromosome represents a shuffling scheme, not a loading pattern, the LP needs to be extracted before this step.
         valid_genes_list = []
         for gene in genes_list:
             if genome[gene]['constraint']:
@@ -215,6 +257,29 @@ class Constrain_Input():
             else:
                 valid_genes_list.append(gene)
         
+        return valid_genes_list
+
+    def calc_lat_gene_options(genes_list, genome, symmetry, chromosome):
+        valid_genes_list = []
+        for gene in genes_list:
+            if genome[gene]['constraint']:
+                ctype = genome[gene]['constraint']['type']
+                cvalue = genome[gene]['constraint']['value']
+                gene_counts = LWR_Core_Shapes.count_in_lattice(symmetry,chromosome)
+                if gene not in gene_counts:
+                    gene_counts[gene] = 0
+                if cvalue not in gene_counts:
+                    gene_counts[cvalue] = 0
+                if ctype == 'max_quantity':
+                    #only include option if less than the max quantity have been already used.
+                    if gene_counts[gene] < cvalue and (cvalue - gene_counts[gene]) > 1:
+                        valid_genes_list.append(gene)
+                elif ctype == 'less_than_variable':
+                    #only include option if fewer than the target option have been already used.
+                    if gene_counts[gene] < gene_counts[cvalue] and (gene_counts[cvalue] - gene_counts[gene]) > 1:
+                        valid_genes_list.append(gene)
+            else:
+                valid_genes_list.append(gene)
         return valid_genes_list
 
     def check_constraints(genes_list, genome, LWR_core_parameters, solution):
