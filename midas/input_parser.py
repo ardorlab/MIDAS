@@ -1,5 +1,6 @@
 ## Import Block ##
 import yaml
+import re
 import logging
 from pathlib import Path
 """
@@ -62,12 +63,12 @@ def validate_input(keyword, value):
     
     elif keyword == 'code_type':
         value = str(value).lower().replace(' ','_')
-        if value not in ["parcs342", "parcs343", "nuscale_database", "trace50p5"]:
+        if value not in ["parcs342", "parcs343", "nuscale_database", "trace50p5", "polaris624"]:
             raise ValueError("Code types currently supported: PARCS342, PARCS343, NuScale_Database, TRACE50p5.")
     
     elif keyword == 'calc_type':
         value = str(value).lower().replace(' ','_')
-        if value not in ["single_cycle","eq_cycle"]:
+        if value not in ["single_cycle","eq_cycle", "lattice_physics"]:
             raise ValueError("Data type not supported.")
     
     elif keyword == 'statistics_plots':
@@ -147,7 +148,9 @@ def validate_input(keyword, value):
                                    'av_fuelenrichment',
                                    'maxcladtemp',
                                    'maxfueltemp',
-                                   'maxgapq']:
+                                   'maxgapq',
+                                   'peak_reactivity',
+                                   'max_critical_exposure']:
                     raise ValueError(f"Requested objective/constraint '{key}' not supported.")
                 new_item = {}
                 if isinstance(item, dict):
@@ -444,6 +447,125 @@ def validate_input(keyword, value):
             if value:
                 raise ValueError("Assembly options must be nested with reflectors, fuels, and/or blankets with their parameters.")
     
+## Fuel Pin Parts Block ##
+    elif keyword == 'rod_options':
+        if isinstance(value, dict):
+            new_dict = {}
+            for key, item in value.items():
+                new_key = str(key).lower()
+                #check rod_geometries options
+                if new_key == 'rod_geometries':
+                    new_item = {}
+                    if isinstance(item, dict):
+                        #read rod types
+                        for subkey, subitem in item.items():
+                            new_subkey = str(subkey)
+                            new_subitem = {}
+                            if isinstance(subitem, dict):
+                                #check types, radii, and materials
+                                for subsubkey, subsubitem in subitem.items():
+                                    new_subsubkey =str(subsubkey).lower().replace(' ','_')
+                                    if new_subsubkey == 'type':
+                                        new_subsubitem = str(subsubitem)[0]
+                                    elif new_subsubkey == 'radii':
+                                        new_subsubitem = [float(x) for x in re.split(r'[, ]',str(subsubitem).strip('[]')) if x]
+                                    elif new_subsubkey == 'materials':
+                                        new_subsubitem = [str(x) for x in re.split(r'[, ]',str(subsubitem).strip('[]')) if x]
+                                    new_subitem[new_subsubkey] = new_subsubitem
+                            else:
+                                raise ValueError("Requested rod type missing parameters.")
+                            new_item[new_subkey] = new_subitem
+                        new_dict[new_key] = new_item
+                    else:
+                        raise ValueError("Rod option missing rod_geometries and their parameters.")
+                #check control_rods options
+                elif new_key == 'control_rods':
+                    new_item = {}
+                    if isinstance(item, dict):
+                        #read control rod types
+                        for subkey, subitem in item.items():
+                            new_subkey = str(subkey)
+                            new_subitem = {}
+                            if isinstance(subitem, dict):
+                                #check types, radii, and materials
+                                for subsubkey, subsubitem in subitem.items():
+                                    new_subsubkey =str(subsubkey).lower().replace(' ','_')
+                                    if new_subsubkey == 'type':
+                                        new_subsubitem = str(subsubitem)[0]
+                                    elif new_subsubkey == 'radii':
+                                        new_subsubitem = [float(x) for x in re.split(r'[, ]',str(subsubitem).strip('[]')) if x]
+                                    elif new_subsubkey == 'materials':
+                                        new_subsubitem = [str(x) for x in re.split(r'[, ]',str(subsubitem).strip('[]')) if x]
+                                    elif new_subsubkey == 'guide_tube':
+                                        new_subsubitem = str(subsubitem).upper()
+                                    new_subitem[new_subsubkey] = new_subsubitem
+                            else:
+                                raise ValueError("Requested control rod type missing parameters.")
+                            new_item[new_subkey] = new_subitem
+                        new_dict[new_key] = new_item
+                    else:
+                        if item: #optional argument can be 'None'.
+                            raise ValueError("Rod option missing control_rods and their parameters.")
+                #check compositions options
+                elif new_key == 'compositions':
+                    new_item = {}
+                    if isinstance(item, dict):
+                        #read compositions
+                        for subkey, subitem in item.items():
+                            new_subkey = str(subkey)
+                            new_subitem = {}
+                            if isinstance(subitem, dict):
+                                #check types and values
+                                for subsubkey, subsubitem in subitem.items():
+                                    new_subsubkey =str(subsubkey).lower().replace(' ','_')
+                                    if new_subsubkey == 'type':
+                                        new_subsubitem = str(subsubitem).upper().strip()
+                                    elif new_subsubkey == 'values':
+                                        new_subsubitem = [str(x) for x in re.split(r'[, ]',str(subsubitem).strip('[]')) if x]
+                                    new_subitem[new_subsubkey] = new_subsubitem
+                            else:
+                                raise ValueError("Requested composition type missing parameters.")
+                            new_item[new_subkey] = new_subitem
+                        new_dict[new_key] = new_item
+                    else:
+                        raise ValueError("Rod option missing compositions and their parameters.")
+                #check materials options
+                elif new_key == 'materials':
+                    new_item = {}
+                    if isinstance(item, dict):
+                        #read materials
+                        for subkey, subitem in item.items():
+                            new_subkey = str(subkey)
+                            new_subitem = {}
+                            if isinstance(subitem, dict):
+                                #check comps, dens, and temps #!TODO: additional properties not supported?
+                                for subsubkey, subsubitem in subitem.items():
+                                    new_subsubkey =str(subsubkey).lower().replace(' ','_')
+                                    if new_subsubkey == 'comp':
+                                        new_subsubitem = str(subsubitem).lower().strip()
+                                    elif new_subsubkey == 'dens':
+                                        new_subsubitem = float(subsubitem)
+                                    elif new_subsubkey == 'temp':
+                                        new_subsubitem = float(subsubitem)
+                                    elif new_subsubkey == 'fueltype':
+                                        new_subsubitem = bool(subsubitem)
+                                    new_subitem[new_subsubkey] = new_subsubitem
+                            else:
+                                raise ValueError("Requested composition type missing parameters.")
+                            new_item[new_subkey] = new_subitem
+                        new_dict[new_key] = new_item
+                    else:
+                        raise ValueError("Rod option missing compositions and their parameters.")
+            #check parameters logic
+            if 'materials' in new_dict:
+                for key, value in new_dict['materials'].items():
+                    if not 'fueltype' in value:
+                        new_dict['materials'][key]['fueltype'] = False
+            #!TODO: make sure each rod type has type, radii, materials
+            #!TODO: make sure each composition has type, values
+            #!TODO: make sure each material has comp and density (temp is optional)
+        return new_dict
+
 ## Genome Block ##
     elif keyword in ['parameters', 'batches']:
         new_dict = {}
@@ -544,7 +666,7 @@ def validate_input(keyword, value):
             raise ValueError("Requested core symmetry (used for printing) not valid.")
     
     elif keyword == 'xs_library_path':
-        value = Path(str(value))
+        value = Path('../../') / Path(str(value))
     
     elif keyword == 'xs_extension':
         value = str(value).split('.')[-1] #this supports both e.g. ".exe" and "exe".
@@ -605,9 +727,12 @@ def validate_input(keyword, value):
             raise ValueError("Requested code for initializing TRACE calculation not supported. Supported codes include: PARCS343.")
     
     elif keyword == 'ss_input_file':
-        value = Path(str(value))
-        if not value.exists():
-            raise ValueError(f"Could not locate TRACE steady-state input file: '{value}'.")
+        if value:
+            value = Path(str(value))
+            if not value.exists():
+                raise ValueError(f"Could not locate TRACE steady-state input file: '{value}'.")
+        else:
+            value = None
     
     elif keyword == 'tr_input_file':
         if value:
@@ -618,9 +743,12 @@ def validate_input(keyword, value):
             value = None
     
     elif keyword == 'maptab_file':
-        value = Path(str(value))
-        if not value.exists():
-            raise ValueError(f"Could not locate MAPTAB file for TRACE-PARCS coupling: '{value}'.")
+        if value:
+            value = Path(str(value))
+            if not value.exists():
+                raise ValueError(f"Could not locate MAPTAB file for TRACE-PARCS coupling: '{value}'.")
+        else:
+            value = None
     
     elif keyword == 'ss_power_fraction':
         value = float(value)
@@ -628,6 +756,42 @@ def validate_input(keyword, value):
             value *= -1
         if value <= 1.0:
             value *= 100 #change from fraction to percent
+    
+    ## POLARIS DATA ##
+    elif keyword == 'exec_walltime':
+        value = int(value)
+        if value <= 0:
+            raise ValueError("'exec_walltime' must be a positive number, measured in seconds.")
+    
+    elif keyword == 'num_rows':
+        value = int(value)
+    
+    elif keyword == 'lattice_symmetry':
+        value = str(value).upper().strip()
+        if value not in ['SE', 'FULL']:
+            raise ValueError("'lattice_symmetry' must be either 'SE' or 'FULL'.")
+    
+    elif keyword == 'power':
+        value = float(value)
+    
+    elif keyword == 'bulk_temperatures':
+        value = float(value)
+    
+    elif keyword == 'fuel_temperatures':
+        value = float(value)
+    
+    elif keyword == 'controlrods_inserted':
+        value = bool(value)
+    
+    elif keyword == 'borated_material':
+        matname, ppm = map(str,[x for x in re.split(r'[ ,]',str(value).strip('[]')) if x])
+        value = [str(matname),int(ppm)] #material name, boron concentration in ppm
+    
+    elif keyword == 'num_mesh_rings':
+        value = int(value)
+    
+    elif keyword=='depletion_steps':
+        value = [float(x) for x in re.split(r'[, ]',str(value).strip('[]')) if x]
     
     return value
 
@@ -711,7 +875,7 @@ class Input_Parser():
         
     ## Fuel Assembly Block ##
         self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)
-        if not self.fa_options and self.code_interface not in ['nuscale_database']:
+        if not self.fa_options and self.code_interface not in ['nuscale_database','polaris624']:
             raise ValueError("Assembly options must be nested with reflectors, fuels, and/or blankets with their parameters.")
         for param in ['cost_fuelcycle','av_fuelenrichment']:
             if param in self.objectives:
@@ -724,6 +888,12 @@ class Input_Parser():
                         if not 'enrichment' in self.fa_options['blankets'][key] and \
                            not 'hm_loading' in self.fa_options['blankets'][key]:
                             raise ValueError(f"Entry for 'enrichment' or 'HM_loading' missing for blanket type '{key}'. This is required by the '{param}' objective.")
+        
+    ## Fuel Pin Parts Block ## (for lattice physics calcs)
+        self.pin_options = yaml_line_reader(self.file_settings, 'rod_options', None)
+        if not self.pin_options and self.calculation_type in ['lattice_physics']:
+            raise ValueError("Fuel pin options must be nested with rod_geometries, compositions, and/or controls_rods.")
+        
         
     ## Genome Block ##
         try:
@@ -739,10 +909,14 @@ class Input_Parser():
         if self.calculation_type == 'eq_cycle' and not self.batches:
             raise ValueError("'Batches' must be specified in Decision Variables for the 'EQ Cycle' type.")
         for key, value in self.genome.items():
-            if key not in self.fa_options['fuel']:
-                raise ValueError(f"Decision variable option '{key}' not found in the list of fuel types under 'assembly_options'.")
+            if self.fa_options:
+                if key not in self.fa_options['fuel']:
+                    raise ValueError(f"Decision variable option '{key}' not found in the list of fuel types under 'assembly_options'.")
+            elif self.pin_options:
+                if key not in self.pin_options['rod_geometries']:
+                    raise ValueError(f"Decision variable option '{key}' not found in the list of rod types under 'rod_options'.")
         
-    ## Calculation Block ##
+    ## Calculation Block ## #!TODO: should each parameter set be nested under a code-specific object?
         info = None; THinfo = None; infomap = None # initialize info variables
         try:
             if self.code_interface in ["parcs342","parcs343"]:
@@ -755,6 +929,8 @@ class Input_Parser():
                 except KeyError:
                     pass
                 THinfo = self.file_settings['trace_data']
+            elif self.code_interface == "polaris624":
+                info = self.file_settings['polaris_data']
             try:
                 infomap = info['map']
             except KeyError:
@@ -769,7 +945,7 @@ class Input_Parser():
         self.ncol = yaml_line_reader(infomap, 'num_cols', 17)
         self.num_assemblies = yaml_line_reader(infomap, 'number_assemblies', 193)
         self.map_size = yaml_line_reader(infomap, 'core_symmetry', 'full')
-        self.xs_lib = yaml_line_reader(info, 'xs_library_path', '../../') #!TODO: interpret this path relative to the MIDAS job base dir, not opt indv base dir.
+        self.xs_lib = yaml_line_reader(info, 'xs_library_path', './') #!TODO: interpret this path relative to the MIDAS job base dir, not opt indv base dir.
         self.xs_extension = yaml_line_reader(info, 'xs_extension', '')
         self.power = yaml_line_reader(info, 'power', 3800.0)
         self.flow = yaml_line_reader(info, 'flow', 18231.89)
@@ -781,12 +957,29 @@ class Input_Parser():
         self.boc_exposure = yaml_line_reader(info, 'boc_core_exposure', 0.0)
         self.depl_steps = yaml_line_reader(info, 'depletion_steps', [1, 1, 30, 30, 30, 30, 30, 30])
         
-        # TRACE input block #!TODO: these lines are all just placeholders and need to be completed.
+        # TRACE input block
+        if self.code_interface == "trace50p5":
+            TRACE_file_defaults = {'templatefile':'./trace_ss.inp', 'maptabfile':'./TRACE-PARCS.map'}
+        else:
+            TRACE_file_defaults = {'templatefile':None, 'maptabfile':None}
+        
         self.init_code = yaml_line_reader(THinfo, 'initialize_code', 'PARCS343')
-        self.inp_template_ss = yaml_line_reader(THinfo, 'ss_input_file', './trace_ss.inp')
-        self.inp_maptabfile = yaml_line_reader(THinfo, 'maptab_file', './TRACE-PARCS.map')
+        self.inp_template_ss = yaml_line_reader(THinfo, 'ss_input_file', TRACE_file_defaults['templatefile'])
+        self.inp_maptabfile = yaml_line_reader(THinfo, 'maptab_file', TRACE_file_defaults['maptabfile'])
         self.ss_powerfraction = yaml_line_reader(THinfo, 'ss_power_fraction', 100)
         self.inp_template_tr = yaml_line_reader(THinfo, 'tr_input_file', None)
+        
+        # POLARIS input block
+        self.nrow = yaml_line_reader(info, 'num_rows', 17)
+        self.map_size = yaml_line_reader(infomap, 'lattice_symmetry', 'SE')
+        self.power = yaml_line_reader(info, 'powdens', 36) #W/gIHM
+        self.bulk_temps = yaml_line_reader(info, 'bulk_temperatures', 566.0) #K
+        self.fuel_temps = yaml_line_reader(info, 'fuel_temperatures', 900.0) #K
+        self.cr_inserted = yaml_line_reader(info, 'controlrods_inserted', False)
+        self.boronmat = yaml_line_reader(info, 'borated_material', None) #str, ppm
+        self.num_meshrings = yaml_line_reader(info, 'num_mesh_rings', 3)
+        self.depl_steps = yaml_line_reader(info, 'depletion_steps', [1, 1, 30, 30, 30, 30, 30, 30])
+        
         
         #NuScale database verification block
         if self.code_interface == 'nuscale_database':
