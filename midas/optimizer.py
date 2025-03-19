@@ -100,11 +100,12 @@ class Optimizer():
         for key in soln.parameters.keys():
             soln.parameters[key]['value'] = None #placeholder to be filled by objective function.
         
-        LWR_core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies, self.input.symmetry]
+        core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies,
+                            self.input.symmetry, self.input.calculation_type]
         if chromosome:
             soln.chromosome = chromosome
         else: #generate random chromosome
-            soln.chromosome = soln.generate_initial(self.input.calculation_type, LWR_core_parameters,\
+            soln.chromosome = soln.generate_initial(self.input.calculation_type, core_parameters,\
                                                     self.input.genome, self.input.batches) #'batches' is None when not applicable.
 
         return soln
@@ -159,39 +160,6 @@ class Optimizer():
             for soln in self.population.current:
                 soln.fitness_value = self.fitness.calculate(soln.parameters)
             logger.info("Done!")
-    
-    ## Archive initial results
-            for soln in self.population.current:
-                self.population.archive['solutions'].append(soln.chromosome)
-                self.population.archive['fitnesses'].append(soln.fitness_value)
-                self.population.archive['parameters'].append(soln.parameters)
-            
-            ## Only initialize the results file the first time.
-            archive_header = ["Generation","Individual","Fitness Value"]
-            for param in self.input.objectives.keys():
-                archive_header.append(str(param))
-            archive_header.append("Chromosome")
-            ## write output file
-            with open("optimizer_results.csv", 'w') as csvfile:
-                csvwriter = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
-                csvwriter.writerow(archive_header)
-            best_soln_index = [s.fitness_value for s in self.population.current].index(max([s.fitness_value for s in self.population.current]))
-            for i in range(len(self.population.current)):
-                soln = self.population.current[i]
-                soln_result_list = [str(self.generation.current),str(i),'{0:.3f}'.format(soln.fitness_value)]
-                for param in soln.parameters.keys():
-                    if param == 'av_fuelenrichment': #reformat this parameter prior to printing
-                        soln_result_list.append('{0:.3f}'.format(100*soln.parameters[param]['value'])) #convert w.t. to wo%
-                    else:
-                        soln_result_list.append('{0:.3f}'.format(soln.parameters[param]['value']))
-                for gene in soln.chromosome:
-                    soln_result_list.append(str(gene))
-                ## write to output file
-                with open("optimizer_results.csv", 'a') as csvfile:
-                    csvwriter = csv.writer(csvfile, delimiter=',')
-                    csvwriter.writerow(soln_result_list)
-                if i == best_soln_index:
-                    best_soln_string = ",".join(soln_result_list)
         
     ## Archive initial results
             for soln in self.population.current:
@@ -281,7 +249,7 @@ class Optimizer():
                 self.population.current.append(self.generate_solution(f'Gen_{self.generation.current}_Indv_{i}', new_chromosome_list[i]))
         
         ## Evaluate fitness
-            ## If chromosome exists in previous generations, skip call to external model.
+            ## If chromosome exists in previous generations, skip call to external code.
             inactive_solutions = []
             for soln in self.population.current:
                 try:
