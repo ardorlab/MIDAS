@@ -9,7 +9,7 @@ from pathlib import Path
 import subprocess
 from subprocess import STDOUT
 from midas.utils.optimizer_tools import Constrain_Input
-from midas_data import __polaris624exe__
+from midas_data import __polaris624exe__;
 
 
 ## Initialize logging for the present file
@@ -123,7 +123,7 @@ def evaluate(solution, input):
         if input.boronmat:
             ofile.write(f"state {input.boronmat[0]} : boron={input.boronmat[1]} % ppm\n")
         ofile.write("%\n")
-        ofile.write(f"power {input.power} %W/gIHM\n%\n")
+        ofile.write(f"power {input.powdens} %W/gIHM\n%\n")
         ofile.write("deplete")
         for name, mat in input.pin_options['materials'].items():
             if mat['fueltype']:
@@ -144,7 +144,7 @@ def evaluate(solution, input):
                                             stderr=STDOUT, timeout=input.code_walltime) #wait until calculation finishes
     
     ## Get Results
-        if 'Finished' in str(output): #job completed
+        if 'Polaris execution completed with zero errors' in str(output): #job completed
             logger.debug(f"Job {solution.name} completed successfully in PARCSv343.")
             solution.parameters = get_results(solution.parameters, solution.name)
         
@@ -227,6 +227,7 @@ def get_results(parameters, filename, job_failed=False):
     for param in parameters.keys():
         if param in results_dict:
             parameters[param]['value'] = results_dict[param]["value"]
+        else:
             if param not in ['cost_fuelcycle','av_fuelenrichment']: #check whitelist
                 logger.warning(f"Parameter '{param}' not supported in POLARISv6.2.4 results parsing.")
     

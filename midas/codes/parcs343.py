@@ -401,20 +401,20 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
         res_str = res_str[0].split('\n')
         
         ## Parse raw values by timestep
-        efpd_list = []; boron_list = []; keff_list = []; fq_list = []; fdh_list = []
+        efpd_list = []; boron_list = []; keff_list = []; Pxyz_list = []; fdh_list = []
         for i in range(2, len(res_str)-1):
             res_val=res_str[i].split()
             
             efpd_list.append(float(res_val[9]))
             boron_list.append(float(res_val[14]))
             keff_list.append(float(res_val[2]))
-            fq_list.append(float(res_val[7]))
+            Pxyz_list.append(float(res_val[7]))
             fdh_list.append(float(res_val[6]))
         
         del filestr, res_str, res_val #unload file contents to clean up memory
         
         results_dict["cycle_length"]["value"] = calc_cycle_length(efpd_list,boron_list,keff_list)
-        results_dict["pinpowerpeaking"]["value"] = max(fq_list)
+        results_dict["pinpowerpeaking"]["value"] = max(Pxyz_list)
         results_dict["fdeltah"]["value"] = max(fdh_list)
         results_dict["max_boron"]["value"] = max(boron_list)
         
@@ -468,16 +468,14 @@ def calc_cycle_length(efpd,boron,keff):
             def_dbor = 0.0
         eoc = efpd[eoc1_ind] + def_dbor*(boron[eoc1_ind]-boron[eco2_ind]) #linear extrapolation to efpd at boron=0.1
     elif boron[-1]==boron[0]: #true boron exceeds initial guess
-        drho_dcb=10
-        drho1 = (keff[-2]-1.0)*10**5
-        dcb1 = drho1/drho_dcb
-        cb1= boron[-2] + dcb1
-        drho2 = (keff[-1]-1.0)*10**5
-        dcb2 = drho2/drho_dcb
-        cb2= boron[-1] + dcb2
-        dbor = abs(cb1-cb2)
-        defpd = abs(efpd[-2]-efpd[-1])
-        def_dbor = defpd/dbor
+        drho_dcb=10 #pcm/ppm
+        drho1 = (keff[-2]-1.0)*10**5 #pcm
+        cb1= boron[-2] + drho1/drho_dcb #corrected boron concentration
+        drho2 = (keff[-1]-1.0)*10**5 #pcm
+        cb2= boron[-1] + drho2/drho_dcb #corrected boron concentration
+        dbor = abs(cb1-cb2) #ppm
+        defpd = abs(efpd[-2]-efpd[-1]) #efpd
+        def_dbor = defpd/dbor #efpd/ppm
         eoc = efpd[-1] + def_dbor*(cb2-0.1)
     else: #EOC boron is greater than 0.1
         dbor = abs(boron[-2]-boron[-1])

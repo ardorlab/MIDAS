@@ -250,7 +250,7 @@ class Prepare_Problem_Values():
     
     Written by Nicholas Rollins. 10/04/2024
     """
-    def prepare_calc(input_obj):
+    def prepare_calc(input_obj): #!TODO: this is currently just a placeholder, "prepare_lattice" isn't in use.
         if input_obj.calculation_type in ["single_cycle","eq_cycle"]:
             input_obj = Prepare_Problem_Values.prepare_cycle(input_obj)
         elif input_obj.calculation_type in ["lattice_physics"]:

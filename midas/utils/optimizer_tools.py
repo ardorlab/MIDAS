@@ -282,7 +282,7 @@ class Constrain_Input():
                 valid_genes_list.append(gene)
         return valid_genes_list
 
-    def check_constraints(genes_list, genome, LWR_core_parameters, solution):
+    def check_constraints(genes_list, genome, core_parameters, solution):
         """
         Check solution parameters against user-specified constraints on the input space.
         Returns True if the solution is valid and False if a constraint is violated.
@@ -293,14 +293,18 @@ class Constrain_Input():
             return True
         
         ## fetch the duplication multiplicity of each location when expanded to the full core.
-        num_rows = LWR_core_parameters[0]
-        num_cols = LWR_core_parameters[1]
-        num_FA   = LWR_core_parameters[2]
-        symmetry = LWR_core_parameters[3]
+        num_rows = core_parameters[0]
+        num_cols = core_parameters[1]
+        num_FA   = core_parameters[2]
+        symmetry = core_parameters[3]
+        calc_type = core_parameters[4]
         multdict = LWR_Core_Shapes.get_symmetry_multiplicity(num_rows, num_cols, num_FA, symmetry)
         
         ## make sure that quantities of each gene type appearing in the solution are allowed.
-        gene_counts = LWR_Core_Shapes.count_in_LP(multdict,solution)
+        if calc_type != "lattice_physics":
+            gene_counts = LWR_Core_Shapes.count_in_LP(multdict,solution)
+        else:
+            gene_counts = LWR_Core_Shapes.count_in_lattice(symmetry,solution)
         for gene in genes_list:
             if genome[gene]['constraint']:
                 ctype = genome[gene]['constraint']['type']
