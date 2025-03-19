@@ -564,7 +564,7 @@ def validate_input(keyword, value):
             #!TODO: make sure each rod type has type, radii, materials
             #!TODO: make sure each composition has type, values
             #!TODO: make sure each material has comp and density (temp is optional)
-        return new_dict
+            return new_dict
 
 ## Genome Block ##
     elif keyword in ['parameters', 'batches']:
@@ -784,8 +784,9 @@ def validate_input(keyword, value):
         value = bool(value)
     
     elif keyword == 'borated_material':
-        matname, ppm = map(str,[x for x in re.split(r'[ ,]',str(value).strip('[]')) if x])
-        value = [str(matname),int(ppm)] #material name, boron concentration in ppm
+        if value:
+            matname, ppm = map(str,[x for x in re.split(r'[ ,]',str(value).strip('[]')) if x])
+            value = [str(matname),int(ppm)] #material name, boron concentration in ppm
     
     elif keyword == 'num_mesh_rings':
         value = int(value)
@@ -972,7 +973,7 @@ class Input_Parser():
         # POLARIS input block
         self.nrow = yaml_line_reader(info, 'num_rows', 17)
         self.map_size = yaml_line_reader(infomap, 'lattice_symmetry', 'SE')
-        self.power = yaml_line_reader(info, 'powdens', 36) #W/gIHM
+        self.powdens = yaml_line_reader(info, 'powdens', 36) #W/gIHM
         self.bulk_temps = yaml_line_reader(info, 'bulk_temperatures', 566.0) #K
         self.fuel_temps = yaml_line_reader(info, 'fuel_temperatures', 900.0) #K
         self.cr_inserted = yaml_line_reader(info, 'controlrods_inserted', False)
