@@ -140,9 +140,9 @@ def evaluate(solution, input):
 ## Run POLARIS INPUT DECK #!TODO: separate the input writing and execution into two different functions that are called in sequence.
     polariscmd = __polaris624exe__
     try:
-        output = subprocess.check_output([polariscmd,filename,'>',''.join(filename.split('.')[:-1])+'.out'],\
+        output = subprocess.check_output([polariscmd,filename+' > '+''.join(filename.split('.')[:-1])+'.out'],\
                                             stderr=STDOUT, timeout=input.code_walltime) #wait until calculation finishes
-    
+        raise ValueError(output)#!debug
     ## Get Results
         if 'Polaris execution completed with zero errors' in str(output): #job completed
             logger.debug(f"Job {solution.name} completed successfully in PARCSv343.")

@@ -709,15 +709,15 @@ def validate_input(keyword, value):
             raise ValueError("'boc_core_exposure' must be a real number.")
     
     elif keyword=='depletion_steps':
-        if isinstance(value, str):
-            value = [a.strip() for a in value.strip().replace(', ',',').replace(' ',',').split(',')]
-        new_value = []
-        for step in value:
-            if "*" in str(step):
-                s_step = step.split('*')
-                new_value.extend(int(s_step[0])*[float(s_step[1])])
-            else:
-                new_value.append(float(step))
+        value = [x.strip() for x in re.split(r'[, ]',str(value).strip('[]')) if x]
+        if isinstance(value, list):
+            new_value = []
+            for step in value:
+                if "*" in str(step):
+                    s_step = step.split('*')
+                    new_value.extend(int(s_step[0])*[float(s_step[1])])
+                else:
+                    new_value.append(float(step))
         return new_value
     
     ## TRACE DATA ##
