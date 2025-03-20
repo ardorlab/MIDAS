@@ -94,7 +94,7 @@ class Solution():
         elif calc_type == 'eq_cycle':
             return self.EQ_chromosome(genome, batches, LWR_core_parameters)
         elif calc_type == 'lattice_physics':
-            return self.lat_chromosome(genome,LWR_core_parameters[3])
+            return self.lat_chromosome(genome,LWR_core_parameters)
         else:
             raise ValueError("Calculation Type not recognized; potential solution not generated.")
     
@@ -183,32 +183,46 @@ class Solution():
         
         return chromosome
     
-    def lat_chromosome(self,genome,symmetry):
+    def lat_chromosome(self,genome,core_parameters):
         """
         Generates an initial solution for the rod configuration for a lattice physics calculation.
         
         Written by Nicholas Rollins. 03/10/2025
         """
+        symmetry = core_parameters[3]
+        
         genes_list = list(genome.keys())
         chromosome_length = []
         for gene in genes_list:
             chromosome_length.append(len(genome[gene]['map']))
         
-        chromosome = []
-        for i in range(max(chromosome_length)):
-                gene_options = Constrain_Input.calc_lat_gene_options(genes_list, genome, symmetry, chromosome)
-                invalid = True
-                antihang = 0
-                while invalid:
-                    antihang +=1
-                    if antihang > 1000:
-                        raise ValueError("Random solution generation failed after 1000 attempts. Check the variables maps and constraints.")
-                    gene = random.choice(gene_options)
-                    if genome[gene]['map'][i]: #check that the selected gene option is viable at this location.
-                        chromosome.append(gene)
-                        invalid = False
-                    else:
-                        gene_options.remove(gene)
+        chromosome_is_valid = False
+        attempts = 0
+        while not chromosome_is_valid:
+            if attempts > 10000:
+                raise ValueError("Random solution generation has failed after 10,000 attempts. Consider checking the variables maps and constraints.")
+
+            chromosome = []
+            #randomize the order by which locations are sampled to avoid bias
+            randindexlist = [x for x in range(max(chromosome_length))]
+            random.shuffle(randindexlist)
+            for i in randindexlist:
+                    gene_options = Constrain_Input.calc_lat_gene_options(genes_list, genome, symmetry, chromosome)
+                    invalid = True
+                    antihang = 0
+                    while invalid:
+                        antihang +=1
+                        if antihang > 1000:
+                            raise ValueError("Random solution generation failed after 1000 attempts. Check the variables maps and constraints.")
+                        gene = random.choice(gene_options)
+                        if genome[gene]['map'][i]: #check that the selected gene option is viable at this location.
+                            chromosome.append(gene)
+                            invalid = False
+                        else:
+                            gene_options.remove(gene)
+                            
+            if Constrain_Input.check_constraints(genes_list,genome,core_parameters,chromosome):
+                chromosome_is_valid = True
         
         return chromosome
 

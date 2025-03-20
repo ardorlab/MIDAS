@@ -140,12 +140,16 @@ def evaluate(solution, input):
 ## Run POLARIS INPUT DECK #!TODO: separate the input writing and execution into two different functions that are called in sequence.
     polariscmd = __polaris624exe__
     try:
-        output = subprocess.check_output([polariscmd,filename+' > '+''.join(filename.split('.')[:-1])+'.out'],\
-                                            stderr=STDOUT, timeout=input.code_walltime) #wait until calculation finishes
-        raise ValueError(output)#!debug
+        completed_process = subprocess.run([polariscmd,filename], stderr=STDOUT, timeout=input.code_walltime) #wait until calculation finishes
+        calc_success = False
+        with open(solution.name+'.msg','r')as ofile:
+            for line in ofile:
+                if 'Polaris execution completed with zero errors' in line:
+                    calc_success = True
+
     ## Get Results
-        if 'Polaris execution completed with zero errors' in str(output): #job completed
-            logger.debug(f"Job {solution.name} completed successfully in PARCSv343.")
+        if calc_success: #job completed
+            logger.debug(f"Job {solution.name} completed successfully in POLARISv624.")
             solution.parameters = get_results(solution.parameters, solution.name)
         
         else: #job failed
@@ -165,7 +169,7 @@ def evaluate(solution, input):
     
     return solution
 
-def get_results(parameters, filename, job_failed=False):
+def get_results(parameters, solnname, job_failed=False):
     """
     Currently supports max Power Form Factor (pin power peaking), peak reactivity (k-inf),
     and max critical exposure (in GWd/MTU).
@@ -183,7 +187,7 @@ def get_results(parameters, filename, job_failed=False):
         keff_list = []
         peak_power = 0.0
         ## Parse values at each statepoint
-        with open(''.join(filename.split('.')[:-1])+'.out', 'r') as fileread:
+        with open(solnname+'.out', 'r') as fileread:
             valid = False
             for line in fileread:
                 if not valid:
