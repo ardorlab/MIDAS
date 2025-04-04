@@ -212,14 +212,16 @@ def get_results(parameters, solnname, job_failed=False):
         results_dict["pinpowerpeaking"]["value"] = peak_power
         results_dict["peak_reactivity"]["value"] = max(keff_list)
         subcritical = False
-        for i in range(len(keff_list)):
+        for i in range(1,len(keff_list)):
             if keff_list[i] >= 1.0:
                 continue
             else:
-                results_dict["max_critical_exposure"]["value"] = exposure_list[i] #GWd/MTU
+                dbu_dkeff = (exposure_list[i] - exposure_list[i-1])/(keff_list[i] - keff_list[i-1])
+                results_dict["max_critical_exposure"]["value"] = exposure_list[i-1] + dbu_dkeff*(1.0 - keff_list[i-1])#GWd/MTU; linear interpolation to keff = 1.0
                 subcritical = True
-        if not subcritical: #!TODO: a more sophisticated way to handle this would be to extrapolate the rate of depletion to estimate the BU value at which k_eff crosses 1.0 (becomes subcritical).
-            results_dict["max_critical_exposure"]["value"] = exposure_list[-1] #GWd/MTU
+        if not subcritical:
+            dbu_dkeff = (exposure_list[-1] - exposure_list[-2])/(keff_list[-1] - keff_list[-2])
+            results_dict["max_critical_exposure"]["value"] = exposure_list[-2] + dbu_dkeff*(1.0 - keff_list[-2])#GWd/MTU; linear extrapolation to keff = 1.0
     
     
     else: #job has failed; fill parameters with absurdly negative values.

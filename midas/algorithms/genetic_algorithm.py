@@ -190,7 +190,9 @@ class GA_reproduction():
             child_one = []
             child_two = []
             position_count = 0
-            for i, j in zip(chromosome_one, chromosome_two):
+            for indx in range(len(chromosome_one)):
+                i = chromosome_one[indx]
+                j = chromosome_two[indx]
                 if position_count in difference_positions:
                     if random.random() < crossover_rate:
                         if batches:
@@ -199,9 +201,9 @@ class GA_reproduction():
                                 child1_zone = [loc[0] for loc in child_one+chromosome_one[len(child_one):]]
                                 child2_zone = [loc[0] for loc in child_two+chromosome_two[len(child_two):]]
                                 child1_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, batches, 
-                                                                                             core_parameters, child1_zone)
+                                                                                             core_parameters, child1_zone, indx)
                                 child2_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, batches, 
-                                                                                             core_parameters, child2_zone)
+                                                                                             core_parameters, child2_zone, indx)
                                 if j[0] in child1_gene_opts and i[0] in child2_gene_opts: #swap batches
                                     child_one.append((j[0],None))
                                     child_two.append((i[0],None))
@@ -216,14 +218,14 @@ class GA_reproduction():
                             #constrain input for child_one and child_two
                             if core_parameters[4] != "lattice_physics": #check calculation type
                                 child1_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, genome, core_parameters, 
-                                                                                             child_one+chromosome_one[len(child_one):])
+                                                                                             child_one+chromosome_one[len(child_one):], indx)
                                 child2_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, genome, core_parameters, 
-                                                                                             child_two+chromosome_two[len(child_two):])
+                                                                                             child_two+chromosome_two[len(child_two):], indx)
                             else:
                                 child1_gene_opts = optools.Constrain_Input.calc_lat_gene_options(genes_list, genome, core_parameters[3], 
-                                                                                             child_one+chromosome_one[len(child_one):])
+                                                                                             child_one+chromosome_one[len(child_one):], indx)
                                 child2_gene_opts = optools.Constrain_Input.calc_lat_gene_options(genes_list, genome, core_parameters[3], 
-                                                                                             child_two+chromosome_two[len(child_two):])
+                                                                                             child_two+chromosome_two[len(child_two):], indx)
                             if j in child1_gene_opts and i in child2_gene_opts: #swap genes
                                 child_one.append(j)
                                 child_two.append(i)
@@ -312,9 +314,9 @@ class GA_reproduction():
                 child1_zone = [loc[0] for loc in child_one+chromosome_one[len(child_one):]] #!TODO: why do we extend the child chromosome with the original in this way? This doesn't appear to do anything.
                 child2_zone = [loc[0] for loc in child_two+chromosome_two[len(child_two):]]
                 child1_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, batches, 
-                                                                             core_parameters, child1_zone)
+                                                                             core_parameters, child1_zone, c1_gene_position)
                 child2_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, batches, 
-                                                                             core_parameters, child2_zone)
+                                                                             core_parameters, child2_zone, c2_gene_position)
                 # swaps genes
                 if child2_zone[c2_gene_position] in child1_gene_opts and \
                    child1_zone[c1_gene_position] in child2_gene_opts:
@@ -328,14 +330,14 @@ class GA_reproduction():
                 # only consider valid gene options
                 if core_parameters[4] != "lattice_physics": #check calculation type
                     child1_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, genome, core_parameters, 
-                                                                                 child_one+chromosome_one[len(child_one):])
+                                                                                 child_one+chromosome_one[len(child_one):], c1_gene_position)
                     child2_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, genome, core_parameters, 
-                                                                                 child_two+chromosome_two[len(child_two):])
+                                                                                 child_two+chromosome_two[len(child_two):], c2_gene_position)
                 else:
                     child1_gene_opts = optools.Constrain_Input.calc_lat_gene_options(genes_list, genome, core_parameters[3], 
-                                                                                 child_one+chromosome_one[len(child_one):])
+                                                                                 child_one+chromosome_one[len(child_one):], c1_gene_position)
                     child2_gene_opts = optools.Constrain_Input.calc_lat_gene_options(genes_list, genome, core_parameters[3], 
-                                                                                 child_two+chromosome_two[len(child_two):])
+                                                                                 child_two+chromosome_two[len(child_two):], c2_gene_position)
 
                 # swaps genes
                 if child_two[c2_gene_position] in child1_gene_opts and \
@@ -545,10 +547,10 @@ class GA_reproduction():
                     old_gene = new_soln[loc_to_mutate]
                     if input_obj.calculation_type != "lattice_physics": #check calculation type
                         gene_options = optools.Constrain_Input.calc_gene_options(all_genes_list, all_gene_options,\
-                                                                                    core_parameters, old_soln) #constraint input
+                                                                                    core_parameters, old_soln, loc_to_mutate) #constraint input
                     else:
                         gene_options = optools.Constrain_Input.calc_lat_gene_options(all_genes_list, all_gene_options,\
-                                                                                        core_parameters[3], old_soln) #constraint input
+                                                                                        core_parameters[3], old_soln, loc_to_mutate) #constraint input
                     new_gene = random.choice(gene_options)
                     if new_gene != old_gene:
                         if all_gene_options[new_gene]['map'][loc_to_mutate] == 1:

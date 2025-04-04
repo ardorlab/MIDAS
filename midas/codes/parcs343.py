@@ -359,7 +359,12 @@ def evaluate(solution, input):
         
         else: #job failed
             if input.calculation_type in ['eq_cycle']:
-                solution.parameters = eq_cycle_convergence(input, solution, filename, parcscmd, input.code_walltime) #iteratively try to find an intial guess that will converge
+                try:
+                    solution.parameters = eq_cycle_convergence(input, solution, filename, parcscmd, input.code_walltime) #iteratively try to find an intial guess that will converge
+                except Exception as e:
+                    logger.error(f"Job {solution.name} has failed to converge with the following exception: {e}")
+                    solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+                    
             else: #standard execution pathway
                 logger.warning(f"Job {solution.name} has failed!")
                 solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
