@@ -5,6 +5,7 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import Matern
 from scipy.optimize import minimize
 import logging
+from midas.utils import optimizer_tools as optools
 
 logger = logging.getLogger("MIDAS_logger")
 class Bayesian_Optimization:
@@ -333,13 +334,23 @@ class Bayesian_Optimization:
             pop_list: object
                 The current population.current list containing the list of individuals and their fitness values
         """
+        #Create a genes list for use in checking solution constraints
+        gene_list = []
+        for gene in self.input.genome:
+            gene_list.append(gene)
+
+        #Create LWR core parameters for use in checking constraints
+        LWR_core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies, self.input.symmetry]
         self.iterations = current_generation
+
         chromosome_list = [soln.chromosome for soln in pop_list]
         #Invert incoming fitness because BO is a minimization tool and MIDAS prefers a maximum fitness
         fitness_list = [-1 * soln.fitness_value for soln in pop_list]
+        
+        #Logic for allowing user to define generation when surrogate fitting stops
         if self.iterations <= self.input.surrogate_fitting_off:
             self.tell(chromosome_list, fitness_list) #Fit the new data to the surrogate model
-        elif self.iterations == self.input.surrogate_fitting_off+1:
+        elif self.iterations == self.input.surrogate_fitting_off:
             logger.info("Max generation for surrogate update reached; Surrogate is no longer being updated")
 
         candidates = []
@@ -349,5 +360,7 @@ class Bayesian_Optimization:
                 kappa=self.input.exploration_exploitation_factor,
                 n_restarts=5
             )
-            candidates.append(candidate)
+            #Check to make sure solution fits constraints, if it does not then it will not be considered
+            if optools.Constrain_Input.check_constraints(gene_list, self.input.genome, LWR_core_parameters, candidate):
+                candidates.append(candidate)
         return candidates
