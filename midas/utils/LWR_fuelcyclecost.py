@@ -21,7 +21,7 @@ def get_fuelcycle_cost(soln, input):
     ## Interpret loading pattern from chromosome
     if input.calculation_type in ['eq_cycle']:
         loading_pattern = optools.Constrain_Input.SS_decoder(soln.chromosome)
-        if input.objectives['cycle_cost']['settings'] == 'feed_batch_only':
+        if input.objectives['cost_fuelcycle']['settings'] == 'feed_batch_only':
             # extract the feed batch only
             LP_full = deepcopy(loading_pattern)
             loading_pattern = []
