@@ -144,7 +144,7 @@ def validate_input(keyword, value):
                                    'fdeltah',
                                    'cycle_length',
                                    'assembly_burnup',
-                                   'cycle_cost',
+                                   'cost_fuelcycle',
                                    'av_fuelenrichment',
                                    'maxcladtemp',
                                    'maxfueltemp',
