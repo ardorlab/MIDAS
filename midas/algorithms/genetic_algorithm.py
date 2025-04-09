@@ -71,10 +71,12 @@ class Genetic_Algorithm():
                             self.input.symmetry, self.input.calculation_type]
     ## Perform Crossover
         Num_children = int(self.input.population_size) - len(Elites)
+        parents = self.selection_methods(pop_list, int(self.input.population_size), self.input.selection)
+        p_indx = 0
         while len(child_chromosome_list) < Num_children:
-            parents = self.selection_methods(pop_list, self.input.selection)
-            mate_one = parents[0]
-            mate_two = parents[1]
+            mate_one = parents[p_indx]
+            mate_two = parents[p_indx+1]
+            p_indx += 2
             child_one, child_two = self.crossover_methods(mate_one, mate_two, self.input.crossover, 
                                                             core_parameters, self.input.genome, self.input.batches) 
             if len(child_chromosome_list) == Num_children - 1: 
@@ -103,7 +105,7 @@ class Genetic_Algorithm():
 
         return child_chromosome_list
     
-    def selection_methods(self, pop_list, method):
+    def selection_methods(self, pop_list, pop_size, method):
         """
         Method for distributing to the requested GA selection method.
         
@@ -113,17 +115,18 @@ class Genetic_Algorithm():
 
         ## TODO modify selection methods for use in queling
         if method["method"] == 'roulette':
-            pop_list = GA_selection.roulette(pop_list, 2) #assume no quelling (only selecting parents) 
+            pop_list = GA_selection.roulette(pop_list, pop_size) #assume no culling (only selecting parents) 
         elif method["method"] == 'tournament':
-            pop_list = GA_selection.tournament(pop_list, 2) #assume no quelling (only selecting parents) 
+            pop_list = GA_selection.tournament(pop_list, pop_size) #assume no culling (only selecting parents) 
         elif method["method"] == 'ktournament':
-            pop_list = GA_selection.ktournament(pop_list, 2, method) #assume no quelling (only selecting parents) 
+            pop_list = GA_selection.ktournament(pop_list, pop_size, method) #assume no culling (only selecting parents) 
         elif method["method"] == 'truncation':
-            pop_list = GA_selection.truncation(pop_list, 2) #assume no quelling (only selecting parents) 
+            pop_list = GA_selection.truncation(pop_list, pop_size) #assume no culling (only selecting parents) 
         elif method["method"] == 'sus':
-            pop_list = GA_selection.sus(pop_list, 2) #assume no quelling (only selecting parents) 
+            pop_list = GA_selection.sus(pop_list, pop_size) #assume no culling (only selecting parents) 
         elif method["method"] == 'random':
-            pop_list = GA_selection.random(pop_list, 2) #assume no quelling (only selecting parents) 
+            pop_list = GA_selection.random(pop_list, pop_size) #assume no culling (only selecting parents) 
+        
         return pop_list
     
     def crossover_methods(self, mate_one, mate_two, crossover, core_parameters, genome, batches):
@@ -259,7 +262,6 @@ class GA_reproduction():
 
         return child_one, child_two
     
-
     def random_element_crossover(chromosome_one, chromosome_two, num_swaps, core_parameters, genome, batches=None):
         """
         genes are randomly selected within each chromosome to be swapped. 
@@ -309,61 +311,62 @@ class GA_reproduction():
                         raise ValueError("Random Element Crossover has failed to select a novel location after 1,000 attempts.")
 
             
-            if batches:
-                # only consider valid gene options
-                child1_zone = [loc[0] for loc in child_one+chromosome_one[len(child_one):]] #!TODO: why do we extend the child chromosome with the original in this way? This doesn't appear to do anything.
-                child2_zone = [loc[0] for loc in child_two+chromosome_two[len(child_two):]]
-                child1_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, batches, 
-                                                                             core_parameters, child1_zone, c1_gene_position)
-                child2_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, batches, 
-                                                                             core_parameters, child2_zone, c2_gene_position)
-                # swaps genes
-                if child2_zone[c2_gene_position] in child1_gene_opts and \
-                   child1_zone[c1_gene_position] in child2_gene_opts:
-                    child_one[c1_gene_position] = (child_two[c2_gene_position][0],None)
-                    child_two[c2_gene_position] = (child_one[c1_gene_position][0],None)
+                if batches:
+                    # only consider valid gene options
+                    child1_zone = [loc[0] for loc in child_one+chromosome_one[len(child_one):]] #!TODO: why do we extend the child chromosome with the original in this way? This doesn't appear to do anything.
+                    child2_zone = [loc[0] for loc in child_two+chromosome_two[len(child_two):]]
+                    child1_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, batches, 
+                                                                                 core_parameters, child1_zone, c1_gene_position)
+                    child2_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, batches, 
+                                                                                 core_parameters, child2_zone, c2_gene_position)
+                    # swaps genes
+                    if child2_zone[c2_gene_position] in child1_gene_opts and \
+                       child1_zone[c1_gene_position] in child2_gene_opts:
+                        child_one[c1_gene_position] = (child_two[c2_gene_position][0],None)
+                        child_two[c2_gene_position] = (child_one[c1_gene_position][0],None)
+                    else:
+                        attempts += 1
+                        continue
+                        
                 else:
-                    attempts += 1
-                    continue
-                    
-            else:
-                # only consider valid gene options
-                if core_parameters[4] != "lattice_physics": #check calculation type
-                    child1_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, genome, core_parameters, 
-                                                                                 child_one+chromosome_one[len(child_one):], c1_gene_position)
-                    child2_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, genome, core_parameters, 
-                                                                                 child_two+chromosome_two[len(child_two):], c2_gene_position)
+                    # only consider valid gene options
+                    if core_parameters[4] != "lattice_physics": #check calculation type
+                        child1_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, genome, core_parameters, 
+                                                                                     child_one+chromosome_one[len(child_one):], c1_gene_position)
+                        child2_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, genome, core_parameters, 
+                                                                                     child_two+chromosome_two[len(child_two):], c2_gene_position)
+                    else:
+                        child1_gene_opts = optools.Constrain_Input.calc_lat_gene_options(genes_list, genome, core_parameters[3], 
+                                                                                     child_one+chromosome_one[len(child_one):], c1_gene_position)
+                        child2_gene_opts = optools.Constrain_Input.calc_lat_gene_options(genes_list, genome, core_parameters[3], 
+                                                                                     child_two+chromosome_two[len(child_two):], c2_gene_position)
+
+                    # swaps genes
+                    if child_two[c2_gene_position] in child1_gene_opts and \
+                       child_one[c1_gene_position] in child2_gene_opts:
+                        child_one[c1_gene_position] = deepcopy(child_two[c2_gene_position])
+                        child_two[c2_gene_position] = deepcopy(child_one[c1_gene_position])
+                    else:
+                        attempts += 1
+                        continue
+
+                # stores positions that have been previously swapped
+                c1_swapped_elements.append(c1_gene_position)
+                c2_swapped_elements.append(c2_gene_position)
+
+                attempts += 1
+                
+                # final check for adherence to input constraints
+                if batches:
+                    if optools.Constrain_Input.check_constraints(genes_list,batches,core_parameters,\
+                                                             [loc[0] for loc in child_one]) and \
+                       optools.Constrain_Input.check_constraints(genes_list,batches,core_parameters,\
+                                                             [loc[0] for loc in child_two]):
+                        chromosome_is_valid = True
                 else:
-                    child1_gene_opts = optools.Constrain_Input.calc_lat_gene_options(genes_list, genome, core_parameters[3], 
-                                                                                 child_one+chromosome_one[len(child_one):], c1_gene_position)
-                    child2_gene_opts = optools.Constrain_Input.calc_lat_gene_options(genes_list, genome, core_parameters[3], 
-                                                                                 child_two+chromosome_two[len(child_two):], c2_gene_position)
-
-                # swaps genes
-                if child_two[c2_gene_position] in child1_gene_opts and \
-                   child_one[c1_gene_position] in child2_gene_opts:
-                    child_one[c1_gene_position] = deepcopy(child_two[c2_gene_position])
-                    child_two[c2_gene_position] = deepcopy(child_one[c1_gene_position])
-                else:
-                    attempts += 1
-                    continue
-
-            # stores positions that have been previously swapped
-            c1_swapped_elements.append(c1_gene_position)
-            c2_swapped_elements.append(c2_gene_position)
-
-            attempts += 1
-            # final check for adherence to input constraints
-            if batches:
-                if optools.Constrain_Input.check_constraints(genes_list,batches,core_parameters,\
-                                                         [loc[0] for loc in child_one]) and \
-                   optools.Constrain_Input.check_constraints(genes_list,batches,core_parameters,\
-                                                         [loc[0] for loc in child_two]):
-                    chromosome_is_valid = True
-            else:
-                if optools.Constrain_Input.check_constraints(genes_list,genome,core_parameters,child_one) and \
-                   optools.Constrain_Input.check_constraints(genes_list,genome,core_parameters,child_two):
-                    chromosome_is_valid = True
+                    if optools.Constrain_Input.check_constraints(genes_list,genome,core_parameters,child_one) and \
+                       optools.Constrain_Input.check_constraints(genes_list,genome,core_parameters,child_two):
+                        chromosome_is_valid = True
             
         if batches: #reload fuel in 'None' locations and resolve conflicts.
             child_one = optools.Constrain_Input.EQ_reload_fuel(genome,core_parameters,child_one)
@@ -632,10 +635,11 @@ class GA_selection():
             selection_probability['low_bound'] = []
             selection_probability['up_bound']  = []
             
-            # the probability of selecting an individual is weighted by its fitness
+            # the probability of selecting an individual is weighted by its fitness #!TODO: is there an input parameter that's supposed to toggle this?
+            shift_fitness_scale = min([soln.fitness_value for soln in unused_solutions]) #shift fitness values to start at zero (this corrects for negative fitness values)
             for solution in unused_solutions:
                 selection_probability['low_bound'].append(probability_sum)
-                probability_sum += solution.fitness_value
+                probability_sum += (solution.fitness_value + shift_fitness_scale)
                 selection_probability['up_bound'].append(probability_sum)
 
             value = random.random()

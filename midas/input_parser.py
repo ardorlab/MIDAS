@@ -227,11 +227,15 @@ def validate_input(keyword, value):
                         raise ValueError("k parameter must be greater than 1 and less than population_size")             
                 new_dict[new_key] = new_item
 
-            if 'k' not in new_dict.keys() and new_dict['method'] == 'ktournament':
-                new_key = 'k'
-                new_item = 4
-                new_dict[new_key] = new_item
-                logger.warning("'k' parameter is missing from input while ktournament selection method is used, k is set to default value of 4.")  
+            #check parameters logic
+            if new_dict['method'] == 'ktournament' and 'k' not in new_dict.keys():
+                new_dict['k'] = 4
+                logger.warning("'k' parameter is missing from input while 'ktournament' selection method is used, k has been set to default value of 4.")
+            elif new_dict['method'] == 'uniform' and 'crossover_rate' not in new_dict.keys():
+                new_dict['crossover_rate'] = 0.50
+                logger.warning("'crossover_rate' parameter is missing from input while 'uniform' selection method is used; crossover_rate has been set to default value of 0.50.")
+            elif new_dict['method'] == 'random_element' and 'num_swaps' not in new_dict.keys():
+                raise ValueError("'num_swaps' parameter is missing from input while 'random_element' selection method is used.")
                 
             return new_dict
         else:
