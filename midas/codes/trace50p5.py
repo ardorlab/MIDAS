@@ -28,6 +28,21 @@ def evaluate(solution, input): #!TODO: this doesn't include the initial PARCS ca
 ## Run Initial Solution
     if input.init_code == "parcs343":
         solution = parcs343.evaluate(solution, input)
+        # check initial solution success
+        valid = False
+        try:
+            with open(solution.name + '.parcs_out', 'r') as ofile:
+                for line in ofile:
+                    if "Job Finished" in line:
+                        valid = True
+        except FileNotFoundError:
+            valid = False
+        if not valid: #initial solution failed, do not continue.
+            logger.error(f"Job {solution.name} has failed in its initial solution.")
+            solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+            gc.collect()
+            return solution
+            
     
     # using the "evaluate" function of another code will automatically create the job directory, so this step is skipped.
     cwd = Path(os.getcwd())
@@ -540,7 +555,7 @@ def writeDEPfromOUT(depFileName, soln_name, fuel_locs_inp, num_axial_nodes):
     Written by Nicholas Rollins. 2/14/2025
     """
     ## Identify PARCS output file containing the 3D exposure map data
-    if Path(soln_name + ".parcs_dpl").exists: #multiple PARCS output files present; EOC of last cycle will be used.
+    if Path(soln_name + ".parcs_dpl").exists(): #multiple PARCS output files present; EOC of last cycle will be used.
         cycles = []
         with open(soln_name + ".parcs_dpl", 'r') as dpl_read:
             for line in dpl_read:
@@ -552,8 +567,10 @@ def writeDEPfromOUT(depFileName, soln_name, fuel_locs_inp, num_axial_nodes):
             filename = Path(soln_name + ".parcs_cyc-" + str(lastcycle).rjust(2,'0'))
         else:
             filename = Path(soln_name + ".parcs_dep")
-    else:
+    elif Path(soln_name + ".dep").exists():
         filename = Path(soln_name + ".dep") #this is necessary for earlier PARCS versions.
+    else:
+        raise ValueError("Previous PARCS calculation failed and this failure was not caught.")
     
     fuel_locs_list = []
     for line in fuel_locs_inp:
