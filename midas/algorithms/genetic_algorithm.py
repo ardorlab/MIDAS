@@ -304,24 +304,26 @@ class GA_reproduction():
                     antihang += 1
                     if antihang > 1000:
                         raise ValueError("Random Element Crossover has failed to select a novel location after 1,000 attempts.")
+                antihang = 0
                 while c2_gene_position in c2_swapped_elements:
                     c2_gene_position = random.choice(chromosome_elements)
                     antihang += 1
-                    if antihang > 2000:
+                    if antihang > 1000:
                         raise ValueError("Random Element Crossover has failed to select a novel location after 1,000 attempts.")
 
             
                 if batches:
-                    # only consider valid gene options
+                    # decode zoning maps
                     child1_zone = [loc[0] for loc in child_one+chromosome_one[len(child_one):]] #!TODO: why do we extend the child chromosome with the original in this way? This doesn't appear to do anything.
                     child2_zone = [loc[0] for loc in child_two+chromosome_two[len(child_two):]]
+                    # only consider valid gene options
                     child1_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, batches, 
                                                                                  core_parameters, child1_zone, c1_gene_position)
                     child2_gene_opts = optools.Constrain_Input.calc_gene_options(genes_list, batches, 
                                                                                  core_parameters, child2_zone, c2_gene_position)
                     # swaps genes
-                    if child2_zone[c2_gene_position] in child1_gene_opts and \
-                       child1_zone[c1_gene_position] in child2_gene_opts:
+                    if child_two[c2_gene_position][0] in child1_gene_opts and \
+                       child_one[c1_gene_position][0] in child2_gene_opts:
                         child_one[c1_gene_position] = (child_two[c2_gene_position][0],None)
                         child_two[c2_gene_position] = (child_one[c1_gene_position][0],None)
                     else:

@@ -28,6 +28,13 @@ def evaluate(solution, input): #!TODO: this doesn't include the initial PARCS ca
 ## Run Initial Solution
     if input.init_code == "parcs343":
         solution = parcs343.evaluate(solution, input)
+        
+        # using the "evaluate" function of another code will automatically create the job directory, so this step is skipped.
+        cwd = Path(os.getcwd())
+        indv_dir = cwd.joinpath(input.results_dir_name / Path(solution.name))
+        logger.debug(f"Continuing to working directory: {indv_dir}")
+        os.chdir(indv_dir)
+    
         # check initial solution success
         valid = False
         try:
@@ -40,15 +47,18 @@ def evaluate(solution, input): #!TODO: this doesn't include the initial PARCS ca
         if not valid: #initial solution failed, do not continue.
             logger.error(f"Job {solution.name} has failed in its initial solution.")
             solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+            logger.debug(f"Returning to original working directory: {cwd}")
+            os.chdir(cwd)
             gc.collect()
             return solution
-            
-    
-    # using the "evaluate" function of another code will automatically create the job directory, so this step is skipped.
-    cwd = Path(os.getcwd())
-    indv_dir = cwd.joinpath(input.results_dir_name / Path(solution.name))
-    logger.debug(f"Continuing to working directory: {indv_dir}")
-    os.chdir(indv_dir)
+    else:
+        #!TODO: TRACE-PARCS requires PARCS to initialize the calc, so there isn't a viable non-PARCS alternative.
+        
+        # using the "evaluate" function of another code will automatically create the job directory, so this step is skipped.
+        cwd = Path(os.getcwd())
+        indv_dir = cwd.joinpath(input.results_dir_name / Path(solution.name))
+        logger.debug(f"Continuing to working directory: {indv_dir}")
+        os.chdir(indv_dir)
 
 ## TRACE SS input file
     shutil.copy(cwd / input.inp_template_ss, indv_dir / Path("TRACE_" + solution.name + "_ss.inp"))
