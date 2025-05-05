@@ -127,12 +127,6 @@ def validate_input(keyword, value):
                 raise ValueError("Number of generations may be a positive number, or 'calculate_from_genes'.")
         except AttributeError:
                 value = int(value)
-    
-    elif keyword == 'buffer_size':
-        if not isinstance(value, int):
-            raise ValueError("bufer size must be an integer") 
-        elif isinstance(value, int) and value < 1:
-            raise ValueError("buffer size must be greater than 1") 
 
     elif keyword == 'solution_symmetry':
         value = str(value).lower().replace(' ','_')
@@ -362,6 +356,13 @@ def validate_input(keyword, value):
         value = str(value).lower().replace(' ','_')
         if value not in ["perturb_by_gene"]:
             raise ValueError("perturbation type not supported.")
+
+    elif keyword == 'buffer_size':
+        value = int(value)
+        if not isinstance(value, int):
+            raise ValueError("bufer size must be an integer") 
+        elif isinstance(value, int) and value < 1:
+            raise ValueError("buffer size must be greater than 1") 
 
     elif keyword == 'acquisition_function':
         value = str(value).lower().replace(' ','_')
@@ -813,7 +814,6 @@ class Input_Parser():
         self.objectives = yaml_line_reader(info, 'objectives', None)
         termination_criteria_default = {'method':'None','termination_generations':0}
         self.termination_criteria = yaml_line_reader(info, 'termination_criteria', termination_criteria_default)
-        self.buffer_size = yaml_line_reader(info, 'buffer_size', 10)
         
     ## Algorithm Block ##
         try:
@@ -847,6 +847,7 @@ class Input_Parser():
         self.quality_factor = yaml_line_reader(info, 'quality_factor', 1.1)
         self.scaling_factor = yaml_line_reader(info, 'scaling_factor', 1.5)
         self.perturbation_type = yaml_line_reader(info, 'perturbation_type', 'perturb_by_gene')
+        self.buffer_size = yaml_line_reader(info, 'buffer_size', 10)
         
     ## Fuel Assembly Block ##
         self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)

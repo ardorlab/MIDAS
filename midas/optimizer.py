@@ -538,7 +538,7 @@ class Optimizer():
                     logger.info("Done!\n")
                 elif self.input.clear_results == "output_files":
                     logger.info(f"Clearing all output files for Buffer...")
-                    for i in range(len(self.buffer_size)):
+                    for i in range(self.input.buffer_size):
                         try:
                             os.system(f'mv ./{self.input.results_dir_name}/Buffer_Indv_{i}/Buffer_Indv_{i}.inp ./{self.input.results_dir_name}/Buffer_Indv_{i}/safe.inp ')
                             os.system(f'rm -rf ./{self.input.results_dir_name}/Buffer_Indv_{i}/Buffer_Indv_{i}.*')
@@ -549,7 +549,7 @@ class Optimizer():
                     logger.info("Done!\n")
 
     ## Iterate Over Generations  ##
-            for iter_gens in range(1,self.generation.total):
+            for iter_gens in range(self.generation.total):
                 ## create buffer / update buffer
                 self.algorithm.update_buffer(self.population.current, self.generation.current)
                 self.generation.current += 1
@@ -563,7 +563,7 @@ class Optimizer():
                     for i in range(self.input.num_procs):
                         proc_data = []
                         for j in range(len(new_chromosome_list[i])):
-                            proc_data.append(self.generate_solution(f'Gen_{self.generation.current}_Indv_{j}_proc_{i}', new_chromosome_list[i][j]))
+                            proc_data.append(self.generate_solution(f'Gen_{self.generation.current}_Indv_{population_step}_proc_{i}', new_chromosome_list[i][j]))
                         self.population.current.append(proc_data)
 
                 ## Evaluate fitness
@@ -581,17 +581,29 @@ class Optimizer():
                             except ValueError:
                                 continue #chromosome is unique, do nothing.
 
-                    # logger.info("Calculating fitness for generation %s...", self.generation.current) # don't think this is necessary for PSA 
                     ## Execute and parse objective/constraint values
+                    soln_index = []
+                    calculations = []
                     for i in range(self.input.num_procs):
-                        self.population.current[i] = pool.starmap(self.eval_func, zip(self.population.current[i], repeat(self.input)))
-                        
-                    if 'cost_fuelcycle' in self.input.objectives.keys():
-                        for soln in self.population.current:
-                            soln.parameters = LWR_fuelcyclecost.get_fuelcycle_cost(soln, self.input)
-                    if 'av_fuelenrichment' in self.input.objectives.keys():
-                        for soln in self.population.current:
-                            soln.parameters = LWR_averageenrichment.get_avfuelenrichment(soln, self.input)
+                        soln_index.append(len(self.population.current[i]))
+                        for j in self.population.current[i]:
+                            calculations.append(j)
+
+                    calculations = pool.starmap(self.eval_func, zip(calculations, repeat(self.input)))
+
+                    x = 0
+                    for i in range(self.input.num_procs):
+                        for j in range(soln_index[i]):
+                            self.population.current[i][j] = calculations[x]
+                            x += 1
+
+                    for i in range(self.input.num_procs):
+                        if 'cost_fuelcycle' in self.input.objectives.keys():
+                            for soln in self.population.current[i]:
+                                soln.parameters = LWR_fuelcyclecost.get_fuelcycle_cost(soln, self.input)
+                        if 'av_fuelenrichment' in self.input.objectives.keys():
+                            for soln in self.population.current[i]:
+                                soln.parameters = LWR_averageenrichment.get_avfuelenrichment(soln, self.input)
 
                     ## Calculate fitness from objective/constriant values
                     for i in range(self.input.num_procs):
@@ -603,14 +615,14 @@ class Optimizer():
                         self.population.current[inactive_solutions.index(soln)].append(soln)
 
                     self.algorithm.update_active(self.population.current)
-                logger.info("Done!")
 
-            ## Archive results
-                for i in range(self.input.num_procs):
-                    for soln in self.population.current[i]:
-                        self.population.archive['solutions'].append(soln.chromosome)
-                        self.population.archive['fitnesses'].append(soln.fitness_value)
-                        self.population.archive['parameters'].append(soln.parameters)
+                                    ## Archive results
+                    for i in range(self.input.num_procs):
+                        for soln in self.population.current[i]:
+                            self.population.archive['solutions'].append(soln.chromosome)
+                            self.population.archive['fitnesses'].append(soln.fitness_value)
+                            self.population.archive['parameters'].append(soln.parameters)
+                logger.info("Done!")
                 
                 best_indv_fitness = -10000000
                 for i in range(self.input.num_procs):  
@@ -650,7 +662,7 @@ class Optimizer():
             ## Clear solution files to save disk space
                 if self.input.clear_results == "all":
                     logger.info(f"Clearing solution files for Generation {self.generation.current}...")
-                    os.system(f'rm -rf ./{self.input.results_dir_name}/Gen_{self.generation.current}_Indv_*')
+                    os.system(f'rm -rf ./{self.input.results_dir_name}/Gen_{self.generation.current}_Indv_{population_step}*')
                     logger.info("Done!\n")
                 elif self.input.clear_results == "all_but_best":
                     logger.info(f"Clearing all but best solution files for Generation {self.generation.current}...")
@@ -660,14 +672,15 @@ class Optimizer():
                     logger.info("Done!\n")
                 elif self.input.clear_results == "output_files":
                     logger.info(f"Clearing all output files for Generation {self.generation.current}...")
-                    for i in range(len(self.population.current)):
-                        try:
-                            os.system(f'mv ./{self.input.results_dir_name}/Gen_{self.generation.current}_Indv_{i}/Gen_{self.generation.current}_Indv_{i}.inp ./{self.input.results_dir_name}/Gen_{self.generation.current}_Indv_{i}/safe.inp ')
-                            os.system(f'rm -rf ./{self.input.results_dir_name}/Gen_{self.generation.current}_Indv_{i}/Gen_{self.generation.current}_Indv_{i}.*')
-                            os.system(f'rm -rf ./{self.input.results_dir_name}/Gen_{self.generation.current}_Indv_{i}/boc_exp.dep')
-                            os.system(f'mv ./{self.input.results_dir_name}/Gen_{self.generation.current}_Indv_{i}/safe.inp  ./{self.input.results_dir_name}/Gen_{self.generation.current}_Indv_{i}/Gen_{self.generation.current}_Indv_{i}.inp')
-                        except: 
-                            continue
+                    for i in range(self.input.num_procs):
+                        for population_step in range(self.input.population_size):
+                            try:
+                                os.system(f'mv ./{self.input.results_dir_name}/Gen_{self.generation.current}_Indv_{population_step}_proc_{i}/Gen_{self.generation.current}_Indv_{population_step}_proc_{i}.inp ./{self.input.results_dir_name}/Gen_{self.generation.current}_Indv_{population_step}_proc_{i}/safe.inp ')
+                                os.system(f'rm -rf ./{self.input.results_dir_name}/Gen_{self.generation.current}_Indv_{population_step}_proc_{i}/Gen_{self.generation.current}_Indv_{population_step}_proc_{i}.*')
+                                os.system(f'rm -rf ./{self.input.results_dir_name}/Gen_{self.generation.current}_Indv_{population_step}_proc_{i}/boc_exp.dep')
+                                os.system(f'mv ./{self.input.results_dir_name}/Gen_{self.generation.current}_Indv_{population_step}_proc_{i}/safe.inp  ./{self.input.results_dir_name}/Gen_{self.generation.current}_Indv_{population_step}_proc_{i}/Gen_{self.generation.current}_Indv_{population_step}_proc_{i}.inp')
+                            except: 
+                                continue
                     logger.info("Done!\n")
             
                 terminate = self.termination_criteria.TC_methods(self.population.current, self.input.termination_criteria)

@@ -4,6 +4,8 @@ from copy import deepcopy
 import random
 import numpy as np
 from midas.utils import optimizer_tools as optools
+from midas.algorithms.simulated_annealing import Cooling_Schedule as SA_Cooling_Schedules
+from midas.algorithms.simulated_annealing import SA_reproduction 
 import statistics
 
 class Parallel_Simulated_Annealing():
@@ -12,8 +14,26 @@ class Parallel_Simulated_Annealing():
     parallel simulated annealing works by running multiple SAs in parallel.
     It was decided to make a unique file for PSA to keep the code clean and organized.
 
-    Note that within MIDAS each iterations is refered to as a generation. This is not necessarily the correct nomenclature 
+    Within MIDAS each iterations is refered to as a generation. This is not necessarily the correct nomenclature 
     for SA but it is named in this way for consistencey.
+
+    *********** NOTE ************
+    PSA borrows a large amount of functions from SA.
+    Currently these functions are:
+    perturb_by_genes in SA_reproduction
+    all cooling schedules in SA_Cooling_Schedules class
+
+    If a future developer wishes to add a new perturbation type please do so in SA_reproduction in 
+    simulatted_annealing.py and ensure that reproduction is updated accordingly.
+
+    If a future devloper wishes to add a new cooling schedule that can be utlized by both PSA and SA
+    please do so in SA_Cooling_Schedules in simulatted_annealing.py and update Temperature_update_methods accordingly.
+
+    If a future devloper wishes to add a new cooling schedule that can only be utlized by PSA, please do so in
+    PSA_Cooling_Schedules in parallel_simulated_annealiing.py. Currently the LAM cooling schedule is the only
+    CS unique to PSA.    
+
+    *********** END NOTE ************
 
     Written by Jake Mikouchi. 04/25/2025
     """
@@ -24,6 +44,7 @@ class Parallel_Simulated_Annealing():
         self.local_temperatures = [input.initial_temperature for i in range(self.input.num_procs)]
         self.buffer = []
         self.active_solutions = [[] for i in range(self.input.num_procs)]
+        self.selected_solutions = [0 for i in range(self.input.num_procs)]
         self.best_in_gen = [0 for i in range(self.input.num_procs)]
         self.total_moves = 0
 
@@ -49,7 +70,7 @@ class Parallel_Simulated_Annealing():
         LWR_core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies, self.input.symmetry]
         ## Perform perturbation
         if self.input.perturbation_type == "perturb_by_gene":
-            individual_pairs.append(PSA_reproduction.perturb_by_gene(self.input, primary_individual[0]))
+            individual_pairs.append(SA_reproduction.perturb_by_gene(self.input, primary_individual[0]))
         else:
             raise ValueError("Requested perturbation type not recognized.")
 
@@ -78,7 +99,7 @@ class Parallel_Simulated_Annealing():
             for i in range(self.input.buffer_size):
                 self.buffer.append(pop_list[i])
 
-            self.global_temperature = Cooling_Schedule.lam_set_intial(self)
+            self.global_temperature = PSA_Cooling_Schedules.lam_set_intial(self)
             logger = logging.getLogger("MIDAS_logger")
             logger.info(f"Initial Temperature: {self.global_temperature}")
 
@@ -112,24 +133,30 @@ class Parallel_Simulated_Annealing():
         """
         Method for distributing to the requested SA cooling schedule
 
+        NOTE: If a future developer adds a new cooling schedule in SA that can be utilized in
+        PSA, it has to be explicitly added to this function in order for PSA to utilize it. 
+
         updated by Jake Mikouchi. 04/25/2024
         """
+
         if Global:
+            # updates the global temperatures
             if cooling_schedule == 'exponential_decrease':
-                temperature = Cooling_Schedule.exponential_decrease(temperature)
+                temperature = SA_Cooling_Schedules.exponential_decrease(temperature)
             if cooling_schedule == 'linear_update':
-                temperature = Cooling_Schedule.linear_update(self.input.initial_temperature, current_step, self.input.num_generations)
+                temperature = SA_Cooling_Schedules.linear_update(self.input.initial_temperature, current_step, self.input.num_generations)
             if cooling_schedule == 'log_update':
-                temperature = Cooling_Schedule.logarithmic_update(self.input.initial_temperature, current_step)
+                temperature = SA_Cooling_Schedules.logarithmic_update(self.input.initial_temperature, current_step)
             if cooling_schedule == 'lam':
-                temperature = Cooling_Schedule.lam(self, current_step)  
+                temperature = PSA_Cooling_Schedules.lam(self, current_step)  
         else: 
+            # updates the local temperatures
             if cooling_schedule == 'exponential_decrease':
-                temperature = Cooling_Schedule.exponential_decrease(temperature)
+                temperature = SA_Cooling_Schedules.exponential_decrease(temperature)
             if cooling_schedule == 'linear_update':
-                temperature = Cooling_Schedule.linear_update(self.global_temperature, current_step, self.input.population_size)
+                temperature = SA_Cooling_Schedules.linear_update(self.global_temperature, current_step, self.input.population_size)
             if cooling_schedule == 'log_update':
-                temperature = Cooling_Schedule.logarithmic_update(self.global_temperature, current_step)
+                temperature = SA_Cooling_Schedules.logarithmic_update(self.global_temperature, current_step)
  
         return temperature 
     
@@ -182,6 +209,8 @@ class PSA_reproduction():
                     
         self.best_in_gen[proc] = selected_indv
 
+        self.selected_solutions[proc] = selected_indv
+
 
         return selected_indv
 
@@ -193,13 +222,28 @@ class PSA_reproduction():
         
         Created by Jake Mikouchi. 04/22/2025
         """
-        # optimizer.py does some weird shifting due to inactive solutions
-        # so challenger is index 0 while primary is index 1
-        challenger = self.active_solutions[proc][0]
-        if len(self.active_solutions[proc]) < 2:
+
+        with open("info.txt","a") as f:
+            for soln in self.selected_solutions:
+                f.write(str(soln.fitness_value)+"  ")
+            f.write("\n")
+
+        try:
+            if self.selected_solutions[proc].chromosome == self.active_solutions[proc][0].chromosome:
+                primary = self.active_solutions[proc][0]
+                challenger = self.active_solutions[proc][1]
+            if self.selected_solutions[proc].chromosome == self.active_solutions[proc][1].chromosome:
+                primary = self.active_solutions[proc][1]
+                challenger = self.active_solutions[proc][0]
+        except: 
             primary = self.active_solutions[proc][0]
-        else:
-            primary = self.active_solutions[proc][1]
+            challenger = self.active_solutions[proc][0]
+            
+        # challenger = self.active_solutions[proc][0]
+        # if len(self.active_solutions[proc]) < 2:
+        #     primary = self.active_solutions[proc][0]
+        # else:
+        #     primary = self.active_solutions[proc][1]
 
         selected = self.active_solutions[proc][0]
 
@@ -217,134 +261,31 @@ class PSA_reproduction():
         if challenger.fitness_value >= self.best_in_gen[proc].fitness_value:
             self.best_in_gen[proc] = challenger
 
+        self.selected_solutions[proc] = selected
+
         return selected
 
-## Mutation types ##
-    def perturb_by_gene(input_obj, chromosome):
-        """
-        Generates a new solution by randomly mutating a single gene.
-        
-        Created by Jake Mikouchi. 04/21/2025
-        """
-        ## Initialize logging for the present file
-        logger = logging.getLogger("MIDAS_logger")
-        
-        LWR_core_parameters = [input_obj.nrow, input_obj.ncol, input_obj.num_assemblies, input_obj.symmetry]
-        
-        if input_obj.calculation_type in ["eq_cycle"]:
-            zone_chromosome = [loc[0] for loc in chromosome]
-            child_zone_chromosome = deepcopy(zone_chromosome)
-            old_soln = zone_chromosome
-            new_soln = child_zone_chromosome
-            all_gene_options = input_obj.batches
-            all_genes_list = list(input_obj.batches.keys())
-        else:
-            child_chromosome = deepcopy(chromosome)
-            old_soln = chromosome
-            new_soln = child_chromosome
-            all_gene_options = input_obj.genome
-            all_genes_list = list(input_obj.genome.keys())
 
-        num_mutations = 1 #!TODO: this was hardcoded to 1 in old MIDAS. Should probably be parameterized.
-        chromosome_is_valid = False
-        attempts = 0
-        while not chromosome_is_valid:
-            new_soln = deepcopy(old_soln) #in the case of abortion, start from scratch.
-            while new_soln == old_soln:
-                for i in range(num_mutations):
-                    loc_to_mutate = random.randint(0, len(new_soln)-1) #choose a random gene
-                    old_gene = new_soln[loc_to_mutate]
-                    gene_options = optools.Constrain_Input.calc_gene_options(all_genes_list, all_gene_options,\
-                                                                                LWR_core_parameters, old_soln) #constraint input
-                    new_gene = random.choice(gene_options)
-                    if new_gene != old_gene:
-                        if all_gene_options[new_gene]['map'][loc_to_mutate] == 1:
-                            new_soln[loc_to_mutate] = new_gene
-            chromosome_is_valid = optools.Constrain_Input.check_constraints(all_genes_list,all_gene_options,\
-                                                                            LWR_core_parameters,new_soln)
-            if not chromosome_is_valid:
-                attempts += 1
-                if attempts > 100000:
-                    logger.error("Mutate-by-Gene has failed after 100,000 attempts; the Individual will be restored. Consider relaxing the constraints on the input space.")
-                    return chromosome
-
-        if input_obj.calculation_type in ["eq_cycle"]:
-            #recreate child_chromosome
-            child_chromosome = []
-            for i in range(len(new_soln)):
-                if new_soln[i] == chromosome[i][0]:
-                    child_chromosome.append(chromosome[i])
-                else:
-                    child_chromosome.append((new_soln[i],None))
-            child_chromosome = optools.Constrain_Input.EQ_reload_fuel(input_obj.genome,LWR_core_parameters,child_chromosome)
-
-        else: 
-            child_chromosome = new_soln
-
-        return child_chromosome
-
-
-class Cooling_Schedule(object):
+class PSA_Cooling_Schedules(object):
     """
-    Class for Simulated Annealing cooling schedules.
+    Class for Parallel Simulated Annealing cooling schedules.
 
-    THe cooling schedule sets the tolerance for accepting new solutions.
-    A high initial temperature indicates accepting new designs even if
-    they have a less favorable objective function. Thus the logarithmic cooling
-    schedule is favorable for this problem.
+    The cooling schedule sets the tolerance for accepting new solutions.
+    Thisdictates the "randomness" of the optimization and balances the exploration vs exploitation 
+    of the optimization. Generally, it is best for the cooling schedule to
+    start at a high temperature and gradually decrease throughout the optimization.
 
-    There are two cooling schedules defined below. In both the temperature is
-    determined by the current era of a lifetime, represented by a piecewise
-    function. The second cooling schedule is identical to the first but with
-    two cycles.
+    The PSA algorithm can access all cooling schedules available in the SA script. 
+    This class is for PSA specific schedules which SA cannot utilize.
+
+    If a future developer wants to add cooling schedules that can be universally applied to both 
+    SA and PSA please add it to the simulated_annealing.py file.
 
     Updated by Jake Mikouchi 04/23/2025
     """
 
     def __init__(self, generation):
         self.generation = generation
-
-    def exponential_decrease(temperature):
-        """
-        Logarithmic cooling schedule for simulated annealing. Implementing this because Johnny Klemes cooling schedules seem broken.
-        His implementation that I pulled from Github is broken at the least, and there isn't sufficient documentation available to
-        understand how to fix it.
-        This cooling schedule is about as simple as it can get.
-        T = T0*alpha
-        Where 0.9 < alpha < 1.0 and 1 < T0 < 10
-
-        This was kept in for legacy reasons 
-
-        Updated by Jake Mikouchi 04/23/2025
-        """
-        alpha = 0.95 #TODO make this avialble to edit in input file
-        if temperature <= 0.0001:
-            temperature = 0.0001
-        else:
-            temperature = temperature * alpha
-        return temperature
-    
-    def linear_update( initial_temperature, current_generation, total_generations):
-        """
-        linearly updates the temperature
-        
-        created by Jake Mikouchi 04/23/2025
-        """
-        temperature = initial_temperature + ((0 - initial_temperature) / total_generations) * (current_generation + 1)
-    
-        return temperature
-
-    def logarithmic_update(initial_temperature, current_generation):
-        """
-        Logarithmically updates the temperature
-        Note that the user defined inital temperature is used as a contant rather than the actual starting point.
-        Literature says this method is rarely used. 
-        
-        created by Jake Mikouchi 04/23/2025
-        """
-        temperature = initial_temperature / np.log10(2 + current_generation)
-    
-        return temperature
 
     def lam(self, current_generation):
         """

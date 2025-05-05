@@ -30,7 +30,8 @@ class Simulated_Annealing():
     def __init__(self, input):
         self.input = input   
         self.temperature = input.initial_temperature
-        self.generation = 0  
+        self.generation = 0 
+        self.selected_solution = 0  
 
 
     def reproduction(self, pop_list, current_generation):
@@ -41,7 +42,7 @@ class Simulated_Annealing():
         Updated by Jake Mikouchi. 04/21/2025
         """
     ## Container for holding new list of child chromosomes
-        primary_individual = [SA_reproduction.selection(self.temperature, pop_list).chromosome]
+        primary_individual = [SA_reproduction.selection(self, self.temperature, pop_list).chromosome]
         individual_pairs = deepcopy(primary_individual)
     ## preserve core parameters 
         LWR_core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies, self.input.symmetry]
@@ -67,7 +68,7 @@ class SA_reproduction():
     Written by Jake Mikouchi. 04/21/25
     """
 
-    def selection(temperature, pop_list):
+    def selection(self, temperature, pop_list):
         """
         Selects the current indivdiual in the SA optimization.
         This is a little weird and may need to be addressed. MIDAS is constructed to always maximize the fitness
@@ -78,11 +79,24 @@ class SA_reproduction():
 
         # optimizer.py does some weird shifting due to inactive solutions
         # so challenger is index 0 while primary is index 1
-        challenger = pop_list[0]
-        if len(pop_list) < 2:
+
+        try:
+            if self.selected_solution.chromosome == pop_list[0].chromosome:
+                primary = pop_lis[0]
+                challenger = pop_list[0][1]
+            if self.selected_solution.chromosome == pop_list[1].chromosome:
+                primary = pop_list[1]
+                challenger = pop_list[0]
+
+        except: 
             primary = pop_list[0]
-        else:
-            primary = pop_list[1]
+            challenger = pop_list[0]
+            
+        # challenger = pop_list[0]
+        # if len(pop_list) < 2:
+        #     primary = pop_list[0]
+        # else:
+        #     primary = pop_list[1]
 
         selected = pop_list[0]
 
@@ -94,7 +108,9 @@ class SA_reproduction():
             if chance < acceptance_prob:
                 selected = challenger
             else: 
-                selected = primary
+                selected = primary  
+        
+        self.selected_solution = selected
 
         return selected
 
@@ -187,15 +203,12 @@ class Cooling_Schedule(object):
     """
     Class for Simulated Annealing cooling schedules.
 
-    THe cooling schedule sets the tolerance for accepting new solutions.
-    A high initial temperature indicates accepting new designs even if
-    they have a less favorable objective function. Thus the logarithmic cooling
-    schedule is favorable for this problem.
+    The cooling schedule sets the tolerance for accepting new solutions.
+    The cooling schedule dictates the "randomness" of the optimization and balances the 
+    exploration vs exploitation of the optimization. Generally, it is best for the cooling schedule to
+    start at a high temperature and gradually decrease throughout the optimization.
 
-    There are two cooling schedules defined below. In both the temperature is
-    determined by the current era of a lifetime, represented by a piecewise
-    function. The second cooling schedule is identical to the first but with
-    two cycles.
+    All cooling schedules shown here can be accessed by both SA and PSA.
 
     Updated by Jake Mikouchi 04/23/2025
     """
