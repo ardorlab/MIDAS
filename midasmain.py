@@ -88,6 +88,9 @@ def restart(args):
     optimizer.input.set_seed = random.randrange(sys.maxsize) # generate an artibtrary RNG seed
     random.seed(optimizer.input.set_seed)
     logger.info("Set global RNG Seed: %s", optimizer.input.set_seed)
+
+## Update initial generation number
+    optimizer.generation.initial = optimizer.generation.current + 1
     
 ## Execute
     logger.info("Restart Optimization...\n")
@@ -115,7 +118,7 @@ def main(args):
 ## Parse input file
     inp_lines = Input_Parser(args.cpus, args.input)
 ## Prepare input values for writing
-    inp_lines = prep_inp.prepare_cycle(inp_lines)
+    inp_lines = prep_inp.prepare_calc(inp_lines)
     logger.info("Parsed input file: %s", str(args.input))
     
 ## Seed the global RNG
