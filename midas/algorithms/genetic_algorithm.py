@@ -42,7 +42,7 @@ class Genetic_Algorithm():
             from crudworks import CRUD_Predictor
             self.crud = CRUD_Predictor(file_settings)'''
     
-    def reproduction(self, pop_list, current_generation): #!TODO: apply constraints.
+    def reproduction(self, pop_list, gen_obj): #!TODO: apply constraints.
         """
         Generates a new generation of individuals by performing crossover and mutation 
         operations on the parents generation. These operations are performed on an ordered 
@@ -86,7 +86,7 @@ class Genetic_Algorithm():
 
     ## Perform Mutation
         curr_mutation_rate = GA_reproduction.linear_update(self.input.mutation_rate['initial_rate'], self.input.mutation_rate['final_rate'], 
-                                                           current_generation, self.input.num_generations)
+                                                           gen_obj.current, gen_obj.initial, gen_obj.total)
         mutation_list  = [] 
         for soln in child_chromosome_list:
             if random.random() < curr_mutation_rate:
@@ -580,13 +580,14 @@ class GA_reproduction():
 
         return child_chromosome
 
-    def linear_update(initial_rate, final_rate, current_generation, num_generations):
+    def linear_update(initial_rate, final_rate, current_generation, initial_generation, num_generations): #!TODO: this method doesn't account for restarts, which is likely to result in unintended extrapolation (current_generation > num_generations)
         """
         linearly updates the mutation rate at a given generation
         
         written by Jake Mikouchi. 12/21/2024
+        updated by Nicholas Rollins. 05/08/2025
         """
-        curr_rate = initial_rate + ((final_rate - initial_rate) / num_generations) * (current_generation + 1)
+        curr_rate = initial_rate + ((final_rate - initial_rate) / (num_generations - initial_generation)) * current_generation
 
         return curr_rate
     
@@ -641,7 +642,7 @@ class GA_selection():
             shift_fitness_scale = min([soln.fitness_value for soln in unused_solutions]) #shift fitness values to start at zero (this corrects for negative fitness values)
             for solution in unused_solutions:
                 selection_probability['low_bound'].append(probability_sum)
-                probability_sum += (solution.fitness_value + shift_fitness_scale)
+                probability_sum += (solution.fitness_value - shift_fitness_scale)
                 selection_probability['up_bound'].append(probability_sum)
 
             value = random.random()
@@ -654,7 +655,7 @@ class GA_selection():
             # if we run out of parents, continue from a fresh list
             if not unused_solutions:
                 unused_solutions = deepcopy(pop_list)
-
+        
         return winners
     
     def tournament(pop_list, desired_pop_size):

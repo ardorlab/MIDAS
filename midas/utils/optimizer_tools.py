@@ -51,7 +51,8 @@ class Generation(): #!TODO: an object for holding two integers is silly; fold th
         else:
             self.total = num_gens
         
-        self.current = 0
+        self.current = 0 # dynamically tracks the iteration number of the optimizer
+        self.initial = 0 # stores the starting generation number in the case of a restarted calculation
 
     def calculate_total_generations(self, number_changes):
         """
