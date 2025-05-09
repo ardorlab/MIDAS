@@ -119,15 +119,20 @@ def evaluate(solution, input):
         else:
             ofile.write("      TH_FDBK    F\n")
         ofile.write("      CORE_POWER 100.0\n")
-        ofile.write("      CORE_TYPE  PWR\n")
-        ofile.write("      PPM        1000 1.0 1800.0 10.0\n") #!TODO: this should be a parameterized boron guess value.
+        ofile.write(f"      CORE_TYPE  {input.core_type}\n")
+        if input.core_type == "PWR":
+            ofile.write("      PPM        1000 1.0 1800.0 10.0\n") #!TODO: this should be a parameterized boron guess value.
         ofile.write("      DEPLETION  T  1.0E-5 T\n")
         if input.calculation_type in ['eq_cycle']:
             ofile.write("      MULT_CYC   T  F\n") #v3.4.2 specific line to enable the MCYCLE block
         ofile.write("      TREE_XS    T  {}  T  T  F  F  T  F  F  F  T  F  T  T  T  F  F \n".format(int(len(list_unique_xs))))
-        ofile.write("      BANK_POS   100 100 100 100 100 100\n")
+        if input.core_type == "PWR":
+            ofile.write("      BANK_POS   100 100 100 100 100 100\n")
         ofile.write("      XE_SM      1 1 1 1\n")
-        ofile.write("      SEARCH     PPM\n")
+        if input.core_type == "PWR":
+            ofile.write("      SEARCH     PPM\n")
+        elif input.core_type == "BWR":
+            ofile.write("      SEARCH     KEFF 0.997\n")
         ofile.write("      XS_EXTRAP  1.0 0.3\n")
         if input.pin_power_recon:
             ofile.write("      PIN_POWER  T\n")
@@ -354,7 +359,12 @@ def evaluate(solution, input):
         
         else: #job failed
             if input.calculation_type in ['eq_cycle']:
-                solution.parameters = eq_cycle_convergence(input, solution, filename, parcscmd, input.code_walltime) #iteratively try to find an intial guess that will converge
+                try:
+                    solution.parameters = eq_cycle_convergence(input, solution, filename, parcscmd, input.code_walltime) #iteratively try to find an intial guess that will converge
+                except Exception as e:
+                    logger.error(f"Job {solution.name} has failed to converge with the following exception: {e}")
+                    solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+                    
             else: #standard execution pathway
                 logger.warning(f"Job {solution.name} has failed!")
                 solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
@@ -396,20 +406,20 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
         res_str = res_str[0].split('\n')
         
         ## Parse raw values by timestep
-        efpd_list = []; boron_list = []; keff_list = []; fq_list = []; fdh_list = []
+        efpd_list = []; boron_list = []; keff_list = []; Pxyz_list = []; fdh_list = []
         for i in range(2, len(res_str)-1):
             res_val=res_str[i].split()
             
             efpd_list.append(float(res_val[9]))
             boron_list.append(float(res_val[14]))
             keff_list.append(float(res_val[2]))
-            fq_list.append(float(res_val[7]))
+            Pxyz_list.append(float(res_val[7]))
             fdh_list.append(float(res_val[6]))
         
         del filestr, res_str, res_val #unload file contents to clean up memory
         
         results_dict["cycle_length"]["value"] = calc_cycle_length(efpd_list,boron_list,keff_list)
-        results_dict["pinpowerpeaking"]["value"] = max(fq_list)
+        results_dict["pinpowerpeaking"]["value"] = max(Pxyz_list)
         results_dict["fdeltah"]["value"] = max(fdh_list)
         results_dict["max_boron"]["value"] = max(boron_list)
         
@@ -463,16 +473,14 @@ def calc_cycle_length(efpd,boron,keff):
             def_dbor = 0.0
         eoc = efpd[eoc1_ind] + def_dbor*(boron[eoc1_ind]-boron[eco2_ind]) #linear extrapolation to efpd at boron=0.1
     elif boron[-1]==boron[0]: #true boron exceeds initial guess
-        drho_dcb=10
-        drho1 = (keff[-2]-1.0)*10**5
-        dcb1 = drho1/drho_dcb
-        cb1= boron[-2] + dcb1
-        drho2 = (keff[-1]-1.0)*10**5
-        dcb2 = drho2/drho_dcb
-        cb2= boron[-1] + dcb2
-        dbor = abs(cb1-cb2)
-        defpd = abs(efpd[-2]-efpd[-1])
-        def_dbor = defpd/dbor
+        drho_dcb=10 #pcm/ppm
+        drho1 = (keff[-2]-1.0)*10**5 #pcm
+        cb1= boron[-2] + drho1/drho_dcb #corrected boron concentration
+        drho2 = (keff[-1]-1.0)*10**5 #pcm
+        cb2= boron[-1] + drho2/drho_dcb #corrected boron concentration
+        dbor = abs(cb1-cb2) #ppm
+        defpd = abs(efpd[-2]-efpd[-1]) #efpd
+        def_dbor = defpd/dbor #efpd/ppm
         eoc = efpd[-1] + def_dbor*(cb2-0.1)
     else: #EOC boron is greater than 0.1
         dbor = abs(boron[-2]-boron[-1])
