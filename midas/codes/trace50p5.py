@@ -66,8 +66,27 @@ def evaluate(solution, input): #!TODO: this doesn't include the initial PARCS ca
 
 ## PARCS SS input file
 
+    ## Fetch EOC Timestep
+    with open(solution.name + ".parcs_dpl", "r") as ofile:
+        filestr = ofile.read()
+    ## Split file by section
+    res_str = filestr.split('===============================================================================')
+    res_str = res_str[-1].split('_______________________________________________________________________________')
+    res_str = res_str[0].split('\n')
+    ## Parse raw values by timestep
+    boron_list = []
+    for i in range(2, len(res_str)-1):
+        res_val=res_str[i].split()
+        boron_list.append(float(res_val[14]))
+    del filestr, res_str, res_val #unload file contents to clean up memory
+    
+    eoc_ts = 0
+    for i in range(len(boron_list)):
+        if boron_list[i] > 0.1: #EOC not reached
+            eoc_ts = i #the last time this is overwritten is assumed to be EOC (last critical timestep)
+    
     ## Write EOC Exposure Map
-    writeDEPfromOUT("eoc_exp.dep", solution.name, input.pincal_loc, input.number_axial)
+    writeDEPfromOUT("eoc_exp.dep", solution.name, eoc_ts, input.pincal_loc, input.number_axial)
     
     ## Prepare values for file writing
     list_unique_xs = np.concatenate([value if isinstance(value,list) else np.concatenate(list(value.values()))\
@@ -551,7 +570,7 @@ def evaluate(solution, input): #!TODO: this doesn't include the initial PARCS ca
     
     return solution
 
-def writeDEPfromOUT(depFileName, soln_name, fuel_locs_inp, num_axial_nodes):
+def writeDEPfromOUT(depFileName, soln_name, timestep, fuel_locs_inp, num_axial_nodes):
     """
     Method for automatically parsing and generating the 3D nodel exposure map data and '.dep' file
     needed to initialize the coupled TRACE-PARCS calculation. Assumes EOC conditions are desired.
@@ -592,7 +611,8 @@ def writeDEPfromOUT(depFileName, soln_name, fuel_locs_inp, num_axial_nodes):
     num_assemblies = sum(fuel_locs_list)
 
     exp_map = np.zeros((num_axial_nodes-2,num_assemblies)) #(axial node, FA index)
-
+    
+    exp_maps_list = []
     ## Parse exposure map from PARCS output file
     with open(filename, 'r') as fileread:
         loc_offset = -10
@@ -608,6 +628,7 @@ def writeDEPfromOUT(depFileName, soln_name, fuel_locs_inp, num_axial_nodes):
                 if not line.strip():
                     continue
                 elif " I_D 2D MAP" in line:
+                    exp_maps_list.append(exp_map) #save map to list ordered by timestep
                     invalid = True
                     loc_offset = -10
                     FAi_offset = 0
@@ -627,6 +648,7 @@ def writeDEPfromOUT(depFileName, soln_name, fuel_locs_inp, num_axial_nodes):
                             else:
                                 exp_map[axindex-2][FAi_offset+line_offset] = float(sline[i])
                                 line_offset += 1
+    eoc_exp_map = exp_maps_list[timestep] #use exp map from EOC (last critical timestep)
 
     ## Prepare depletion file template
     with open(depFileName,"w") as depfile:
@@ -646,7 +668,7 @@ def writeDEPfromOUT(depFileName, soln_name, fuel_locs_inp, num_axial_nodes):
                 for j in range(num_axial_nodes-2,0,-1): #iterate in reverse; assume 1 node each top and bottom reflectors.
                     depfile.write(' '+str(j).ljust(3))
                     for k in range(columncount):
-                        depfile.write('{:.3f}'.format((exp_map[j-1][k+ioffset])).rjust(8))
+                        depfile.write('{:.3f}'.format((eoc_exp_map[j-1][k+ioffset])).rjust(8))
                     depfile.write('\n')
                 depfile.write('\n')
                 columncount = 0
@@ -656,7 +678,7 @@ def writeDEPfromOUT(depFileName, soln_name, fuel_locs_inp, num_axial_nodes):
             for j in range(num_axial_nodes-2,0,-1): #iterate in reverse; assume 1 node each top and bottom reflectors.
                 depfile.write(' '+str(j).ljust(3))
                 for k in range(columncount):
-                    depfile.write('{:.3f}'.format(exp_map[j-1][k+ioffset]).rjust(8))
+                    depfile.write('{:.3f}'.format(eoc_exp_map[j-1][k+ioffset]).rjust(8))
                 depfile.write('\n')
             depfile.write('\n')
         depfile.write(' END STEP\n')
@@ -677,7 +699,6 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
         
     if not job_failed:
     ## Read TRACE transient file for parsing
-        cold_temp = 562.95 #K; CZP temperature (such as in the radial reflectors) #!TODO: this should be parameterized.
         split_center_row = True #!TODO: this should be parameterized.
         core_shape = [
             [None, None, None, None, 909, 909, 909, 909, 909, 909, 909, 909, 909, None, None, None, None],
@@ -768,12 +789,13 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
                                 fuel_coremap[row][col] = CenterlineTemp_dict[core_shape[row][col]][ts][axn]
                                 gapq_coremap[row][col] = GapQ_dict[core_shape[row][col]][ts][axn]
                             else:
-                                if not row == split_center:
+                                if row != split_center:
                                     clad_coremap[row][col] = CladTemp_dict[core_shape[row][col]][ts][axn]
                                     fuel_coremap[row][col] = CenterlineTemp_dict[core_shape[row][col]][ts][axn]
                                     gapq_coremap[row][col] = GapQ_dict[core_shape[row][col]][ts][axn]
                                 else: #if split_center, recombine center row FA values.
                                     try:
+                                        cold_temp = CladTemp_dict[core_shape[split_center][0]][ts][axn] #K; CZP temperature (such as in the radial reflectors) #!TODO: this should be parameterized.
                                         clad_TperQ = [(CladTemp_dict[core_shape[row][col]][ts][axn]-cold_temp)/GapQ_dict[core_shape[row][col]][ts][axn],
                                                  (CladTemp_dict[core_shape[row+1][col]][ts][axn]-cold_temp)/GapQ_dict[core_shape[row+1][col]][ts][axn]]
                                         clad_coremap[row][col] = cold_temp + (GapQ_dict[core_shape[row][col]][ts][axn] + \
@@ -781,16 +803,17 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
                                     except ZeroDivisionError:
                                         clad_coremap[row][col] = CladTemp_dict[core_shape[row][col]][ts][axn]
                                     try:
+                                        cold_temp = CenterlineTemp_dict[core_shape[split_center][0]][ts][axn] #K; CZP temperature (such as in the radial reflectors) #!TODO: this should be parameterized.
                                         fuel_TperQ = [(CenterlineTemp_dict[core_shape[row][col]][ts][axn]-cold_temp)/GapQ_dict[core_shape[row][col]][ts][axn],
                                                  (CenterlineTemp_dict[core_shape[row+1][col]][ts][axn]-cold_temp)/GapQ_dict[core_shape[row+1][col]][ts][axn]]
                                         fuel_coremap[row][col] = cold_temp + (GapQ_dict[core_shape[row][col]][ts][axn] + \
                                                                        GapQ_dict[core_shape[row+1][col]][ts][axn])*(fuel_TperQ[0] + fuel_TperQ[1])/2
                                     except ZeroDivisionError:
                                         fuel_coremap[row][col] = CenterlineTemp_dict[core_shape[row][col]][ts][axn]
-
+                                        
                                     gapq_coremap[row][col] = GapQ_dict[core_shape[row][col]][ts][axn] + GapQ_dict[core_shape[row+1][col]][ts][axn]
                 
-                ## Skip second channel for center row of FAs 
+                ## Remove second channel for center row of FAs 
                 if split_center_row == True:
                     clad_coremap = clad_coremap[:split_center+1] + clad_coremap[split_center+2:]
                     fuel_coremap = fuel_coremap[:split_center+1] + fuel_coremap[split_center+2:]
@@ -814,14 +837,15 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
                             gapqtemps_list.append(float(gapq_coremap[row][col]))
                         except TypeError:
                             continue
+                
                 results_dict["maxcladtemp"]["value"] = max(max(cladtemps_list),results_dict["maxcladtemp"]["value"])
                 results_dict["maxfueltemp"]["value"] = max(max(fueltemps_list),results_dict["maxfueltemp"]["value"])
                 results_dict["maxgapq"]["value"] = max(max(gapqtemps_list),results_dict["maxgapq"]["value"])
     
     
     else: #job has failed; fill parameters with absurdly negative values.
-        results_dict["maxcladtemp"]["value"] = 2000 #K
-        results_dict["maxfueltemp"]["value"] = 2000 #K
+        results_dict["maxcladtemp"]["value"] = 10000 #K
+        results_dict["maxfueltemp"]["value"] = 10000 #K
         results_dict["maxgapq"]["value"] = 1E6 #W/m^2
     
     ## Save user-requested values from results
