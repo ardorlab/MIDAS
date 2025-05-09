@@ -243,7 +243,7 @@ class Optimizer():
             self.generation.current += 1
         ## Create new generation
             logger.info("Creating population of %s individuals for generation %s...", self.input.population_size, self.generation.current)
-            new_chromosome_list = self.algorithm.reproduction(self.population.current, self.generation.current)
+            new_chromosome_list = self.algorithm.reproduction(self.population.current, self.generation)
             self.population.current = []
             for i in range(len(new_chromosome_list)):
                 self.population.current.append(self.generate_solution(f'Gen_{self.generation.current}_Indv_{i}', new_chromosome_list[i]))

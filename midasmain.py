@@ -88,6 +88,9 @@ def restart(args):
     optimizer.input.set_seed = random.randrange(sys.maxsize) # generate an artibtrary RNG seed
     random.seed(optimizer.input.set_seed)
     logger.info("Set global RNG Seed: %s", optimizer.input.set_seed)
+
+## Update initial generation number
+    optimizer.generation.initial = optimizer.generation.current + 1
     
 ## Execute
     logger.info("Restart Optimization...\n")
