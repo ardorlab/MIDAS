@@ -10,6 +10,7 @@ import subprocess
 from subprocess import STDOUT
 from midas.utils.optimizer_tools import Constrain_Input
 from midas_data import __polaris624exe__;
+import random #!needed for debug
 
 
 ## Initialize logging for the present file
@@ -219,6 +220,7 @@ def get_results(parameters, solnname, job_failed=False):
                 dbu_dkeff = (exposure_list[i] - exposure_list[i-1])/(keff_list[i] - keff_list[i-1])
                 results_dict["max_critical_exposure"]["value"] = exposure_list[i-1] + dbu_dkeff*(1.0 - keff_list[i-1])#GWd/MTU; linear interpolation to keff = 1.0
                 subcritical = True
+                break
         if not subcritical:
             dbu_dkeff = (exposure_list[-1] - exposure_list[-2])/(keff_list[-1] - keff_list[-2])
             results_dict["max_critical_exposure"]["value"] = exposure_list[-2] + dbu_dkeff*(1.0 - keff_list[-2])#GWd/MTU; linear extrapolation to keff = 1.0
