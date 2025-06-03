@@ -18,7 +18,7 @@ logger = logging.getLogger("MIDAS_logger")
 ## Functions ##
 def evaluate(solution, input):
     """
-    #!TODO: write docstring.
+    Interface used to run PARCSv343 calculations.
     
     Updated by Nicholas Rollins. 10/03/2024
     """
@@ -147,7 +147,7 @@ def evaluate(solution, input):
     with open(filename,"a") as ofile:
         ofile.write("PARAM\n")
         ofile.write("      LSOLVER     1 1 20\n")
-        if input.th_fdbk:
+        if input.th_fdbk: #!TODO: temporary solution. This should be replaced with an actual parameter for the kernal.
             ofile.write("      NODAL_KERN  HYBRID\n")
         else:
             ofile.write("      NODAL_KERN  NEMMG\n")
@@ -258,6 +258,7 @@ def evaluate(solution, input):
             ofile.write("      PIN_DIM      4.1 4.75 0.58 6.13\n")
             ofile.write("      FLOW_COND    {}  {}\n".format(np.round(input.inlet_temp-273.15,2),\
                                                              np.round(input.flow/input.num_assemblies,4)))
+            ofile.write("      STATE_CORE   {}  1301.86  1.5789E7\n".format(np.round(input.flow)))
             ofile.write("      HGAP     11356.0\n") #!TODO:check this value, should it be parameterized?
             ofile.write("      N_RING   6\n")
             ofile.write(f"      THMESH_X       {dim_size[0]}*1\n")
@@ -353,12 +354,17 @@ def evaluate(solution, input):
         output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=input.code_walltime) #wait until calculation finishes
     ## Get Results
         if 'Finished' in str(output): #job completed
-            logger.debug(f"Job {solution.name} completed successfully.")
+            logger.debug(f"Job {solution.name} completed successfully in PARCSv343.")
             solution.parameters = get_results(solution.parameters, solution.name)
         
         else: #job failed
             if input.calculation_type in ['eq_cycle']:
-                solution.parameters = eq_cycle_convergence(input, solution, filename, parcscmd, input.code_walltime) #iteratively try to find an intial guess that will converge
+                try:
+                    solution.parameters = eq_cycle_convergence(input, solution, filename, parcscmd, input.code_walltime) #iteratively try to find an intial guess that will converge
+                except Exception as e:
+                    logger.error(f"Job {solution.name} has failed to converge with the following exception: {e}")
+                    solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+                    
             else: #standard execution pathway
                 logger.warning(f"Job {solution.name} has failed!")
                 solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
@@ -400,20 +406,20 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
         res_str = res_str[0].split('\n')
         
         ## Parse raw values by timestep
-        efpd_list = []; boron_list = []; keff_list = []; fq_list = []; fdh_list = []
+        efpd_list = []; boron_list = []; keff_list = []; Pxyz_list = []; fdh_list = []
         for i in range(2, len(res_str)-1):
             res_val=res_str[i].split()
             
             efpd_list.append(float(res_val[9]))
             boron_list.append(float(res_val[14]))
             keff_list.append(float(res_val[2]))
-            fq_list.append(float(res_val[7]))
+            Pxyz_list.append(float(res_val[7]))
             fdh_list.append(float(res_val[6]))
         
         del filestr, res_str, res_val #unload file contents to clean up memory
         
         results_dict["cycle_length"]["value"] = calc_cycle_length(efpd_list,boron_list,keff_list)
-        results_dict["pinpowerpeaking"]["value"] = max(fq_list)
+        results_dict["pinpowerpeaking"]["value"] = max(Pxyz_list)
         results_dict["fdeltah"]["value"] = max(fdh_list)
         results_dict["max_boron"]["value"] = max(boron_list)
         
@@ -440,9 +446,9 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
     for param in parameters.keys():
         if param in results_dict:
             parameters[param]['value'] = results_dict[param]["value"]
-        else:
-            if param not in ['cost_fuelcycle','av_fuelenrichment']: #check whitelist
-                logger.warning(f"Parameter '{param}' not supported in PARCS343 results parsing.")
+        #!else: #!TODO: is this practical? It would need to have all the TRACE parameters whitelisted as well.
+        #!    if param not in ['cost_fuelcycle','av_fuelenrichment']: #check whitelist
+        #!        logger.warning(f"Parameter '{param}' not supported in PARCS343 results parsing.")
     
     return parameters
 
@@ -467,16 +473,14 @@ def calc_cycle_length(efpd,boron,keff):
             def_dbor = 0.0
         eoc = efpd[eoc1_ind] + def_dbor*(boron[eoc1_ind]-boron[eco2_ind]) #linear extrapolation to efpd at boron=0.1
     elif boron[-1]==boron[0]: #true boron exceeds initial guess
-        drho_dcb=10
-        drho1 = (keff[-2]-1.0)*10**5
-        dcb1 = drho1/drho_dcb
-        cb1= boron[-2] + dcb1
-        drho2 = (keff[-1]-1.0)*10**5
-        dcb2 = drho2/drho_dcb
-        cb2= boron[-1] + dcb2
-        dbor = abs(cb1-cb2)
-        defpd = abs(efpd[-2]-efpd[-1])
-        def_dbor = defpd/dbor
+        drho_dcb=10 #pcm/ppm
+        drho1 = (keff[-2]-1.0)*10**5 #pcm
+        cb1= boron[-2] + drho1/drho_dcb #corrected boron concentration
+        drho2 = (keff[-1]-1.0)*10**5 #pcm
+        cb2= boron[-1] + drho2/drho_dcb #corrected boron concentration
+        dbor = abs(cb1-cb2) #ppm
+        defpd = abs(efpd[-2]-efpd[-1]) #efpd
+        def_dbor = defpd/dbor #efpd/ppm
         eoc = efpd[-1] + def_dbor*(cb2-0.1)
     else: #EOC boron is greater than 0.1
         dbor = abs(boron[-2]-boron[-1])
@@ -630,7 +634,7 @@ def eq_cycle_convergence(input, solution, filename, parcscmd, walltime):
         #try again with new starting point
         output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=walltime) #wait until calculation finishes
     if 'Finished' in str(output): #job completed
-        logger.debug(f"Job {solution.name} completed successfully.")
+        logger.debug(f"Job {solution.name} completed successfully in PARCSv343.")
         solution.parameters = get_results(solution.parameters, solution.name)
     else:
         logger.warning(f"Job {solution.name} has failed!")

@@ -250,6 +250,13 @@ class Prepare_Problem_Values():
     
     Written by Nicholas Rollins. 10/04/2024
     """
+    def prepare_calc(input_obj): #!TODO: this is currently just a placeholder, "prepare_lattice" isn't in use.
+        if input_obj.calculation_type in ["single_cycle","eq_cycle"]:
+            input_obj = Prepare_Problem_Values.prepare_cycle(input_obj)
+        elif input_obj.calculation_type in ["lattice_physics"]:
+            input_obj = Prepare_Problem_Values.prepare_lattice(input_obj)
+        return input_obj
+    
     def prepare_cycle(input_obj):
         """
         Prepares the provided input parameters in the necessary format for writing to
@@ -322,7 +329,7 @@ class Prepare_Problem_Values():
                     if val is None:
                         full_core_locs[y,x] = "    "
                     elif val[0] == "R":
-                        if input_obj.code_interface in ["parcs342","parcs343"]:
+                        if input_obj.code_interface in ["parcs342","parcs343","trace50p5"]:
                             full_core_locs[y,x] = "   0"
                         else:
                             full_core_locs[y,x] = "    "
@@ -336,6 +343,24 @@ class Prepare_Problem_Values():
         input_obj.core_lattice = core_lattice
         input_obj.pincal_loc = pincal_loc
         input_obj.full_core_locs = full_core_locs
+        
+        return input_obj
+    
+    def prepare_lattice(input_obj):
+        """
+        Prepares the provided input parameters in the necessary format for writing to
+        the external model's input file.
+        
+        Written by Nicholas Rollins. 03/08/2025
+        """
+    ## Prepare lattice map for printing to file
+        #!TODO: create method to correlate all soln symmetries to both printing symmetries
+    
+    ## Store results alongside input data
+        #!input_obj.tag_list = tag_list
+        #!input_obj.core_dict = core_dict
+        #!input_obj.core_lattice = core_lattice
+        #!input_obj.full_core_locs = full_core_locs
         
         return input_obj
 
@@ -516,4 +541,45 @@ class LWR_Core_Shapes():
             gene_type_count['total'] += multiplicity
         return gene_type_count
         
+    def count_in_lattice(symmetry, chromosome):
+        gene_type_count = {'total':0}
         
+        carts = [0,0]
+        for i in range(len(chromosome)):
+            gene = chromosome[i]
+            if symmetry == "octant": #assumes SE octant
+                if carts[0] == 0:
+                    if carts[1] == 0:
+                        multiplicity = 1
+                        carts[1] += 1 #next row
+                    else:
+                        multiplicity = 4
+                        carts[0] += 1 #next col
+                elif carts[0] == carts[1]:
+                    multiplicity = 4
+                    carts[0] = 0
+                    carts[1] += 1 #next row
+                else:
+                    multiplicity = 8
+                    carts[0] += 1 #next col
+            elif symmetry == "quarter": #counting rows and columns after center pin is unnecessary
+                if carts[0] == 0:
+                    if carts[1] == 0:
+                        multiplicity = 1
+                        carts[1] += 1 #next row
+                    else:
+                        multiplicity = 4
+                else:
+                    multiplicity = 4
+            elif symmetry == "full":
+                multiplicity = 1
+            else:
+                raise ValueError(f"Lattice symmetry {symmetry} not recognized.")
+            
+            if gene in gene_type_count:
+                gene_type_count[gene] += multiplicity
+            else:
+                gene_type_count[gene] = multiplicity
+            gene_type_count['total'] += multiplicity
+        
+        return gene_type_count

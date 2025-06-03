@@ -323,7 +323,7 @@ class Bayesian_Optimization:
         candidate = self.binary_vector_to_categorical(best_binary)
         return candidate
 
-    def reproduction(self, pop_list, current_generation):
+    def reproduction(self, pop_list, gen_obj):
         """
         Takes in the current population and their respective fitness values, and uses Bayesian Optimization to 
         suggest the next points.
@@ -341,8 +341,8 @@ class Bayesian_Optimization:
 
         #Create LWR core parameters for use in checking constraints
         LWR_core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies, self.input.symmetry]
-        self.iterations = current_generation
-
+        self.iterations = gen_obj.current
+        
         chromosome_list = [soln.chromosome for soln in pop_list]
         #Invert incoming fitness because BO is a minimization tool and MIDAS prefers a maximum fitness
         fitness_list = [-1 * soln.fitness_value for soln in pop_list]
