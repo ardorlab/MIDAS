@@ -9,14 +9,16 @@ from itertools import repeat
 import csv
 import pickle
 
-from midas.algorithms import genetic_algorithm as GA
-from midas.algorithms import bayesian_optimization as BO
 from midas.utils import optimizer_tools as optools
-from midas.codes import parcs342, parcs343
 from midas.utils import LWR_fuelcyclecost
 from midas.utils import LWR_averageenrichment
-from midas.codes import nuscale_lut
 from midas.utils import termination_criteria as TC
+from midas.algorithms import genetic_algorithm as GA
+from midas.algorithms import bayesian_optimization as BO
+from midas.codes import parcs342, parcs343
+from midas.codes import nuscale_lut
+from midas.codes import trace50p5
+from midas.codes import polaris624
 
 
 ## Classes ##
@@ -47,13 +49,18 @@ class Optimizer():
         self.population = optools.Population(self.input.population_size, num_gene_combos)
         self.generation = optools.Generation(self.input.num_generations, num_gene_combos)
         self.fitness    = optools.Fitness()
-        self.eval_func  = None
         if self.input.code_interface == "parcs342":
             self.eval_func = parcs342.evaluate #assign, don't execute.
         elif self.input.code_interface == "parcs343":
             self.eval_func = parcs343.evaluate
         elif self.input.code_interface == "nuscale_database":
             self.eval_func = nuscale_lut.evaluate
+        elif self.input.code_interface == "trace50p5":
+            self.eval_func = trace50p5.evaluate
+        elif self.input.code_interface == "polaris624":
+            self.eval_func = polaris624.evaluate
+        else:
+            raise ValueError(f"Could not identify eval_func for code type '{self.input.code_interface}'. This is highly irregular.")
         
         if methodology == 'genetic_algorithm':
             self.algorithm = GA.Genetic_Algorithm(self.input)
@@ -93,11 +100,12 @@ class Optimizer():
         for key in soln.parameters.keys():
             soln.parameters[key]['value'] = None #placeholder to be filled by objective function.
         
-        LWR_core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies, self.input.symmetry]
+        core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies,
+                            self.input.symmetry, self.input.calculation_type]
         if chromosome:
             soln.chromosome = chromosome
         else: #generate random chromosome
-            soln.chromosome = soln.generate_initial(self.input.calculation_type, LWR_core_parameters,\
+            soln.chromosome = soln.generate_initial(self.input.calculation_type, core_parameters,\
                                                     self.input.genome, self.input.batches) #'batches' is None when not applicable.
 
         return soln
@@ -152,39 +160,6 @@ class Optimizer():
             for soln in self.population.current:
                 soln.fitness_value = self.fitness.calculate(soln.parameters)
             logger.info("Done!")
-    
-    ## Archive initial results
-            for soln in self.population.current:
-                self.population.archive['solutions'].append(soln.chromosome)
-                self.population.archive['fitnesses'].append(soln.fitness_value)
-                self.population.archive['parameters'].append(soln.parameters)
-            
-            ## Only initialize the results file the first time.
-            archive_header = ["Generation","Individual","Fitness Value"]
-            for param in self.input.objectives.keys():
-                archive_header.append(str(param))
-            archive_header.append("Chromosome")
-            ## write output file
-            with open("optimizer_results.csv", 'w') as csvfile:
-                csvwriter = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
-                csvwriter.writerow(archive_header)
-            best_soln_index = [s.fitness_value for s in self.population.current].index(max([s.fitness_value for s in self.population.current]))
-            for i in range(len(self.population.current)):
-                soln = self.population.current[i]
-                soln_result_list = [str(self.generation.current),str(i),'{0:.3f}'.format(soln.fitness_value)]
-                for param in soln.parameters.keys():
-                    if param == 'av_fuelenrichment': #reformat this parameter prior to printing
-                        soln_result_list.append('{0:.3f}'.format(100*soln.parameters[param]['value'])) #convert w.t. to wo%
-                    else:
-                        soln_result_list.append('{0:.3f}'.format(soln.parameters[param]['value']))
-                for gene in soln.chromosome:
-                    soln_result_list.append(str(gene))
-                ## write to output file
-                with open("optimizer_results.csv", 'a') as csvfile:
-                    csvwriter = csv.writer(csvfile, delimiter=',')
-                    csvwriter.writerow(soln_result_list)
-                if i == best_soln_index:
-                    best_soln_string = ",".join(soln_result_list)
         
     ## Archive initial results
             for soln in self.population.current:
@@ -268,13 +243,13 @@ class Optimizer():
             self.generation.current += 1
         ## Create new generation
             logger.info("Creating population of %s individuals for generation %s...", self.input.population_size, self.generation.current)
-            new_chromosome_list = self.algorithm.reproduction(self.population.current, self.generation.current)
+            new_chromosome_list = self.algorithm.reproduction(self.population.current, self.generation)
             self.population.current = []
             for i in range(len(new_chromosome_list)):
                 self.population.current.append(self.generate_solution(f'Gen_{self.generation.current}_Indv_{i}', new_chromosome_list[i]))
         
         ## Evaluate fitness
-            ## If chromosome exists in previous generations, skip call to external model.
+            ## If chromosome exists in previous generations, skip call to external code.
             inactive_solutions = []
             for soln in self.population.current:
                 try:
@@ -378,7 +353,7 @@ class Optimizer():
                 avg_fit = statistics[gen]['Average_Fitness']
                 max_fit = statistics[gen]['Average_Fitness']
                 std_fit = statistics[gen]['Std_Fitness']
-                file.write(f'{int(gen.split('_')[1])},{avg_fit},{max_fit},{std_fit}\n')
+                file.write(f"{int(gen.split('_')[1])},{avg_fit},{max_fit},{std_fit}\n")
         #Plot statistics info if user turned on plot
         if self.input.statistics_plots:
             optimization_information.plot_optimization_statistics()
