@@ -58,7 +58,7 @@ def validate_input(keyword, value):
     
     elif keyword == 'optimizer':
         value = str(value).lower().replace(' ','_')
-        if value not in ["genetic_algorithm","bayesian_optimization"]:
+        if value not in ["genetic_algorithm","bayesian_optimization","simulated_annealing"]:
             raise ValueError("Requested methodology '" + value + "' invalid.")
     
     elif keyword == 'code_type':
@@ -324,6 +324,46 @@ def validate_input(keyword, value):
         if value < 0:
             raise ValueError('Generation for turning the surrogate model fitting off must be greater than 0.')
         
+    elif keyword == 'temperature':
+        value = float(value)
+        if value < 0.0:
+            raise ValueError("Simulated Annealing intial temperature must be greater than 0")
+        
+    elif keyword == 'cooling_schedule':
+        value = str(value).lower().replace(' ','_')
+        if value not in ["exponential_decrease", "linear_update", "log_update", "lam"]:
+            raise ValueError(f"Cooling schedule '{value}' not supported.")
+        if value == "lam":
+            logger.warning(f"Cooling schedule '{value}' only available for parallel simulated annealing.")
+
+    elif keyword == 'secondary_cooling_schedule':
+        value = str(value).lower().replace(' ','_')
+        if value not in ["exponential_decrease", "linear_update", "log_update", "none"]:
+            raise ValueError(f"Secondary cooling schedule '{value}' not supported.")
+        
+    elif keyword == 'quality_factor':
+        value = float(value)
+        if value < 1.0 or value > 2.0:
+            raise ValueError("quality factor for LAM cooling schedule must be 2.0 > qf > 1.0")
+        
+    elif keyword == 'scaling_factor':
+        value = float(value)
+        if value < 1.0 or value > 2.0:
+            raise ValueError("scaling factor for LAM cooling schedule must be 2.0 > qf > 1.0")
+        
+    elif keyword == 'perturbation_type':
+        value = str(value).lower().replace(' ','_')
+        if value not in ["perturb_by_gene"]:
+            raise ValueError("perturbation type not supported.")
+        
+    elif keyword == 'buffer_size':
+        value = int(value)
+        if not isinstance(value, int):
+            raise ValueError("bufer size must be an integer")
+        elif isinstance(value, int) and value < 1:
+            raise ValueError("buffer size must be greater than 1")
+
+
 ## Fuel Assembly Block ##
     elif keyword == 'assembly_options':
         if isinstance(value, dict):
@@ -877,6 +917,17 @@ class Input_Parser():
         self.kernel_smoothness = yaml_line_reader(info, 'kernel_smoothness_factor', 0.5)
         self.kernel_hyperparam_conv = yaml_line_reader(info, 'hyperparameter_convergence_criteria', 0.01)
         self.surrogate_fitting_off = yaml_line_reader(info, 'surrogate_off_generation', int(self.num_generations/2))
+        self.initial_temperature = yaml_line_reader(info, 'temperature', 100)
+        if self.num_procs > 1:
+            self.cooling_schedule = yaml_line_reader(info, 'cooling_schedule', 'exponential_decrease')
+        if self.num_procs <= 1:
+            self.cooling_schedule = yaml_line_reader(info, 'cooling_schedule', 'lam')
+        self.secondary_cooling_schedule = yaml_line_reader(info, 'secondary_cooling_schedule', 'exponential_decrease')
+        self.quality_factor = yaml_line_reader(info, 'quality_factor', 1.1)
+        self.scaling_factor = yaml_line_reader(info, 'scaling_factor', 1.5)
+        self.perturbation_type = yaml_line_reader(info, 'perturbation_type', 'perturb_by_gene')
+        self.buffer_size = yaml_line_reader(info, 'buffer_size', 10)
+
         
     ## Fuel Assembly Block ##
         self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)

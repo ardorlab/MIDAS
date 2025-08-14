@@ -15,6 +15,7 @@ from midas.utils import LWR_averageenrichment
 from midas.utils import termination_criteria as TC
 from midas.algorithms import genetic_algorithm as GA
 from midas.algorithms import bayesian_optimization as BO
+from midas.algorithms import simulated_annealing as SA
 from midas.codes import parcs342, parcs343
 from midas.codes import nuscale_lut
 from midas.codes import trace50p5
@@ -66,6 +67,8 @@ class Optimizer():
             self.algorithm = GA.Genetic_Algorithm(self.input)
         elif methodology == 'bayesian_optimization':
             self.algorithm = BO.Bayesian_Optimization(self.input)
+        elif methodology == 'simulated_annealing' and self.input.num_procs == 1:
+            self.algorithm = SA.Simulated_Annealing(self.input)
         #!TODO: Add the other algorithms back in.
 
         return
