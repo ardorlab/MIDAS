@@ -179,7 +179,7 @@ if __name__ == "__main__":
         exitcode = restart(args)
 
     
-    #Clean up
+    #Clean up code
     logger.info("MIDAS execution completed.")
     logging.shutdown()
     sys.exit(exitcode)
