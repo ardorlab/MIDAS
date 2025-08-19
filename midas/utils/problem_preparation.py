@@ -32,7 +32,7 @@ class Problem_Preparation_Tools():
                 xs_list['reflectors']['top'].append(param['serial'])
             elif param['refl_type'] == 'radial':
                 xs_list['reflectors']['radial'].append(param['serial'])
-                tag_list['reflectors']['radial'].append((str(10+len(tag_list['reflectors'])),key))
+                tag_list['reflectors'].append((str(10+len(tag_list['reflectors'])),key))
             elif param['refl_type'] == 'bot':
                 xs_list['reflectors']['bot'].append(param['serial'])
         if 'blankets' in input_obj.fa_options:
@@ -272,26 +272,50 @@ class Prepare_Problem_Values():
         core_dict = Problem_Preparation_Tools.generate_core(input_obj, core_shape) #create LP maps that match the length and symmetry of the chromosome.
  
     ## Generate map of core for printing to file
-        if input_obj.map_size == "quarter":
-            size_x = int(np.ceil(input_obj.nrow/2))
-            size_y = int(np.ceil(input_obj.ncol/2))
-            core_lattice = np.zeros((size_y,size_x), dtype='<U8')
-            for y in range(size_y):
-                for x in range(size_x):
-                    val = core_shape[size_y-1+y,size_x-1+x]
-                    if val is None:
-                        val = "00"
-                    core_lattice[y,x] = val
-        else: #assume full map
-            size_x = int(input_obj.nrow)
-            size_y = int(input_obj.ncol)
-            core_lattice = np.zeros((size_y,size_x), dtype='<U8')
-            for y in range(size_y):
-                for x in range(size_x):
-                    val = core_shape[y,x]
-                    if val is None:
-                        val = "00"
-                    core_lattice[y,x] = val
+        if not input_obj.nrow % 2 == 0:
+            if input_obj.map_size == "quarter":
+                size_x = int(np.ceil(input_obj.nrow/2))
+                size_y = int(np.ceil(input_obj.ncol/2))
+                core_lattice = np.zeros((size_y,size_x), dtype='<U8')
+                for y in range(size_y):
+                    for x in range(size_x):
+                        val = core_shape[size_y-1+y,size_x-1+x]
+                        if val is None:
+                            val = "00"
+                        core_lattice[y,x] = val
+
+            else: #assume full map
+                size_x = int(input_obj.nrow)
+                size_y = int(input_obj.ncol)
+                core_lattice = np.zeros((size_y,size_x), dtype='<U8')
+                for y in range(size_y):
+                    for x in range(size_x):
+                        val = core_shape[y,x]
+                        if val is None:
+                            val = "00"
+                        core_lattice[y,x] = val
+        else: 
+            if input_obj.map_size == "quarter":
+                size_x = int(np.ceil(input_obj.nrow/2))
+                size_y = int(np.ceil(input_obj.ncol/2))
+                core_lattice = np.zeros((size_y,size_x), dtype='<U8')
+                for y in range(size_y):
+                    for x in range(size_x):
+                        val = core_shape[size_y+y,size_x+x]
+                        if val is None:
+                            val = "00"
+                        core_lattice[y,x] = val
+
+            else: #assume full map
+                size_x = int(input_obj.nrow)
+                size_y = int(input_obj.ncol)
+                core_lattice = np.zeros((size_y,size_x), dtype='<U8')
+                for y in range(size_y):
+                    for x in range(size_x):
+                        val = core_shape[y,x]
+                        if val is None:
+                            val = "00"
+                        core_lattice[y,x] = val
 
         pincal_loc = np.zeros((core_lattice.shape[0],core_lattice.shape[1]), dtype='<U20')
         for x in range(core_lattice.shape[0]):
@@ -372,6 +396,7 @@ class LWR_Core_Shapes():
     Written by Nicholas Rollins. 10/04/2024
     """
     def get_core_shape(num_rows, num_cols, num_FA):
+
         core_shape = {}
         core_shape[(17,17)] = {}
         core_shape[(17,17)][193] = [None , None , None  , None ,"R0004","R0005","R0006","R0007","R0008","R0009","R0010","R0011","R0012",  None , None ,  None ,  None ,
@@ -460,7 +485,13 @@ class LWR_Core_Shapes():
                                      None  ,  None  ,  None  ,  None  ,  None  ,  None  ,  None  , 'R3007', 'R3008',   'I30',   'J30',   'K30',   'L30',   'M30',   'N30',   'O30',   'P30',   'Q30',   'R30',   'S30',   'T30',   'U30',   'V30', 'R3023', 'R3024',  None  ,  None  ,  None  ,  None  ,  None  ,  None  ,  None  ,
                                      None  ,  None  ,  None  ,  None  ,  None  ,  None  ,  None  ,  None  , 'R3108', 'R3109', 'R3110', 'R3111', 'R3112', 'R3113', 'R3114', 'R3115', 'R3116', 'R3117', 'R3118', 'R3119', 'R3120', 'R3121', 'R3122', 'R3123',  None  ,  None  ,  None  ,  None  ,  None  ,  None  ,  None  ,  None ]
 
-
+        core_shape[(6,6)] = {}
+        core_shape[(6,6)][16] = ['R0000', 'R0001', 'R0002', 'R0003', 'R0004', 'R0005',
+                                 'R0100', 'A01',   'B01',   'C01',   'D01',   'R0105',
+                                 'R0200', 'A02',   'B02',   'C02',   'D02',   'R0205',
+                                 'R0300', 'A03',   'B03',   'C03',   'D03',   'R0305',
+                                 'R0400', 'A04',   'B04',   'C04',   'D04',   'R0405',
+                                 'R0500', 'R0501', 'R0502', 'R0503', 'R0504', 'R0505']
     
         return np.array(core_shape[(num_rows,num_cols)][num_FA]).reshape((num_rows,num_cols))
     
@@ -526,6 +557,11 @@ class LWR_Core_Shapes():
                                              166:4, 167:4, 168:4, 169:4, 170:4, 171:4, 172:4, 173:4, 174:4, 175:4, \
                                              176:4, 177:4, 178:4, 179:4, 180:4, 181:4, 182:4, 183:4, \
                                              184:4, 185:4, 186:4, 187:4, 188:4, 189:4, 190:4} 
+
+        multdict[(6,6)] = {}
+        multdict[(6,6)][16] = {}
+        multdict[(6,6)][16]['quarter'] = { 0:4, 1:4, \
+                                           2:4, 3:4 }
 
         return multdict[(num_rows,num_cols)][num_FA][symmetry]
     
