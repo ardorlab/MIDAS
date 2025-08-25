@@ -71,6 +71,29 @@ def validate_input(keyword, value):
         if value not in ["single_cycle","eq_cycle", "lattice_physics"]:
             raise ValueError("Data type not supported.")
     
+    elif keyword == 'input_template':
+        if isinstance(value, dict):
+            new_dict = {}
+            for key, item in value.items():
+                new_key = str(key).lower()
+                if new_key =='apply':
+                    new_item = item
+                    if not isinstance(new_item, bool):
+                        raise ValueError("'apply' flag for input template must be boolean")
+                    if new_item:
+                        logger.warning("Input template functionality currently only supports single cycle calculations") #TODO add other calculation functionality
+                if new_key == 'loc':
+                    new_item = Path(str(item))
+                new_dict[new_key] = new_item
+
+            if 'apply' in new_dict.keys() and new_dict['apply']:
+                if 'loc' not in new_dict.keys():
+                    raise ValueError("'apply' in input_template is set to true but path to template is not specified") 
+            if 'loc' in new_dict.keys() and 'apply' not in new_dict.keys(): 
+                logger.warning("path to input template is specified but 'apply' flag is not given. MIDAS will assume no input tempate in calculation")
+                new_dict['apply'] = False
+            return new_dict
+
     elif keyword == 'statistics_plots':
         value = str(value).lower().replace(' ','')
         if value == 'true':
@@ -727,7 +750,29 @@ def validate_input(keyword, value):
         value = float(value)
     
     elif keyword == 'th_fdbk':
-        value = bool(value)
+        if isinstance(value, dict):
+            new_dict = {}
+            for key, item in value.items():
+                new_key = str(key).lower()
+                if new_key =='apply':
+                    new_item = item
+                    if not isinstance(new_item, bool):
+                        raise ValueError("'apply' flag for th_fdbk must be boolean")
+                if new_key == 'loc':
+                    if item == None:
+                        new_item = item
+                    else:
+                        new_item = Path(str(item))
+                new_dict[new_key] = new_item
+
+            if 'apply' in new_dict.keys() and new_dict['apply']:
+                if 'loc' not in new_dict.keys():
+                    logger.warning("'apply' in th_fdbk is set to true but path to paths input is not specified. PARCS internal mass/energy balance solver is assumed.")
+                    new_dict['loc'] = None
+            if 'loc' in new_dict.keys() and 'apply' not in new_dict.keys(): 
+                logger.warning("Path to PATHS input is specified but 'apply' flag is not given. MIDAS will assume mass/energy balance solver in calculation")
+                new_dict['apply'] = False
+            return new_dict
     
     elif keyword == 'pin_power_recon':
         value = bool(value)
@@ -841,6 +886,67 @@ def validate_input(keyword, value):
     return value
 
 
+
+    return value
+
+def parcs343_template_check(self):
+    """
+    Checks to ensure that necessary flags are present if a template input file is provided for a code interface. 
+    The check is purposefully minimal so that users are able to run the code exactly as they wish.
+    Ensuring that the template is exactly as intended is up to the user.
+    Written by Jake Mikouchi. 3/24/2025
+    """
+    if self.code_interface.lower() == 'parcs343':
+        necessary_flags = {'caseid': False, 'cntl': False, 'param': False, 'geom': False, 'fdbk': False, 
+                        'th': False, 'depl':False}
+        with open(self.input_template['loc'], "r") as file:
+            lines = file.readlines()  
+            for line in lines:
+                if "caseid" in line.lower() and "!" not in line.lower():
+                    necessary_flags['caseid'] = True
+                if "cntl" in line.lower() and "!" not in line.lower():
+                    necessary_flags['cntl'] = True
+                if "param" in line.lower() and "!" not in line.lower():
+                    necessary_flags['param'] = True
+                if "geom" in line.lower() and "!" not in line.lower():
+                    necessary_flags['geom'] = True
+                if "fdbk" in line.lower() and "!" not in line.lower():
+                    necessary_flags['fdbk'] = True
+                if "th" in line.lower() and "!" not in line.lower():
+                    necessary_flags['th'] = True
+                if "depl" in line.lower() and "!" not in line.lower():
+                    necessary_flags['depl'] = True
+
+    if self.code_interface.lower() == 'parcs342':
+        necessary_flags = {'caseid': False, 'cntl': False, 'param': False, 'geom': False, 'fdbk': False, 
+                        'th': False, 'depl':False}
+        with open(self.input_template['loc'], "r") as file:
+            lines = file.readlines()  
+            for line in lines:
+                if "caseid" in line.lower() and "!" not in line.lower():
+                    necessary_flags['caseid'] = True
+                if "cntl" in line.lower() and "!" not in line.lower():
+                    necessary_flags['cntl'] = True
+                if "param" in line.lower() and "!" not in line.lower():
+                    necessary_flags['param'] = True
+                if "geom" in line.lower() and "!" not in line.lower():
+                    necessary_flags['geom'] = True
+                if "fdbk" in line.lower() and "!" not in line.lower():
+                    necessary_flags['fdbk'] = True
+                if "th" in line.lower() and "!" not in line.lower():
+                    necessary_flags['th'] = True
+                if "depl" in line.lower() and "!" not in line.lower():
+                    necessary_flags['depl'] = True
+
+    if self.code_interface.lower() == "nuscale_database":
+        raise ValueError(f'input templates are not supported for nuscale_database')
+
+    for key, value in necessary_flags.items():
+        if not necessary_flags[key]:
+            raise ValueError(f'{self.code_interface} input template is missing {key} flag') 
+
+
+
 class Input_Parser():
     """
     Centralized class for parsing user-supplied input arguments from the 
@@ -877,10 +983,13 @@ class Input_Parser():
         self.clear_results = yaml_line_reader(info, 'clear_results', 'all_but_best')
         self.methodology = yaml_line_reader(info, 'optimizer', 'genetic_algorithm')
         self.code_interface = yaml_line_reader(info, 'code_type', 'PARCS343')
+        template_default = {'apply':False,'loc':''}
+        self.input_template = yaml_line_reader(info, 'input_template', template_default)
         self.calculation_type = yaml_line_reader(info, 'calc_type', 'single_cycle')
         self.statistics_plots = yaml_line_reader(info, 'statistics_plots', True)
         self.convergence_plot = yaml_line_reader(info, 'convergence_plot', True)
-        
+        if self.input_template['apply'] and self.code_interface == 'parcs343':
+            parcs343_template_check(self)
     ## Optimization Block ##
         try:
             info = self.file_settings['optimization']
@@ -1006,7 +1115,8 @@ class Input_Parser():
         self.power = yaml_line_reader(info, 'power', 3800.0)
         self.flow = yaml_line_reader(info, 'flow', 18231.89)
         self.inlet_temp = yaml_line_reader(info, 'inlet_temperature', 565.0)
-        self.th_fdbk = yaml_line_reader(info, 'th_fdbk', True)
+        th_default = {'apply':True, 'loc': None}
+        self.th_fdbk = yaml_line_reader(info, 'th_fdbk', th_default)
         self.pin_power_recon = yaml_line_reader(info, 'pin_power_recon', True)
         self.number_axial = yaml_line_reader(info, 'num_axial_nodes', 19)
         self.axial_nodes = yaml_line_reader(info, 'axial_nodes', [16.12, "15*25.739", 16.12])
@@ -1026,7 +1136,8 @@ class Input_Parser():
         self.inp_template_tr = yaml_line_reader(THinfo, 'tr_input_file', None)
         
         # POLARIS input block
-        self.nrow = yaml_line_reader(info, 'num_rows', 17)
+        if self.code_interface == "polaris624":
+            self.nrow = yaml_line_reader(info, 'num_rows', 17)
         self.map_size = yaml_line_reader(infomap, 'lattice_symmetry', 'SE')
         self.powdens = yaml_line_reader(info, 'powdens', 36) #W/gIHM
         self.bulk_temps = yaml_line_reader(info, 'bulk_temperatures', 566.0) #K
