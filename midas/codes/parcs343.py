@@ -20,7 +20,12 @@ def evaluate(solution, input):
     """
     Interface used to run PARCSv343 calculations.
     
+    evaluate function creates working directory and prepares depletion file.
+    if a parcs input file template is provided by the user in the yaml file, the parcs input will be created in with_template()
+    if no template is provided (base case) then the files will be created using without_template()
+
     Updated by Nicholas Rollins. 10/03/2024
+    Updated by Jake Mikouchi. 03/18/2025
     """
     
 ## Create and move to unique directory for PARCS execution
@@ -63,6 +68,49 @@ def evaluate(solution, input):
             depfile.write('\n')
         depfile.write(' END STEP\n')
     
+        filename = solution.name + '.inp'
+        # create input file based on if an input template is given
+        if not input.input_template['apply']: 
+            without_template(solution, input, cwd, filename)
+        elif input.input_template['apply']:
+            with_template(solution, input, cwd, filename)
+
+    ## Run PARCS INPUT DECK #!TODO: separate the input writing and execution into two different functions that are called in sequence.
+        parcscmd = __parcs343exe__
+        try:
+            output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=input.code_walltime) #wait until calculation finishes
+        ## Get Results
+            if 'Finished' in str(output): #job completed
+                logger.debug(f"Job {solution.name} completed successfully in PARCSv343.")
+                solution.parameters = get_results(solution.parameters, solution.name)
+            
+            else: #job failed
+                if input.calculation_type in ['eq_cycle']:
+                    try:
+                        solution.parameters = eq_cycle_convergence(input, solution, filename, parcscmd, input.code_walltime) #iteratively try to find an intial guess that will converge
+                    except Exception as e:
+                        logger.error(f"Job {solution.name} has failed to converge with the following exception: {e}")
+                        solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+                        
+                else: #standard execution pathway
+                    logger.warning(f"Job {solution.name} has failed!")
+                    solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+        
+        except subprocess.TimeoutExpired: #job timed out
+            os.system('rm -f {}.parcs_pin*'.format(solution.name))
+            logger.error(f"Job {solution.name} has timed out!")
+            solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+        except subprocess.CalledProcessError as e: #PARCS returned an abort signal
+            logger.error(f"Job {solution.name} has failed with the following exception: {e}")
+            solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+        
+        logger.debug(f"Returning to original working directory: {cwd}")
+        os.chdir(cwd)
+        gc.collect()
+
+        return solution
+
+def without_template(solution, input, cwd, filename):    
 ## Prepare values for file writing
     list_unique_xs = np.concatenate([value if isinstance(value,list) else np.concatenate(list(value.values()))\
                                     for value in input.xs_list.values()])
@@ -99,10 +147,8 @@ def evaluate(solution, input):
                         soln_core_lattice[j][i] = "10" #!TODO: add support more multiple radial refls.
                     else:
                         soln_core_lattice[j][i] = vals['Value']
-    
-## Generate Input File
-    filename = solution.name + '.inp'
-    
+
+## Generate Input File   
     ## CaseID Block ##
     with open(filename,"w") as ofile:
         ofile.write("!******************************************************************************\n")
@@ -113,9 +159,13 @@ def evaluate(solution, input):
     with open(filename,"a") as ofile:
         ofile.write("CNTL\n")
         ofile.write("      RUN_OPTS   F T F F\n")
-        if input.th_fdbk:
-            ofile.write("      TH_FDBK    T\n")
-            ofile.write("      INT_TH     T -1\n")
+        if input.th_fdbk['apply']:
+            if input.th_fdbk['loc'] is None:
+                ofile.write("      TH_FDBK    T\n")
+                ofile.write("      INT_TH     T -1\n")
+            else: 
+                ofile.write("      TH_FDBK    T\n")
+                ofile.write(f"      INT_TH     T 1 '{cwd.joinpath(cwd / input.th_fdbk['loc'])}'\n")
         else:
             ofile.write("      TH_FDBK    F\n")
         ofile.write("      CORE_POWER 100.0\n")
@@ -210,11 +260,11 @@ def evaluate(solution, input):
                 xsnum_blanket = xsnum_radtop + \
                                 input.xs_list['blankets'].index(input.fa_options['blankets'][fuel['blanket']]['serial']) + 1
                 ofile.write("      ASSY_TYPE   {}   1*1  1*{} {}*{}  1*{}  1*{} FUEL\n".format(fuel['type'],xsnum_blanket,\
-                                                                                       input.number_axial-4,xsnum_fuel,\
-                                                                                       xsnum_blanket,xsnum_radtop))
+                                                                                    input.number_axial-4,xsnum_fuel,\
+                                                                                    xsnum_blanket,xsnum_radtop))
             else:
                 ofile.write("      ASSY_TYPE   {}   1*1  {}*{}  1*{} FUEL\n".format(fuel['type'],input.number_axial-2,\
-                                                                                  xsnum_fuel,xsnum_radtop))
+                                                                                xsnum_fuel,xsnum_radtop))
         ofile.write("\n")
 
         if input.map_size == 'quarter':
@@ -257,7 +307,7 @@ def evaluate(solution, input):
             ofile.write("      N_PINGT    264 25\n")
             ofile.write("      PIN_DIM      4.1 4.75 0.58 6.13\n")
             ofile.write("      FLOW_COND    {}  {}\n".format(np.round(input.inlet_temp-273.15,2),\
-                                                             np.round(input.flow/input.num_assemblies,4)))
+                                                            np.round(input.flow/input.num_assemblies,4)))
             ofile.write("      STATE_CORE   {}  1301.86  1.5789E7\n".format(np.round(input.flow)))
             ofile.write("      HGAP     11356.0\n") #!TODO:check this value, should it be parameterized?
             ofile.write("      N_RING   6\n")
@@ -284,8 +334,8 @@ def evaluate(solution, input):
             radpath = input.xs_lib / Path(input.xs_list['reflectors']['radial'][i])
             ofile.write("      PMAXS_F   {} '{}{}' {}\n".format(rxs_index,radpath,input.xs_extension,rxs_index))
         ofile.write("      PMAXS_F   {} '{}{}' {}\n".format(rxs_index+1,\
-                                                          input.xs_lib / Path(input.xs_list['reflectors']['top'][0]),\
-                                                          input.xs_extension,rxs_index+1))
+                                                        input.xs_lib / Path(input.xs_list['reflectors']['top'][0]),\
+                                                        input.xs_extension,rxs_index+1))
         nxs_index = rxs_index + 2
         # Write blankets cross sections
         if 'blankets' in input.fa_options:
@@ -299,8 +349,8 @@ def evaluate(solution, input):
         for i in range(len(input.xs_list['fuel'])):
             fxs_index = i + nxs_index
             ofile.write("      PMAXS_F   {} '{}{}' {}\n".format(fxs_index,\
-                                                              input.xs_lib / Path(input.xs_list['fuel'][i]),\
-                                                              input.xs_extension,fxs_index))
+                                                            input.xs_lib / Path(input.xs_list['fuel'][i]),\
+                                                            input.xs_extension,fxs_index))
     
     ## MCYCLE Block ##
     if input.calculation_type in ['eq_cycle']:
@@ -348,40 +398,77 @@ def evaluate(solution, input):
     with open(filename,"a") as ofile:
         ofile.write(".")
 
-## Run PARCS INPUT DECK #!TODO: separate the input writing and execution into two different functions that are called in sequence.
-    parcscmd = __parcs343exe__
-    try:
-        output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=input.code_walltime) #wait until calculation finishes
-    ## Get Results
-        if 'Finished' in str(output): #job completed
-            logger.debug(f"Job {solution.name} completed successfully in PARCSv343.")
-            solution.parameters = get_results(solution.parameters, solution.name)
-        
-        else: #job failed
-            if input.calculation_type in ['eq_cycle']:
-                try:
-                    solution.parameters = eq_cycle_convergence(input, solution, filename, parcscmd, input.code_walltime) #iteratively try to find an intial guess that will converge
-                except Exception as e:
-                    logger.error(f"Job {solution.name} has failed to converge with the following exception: {e}")
-                    solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
-                    
-            else: #standard execution pathway
-                logger.warning(f"Job {solution.name} has failed!")
-                solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
-    
-    except subprocess.TimeoutExpired: #job timed out
-        os.system('rm -f {}.parcs_pin*'.format(solution.name))
-        logger.error(f"Job {solution.name} has timed out!")
-        solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
-    except subprocess.CalledProcessError as e: #PARCS returned an abort signal
-        logger.error(f"Job {solution.name} has failed with the following exception: {e}")
-        solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
-    
-    logger.debug(f"Returning to original working directory: {cwd}")
-    os.chdir(cwd)
-    gc.collect()
-    
-    return solution
+def with_template(solution, input, cwd, filename): 
+
+## Prepare values for file writing
+    ## Fill loading pattern with chromosome (core_dict from Prepare_Problem_Values.prepare_cycle)
+    fuel_locations = [loc for loc in input.core_dict.keys() if 2 < len(loc) <  5]
+    soln_fuel_locations = {}
+    if input.calculation_type in ['eq_cycle']:
+        soln_FAs = Constrain_Input.SS_decoder(solution.chromosome)
+        for i in range(len(solution.chromosome)):
+            soln_fuel_locations[fuel_locations[i]] = soln_FAs[i]
+    else:
+        for i in range(len(solution.chromosome)):
+            soln_fuel_locations[fuel_locations[i]] = solution.chromosome[i]
+    soln_core_dict = deepcopy(input.core_dict)
+    for loc, label in soln_fuel_locations.items():
+        tag = None
+        for fueltype in input.tag_list['fuel']:
+            if fueltype[1] == label:
+                tag = fueltype[0]
+        if not tag:
+            raise ValueError(f"FA label '{label}' not found in fuel types ({input.tag_list['fuel']}).")
+        soln_core_dict[loc]['Value'] = tag
+    #!for loc, label in soln_refl_locations.items(): #!TODO: create a way to specify reflector locs for multiple radial refls.
+
+    soln_core_lattice = deepcopy(input.core_lattice) # core lattice filled with chromosome
+    for loc, vals in soln_core_dict.items():
+        sym_locs = [loc] + vals['Symmetric_Assemblies']
+        for j in range(len(soln_core_lattice)):
+            for i in range(len(soln_core_lattice[j])):
+                if soln_core_lattice[j][i] in sym_locs:
+                    if soln_core_lattice[j][i][0] == "R" and len(soln_core_lattice[j][i]) >= 5: #reflector
+                        soln_core_lattice[j][i] = "10" #!TODO: add support more multiple radial refls.
+                    else:
+                        soln_core_lattice[j][i] = vals['Value']
+## copy input file from template
+    inp_template = str(cwd.joinpath(cwd / input.input_template['loc']))
+    shutil.copy(inp_template, filename)
+
+    with open(filename, "r") as file:
+        lines = file.readlines()  
+
+    with open(filename, "w") as ofile:
+        for line in lines:
+            ## change CaseID ##
+            if "caseid" in line.lower():
+                ofile.write('CASEID {}  \n'.format(solution.name))  
+            ## add LP ##
+            elif "rad_conf" in line.lower() and "!" not in line.lower():
+                ofile.write("      RAD_CONF\n\n")
+                for x in range(soln_core_lattice.shape[0]):
+                    ofile.write("      ")
+                    for y in range(soln_core_lattice.shape[1]):
+                        ofile.write(soln_core_lattice[x,y])
+                        ofile.write("  ")
+                    ofile.write("\n")
+                ofile.write("\n")
+
+            elif 'int_th' in line.lower():
+                if input.th_fdbk['apply']:
+                    if input.th_fdbk['loc'] is None:
+                        ofile.write("      TH_FDBK    T\n")
+                        ofile.write("      INT_TH     T -1\n")
+                    else: 
+                        ofile.write(f"      INT_TH     T 1 '{cwd.joinpath(cwd / input.th_fdbk['loc'])}'\n")
+                else:
+                    ofile.write("      TH_FDBK    F\n")
+
+            else:
+                ofile.write(line)     
+
+
 
 def get_results(parameters, filename, job_failed=False): #!TODO: implement pin power reconstruction.
     """
