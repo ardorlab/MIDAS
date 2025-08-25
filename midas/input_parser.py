@@ -372,7 +372,7 @@ def validate_input(keyword, value):
     elif keyword == 'scaling_factor':
         value = float(value)
         if value < 1.0 or value > 2.0:
-            raise ValueError("scaling factor for LAM cooling schedule must be 2.0 > qf > 1.0")
+            raise ValueError("scaling factor for LAM cooling schedule must be 2.0 > sf > 1.0")
         
     elif keyword == 'perturbation_type':
         value = str(value).lower().replace(' ','_')
@@ -997,6 +997,8 @@ class Input_Parser():
             info = None
         
         self.population_size = yaml_line_reader(info, 'population_size', 1)
+        if self.methodology == 'simulated_annealing' and self.num_procs <= 1:
+            self.population_size = 1
         self.num_generations = yaml_line_reader(info, 'number_of_generations', 1)
         self.symmetry = yaml_line_reader(info, 'solution_symmetry', 'octant')
         self.objectives = yaml_line_reader(info, 'objectives', None)
