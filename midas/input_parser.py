@@ -173,8 +173,16 @@ def validate_input(keyword, value):
                                    'maxfueltemp',
                                    'maxgapq',
                                    'peak_reactivity',
-                                   'max_critical_exposure']:
+                                   'max_critical_exposure',
+                                   'keff_min',
+                                   'keff_max',
+                                   'keff_diff',
+                                   'cpr',
+                                   'lhgr',
+                                   'aplhgr']:
                     raise ValueError(f"Requested objective/constraint '{key}' not supported.")
+                if new_key == 'aplhgr':
+                    logger.warning("APLHGR requires 3d plotting of pin reconstruction.")
                 new_item = {}
                 if isinstance(item, dict):
                     #check goals, weights, and targets
@@ -204,6 +212,16 @@ def validate_input(keyword, value):
                                 new_subitem[new_subsubkey] = new_subsubitem
                             else:
                                 raise ValueError(f"Requested settings for objective '{key}' must be nested with its applicable parameters.")
+                        elif new_subkey == 'critical_power':
+                            new_subitem = float(subitem)
+                        elif new_subkey == 'linear_power_density':
+                            new_subitem = float(subitem)
+                        if new_key == 'cpr' and 'critical_power' not in item.keys():
+                            raise ValueError(f"Critical power ratio is requested in objectives but the critical power is not provided.")
+                        if new_key == 'lhgr' and 'linear_power_density' not in item.keys():
+                            raise ValueError(f"Linear heat generation rate requested in objectives but the linear power density is not provided.")
+                        if new_key == 'aplhgr' and 'linear_power_density' not in item.keys():
+                            raise ValueError(f"Average palnar linear heat generation rate requested in objectives but the linear power density is not provided.")
                         new_item[new_subkey] = new_subitem #save modified parameter
                     #check parameters logic
                     if 'goal' not in new_item:
