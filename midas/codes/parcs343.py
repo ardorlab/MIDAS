@@ -472,13 +472,16 @@ def with_template(solution, input, cwd, filename):
 
 def get_results(parameters, filename, job_failed=False): #!TODO: implement pin power reconstruction.
     """
-    Currently supports cycle length, F_q, F_dh, and max boron.
+    Currently supports cycle length, F_q, F_dh, max boron, keff, critical power ratio,
+    linear heat generation rate, average planar linear heat generation rate.
     
     Updated by Nicholas Rollins. 09/27/2024
+    Updated by Jake Mikouchi. 03/25/2025
     """
     ## Prepare container for results
     results_dict = {}
-    for res in ["cycle_length", "pinpowerpeaking", "fdeltah", "max_boron"]:
+    for res in ["cycle_length", "pinpowerpeaking", "fdeltah", "max_boron", 
+                        "keff_min", "keff_max", "keff_diff", "cpr", "lhgr", "aplhgr"]:
         results_dict[res] = {}
         results_dict[res]['value'] = []
         
@@ -493,23 +496,40 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
         res_str = res_str[0].split('\n')
         
         ## Parse raw values by timestep
-        efpd_list = []; boron_list = []; keff_list = []; Pxyz_list = []; fdh_list = []
+        efpd_list = []; boron_list = []; keff_list = []; fq_list = []; fdh_list = [] #; Pxyz_list = [];   Pxy_list = []
         for i in range(2, len(res_str)-1):
             res_val=res_str[i].split()
             
             efpd_list.append(float(res_val[9]))
             boron_list.append(float(res_val[14]))
             keff_list.append(float(res_val[2]))
-            Pxyz_list.append(float(res_val[7]))
+            fq_list.append(float(res_val[7]))
             fdh_list.append(float(res_val[6]))
+            
+            # Pxyz_list.append(float(res_val[7]))
+            # Pxy_list.append(float(res_val[6]))
+            # fq_list.append(float(res_val[22]))
         
         del filestr, res_str, res_val #unload file contents to clean up memory
         
         results_dict["cycle_length"]["value"] = calc_cycle_length(efpd_list,boron_list,keff_list)
-        results_dict["pinpowerpeaking"]["value"] = max(Pxyz_list)
+        results_dict["pinpowerpeaking"]["value"] = max(fq_list)
         results_dict["fdeltah"]["value"] = max(fdh_list)
         results_dict["max_boron"]["value"] = max(boron_list)
         
+        # results_dict["pinpowerpeaking"]["value"] = max(Pxyz_list)
+        # results_dict["fdeltah"]["value"] = max(Pxy_list)
+        results_dict["keff_min"]["value"] = min(keff_list)
+        results_dict["keff_max"]["value"] = max(keff_list)
+        results_dict["keff_diff"]["value"] = max(keff_list) - min(keff_list)
+        if "cpr" in parameters.keys(): 
+            results_dict["cpr"]["value"] = calc_cpr(filename, parameters)
+        if "lhgr" in parameters.keys(): 
+            results_dict["lhgr"]["value"] = calc_lhgr(fq_list, parameters)
+        if "aplhgr" in parameters.keys(): 
+            results_dict["aplhgr"]["value"] = calc_aplhgr(filename, parameters)
+
+
         ## Correct Boron value if non-critical
         sorted_boron = sorted(boron_list,reverse=True)
         if sorted_boron[0] == sorted_boron[1]: #multiple values exceed maximum value in XS library, which is not reported by PARCS.
@@ -529,6 +549,12 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
         results_dict["pinpowerpeaking"]["value"] = 10.0
         results_dict["fdeltah"]["value"] = 10.0
         results_dict["max_boron"]["value"] = 10000
+        results_dict["keff_min"]["value"] = 0.0
+        results_dict["keff_max"]["value"] = 10.0
+        results_dict["keff_diff"]["value"] = 10.0
+        results_dict["cpr"]["value"] = 0.0
+        results_dict["lhgr"]["value"] = 100.0
+        results_dict["aplhgr"]["value"] = 100.0
     
     for param in parameters.keys():
         if param in results_dict:
@@ -575,6 +601,86 @@ def calc_cycle_length(efpd,boron,keff):
         def_dbor = defpd/dbor #slope
         eoc = efpd[-1] + def_dbor*(boron[-1]-0.1) #linear extrapolation
     return eoc
+
+def calc_cpr(filename, parameters): #TODO update this to use CHFR output by parcs
+    # maximum relative power fraction at each depletion step
+    with open(f"{filename}.parcs_out","r") as f:
+        lines = f.readlines()
+        active_read = False
+        peak_assembly_power = []
+        for line in lines:
+            if " assembly power distribution" in line.lower():
+                active_read = True
+
+            if "(" in line.lower() and active_read:
+                peak_assembly_power.append(float(line.split()[-1]))
+                active_read = False
+
+    # single highest assembly power throughout cycle
+    max_ap = max(peak_assembly_power) 
+
+    #determines critical power ratio
+    try: 
+        cpr =  parameters['cpr']['critical_power'] / max_ap 
+    except:
+        cpr = 1 / max_ap
+
+    return cpr
+
+def calc_lhgr(fq_list, parameters):
+    # max pin power
+    max_pp = max(fq_list)
+
+    #determines maximum linear heat generation rate
+    lhgr = parameters['lhgr']['linear_power_density'] * max_pp
+
+    return lhgr
+
+def calc_aplhgr(filename, parameters):
+
+    direct = os.getcwd()
+    peakval = 0
+    # retrieve average planar lhgr from each assembly
+    for i  in os.listdir(direct):
+        if os.path.isfile(os.path.join(direct,i)) and "parcs_pin" in i:
+            with open(i, "r") as pin_file:
+                lines = pin_file.readlines()
+                fq = 0
+                step = []
+                counts = 0
+                read = False
+                for line in lines:
+                    if read:
+                        step.append(line.split()[1:])
+
+                    if "Case:" in line and counts == 2:
+                        read = True
+                        counts = 0  
+
+                    if "Case:" in line and float(line.split()[-1]) == 0.0:
+                        try:
+                            if counts == 0 and step:
+                                pin_count = 1
+                                for j in range(len(step[1:-1])):
+                                    for k in step[j]:
+                                        if float(k) > 0.0:
+                                            fq += float(k)
+                                            pin_count += 1 
+
+                                fq = fq / pin_count
+                                if fq > peakval:
+                                    peakval = fq
+
+                        except: 
+                            pass
+
+                        step = []
+                        read = False
+                        counts += 1 
+
+    aplhgr = parameters['aplhgr']['linear_power_density'] * peakval
+
+    return aplhgr
 
 def prepare_shuffling_map(input, chromosome):
     """
