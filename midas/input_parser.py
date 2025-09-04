@@ -1089,7 +1089,7 @@ class Input_Parser():
             if self.code_interface in ["parcs342","parcs343"]:
                 info = self.file_settings['parcs_data']
             elif self.code_interface == "nuscale_database":
-                info = self.file_settings['nucale_data']
+                info = self.file_settings['nuscale_data']
             elif self.code_interface == "trace50p5": #multiphysics calcs must first be initialized in neutronics code.
                 try:
                     info = self.file_settings['parcs_data']
