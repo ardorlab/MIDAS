@@ -113,9 +113,13 @@ def evaluate(solution, input):
     with open(filename,"a") as ofile:
         ofile.write("CNTL\n")
         ofile.write("      RUN_OPTS   F T F F\n")
-        if input.th_fdbk:
-            ofile.write("      TH_FDBK    T\n")
-            ofile.write("      INT_TH     T -1\n")
+        if input.th_fdbk['apply']:
+            if input.th_fdbk['loc'] is None:
+                ofile.write("      TH_FDBK    T\n")
+                ofile.write("      INT_TH     T -1\n")
+            else: 
+                ofile.write("      TH_FDBK    T\n")
+                ofile.write(f"      INT_TH     T 1 '{cwd.joinpath(cwd / input.th_fdbk['loc'])}'\n")
         else:
             ofile.write("      TH_FDBK    F\n")
         ofile.write("      CORE_POWER 100.0\n")
