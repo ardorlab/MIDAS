@@ -8,7 +8,6 @@ from copy import deepcopy
 from pathlib import Path
 import subprocess
 from subprocess import STDOUT
-from midas.utils.optimizer_tools import Constrain_Input
 from midas_data import __polaris624exe__;
 import random #!needed for debug
 
