@@ -73,11 +73,12 @@ class Solution():
     Written by Brian Andersen. 1/7/2019
     Updated by Nicholas Rollins. 09/11/2024
     """
-    def __init__(self, name=None):
+    def __init__(self,input_data, name=None):
         self.name = name
         self.parameters = {}
         self.chromosome = []
         self.fitness_value = float("NaN")
+        self.input = input_data
     
     def generate_initial(self,calc_type,LWR_core_parameters,genome,batches=None):
         """
@@ -107,7 +108,8 @@ class Solution():
         
         chromosome = []
         for i in range(max(chromosome_length)):
-                gene_options = Constrain_Input.calc_gene_options(genes_list, genome, LWR_core_parameters, chromosome, i)
+                gene_options = Gene_Validity_check.contraceptive_check(self.input, genes_list, genome, LWR_core_parameters,
+                                                                                        [], chromosome, i)
                 invalid = True
                 antihang = 0
                 while invalid:
@@ -148,7 +150,8 @@ class Solution():
             chromosome_randindex = list(range(max(chromosome_length)))
             random.shuffle(chromosome_randindex)
             for i in chromosome_randindex:
-                batch_options = Constrain_Input.calc_gene_options(batches_list, batches, LWR_core_parameters, zone_chromosome, i)
+                batch_options = Gene_Validity_check.contraceptive_check(self.input, batches_list, batches, LWR_core_parameters,
+                                                                                        [], zone_chromosome, i)
                 valid = False
                 while not valid:
                     try:
@@ -160,7 +163,7 @@ class Solution():
                         valid = True
                     else:
                         batch_options.remove(batch)
-            chromosome_is_valid = Constrain_Input.check_constraints(batches_list, batches, LWR_core_parameters, zone_chromosome)
+            chromosome_is_valid = Gene_Validity_check.abortive_check(self.input,batches_list, batches, LWR_core_parameters, zone_chromosome)
             attempts += 1
             if attempts > 10000:
                 raise ValueError("Random chromosome generation has failed after 10,000 attempts. Is the input space over-constrained?")
@@ -180,11 +183,12 @@ class Solution():
         chromosome = []
         for i in range(len(zone_chromosome)):
             chromosome.append((zone_chromosome[i],None))
-        chromosome = Constrain_Input.EQ_reload_fuel(genome,LWR_core_parameters,chromosome)
+        chromosome =Solution.EQ_reload_fuel(genome,LWR_core_parameters,chromosome)
         
         return chromosome
     
     def lat_chromosome(self,genome,core_parameters):
+        
         """
         Generates an initial solution for the rod configuration for a lattice physics calculation.
         
@@ -209,7 +213,8 @@ class Solution():
             randindexlist = [x for x in range(max(chromosome_length))]
             random.shuffle(randindexlist)
             for i in randindexlist:
-                    gene_options = Constrain_Input.calc_lat_gene_options(genes_list, genome, symmetry, chromosome, i)
+                    gene_options = Gene_Validity_check.contraceptive_check(self.input, genes_list, genome, symmetry,
+                                                                                        [], chromosome, i)
                     invalid = True
                     while invalid:
                         try:
@@ -222,141 +227,11 @@ class Solution():
                         else:
                             gene_options.remove(gene)
                             
-            if Constrain_Input.check_constraints(genes_list,genome,core_parameters,chromosome):
+            if Gene_Validity_check.abortive_check(self.input,genes_list,genome,core_parameters,chromosome):
                 chromosome_is_valid = True
         
         return chromosome
 
-
-class Constrain_Input():
-    """
-    Class used to verify or constrain the parameters that make up a potential solution.
-    Constraints should ALWAYS be employed when creating or manipulating a solution, even
-    if the constraint is trivial (i.e. None, or "unconstrained").
-    
-    Written by Nicholas Rollins. 10/10/2024
-    """
-    def calc_gene_options(genes_list, genome, LWR_core_parameters, chromosome, index):
-        """
-        Constrain the available options for the chromosome based on
-        the existing inventory.
-        
-        Written by Nicholas Rollins. 10/10/2024
-        """
-        
-        ## fetch the duplication multiplicity of each location when expanded to the full core.
-        num_rows = LWR_core_parameters[0]
-        num_cols = LWR_core_parameters[1]
-        num_FA   = LWR_core_parameters[2]
-        symmetry = LWR_core_parameters[3]
-        multdict = LWR_Core_Shapes.get_symmetry_multiplicity(num_rows, num_cols, num_FA, symmetry)
-        gene_counts = LWR_Core_Shapes.count_in_LP(multdict,chromosome)
-
-        ## if chromosome represents a shuffling scheme, not a loading pattern, the LP needs to be extracted before this step.
-        valid_genes_list = []
-        for gene in genes_list:
-            if genome[gene]['constraint']:
-                ctype = genome[gene]['constraint']['type']
-                cvalue = genome[gene]['constraint']['value']
-                if gene not in gene_counts:
-                    gene_counts[gene] = 0
-                if cvalue not in gene_counts:
-                    gene_counts[cvalue] = 0
-                if ctype == 'max_quantity':
-                    #only include option if less than the max quantity have been already used.
-                    if gene_counts[gene] < cvalue and (cvalue - gene_counts[gene]) > 1:
-                        valid_genes_list.append(gene)
-                elif ctype == 'less_than_variable':
-                    #only include option if fewer than the target option have been already used.
-                    if gene_counts[gene] < gene_counts[cvalue] and (gene_counts[cvalue] - gene_counts[gene]) > 1:
-                        valid_genes_list.append(gene)
-            else:
-                valid_genes_list.append(gene)
-        
-        ## make sure that each gene option is valid for the gene location
-        temp_gene_list = deepcopy(valid_genes_list)
-        for gene in temp_gene_list:
-            if not genome[gene]['map'][index] == 1:
-                valid_genes_list.remove(gene)
-        
-        return valid_genes_list
-
-    def calc_lat_gene_options(genes_list, genome, symmetry, chromosome, index):
-        gene_counts = LWR_Core_Shapes.count_in_lattice(symmetry,chromosome)
-        
-        valid_genes_list = []
-        for gene in genes_list:
-            if genome[gene]['constraint']:
-                ctype = genome[gene]['constraint']['type']
-                cvalue = genome[gene]['constraint']['value']
-                if gene not in gene_counts:
-                    gene_counts[gene] = 0
-                if cvalue not in gene_counts:
-                    gene_counts[cvalue] = 0
-                if ctype == 'max_quantity':
-                    #only include option if less than the max quantity have been already used.
-                    if gene_counts[gene] < cvalue and (cvalue - gene_counts[gene]) > 1:
-                        valid_genes_list.append(gene)
-                elif ctype == 'less_than_variable':
-                    #only include option if fewer than the target option have been already used.
-                    if gene_counts[gene] < gene_counts[cvalue] and (gene_counts[cvalue] - gene_counts[gene]) > 1:
-                        valid_genes_list.append(gene)
-            else:
-                valid_genes_list.append(gene)
-        
-        ## make sure that each gene option is valid for the gene location
-        temp_gene_list = deepcopy(valid_genes_list)
-        for gene in temp_gene_list:
-            if not genome[gene]['map'][index] == 1:
-                valid_genes_list.remove(gene)
-        
-        return valid_genes_list
-
-    def check_constraints(genes_list, genome, core_parameters, solution):
-        """
-        Check solution parameters against user-specified constraints on the input space.
-        Returns True if the solution is valid and False if a constraint is violated.
-        
-        Written by Nicholas Rollins. 10/15/2024
-        """
-        if not genome: #! this implies that there are no constraints, but also no valid choices?
-            return True
-        
-        ## fetch the duplication multiplicity of each location when expanded to the full core.
-        num_rows = core_parameters[0]
-        num_cols = core_parameters[1]
-        num_FA   = core_parameters[2]
-        symmetry = core_parameters[3]
-        calc_type = core_parameters[4]
-        multdict = LWR_Core_Shapes.get_symmetry_multiplicity(num_rows, num_cols, num_FA, symmetry)
-        
-        ## make sure that quantities of each gene type appearing in the solution are allowed.
-        if calc_type != "lattice_physics":
-            gene_counts = LWR_Core_Shapes.count_in_LP(multdict,solution)
-        else:
-            gene_counts = LWR_Core_Shapes.count_in_lattice(symmetry,solution)
-        for gene in genes_list:
-            if genome[gene]['constraint']:
-                ctype = genome[gene]['constraint']['type']
-                cvalue = genome[gene]['constraint']['value']
-                if gene not in gene_counts:
-                    gene_counts[gene] = 0
-                if ctype == 'max_quantity': #quantity of gene type must be less than the max allowed quantity.
-                    if gene_counts[gene] > cvalue:
-                        return False
-                elif ctype == 'less_than_variable': #quantity of gene type must be less than the quantity of the target variable.
-                    if cvalue not in gene_counts:
-                        gene_counts[cvalue] = 0
-                    if gene_counts[gene] > gene_counts[cvalue]:
-                        return False
-        
-        ## make sure that each gene option is valid for the gene
-        for i in range(len(solution)):
-            if not genome[solution[i]]['map'][i] == 1: #gene value not allowed at this location in chromosome.
-                return False
-            
-        return True #if you haven't exited with "False" by this point, all constraints were passed.
-    
     def SS_decoder(chromosome):
         """
         Extracts the encoded loading pattern from a chromosome 
@@ -449,6 +324,181 @@ class Constrain_Input():
         return chromosome
 
 
+class Gene_Validity_check():  
+    """
+    Class used to constrain the parameters that make up a potential solution.
+    The type of constraint is determined by the type of optimization being done. All solutions 
+    should be passed to the gene_option_check function and that function will then distribute the 
+    solution to the correct contraint checker. all solutions should be passed through the checks even
+    if the constraint is trivial (i.e. None, or "unconstrained").
+    
+    Written by Jake Mikouchi. 09/04/2025
+    """
+    def contraceptive_check(input_obj, genes_list, genome, parameters, child, chromosome, indx):
+        """
+        Method for distributing to the correct contraceptive gene checking function
+        Every type of contraceptive gene check should be accessed through this distributor.
+        
+        Written by Jake Mikouchi. 09/04/2025
+        """
+        if input_obj.calculation_type == 'single_cycle':
+            valid_genes_list = Gene_Validity_check.calc_LWR_gene_options(genes_list, genome, parameters, child+chromosome[len(child):], indx)
+        if input_obj.calculation_type == 'eq_cycle':
+            child_zone = [loc[0] for loc in child+chromosome[len(child):]]
+            valid_genes_list = Gene_Validity_check.calc_LWR_gene_options(genes_list, genome, parameters, child_zone, indx)
+        elif input_obj.calculation_type == 'lattice_physics':
+            valid_genes_list = Gene_Validity_check.calc_lat_gene_options(genes_list, genome, parameters[3], child+chromosome[len(child):], indx)  
+        
+        return valid_genes_list
+
+    def calc_LWR_gene_options(genes_list, genome, LWR_core_parameters, chromosome, index):
+        """
+        Constrain the available options for the chromosome based on
+        the existing inventory.
+        
+        Written by Nicholas Rollins. 10/10/2024
+        """
+        ## fetch the duplication multiplicity of each location when expanded to the full core.
+        num_rows = LWR_core_parameters[0]
+        num_cols = LWR_core_parameters[1]
+        num_FA   = LWR_core_parameters[2]
+        symmetry = LWR_core_parameters[3]
+        multdict = LWR_Core_Shapes.get_symmetry_multiplicity(num_rows, num_cols, num_FA, symmetry)
+        gene_counts = LWR_Core_Shapes.count_in_LP(multdict,chromosome)
+
+        ## if chromosome represents a shuffling scheme, not a loading pattern, the LP needs to be extracted before this step.
+        valid_genes_list = []
+        for gene in genes_list:
+            if genome[gene]['constraint']:
+                ctype = genome[gene]['constraint']['type']
+                cvalue = genome[gene]['constraint']['value']
+                if gene not in gene_counts:
+                    gene_counts[gene] = 0
+                if cvalue not in gene_counts:
+                    gene_counts[cvalue] = 0
+                if ctype == 'max_quantity':
+                    #only include option if less than the max quantity have been already used.
+                    if gene_counts[gene] < cvalue and (cvalue - gene_counts[gene]) > 1:
+                        valid_genes_list.append(gene)
+                elif ctype == 'less_than_variable':
+                    #only include option if fewer than the target option have been already used.
+                    if gene_counts[gene] < gene_counts[cvalue] and (gene_counts[cvalue] - gene_counts[gene]) > 1:
+                        valid_genes_list.append(gene)
+            else:
+                valid_genes_list.append(gene)
+        
+        ## make sure that each gene option is valid for the gene location
+        temp_gene_list = deepcopy(valid_genes_list)
+        for gene in temp_gene_list:
+            if not genome[gene]['map'][index] == 1:
+                valid_genes_list.remove(gene)
+        
+        return valid_genes_list
+
+    def calc_lat_gene_options(genes_list, genome, symmetry, chromosome, index):
+        gene_counts = LWR_Core_Shapes.count_in_lattice(symmetry,chromosome)
+        
+        valid_genes_list = []
+        for gene in genes_list:
+            if genome[gene]['constraint']:
+                ctype = genome[gene]['constraint']['type']
+                cvalue = genome[gene]['constraint']['value']
+                if gene not in gene_counts:
+                    gene_counts[gene] = 0
+                if cvalue not in gene_counts:
+                    gene_counts[cvalue] = 0
+                if ctype == 'max_quantity':
+                    #only include option if less than the max quantity have been already used.
+                    if gene_counts[gene] < cvalue and (cvalue - gene_counts[gene]) > 1:
+                        valid_genes_list.append(gene)
+                elif ctype == 'less_than_variable':
+                    #only include option if fewer than the target option have been already used.
+                    if gene_counts[gene] < gene_counts[cvalue] and (gene_counts[cvalue] - gene_counts[gene]) > 1:
+                        valid_genes_list.append(gene)
+            else:
+                valid_genes_list.append(gene)
+        
+        ## make sure that each gene option is valid for the gene location
+        temp_gene_list = deepcopy(valid_genes_list)
+        for gene in temp_gene_list:
+            if not genome[gene]['map'][index] == 1:
+                valid_genes_list.remove(gene)
+        
+        return valid_genes_list
+
+    def abortive_check(input_obj, genes_list, genome, parameters, child):
+        """
+        Method for distributing to the correct abortive gene checking function
+        Every type of abortive gene check should be accessed through this distributor.
+        
+        Written by Jake Mikouchi. 09/08/2025
+        """
+
+        if input_obj.calculation_type == 'single_cycle':
+            valid_chromosome = Gene_Validity_check.check_constraints(genes_list, genome, parameters, child)
+        if input_obj.calculation_type == 'eq_cycle':
+            # input arguments are different based on if the solution is generated in the initial population or not
+            is_tuple = False 
+            for item in child:
+                if isinstance(item, tuple):
+                    is_tuple = True
+            if is_tuple:
+                child_zone = [loc[0] for loc in child]
+                valid_chromosome = Gene_Validity_check.check_constraints(genes_list, genome, parameters, child_zone)
+            else: 
+                valid_chromosome = Gene_Validity_check.check_constraints(genes_list, genome, parameters, child)
+
+        elif input_obj.calculation_type == 'lattice_physics':
+            valid_chromosome = Gene_Validity_check.check_constraints(genes_list, genome, parameters, child)  
+        
+        return valid_chromosome
+
+    def check_constraints(genes_list, genome, core_parameters, solution):
+        """
+        Check solution parameters against user-specified constraints on the input space.
+        Returns True if the solution is valid and False if a constraint is violated.
+        
+        Written by Nicholas Rollins. 10/15/2024
+        """
+        if not genome: #! this implies that there are no constraints, but also no valid choices?
+            return True
+        
+        ## fetch the duplication multiplicity of each location when expanded to the full core.
+        num_rows = core_parameters[0]
+        num_cols = core_parameters[1]
+        num_FA   = core_parameters[2]
+        symmetry = core_parameters[3]
+        calc_type = core_parameters[4]
+        multdict = LWR_Core_Shapes.get_symmetry_multiplicity(num_rows, num_cols, num_FA, symmetry)
+        
+        ## make sure that quantities of each gene type appearing in the solution are allowed.
+        if calc_type != "lattice_physics":
+            gene_counts = LWR_Core_Shapes.count_in_LP(multdict,solution)
+        else:
+            gene_counts = LWR_Core_Shapes.count_in_lattice(symmetry,solution)
+        for gene in genes_list:
+            if genome[gene]['constraint']:
+                ctype = genome[gene]['constraint']['type']
+                cvalue = genome[gene]['constraint']['value']
+                if gene not in gene_counts:
+                    gene_counts[gene] = 0
+                if ctype == 'max_quantity': #quantity of gene type must be less than the max allowed quantity.
+                    if gene_counts[gene] > cvalue:
+                        return False
+                elif ctype == 'less_than_variable': #quantity of gene type must be less than the quantity of the target variable.
+                    if cvalue not in gene_counts:
+                        gene_counts[cvalue] = 0
+                    if gene_counts[gene] > gene_counts[cvalue]:
+                        return False
+        
+        ## make sure that each gene option is valid for the gene
+        for i in range(len(solution)):
+            if not genome[solution[i]]['map'][i] == 1: #gene value not allowed at this location in chromosome.
+                return False
+            
+        return True #if you haven't exited with "False" by this point, all constraints were passed.
+
+  
 class Fitness(object):
     """
     The generic fitness function. Requires user specified weights for every 
@@ -505,6 +555,7 @@ class Fitness(object):
                     penalty = (pvalue - ptarget)*pweight if pvalue - ptarget > 0.0 else 0.0
                     fitness -= penalty
         return fitness
+
 
 class Solution_Reporting():
     """

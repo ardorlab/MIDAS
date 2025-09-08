@@ -115,7 +115,6 @@ class SA_reproduction():
             temperature = Cooling_Schedule.linear_update(self.input.initial_temperature, self.generation, self.input.num_generations)
         if cooling_schedule == 'log_update':
             temperature = Cooling_Schedule.logarithmic_update(self.input.initial_temperature, self.generation)
-
         logger.info(f"Updated Temperature: {temperature}")
 
         return temperature 
@@ -130,7 +129,7 @@ class SA_reproduction():
         ## Initialize logging for the present file
         logger = logging.getLogger("MIDAS_logger")
 
-        LWR_core_parameters = [input_obj.nrow, input_obj.ncol, input_obj.num_assemblies, input_obj.symmetry]
+        core_parameters = [input_obj.nrow, input_obj.ncol, input_obj.num_assemblies, input_obj.symmetry, input_obj.calculation_type]
 
         if input_obj.calculation_type in ["eq_cycle"]:
             zone_chromosome = [loc[0] for loc in chromosome]
@@ -155,14 +154,14 @@ class SA_reproduction():
                 for i in range(num_mutations):
                     loc_to_mutate = random.randint(0, len(new_soln)-1) #choose a random gene
                     old_gene = new_soln[loc_to_mutate]
-                    gene_options = optools.Constrain_Input.calc_gene_options(all_genes_list, all_gene_options,\
-                                                                                LWR_core_parameters, old_soln) #constraint input
+                    gene_options = optools.Gene_Validity_check.contraceptive_check(input_obj, all_genes_list, all_gene_options,
+                                                                                    core_parameters, old_soln, [], loc_to_mutate)
                     new_gene = random.choice(gene_options)
                     if new_gene != old_gene:
                         if all_gene_options[new_gene]['map'][loc_to_mutate] == 1:
                             new_soln[loc_to_mutate] = new_gene
-            chromosome_is_valid = optools.Constrain_Input.check_constraints(all_genes_list,all_gene_options,\
-                                                                            LWR_core_parameters,new_soln)
+            chromosome_is_valid = optools.Gene_Validity_check.abortive_check(input_obj,all_genes_list,all_gene_options,\
+                                                                            core_parameters,new_soln)
             if not chromosome_is_valid:
                 attempts += 1
                 if attempts > 100000:
@@ -177,7 +176,7 @@ class SA_reproduction():
                     child_chromosome.append(chromosome[i])
                 else:
                     child_chromosome.append((new_soln[i],None))
-            child_chromosome = optools.Constrain_Input.EQ_reload_fuel(input_obj.genome,LWR_core_parameters,child_chromosome)
+            child_chromosome = optools.Solution.EQ_reload_fuel(input_obj.genome,core_parameters,child_chromosome)
 
         else: 
             child_chromosome = new_soln
