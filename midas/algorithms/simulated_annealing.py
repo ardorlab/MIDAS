@@ -130,7 +130,7 @@ class SA_reproduction():
         ## Initialize logging for the present file
         logger = logging.getLogger("MIDAS_logger")
 
-        LWR_core_parameters = [input_obj.nrow, input_obj.ncol, input_obj.num_assemblies, input_obj.symmetry]
+        LWR_core_parameters = [input_obj.nrow, input_obj.ncol, input_obj.num_assemblies, input_obj.symmetry,input_obj.core_type]
 
         if input_obj.calculation_type in ["eq_cycle"]:
             zone_chromosome = [loc[0] for loc in chromosome]
@@ -156,13 +156,14 @@ class SA_reproduction():
                     loc_to_mutate = random.randint(0, len(new_soln)-1) #choose a random gene
                     old_gene = new_soln[loc_to_mutate]
                     gene_options = optools.Constrain_Input.calc_gene_options(all_genes_list, all_gene_options,\
-                                                                                LWR_core_parameters, old_soln) #constraint input
+                                                                                LWR_core_parameters, old_soln,0) #constraint input
                     new_gene = random.choice(gene_options)
                     if new_gene != old_gene:
                         if all_gene_options[new_gene]['map'][loc_to_mutate] == 1:
                             new_soln[loc_to_mutate] = new_gene
             chromosome_is_valid = optools.Constrain_Input.check_constraints(all_genes_list,all_gene_options,\
                                                                             LWR_core_parameters,new_soln)
+            
             if not chromosome_is_valid:
                 attempts += 1
                 if attempts > 100000:

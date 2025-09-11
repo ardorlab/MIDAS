@@ -63,7 +63,7 @@ def validate_input(keyword, value):
     
     elif keyword == 'code_type':
         value = str(value).lower().replace(' ','_')
-        if value not in ["parcs342", "parcs343", "nuscale_database", "trace50p5", "polaris624"]:
+        if value not in ["parcs342", "parcs343", "nuscale_database", "trace50p5", "polaris624","test_listsum"]:
             raise ValueError("Code types currently supported: PARCS342, PARCS343, NuScale_Database, TRACE50p5.")
     
     elif keyword == 'calc_type':
@@ -179,7 +179,8 @@ def validate_input(keyword, value):
                                    'keff_diff',
                                    'cpr',
                                    'lhgr',
-                                   'aplhgr']:
+                                   'aplhgr',
+                                   'list_sum']:
                     raise ValueError(f"Requested objective/constraint '{key}' not supported.")
                 if new_key == 'aplhgr':
                     logger.warning("APLHGR requires 3d plotting of pin reconstruction.")
@@ -1117,7 +1118,7 @@ class Input_Parser():
             elif self.code_interface == "polaris624":
                 info = self.file_settings['polaris_data']
             try:
-                infomap = info['map']
+                infomap = None
             except KeyError:
                 pass
         except KeyError:

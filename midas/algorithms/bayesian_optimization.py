@@ -361,6 +361,6 @@ class Bayesian_Optimization:
                 n_restarts=5
             )
             #Check to make sure solution fits constraints, if it does not then it will not be considered
-            if optools.Constrain_Input.check_constraints(gene_list, self.input.genome, LWR_core_parameters, candidate):
-                candidates.append(candidate)
+           # if optools.Constrain_Input.check_constraints(gene_list, self.input.genome, LWR_core_parameters, candidate):
+            candidates.append(candidate)
         return candidates
