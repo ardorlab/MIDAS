@@ -8,7 +8,7 @@ from copy import deepcopy
 from pathlib import Path
 import subprocess
 from subprocess import STDOUT
-from midas.utils.optimizer_tools import Constrain_Input
+from midas.utils import optimizer_tools as optools
 from midas_data import __parcs343exe__
 
 
@@ -119,7 +119,7 @@ def without_template(solution, input, cwd, filename):
     fuel_locations = [loc for loc in input.core_dict.keys() if 2 < len(loc) <  5]
     soln_fuel_locations = {}
     if input.calculation_type in ['eq_cycle']:
-        soln_FAs = Constrain_Input.SS_decoder(solution.chromosome)
+        soln_FAs = optools.Solution.SS_decoder(solution.chromosome)
         for i in range(len(solution.chromosome)):
             soln_fuel_locations[fuel_locations[i]] = soln_FAs[i]
     else:
@@ -405,7 +405,7 @@ def with_template(solution, input, cwd, filename):
     fuel_locations = [loc for loc in input.core_dict.keys() if 2 < len(loc) <  5]
     soln_fuel_locations = {}
     if input.calculation_type in ['eq_cycle']:
-        soln_FAs = Constrain_Input.SS_decoder(solution.chromosome)
+        soln_FAs = optools.Solution.SS_decoder(solution.chromosome)
         for i in range(len(solution.chromosome)):
             soln_fuel_locations[fuel_locations[i]] = soln_FAs[i]
     else:

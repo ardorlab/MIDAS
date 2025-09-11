@@ -1048,9 +1048,9 @@ class Input_Parser():
         self.surrogate_fitting_off = yaml_line_reader(info, 'surrogate_off_generation', int(self.num_generations/2))
         self.initial_temperature = yaml_line_reader(info, 'temperature', 100)
         if self.num_procs > 1:
-            self.cooling_schedule = yaml_line_reader(info, 'cooling_schedule', 'exponential_decrease')
-        if self.num_procs <= 1:
             self.cooling_schedule = yaml_line_reader(info, 'cooling_schedule', 'lam')
+        if self.num_procs <= 1:
+            self.cooling_schedule = yaml_line_reader(info, 'cooling_schedule', 'exponential_decrease')
         self.secondary_cooling_schedule = yaml_line_reader(info, 'secondary_cooling_schedule', 'exponential_decrease')
         self.quality_factor = yaml_line_reader(info, 'quality_factor', 1.1)
         self.scaling_factor = yaml_line_reader(info, 'scaling_factor', 1.5)

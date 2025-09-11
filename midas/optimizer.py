@@ -70,7 +70,6 @@ class Optimizer():
         elif methodology == 'simulated_annealing' and self.input.num_procs == 1:
             self.algorithm = SA.Simulated_Annealing(self.input)
         #!TODO: Add the other algorithms back in.
-
         return
     
     def calculate_number_gene_combinations(self, genome):
@@ -96,7 +95,7 @@ class Optimizer():
         Written by Nicholas Rollins. 09/27/2024
         """
         #generate blank solution object
-        soln = optools.Solution(f"{name}")
+        soln = optools.Solution(self.input, f"{name}")
         
         #copy objectives and constraints from input
         soln.parameters = deepcopy(self.input.objectives)
