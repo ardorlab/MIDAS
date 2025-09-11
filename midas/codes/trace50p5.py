@@ -9,7 +9,7 @@ from pathlib import Path
 from time import sleep
 import subprocess
 from subprocess import STDOUT
-from midas.utils.optimizer_tools import Constrain_Input
+from midas.utils import optimizer_tools as optools
 from midas_data import __trace50p5exe__
 from midas.codes import parcs343
 
@@ -96,7 +96,7 @@ def evaluate(solution, input): #!TODO: this doesn't include the initial PARCS ca
     fuel_locations = [loc for loc in input.core_dict.keys() if 2 < len(loc) <  5]
     soln_fuel_locations = {}
     if input.calculation_type in ['eq_cycle']:
-        soln_FAs = Constrain_Input.SS_decoder(solution.chromosome)
+        soln_FAs = optools.Solution.SS_decoder(solution.chromosome)
         for i in range(len(solution.chromosome)):
             soln_fuel_locations[fuel_locations[i]] = soln_FAs[i]
     else:

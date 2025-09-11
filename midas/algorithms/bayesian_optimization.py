@@ -340,7 +340,7 @@ class Bayesian_Optimization:
             gene_list.append(gene)
 
         #Create LWR core parameters for use in checking constraints
-        LWR_core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies, self.input.symmetry]
+        core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies, self.input.symmetry]
         self.iterations = gen_obj.current
         
         chromosome_list = [soln.chromosome for soln in pop_list]
@@ -361,6 +361,6 @@ class Bayesian_Optimization:
                 n_restarts=5
             )
             #Check to make sure solution fits constraints, if it does not then it will not be considered
-            if optools.Constrain_Input.check_constraints(gene_list, self.input.genome, LWR_core_parameters, candidate):
+            if optools.Gene_Validity_check.abortive_check(self.input, gene_list, self.input.genome, core_parameters, candidate):
                 candidates.append(candidate)
         return candidates
