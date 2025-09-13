@@ -36,11 +36,10 @@ class Simulated_Annealing():
     ## preserve core parameters 
         LWR_core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies, self.input.symmetry]
     ## Perform perturbation
-        if self.input.perturbation_type == "perturb_by_gene":
+        if self.input.perturbation_type['method'] == "perturb_by_gene":
             individual_pairs.append(SA_reproduction.perturb_by_gene(self.input, primary_individual[0]))
         else:
             raise ValueError("Requested perturbation type not recognized.")
-
         self.temperature = SA_reproduction.Temperature_update_methods(self, self.temperature, self.input.cooling_schedule)
         self.generation += 1
 
@@ -69,8 +68,8 @@ class SA_reproduction():
 
         try:
             if self.selected_solution.chromosome == pop_list[0].chromosome:
-                primary = pop_lis[0]
-                challenger = pop_list[0][1]
+                primary = pop_list[0]
+                challenger = pop_list[1]
             if self.selected_solution.chromosome == pop_list[1].chromosome:
                 primary = pop_list[1]
                 challenger = pop_list[0]
@@ -78,12 +77,6 @@ class SA_reproduction():
         except: 
             primary = pop_list[0]
             challenger = pop_list[0]
-
-        # challenger = pop_list[0]
-        # if len(pop_list) < 2:
-        #     primary = pop_list[0]
-        # else:
-        #     primary = pop_list[1]
 
         selected = pop_list[0]
 
@@ -98,7 +91,6 @@ class SA_reproduction():
                 selected = primary  
 
         self.selected_solution = selected
-
         return selected
 
     def Temperature_update_methods(self, temperature, cooling_schedule):
@@ -110,7 +102,7 @@ class SA_reproduction():
         logger = logging.getLogger("MIDAS_logger")
 
         if cooling_schedule == 'exponential_decrease':
-            temperature = Cooling_Schedule.exponential_decrease(temperature)
+            temperature = Cooling_Schedule.exponential_decrease(self.input.update_factor, temperature)
         if cooling_schedule == 'linear_update':
             temperature = Cooling_Schedule.linear_update(self.input.initial_temperature, self.generation, self.input.num_generations)
         if cooling_schedule == 'log_update':
@@ -145,7 +137,7 @@ class SA_reproduction():
             all_gene_options = input_obj.genome
             all_genes_list = list(input_obj.genome.keys())
 
-        num_mutations = 1 #!TODO: this was hardcoded to 1 in old MIDAS. Should probably be parameterized.
+        num_mutations = input_obj.perturbation_type['num_perturbations'] 
         chromosome_is_valid = False
         attempts = 0
         while not chromosome_is_valid:
@@ -198,18 +190,18 @@ class Cooling_Schedule(object):
     def __init__(self, generation):
         self.generation = generation
 
-    def exponential_decrease(temperature):
+    def exponential_decrease(update_factor, temperature):
         """
         T = T0*alpha
         Where 0.9 < alpha < 1.0 
         
         Updated by Jake Mikouchi 04/23/2025
+        Updated by Jake Mikouchi 09/13/2025
         """
-        alpha = 0.95 #TODO make this avialble to edit in input file
         if temperature <= 0.0001:
             temperature = 0.0001
         else:
-            temperature = temperature * alpha
+            temperature = temperature * update_factor
         return temperature
 
     def linear_update( initial_temperature, current_generation, total_generations):
