@@ -480,7 +480,7 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
     """
     ## Prepare container for results
     results_dict = {}
-    for res in ["cycle_length", "pinpowerpeaking", "fdeltah", "max_boron", 
+    for res in ["cycle_length", "pinpowerpeaking", "fdeltah",'pxyz', 'pxy', "max_boron", 
                         "keff_min", "keff_max", "keff_diff", "cpr", "lhgr", "aplhgr"]:
         results_dict[res] = {}
         results_dict[res]['value'] = []
@@ -496,29 +496,27 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
         res_str = res_str[0].split('\n')
         
         ## Parse raw values by timestep
-        efpd_list = []; boron_list = []; keff_list = []; fq_list = []; fdh_list = [] #; Pxyz_list = [];   Pxy_list = []
+        efpd_list = []; boron_list = []; keff_list = []; pxy_list = []; pxyz_list = []; fq_list = []; fdh_list = [] 
         for i in range(2, len(res_str)-1):
             res_val=res_str[i].split()
             
             efpd_list.append(float(res_val[9]))
             boron_list.append(float(res_val[14]))
-            keff_list.append(float(res_val[2]))
-            fq_list.append(float(res_val[7]))
-            fdh_list.append(float(res_val[6]))
-            
-            # Pxyz_list.append(float(res_val[7]))
-            # Pxy_list.append(float(res_val[6]))
-            # fq_list.append(float(res_val[22]))
+            keff_list.append(float(res_val[2]))            
+            pxyz_list.append(float(res_val[7]))
+            pxy_list.append(float(res_val[6]))
+            fdh_list.append(float(res_val[21]))
+            fq_list.append(float(res_val[22]))
         
         del filestr, res_str, res_val #unload file contents to clean up memory
         
         results_dict["cycle_length"]["value"] = calc_cycle_length(efpd_list,boron_list,keff_list)
+        results_dict["pxy"]["value"] = max(pxy_list)
+        results_dict["pxyz"]["value"] = max(pxyz_list)
         results_dict["pinpowerpeaking"]["value"] = max(fq_list)
         results_dict["fdeltah"]["value"] = max(fdh_list)
         results_dict["max_boron"]["value"] = max(boron_list)
         
-        # results_dict["pinpowerpeaking"]["value"] = max(Pxyz_list)
-        # results_dict["fdeltah"]["value"] = max(Pxy_list)
         results_dict["keff_min"]["value"] = min(keff_list)
         results_dict["keff_max"]["value"] = max(keff_list)
         results_dict["keff_diff"]["value"] = max(keff_list) - min(keff_list)
@@ -548,6 +546,8 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
         results_dict["cycle_length"]["value"] = 0.0
         results_dict["pinpowerpeaking"]["value"] = 10.0
         results_dict["fdeltah"]["value"] = 10.0
+        results_dict["pxy"]["value"] = 10.0
+        results_dict["pxyz"]["value"] = 10.0
         results_dict["max_boron"]["value"] = 10000
         results_dict["keff_min"]["value"] = 0.0
         results_dict["keff_max"]["value"] = 10.0
@@ -632,7 +632,7 @@ def calc_lhgr(fq_list, parameters):
     max_pp = max(fq_list)
 
     #determines maximum linear heat generation rate
-    lhgr = parameters['lhgr']['linear_power_density'] * max_pp
+    lhgr = parameters['lhgr']['linear_power'] * max_pp
 
     return lhgr
 
@@ -678,7 +678,7 @@ def calc_aplhgr(filename, parameters):
                         read = False
                         counts += 1 
 
-    aplhgr = parameters['aplhgr']['linear_power_density'] * peakval
+    aplhgr = parameters['aplhgr']['linear_power'] * peakval
 
     return aplhgr
 

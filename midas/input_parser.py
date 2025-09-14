@@ -165,6 +165,8 @@ def validate_input(keyword, value):
                 if new_key not in ['max_boron',
                                    'pinpowerpeaking',
                                    'fdeltah',
+                                   'pxyz',
+                                   'pxy',
                                    'cycle_length',
                                    'assembly_burnup',
                                    'cost_fuelcycle',
@@ -214,13 +216,13 @@ def validate_input(keyword, value):
                                 raise ValueError(f"Requested settings for objective '{key}' must be nested with its applicable parameters.")
                         elif new_subkey == 'critical_power':
                             new_subitem = float(subitem)
-                        elif new_subkey == 'linear_power_density':
+                        elif new_subkey == 'linear_power':
                             new_subitem = float(subitem)
                         if new_key == 'cpr' and 'critical_power' not in item.keys():
                             raise ValueError(f"Critical power ratio is requested in objectives but the critical power is not provided.")
-                        if new_key == 'lhgr' and 'linear_power_density' not in item.keys():
+                        if new_key == 'lhgr' and 'linear_power' not in item.keys():
                             raise ValueError(f"Linear heat generation rate requested in objectives but the linear power density is not provided.")
-                        if new_key == 'aplhgr' and 'linear_power_density' not in item.keys():
+                        if new_key == 'aplhgr' and 'linear_power' not in item.keys():
                             raise ValueError(f"Average palnar linear heat generation rate requested in objectives but the linear power density is not provided.")
                         new_item[new_subkey] = new_subitem #save modified parameter
                     #check parameters logic
@@ -382,6 +384,11 @@ def validate_input(keyword, value):
         if value not in ["exponential_decrease", "linear_update", "log_update", "none"]:
             raise ValueError(f"Secondary cooling schedule '{value}' not supported.")
         
+    elif keyword == 'update_factor':
+        value = float(value)
+        if value < 0.0 or value > 1.0:
+            raise ValueError("update factor for exponential cooling schedule must be 2.0 > alpha > 1.0")
+        
     elif keyword == 'quality_factor':
         value = float(value)
         if value < 1.0 or value > 2.0:
@@ -393,10 +400,23 @@ def validate_input(keyword, value):
             raise ValueError("scaling factor for LAM cooling schedule must be 2.0 > sf > 1.0")
         
     elif keyword == 'perturbation_type':
-        value = str(value).lower().replace(' ','_')
-        if value not in ["perturb_by_gene"]:
-            raise ValueError("perturbation type not supported.")
-        
+        if isinstance(value, dict):
+            new_dict = {}
+            for key, item in value.items():
+                new_key = str(key).lower()
+                if new_key == 'method':
+                    new_item = str(item).lower().replace(' ','_')
+                    if new_item not in ["perturb_by_gene"]:
+                        raise ValueError(f"Requested perturbation method '{item}' not supported.")
+                elif new_key =='num_perturbations':
+                    new_item = int(item)
+                    if item < 1:
+                        raise ValueError("num_perturbations must be 1 or greater")
+                new_dict[new_key] = new_item
+            if 'num_perturbations' not in new_dict.keys():
+                new_dict['num_perturbations'] = 1
+            return new_dict
+ 
     elif keyword == 'buffer_size':
         value = int(value)
         if not isinstance(value, int):
@@ -1052,9 +1072,11 @@ class Input_Parser():
         if self.num_procs <= 1:
             self.cooling_schedule = yaml_line_reader(info, 'cooling_schedule', 'exponential_decrease')
         self.secondary_cooling_schedule = yaml_line_reader(info, 'secondary_cooling_schedule', 'exponential_decrease')
+        self.update_factor = yaml_line_reader(info, 'update_factor', 0.95)
         self.quality_factor = yaml_line_reader(info, 'quality_factor', 1.1)
         self.scaling_factor = yaml_line_reader(info, 'scaling_factor', 1.5)
-        self.perturbation_type = yaml_line_reader(info, 'perturbation_type', 'perturb_by_gene')
+        perturbation_default = {'method':'perturb_by_gene','num_perturbations':1}
+        self.perturbation_type = yaml_line_reader(info, 'perturbation_type', perturbation_default)
         self.buffer_size = yaml_line_reader(info, 'buffer_size', 10)
 
         
@@ -1142,6 +1164,8 @@ class Input_Parser():
         self.axial_nodes = yaml_line_reader(info, 'axial_nodes', [16.12, "15*25.739", 16.12])
         self.boc_exposure = yaml_line_reader(info, 'boc_core_exposure', 0.0)
         self.depl_steps = yaml_line_reader(info, 'depletion_steps', [1, 1, 30, 30, 30, 30, 30, 30])
+        if (not self.pin_power_recon and 'pinpowerpeaking' in self.objectives.keys()) or (not self.pin_power_recon and 'fdeltah' in self.objectives.keys()):
+            logger.warning('Pin power reconstruction is turned off but pin peaking factors are requested in objectives.')
         
         # TRACE input block
         if self.code_interface == "trace50p5":
@@ -1172,7 +1196,7 @@ class Input_Parser():
         if self.code_interface == 'nuscale_database':
             #Force octant symmetry for NuScale database
             if self.symmetry != 'octant':
-                logging.warning(f'Core symmetry has been changed from {self.symmetry} to octant. NuScale database only supports octant symmetry.')
+                logger.warning(f'Core symmetry has been changed from {self.symmetry} to octant. NuScale database only supports octant symmetry.')
                 self.symmetry == 'octant'
             
             #Verify assembly map length for each parameter in input file
