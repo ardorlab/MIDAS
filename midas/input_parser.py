@@ -672,7 +672,48 @@ def validate_input(keyword, value):
             return new_dict
 
 ## Genome Block ##
-    elif keyword in ['parameters', 'batches']:
+    elif keyword in ['parameters']:
+        new_dict = {}
+        if isinstance(value, dict):
+            for key, item in value.items():
+                new_key = str(key)
+                new_dict[new_key] = {}
+                #check decision variable options
+                if isinstance(value[key], dict):
+                    for subkey, subitem in item.items():
+                        new_subkey = str(subkey).lower()
+                        if new_subkey == 'type':
+                            new_dict[new_key][new_subkey] = subitem
+                            if subitem not in ["continuous_range", "discrete_range"]:
+                                raise ValueError(f"Requested continuous variable type '{subitem}' not supported.")
+                        if new_subkey == 'range':
+                            if not isinstance(subitem, list):
+                                raise ValueError(f"Continuous variable 'range' must be a list.")
+                            for rangebound in subitem: 
+                                if (not isinstance(rangebound, float) and not isinstance(rangebound, int)) or isinstance(rangebound, bool): 
+                                    raise ValueError(f"Continuous variable 'range' values must be two numeric values in ascending order.")
+                            if len(subitem) != 2: 
+                                raise ValueError(f"Continuous variable 'range' list must contain two numeric values in ascending order.")
+                            if subitem[0] > subitem[1]: 
+                                raise ValueError(f"Continuous variable 'range' list must contain two numeric values in ascending order.")
+                            new_dict[new_key][new_subkey] = subitem
+                        if new_subkey == "increment":
+                            new_dict[new_key][new_subkey] = float(subitem)
+                            if new_dict[new_key][new_subkey] < 0: 
+                                raise ValueError(f"Continuous variable 'increment' must be greater than 0")
+                        if new_subkey == "index":
+                            new_dict[new_key][new_subkey] = int(subitem)
+                    for standard_key in  ["type", "range"]: # 'index' not required
+                        if standard_key not in item.keys():  
+                            raise ValueError(f"Key '{standard_key}' must be given for continuous decision variables.")
+                    if "discrete_range" in item["type"] and "increment" not in item.keys():
+                        raise ValueError(f"Increment for continuous variable with 'discrete_range' is not provided.")
+                    else: 
+                        if (item["increment"] / (item["range"][1] - item["range"][0]))*100 >= 10:
+                            logger.warning(f"Continuous variable increment for '{new_key}' is large relative to the range. Is this intentional?")
+        return new_dict
+    
+    elif keyword in ['assembly_parameters', 'batches']:
         new_dict = {}
         if isinstance(value, dict):
             for key, item in value.items():
@@ -923,10 +964,6 @@ def validate_input(keyword, value):
     
     return value
 
-
-
-    return value
-
 def parcs343_template_check(self):
     """
     Checks to ensure that necessary flags are present if a template input file is provided for a code interface. 
@@ -1130,6 +1167,8 @@ class Input_Parser():
                 info = self.file_settings['parcs_data']
             elif self.code_interface == "nuscale_database":
                 info = self.file_settings['nuscale_data']
+            elif self.code_interface == "serpent":
+                info = self.file_settings['serpent_data']
             elif self.code_interface == "trace50p5": #multiphysics calcs must first be initialized in neutronics code.
                 try:
                     info = self.file_settings['parcs_data']
@@ -1166,6 +1205,9 @@ class Input_Parser():
         self.depl_steps = yaml_line_reader(info, 'depletion_steps', [1, 1, 30, 30, 30, 30, 30, 30])
         if (not self.pin_power_recon and 'pinpowerpeaking' in self.objectives.keys()) or (not self.pin_power_recon and 'fdeltah' in self.objectives.keys()):
             logger.warning('Pin power reconstruction is turned off but pin peaking factors are requested in objectives.')
+        self.active_cycles = yaml_line_reader(info, "active_cycles", 500)
+        self.inactive_cycles = yaml_line_reader(info, "inactive_cycles", 50)
+        self.particles_per_history = yaml_line_reader(info, "particles_per_history", 5000)
         
         # TRACE input block
         if self.code_interface == "trace50p5":
