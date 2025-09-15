@@ -63,12 +63,12 @@ def validate_input(keyword, value):
     
     elif keyword == 'code_type':
         value = str(value).lower().replace(' ','_')
-        if value not in ["parcs342", "parcs343", "nuscale_database", "trace50p5", "polaris624"]:
+        if value not in ["parcs342", "parcs343", "nuscale_database", "trace50p5", "polaris624","serpent"]:
             raise ValueError("Code types currently supported: PARCS342, PARCS343, NuScale_Database, TRACE50p5.")
     
     elif keyword == 'calc_type':
         value = str(value).lower().replace(' ','_')
-        if value not in ["single_cycle","eq_cycle", "lattice_physics"]:
+        if value not in ["single_cycle","eq_cycle", "lattice_physics", "function", "mixed_variable"]:
             raise ValueError("Data type not supported.")
     
     elif keyword == 'input_template':
@@ -682,16 +682,16 @@ def validate_input(keyword, value):
                 if isinstance(value[key], dict):
                     for subkey, subitem in item.items():
                         new_subkey = str(subkey).lower()
-                        if new_subkey == 'continuous_range':
+                        if new_subkey in ['continuous_range','discrete_range']:
                             if not isinstance(subitem, list):
                                 raise ValueError(f"Entry '{new_subkey}' under decision variable '{new_key}' must be a list of two numbers.")
                             for rangebound in subitem: 
                                 if (not isinstance(rangebound, float) and not isinstance(rangebound, int)) or isinstance(rangebound, bool): 
-                                    raise ValueError(f"Continuous variable '{new_subkey}' values under decision variable '{new_key}' must be two numeric values in ascending order.")
+                                    raise ValueError(f"Entry '{new_subkey}' values under decision variable '{new_key}' must be two numeric values in ascending order.")
                             if len(subitem) != 2: 
-                                raise ValueError(f"Continuous variable '{new_subkey}' list under decision variable '{new_key}' must contain two numeric values in ascending order.")
+                                raise ValueError(f"Entry '{new_subkey}' list under decision variable '{new_key}' must contain two numeric values in ascending order.")
                             if subitem[0] > subitem[1]: 
-                                raise ValueError(f"Continuous variable '{new_subkey}' list under decision variable '{new_key}' must contain two numeric values in ascending order.")
+                                raise ValueError(f"Entry '{new_subkey}' list under decision variable '{new_key}' must contain two numeric values in ascending order.")
                             new_dict[new_key][new_subkey] = subitem
                         if new_subkey == "increment":
                             try:
@@ -700,13 +700,15 @@ def validate_input(keyword, value):
                                         raise ValueError(f"The {new_subkey} entry is a list of length 0. It must either be a list with one or more entries for a non-uniform range, or a single number for a uniform range")
                                     for index in range(0, len(subitem)):
                                         subitem[index] = float(subitem[index])
+                                        if subitem[index] < 0: 
+                                            raise ValueError("Continuous variable 'increment' entries must be greater than 0")
                                     new_dict[new_key][new_subkey] = subitem
                                 else:
                                     new_dict[new_key][new_subkey] = float(subitem)
+                                    if new_dict[new_key][new_subkey] < 0: 
+                                        raise ValueError("Continuous variable 'increment' must be greater than 0")
                             except TypeError:
                                 raise ValueError(f"Subkey {new_subkey} has entry of type {type(subitem)} but only accepts a list of integers/floats or a single integer/float")
-                            if new_dict[new_key][new_subkey] < 0: 
-                                raise ValueError(f"Continuous variable 'increment' must be greater than 0")
                         if new_subkey == "index":
                             new_dict[new_key][new_subkey] = int(subitem)
                     for standard_key in  ["type", "range"]: # 'index' not required
@@ -1125,7 +1127,7 @@ class Input_Parser():
         
     ## Fuel Assembly Block ##
         self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)
-        if not self.fa_options and self.code_interface not in ['nuscale_database','polaris624']:
+        if not self.fa_options and self.code_interface not in ['nuscale_database','polaris624','serpent'] and self.calculation_type not in ['mixed_variable','function']:
             raise ValueError("Assembly options must be nested with reflectors, fuels, and/or blankets with their parameters.")
         for param in ['cost_fuelcycle','av_fuelenrichment']:
             if param in self.objectives:
@@ -1151,11 +1153,28 @@ class Input_Parser():
         except KeyError:
             info = None
         
-        self.genome = yaml_line_reader(info, 'parameters', None)
+        if self.calculation_type in ['single_cycle','eq_cycle','lattice_physics']:
+            self.genome = yaml_line_reader(info, 'assembly_parameters', None)
+        elif self.calculation_type in ['function','mixed_variable']:
+            self.genome = yaml_line_reader(info, 'parameters', None)
+            for key, value in self.genome.items():
+                if 'discrete_range' in value.items():
+                    if type(self.genome[key]["increment"]) != list:
+                        new_vals = [self.genome[key]["discrete_range"][0]]
+                        while new_vals[-1] + self.genome[key]["increment"] < self.genome[key]["discrete_range"][1]:
+                            new_vals.append(new_vals[-1] + self.genome[key]["increment"])
+                        self.genome[key]["discrete_range"] = new_vals
+                    else:
+                        counter = 0
+                        new_vals = [self.genome[key]["discrete_range"][0]]
+                        while new_vals[-1] + self.genome[key]["increment"][counter] < self.genome[key]["discrete_range"][1]:
+                            new_vals.append(new_vals[-1] + self.genome[key]["increment"][counter])
+                            counter += 1
+                        self.genome[key]["discrete_range"] = new_vals
         self.batches = yaml_line_reader(info, 'batches', None)
         #check that decision variable options are valid.
         if not self.genome:
-            raise ValueError("'Parameters' must be specified in Decision Variables.")
+            raise ValueError("'parameters' or 'assembly_parameters' must be specified in Decision Variables.")
         if self.calculation_type == 'eq_cycle' and not self.batches:
             raise ValueError("'Batches' must be specified in Decision Variables for the 'EQ Cycle' type.")
         for key, value in self.genome.items():
@@ -1238,7 +1257,6 @@ class Input_Parser():
         self.boronmat = yaml_line_reader(info, 'borated_material', None) #str, ppm
         self.num_meshrings = yaml_line_reader(info, 'num_mesh_rings', 3)
         self.depl_steps = yaml_line_reader(info, 'depletion_steps', [1, 1, 30, 30, 30, 30, 30, 30])
-        
         
         #NuScale database verification block
         if self.code_interface == 'nuscale_database':
