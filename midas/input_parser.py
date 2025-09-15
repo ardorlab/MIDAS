@@ -682,20 +682,16 @@ def validate_input(keyword, value):
                 if isinstance(value[key], dict):
                     for subkey, subitem in item.items():
                         new_subkey = str(subkey).lower()
-                        if new_subkey == 'type':
-                            new_dict[new_key][new_subkey] = subitem
-                            if subitem not in ["continuous_range", "discrete_range"]:
-                                raise ValueError(f"Requested continuous variable type '{subitem}' not supported.")
-                        if new_subkey == 'range':
+                        if new_subkey == 'continuous_range':
                             if not isinstance(subitem, list):
-                                raise ValueError(f"Continuous variable 'range' must be a list.")
+                                raise ValueError(f"Entry '{new_subkey}' under decision variable '{new_key}' must be a list of two numbers.")
                             for rangebound in subitem: 
                                 if (not isinstance(rangebound, float) and not isinstance(rangebound, int)) or isinstance(rangebound, bool): 
-                                    raise ValueError(f"Continuous variable 'range' values must be two numeric values in ascending order.")
+                                    raise ValueError(f"Continuous variable '{new_subkey}' values under decision variable '{new_key}' must be two numeric values in ascending order.")
                             if len(subitem) != 2: 
-                                raise ValueError(f"Continuous variable 'range' list must contain two numeric values in ascending order.")
+                                raise ValueError(f"Continuous variable '{new_subkey}' list under decision variable '{new_key}' must contain two numeric values in ascending order.")
                             if subitem[0] > subitem[1]: 
-                                raise ValueError(f"Continuous variable 'range' list must contain two numeric values in ascending order.")
+                                raise ValueError(f"Continuous variable '{new_subkey}' list under decision variable '{new_key}' must contain two numeric values in ascending order.")
                             new_dict[new_key][new_subkey] = subitem
                         if new_subkey == "increment":
                             try:
