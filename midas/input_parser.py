@@ -698,7 +698,17 @@ def validate_input(keyword, value):
                                 raise ValueError(f"Continuous variable 'range' list must contain two numeric values in ascending order.")
                             new_dict[new_key][new_subkey] = subitem
                         if new_subkey == "increment":
-                            new_dict[new_key][new_subkey] = float(subitem)
+                            try:
+                                if isinstance(subitem, list):
+                                    if len(subitem) == 0:
+                                        raise ValueError(f"The {new_subkey} entry is a list of length 0. It must either be a list with one or more entries for a non-uniform range, or a single number for a uniform range")
+                                    for index in range(0, len(subitem)):
+                                        subitem[index] = float(subitem[index])
+                                    new_dict[new_key][new_subkey] = subitem
+                                else:
+                                    new_dict[new_key][new_subkey] = float(subitem)
+                            except TypeError:
+                                raise ValueError(f"Subkey {new_subkey} has entry of type {type(subitem)} but only accepts a list of integers/floats or a single integer/float")
                             if new_dict[new_key][new_subkey] < 0: 
                                 raise ValueError(f"Continuous variable 'increment' must be greater than 0")
                         if new_subkey == "index":
