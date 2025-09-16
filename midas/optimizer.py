@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 from shutil import rmtree
 from copy import deepcopy
-from multiprocessing.dummy import Pool
+from multiprocessing import Pool
 from itertools import repeat
 import csv
 import pickle
