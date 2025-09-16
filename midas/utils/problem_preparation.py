@@ -563,7 +563,6 @@ class LWR_Core_Shapes():
         multdict[(6,6)][16]['quarter'] = { 0:4, 1:4, \
                                            2:4, 3:4 }
 
-        import pdb; pdb.set_trace()
         return multdict[(num_rows,num_cols)][num_FA][symmetry]
     
     def count_in_LP(multdict, chromosome):
