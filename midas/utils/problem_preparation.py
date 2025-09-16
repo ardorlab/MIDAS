@@ -563,6 +563,7 @@ class LWR_Core_Shapes():
         multdict[(6,6)][16]['quarter'] = { 0:4, 1:4, \
                                            2:4, 3:4 }
 
+        import pdb; pdb.set_trace()
         return multdict[(num_rows,num_cols)][num_FA][symmetry]
     
     def count_in_LP(multdict, chromosome):
@@ -579,7 +580,6 @@ class LWR_Core_Shapes():
         
     def count_in_lattice(symmetry, chromosome):
         gene_type_count = {'total':0}
-        
         carts = [0,0]
         for i in range(len(chromosome)):
             gene = chromosome[i]
@@ -607,6 +607,14 @@ class LWR_Core_Shapes():
                         multiplicity = 4
                 else:
                     multiplicity = 4
+            elif symmetry == "diagonal":
+                if carts[0] == carts[1]:
+                    multiplicity = 1
+                    carts[1] += 1 #next row
+                    carts[0] = 0
+                else:
+                    multiplicity = 2
+                    carts[0] += 1 #next col
             elif symmetry == "full":
                 multiplicity = 1
             else:
@@ -617,5 +625,4 @@ class LWR_Core_Shapes():
             else:
                 gene_type_count[gene] = multiplicity
             gene_type_count['total'] += multiplicity
-        
         return gene_type_count
