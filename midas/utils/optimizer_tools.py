@@ -347,7 +347,7 @@ class Gene_Validity_check():
             child_zone = [loc[0] for loc in child+chromosome[len(child):]]
             valid_genes_list = Gene_Validity_check.calc_LWR_gene_options(genes_list, genome, parameters, child_zone, indx)
         elif input_obj.calculation_type == 'lattice_physics':
-            valid_genes_list = Gene_Validity_check.calc_lat_gene_options(genes_list, genome, parameters[3], child+chromosome[len(child):], indx)
+            valid_genes_list = Gene_Validity_check.calc_lat_gene_options(genes_list, genome, parameters, child+chromosome[len(child):], indx)
         else: 
             logger.warning('Unconstrained optimization')  
         
@@ -398,8 +398,11 @@ class Gene_Validity_check():
         return valid_genes_list
 
     def calc_lat_gene_options(genes_list, genome, symmetry, chromosome, index):
-        gene_counts = LWR_Core_Shapes.count_in_lattice(symmetry,chromosome)
-        
+        if isinstance(symmetry,list):
+            gene_counts = LWR_Core_Shapes.count_in_lattice(symmetry[3],chromosome)  
+        else: 
+            gene_counts = LWR_Core_Shapes.count_in_lattice(symmetry,chromosome) 
+
         valid_genes_list = []
         for gene in genes_list:
             if genome[gene]['constraint']:
@@ -473,7 +476,8 @@ class Gene_Validity_check():
         num_FA   = core_parameters[2]
         symmetry = core_parameters[3]
         calc_type = core_parameters[4]
-        multdict = LWR_Core_Shapes.get_symmetry_multiplicity(num_rows, num_cols, num_FA, symmetry)
+        if calc_type in ['single_cycle', 'eq_cycle']:
+            multdict = LWR_Core_Shapes.get_symmetry_multiplicity(num_rows, num_cols, num_FA, symmetry)
         
         ## make sure that quantities of each gene type appearing in the solution are allowed.
         if calc_type != "lattice_physics":
