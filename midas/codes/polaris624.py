@@ -22,7 +22,7 @@ def evaluate(solution, input):
     
     Written by Nicholas Rollins. 03/06/2025
     """
-    
+
 ## Create and move to unique directory for PARCS execution
     cwd = Path(os.getcwd())
     indv_dir = cwd.joinpath(input.results_dir_name / Path(solution.name))
@@ -40,21 +40,29 @@ def evaluate(solution, input):
         ofile.write("=polaris\n")
         ofile.write("%\ntitle \"MIDAS Lattice Physics Calculation\"\n%\n")
         ofile.write("% Cross Section Library alias\n")
-        ofile.write("lib \"{}\"\n%\n".format("fine_n")) #!TODO: this value needs to be parameterized.
-        ofile.write("system {}\n%\n".format("PWR")) #!TODO: this value needs to be parameterized.
+        ofile.write("lib \"{}\"\n%\n".format("fine_therm")) #!TODO: this value needs to be parameterized.
+        ofile.write("system {}\n%\n".format(input.system_type)) #!TODO: this value needs to be parameterized.
     
     ## Geometry Block ##
     with open(filename,"a") as ofile:
         ofile.write("%\n% % % % % % % % % %\n% %   GEOMETRY  % %\n% % % % % % % % % %\n%\n")
-        ofile.write(f"geom FA_1 :  ASSM {input.nrow} 1.26 sym={input.map_size}\n\n%\n")
+        if input.map_size == 'DIAGONAL':
+            ofile.write(f"geom FA_1 :  ASSM {input.nrow} {input.pin_pitch} \n\n%\n")
+        else:
+            ofile.write(f"geom FA_1 :  ASSM {input.nrow} {input.pin_pitch} sym={input.map_size}\n\n%\n")
+        if input.box != '0':
+            ofile.write(f"box {input.box} \n")
+        if input.hgap != '0':
+            ofile.write(f"hgap {input.hgap} \n")        
         for name, pin in input.pin_options['rod_geometries'].items():
-            ofile.write(f"pin {pin['type']} : {' '.join(map(str,pin['radii']))} : {' '.join(map(str,pin['materials']))} % {name}\n")
-        for name, pin in input.pin_options['control_rods'].items():
-            ofile.write(f"pin {pin['type']} : {' '.join(map(str,pin['radii']))} : {' '.join(map(str,pin['materials']))} % {name} in {pin['guide_tube']}\n")
+            ofile.write(f"pin {pin['type']} {int(np.ceil((pin['radii'][-1]*2 ) / input.pin_pitch))}: {' '.join(map(str,pin['radii']))} : {' '.join(map(str,pin['materials']))} % {name}\n")
+        if 'control_rods' in input.pin_options.keys():
+            for name, pin in input.pin_options['control_rods'].items():
+                ofile.write(f"pin {pin['type']} : {' '.join(map(str,pin['radii']))} : {' '.join(map(str,pin['materials']))} % {name} in {pin['guide_tube']}\n")
         ofile.write("%\n")
         
         #!TODO: this only works for octant solution symmetry and needs to be moved to problem_preparation.py
-        ofile.write("pinmap\n")
+        ofile.write("pinmap\n") # fuel pin map
         if input.map_size == "SE":
             half_size = int(np.ceil(input.nrow/2))
             for y in range(half_size):
@@ -67,31 +75,73 @@ def evaluate(solution, input):
                     ofile.write(" " + str(input.pin_options['rod_geometries'][solution.chromosome[index]]['type']))
                 ofile.write("\n")
             ofile.write("\n")
-        else: # assume full lattice
-            pass #!TODO: repeat above in all quadrants
-        
-        ofile.write("control BankA : RODLET\n")
-        if input.map_size == "SE":
-            half_size = int(np.ceil(input.nrow/2))
-            for y in range(half_size):
+        elif input.map_size == "DIAGONAL":
+            extended_chromosome = [0 for i in range(input.ncol * input.nrow)]
+            for i in range(input.nrow):          
+                start = i * (i + 1) // 2
+                for c in range(i + 1): 
+                    val = solution.chromosome[start + c]
+                    extended_chromosome[i * input.nrow + c] = val
+                    extended_chromosome[c * input.nrow + i] = val 
+
+            index = 0
+            for y in range(input.nrow):
                 ofile.write("   ")
-                for x in range(half_size):
-                    if y < x:
-                        index = int(x*(x+1)/2 + y)
-                    else:
-                        index = int(y*(y+1)/2 + x)
-                    _searching = True
-                    for rod in input.pin_options['control_rods']:
-                        if solution.chromosome[index] == input.pin_options['control_rods'][rod]['guide_tube']:
-                            ofile.write(" " + str(input.pin_options['control_rods'][rod]['type']))
-                            _searching = False
-                            break
-                    if _searching:
-                        ofile.write(" _")
+                for x in range(input.ncol):
+                    ofile.write(" " + str(input.pin_options['rod_geometries'][extended_chromosome[index]]['type']))
+                    index += 1
                 ofile.write("\n")
-            ofile.write("\n%\n")
+            ofile.write("\n")
         else: # assume full lattice
             pass #!TODO: repeat above in all quadrants
+
+        if 'control_rods' in input.pin_options.keys(): # control rod bank map
+            ofile.write("control BankA : RODLET\n")
+            if input.map_size == "SE":
+                half_size = int(np.ceil(input.nrow/2))
+                for y in range(half_size):
+                    ofile.write("   ")
+                    for x in range(half_size):
+                        if y < x:
+                            index = int(x*(x+1)/2 + y)
+                        else:
+                            index = int(y*(y+1)/2 + x)
+                        _searching = True
+                        for rod in input.pin_options['control_rods']:
+                            if solution.chromosome[index] == input.pin_options['control_rods'][rod]['guide_tube']:
+                                ofile.write(" " + str(input.pin_options['control_rods'][rod]['type']))
+                                _searching = False
+                                break
+                        if _searching:
+                            ofile.write(" _")
+                    ofile.write("\n")
+                ofile.write("\n%\n")
+            elif input.map_size == "DIAGONAL":
+                extended_chromosome = [0 for i in range(input.ncol * input.nrow)]
+                for i in range(input.nrow):          
+                    start = i * (i + 1) // 2
+                    for c in range(i + 1): 
+                        val = solution.chromosome[start + c]
+                        extended_chromosome[i * input.nrow + c] = val
+                        extended_chromosome[c * input.nrow + i] = val 
+
+                index = 0
+                for y in range(input.nrow):
+                    ofile.write("   ")
+                    for x in range(input.ncol):
+                        _searching = True
+                        for rod in input.pin_options['control_rods']:
+                            if extended_chromosome[index] == input.pin_options['control_rods'][rod]['guide_tube']:
+                                ofile.write(" " + str(input.pin_options['control_rods'][rod]['type']))
+                                _searching = False
+                                break
+                        if _searching:
+                            ofile.write(" _")
+                        index += 1
+                    ofile.write("\n")
+                ofile.write("\n")
+            else: # assume full lattice
+                pass #!TODO: repeat above in all quadrants
     
     ## Materials Block ##
     with open(filename,"a") as ofile:
@@ -115,13 +165,14 @@ def evaluate(solution, input):
     with open(filename,"a") as ofile:
         ofile.write("%\n% % % % % % % % % % % %\n% %   STATEPOINTS   % %\n% % % % % % % % % % % %\n%\n")
         ofile.write("% Properties of stated materials\n")
-        ofile.write(f"state ALL : temp={input.bulk_temps} % K\n")
+        ofile.write(f"state ALL : temp={input.bulk_temps} ")
         for name, mat in input.pin_options['materials'].items():
             if mat['fueltype']:
-                ofile.write(f"state {name.split('.')[0]} : temp={input.fuel_temps} % K\n")
-        ofile.write(f"state BankA : in={str(input.cr_inserted).lower()} % insert rod cluster\n")
+                ofile.write(f" {name.split('.')[0]} : temp={input.fuel_temps} ")
+        if 'control_rods' in input.pin_options.keys():
+            ofile.write(f" BankA : in={str(input.cr_inserted).lower()} ")
         if input.boronmat:
-            ofile.write(f"state {input.boronmat[0]} : boron={input.boronmat[1]} % ppm\n")
+            ofile.write(f" {input.boronmat[0]} : boron={input.boronmat[1]} \n")
         ofile.write("%\n")
         ofile.write(f"power {input.powdens} %W/gIHM\n%\n")
         ofile.write("deplete")
