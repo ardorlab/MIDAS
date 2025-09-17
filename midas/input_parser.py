@@ -132,8 +132,8 @@ def validate_input(keyword, value):
     
     elif keyword == 'solution_symmetry':
         value = str(value).lower().replace(' ','_')
-        if value not in ['octant','quarter','full']:
-            raise ValueError("Symmetry of the solution list must be octant, quarter, or full.")
+        if value not in ['octant','quarter','full', 'diagonal']:
+            raise ValueError("Symmetry of the solution list must be octant, quarter, full, or diagonal.")
         
     elif keyword == 'termination_criteria':
         if isinstance(value, dict):
@@ -946,13 +946,28 @@ def validate_input(keyword, value):
         if value <= 0:
             raise ValueError("'exec_walltime' must be a positive number, measured in seconds.")
     
+    elif keyword == 'system_type':
+        value = str(value).upper().strip()
+
     elif keyword == 'num_rows':
         value = int(value)
     
+    elif keyword == 'num_cols':
+        value = int(value)
+
+    elif keyword == 'pin_pitch':
+        value = float(value)
+
     elif keyword == 'lattice_symmetry':
         value = str(value).upper().strip()
-        if value not in ['SE', 'FULL']:
-            raise ValueError("'lattice_symmetry' must be either 'SE' or 'FULL'.")
+        if value not in ['SE', 'FULL', 'DIAGONAL']:
+            raise ValueError("'lattice_symmetry' must be either 'SE', 'FULL', or 'DIAGONAL'.")
+        
+    elif keyword == 'box':
+        value = str(value)
+
+    elif keyword == 'hgap':
+        value = str(value)
     
     elif keyword == 'power':
         value = float(value)
@@ -1258,7 +1273,12 @@ class Input_Parser():
         # POLARIS input block
         if self.code_interface == "polaris624":
             self.nrow = yaml_line_reader(info, 'num_rows', 17)
-        self.map_size = yaml_line_reader(infomap, 'lattice_symmetry', 'SE')
+            self.ncol = yaml_line_reader(info, 'num_cols', self.nrow)
+        self.system_type =  yaml_line_reader(info, 'system_type', 'PWR')
+        self.pin_pitch = yaml_line_reader(info, 'pin_pitch', 1.26)
+        self.map_size = yaml_line_reader(info, 'lattice_symmetry', 'SE')
+        self.box = yaml_line_reader(info, 'box', '0')
+        self.hgap = yaml_line_reader(info, 'hgap', '0')
         self.powdens = yaml_line_reader(info, 'powdens', 36) #W/gIHM
         self.bulk_temps = yaml_line_reader(info, 'bulk_temperatures', 566.0) #K
         self.fuel_temps = yaml_line_reader(info, 'fuel_temperatures', 900.0) #K
