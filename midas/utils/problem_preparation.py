@@ -417,12 +417,11 @@ class Prepare_Problem_Values():
 
         for key, value in input_obj.items():
             for subkey in ['discrete_range','continuous_range']:
-                if subkey in value.items():
+                if subkey in input_obj[key]:
                     vals = input_obj[key][subkey]
                     lower, upper = vals[0], vals[-1]
                     denominator = upper - lower
                     input_obj[key][f'normalized_{subkey}'] = [(float(x) - lower) / denominator for x in vals]
-        
         return input_obj
 
 
