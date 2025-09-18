@@ -1152,7 +1152,7 @@ class Input_Parser():
         self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)
         if not self.fa_options and self.code_interface not in ['nuscale_database','polaris624','serpent','custom_function','styblinski_tang']:
             raise ValueError("Assembly options must be nested with reflectors, fuels, and/or blankets with their parameters.")
-        if self.code_interface not in ['nuscale_database','serpent','custom_function','styblinski_tang']:
+        if self.calculation_type not in ['single_cycle','eq_cycle']:
             for param in ['cost_fuelcycle','av_fuelenrichment']:
                 if param in self.objectives:
                     for key in self.fa_options['fuel'].keys():
