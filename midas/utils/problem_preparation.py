@@ -412,6 +412,19 @@ class Prepare_Problem_Values():
                     input_obj[key]["discrete_range"] = new_vals
         
         return input_obj
+    
+    def normalize_continuous_variables(input_obj):
+
+        for key, value in input_obj.items():
+            for subkey in ['discrete_range','continuous_range']:
+                if subkey in value.items():
+                    vals = input_obj[key][subkey]
+                    lower, upper = vals[0], vals[-1]
+                    denominator = upper - lower
+                    input_obj[key][f'normalized_{subkey}'] = [(float(x) - lower) / denominator for x in vals]
+        
+        return input_obj
+
 
 
 class LWR_Core_Shapes():
