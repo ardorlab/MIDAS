@@ -1,0 +1,75 @@
+## Optimizer Block
+general:
+  optimizer: bayesian_optimization
+  code_type: serpent
+  calc_type: continuous_variable
+  #Possible types: continuous_variable, single_cycle_loading_pattern, equilibrium_loading_pattern
+  results_directory_name: output_files
+  input_template:
+    apply: True
+    loc: ./serpent_temp.inp
+
+optimization:
+  population_size: 20
+  number_of_generations: 400
+  objectives:
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      weight: 800.0     
+    cycle_length:
+      goal: maximize
+      weight: 1.0
+    cost_fuelcycle:
+      goal: minimize
+      weight: 0.000001
+    max_doserate:
+      goal: less_than_target
+      target: 50
+      weight: 50.0
+    total_mass:
+      goal: less_than_target
+      target: 50000
+      weight: 50.0
+    doppler_temperature_coefficient:
+      goal: less_than_target
+      target: 0
+      weight: 100.0
+
+## Algorithm Settings
+algorithm:
+  acquisition_function: lcb
+  exploration_exploitation_factor: 1.96
+
+serpent_data:
+  particles_per_history: 5000
+  active_cycles: 500
+  inactive_cycles: 50
+
+## Genome
+decision_variables:
+  # parameters used to fill each chromosome.
+  parameters:
+    fuel_height:
+      continuous_range: [120,180]
+      index: 1
+    enrichment:
+      discrete_range: [15,19.95]
+      increment: 0.05
+      index: 2
+    fuel_pin_radius:
+      continuous_range: [0.5,2.3]
+      index: 3
+    reflector_thickness:
+      continuous_range: [10,30]
+      index: 4
+    triso_packing_fraction:
+      discrete_range: [0.2,0.6]
+      increment: 0.05
+      index: 4
+    moderator_pin_radius:
+      continuous_range: [0.5,2.3]
+      index: 5
+    shield_thickness:
+      continuous_range: [1,20]
+      index: 6

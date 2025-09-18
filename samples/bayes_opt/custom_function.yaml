@@ -1,0 +1,33 @@
+## Optimizer Block
+general:
+  optimizer: bayesian_optimization
+  code_type: custom_function
+  calc_type: continuous_variable
+  #Possible types: mixed_variable, single_cycle_loading_pattern, equilibrium_loading_pattern
+  results_directory_name: output_files
+
+optimization:
+  population_size: 20
+  number_of_generations: 400
+  objectives:
+    function_output: 
+      equation: 0.5*((x**4 - 16x**2 + 5*x)+(y**4 -16*y**2 + 5*y)) #Styblinski tang function
+      goal: minimize
+      
+
+## Algorithm Settings
+algorithm:
+  acquisition_function: lcb
+  exploration_exploitation_factor: 1.96
+
+## Genome
+decision_variables:
+  # parameters used to fill each chromosome.
+  parameters:
+    x: 
+      continuous_range: [-5,5]
+      index: 1
+    y:
+      continuous_range: [-5,5]
+      index: 2
+

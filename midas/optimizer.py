@@ -45,7 +45,11 @@ class Optimizer():
         BO added by Cole Howard. 10/21/2024
         """
         methodology = self.input.methodology
-        num_gene_combos = self.calculate_number_gene_combinations(self.input.genome)
+        if self.input.calculation_type not in ['continuous_variable']: 
+            num_gene_combos = self.calculate_number_gene_combinations(self.input.genome)
+        else:
+            #!TODO: May need to implement a method of calculating this for continuous variables
+            num_gene_combos = None
         
         self.population = optools.Population(self.input.population_size, num_gene_combos)
         self.generation = optools.Generation(self.input.num_generations, num_gene_combos)
