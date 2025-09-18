@@ -68,7 +68,7 @@ def validate_input(keyword, value):
     
     elif keyword == 'calc_type':
         value = str(value).lower().replace(' ','_')
-        if value not in ["single_cycle","eq_cycle", "lattice_physics", "function", "mixed_variable"]:
+        if value not in ["single_cycle","eq_cycle", "lattice_physics", "continuous_variable"]:
             raise ValueError("Data type not supported.")
     
     elif keyword == 'input_template':
@@ -1151,7 +1151,7 @@ class Input_Parser():
         self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)
         if not self.fa_options and self.code_interface not in ['nuscale_database','polaris624','serpent','custom_function','styblinski_tang']:
             raise ValueError("Assembly options must be nested with reflectors, fuels, and/or blankets with their parameters.")
-        if self.code_interface not in ['nuscale_database','serpent','function']:
+        if self.code_interface not in ['nuscale_database','serpent','custom_function','styblinski_tang']:
             for param in ['cost_fuelcycle','av_fuelenrichment']:
                 if param in self.objectives:
                     for key in self.fa_options['fuel'].keys():
@@ -1178,7 +1178,7 @@ class Input_Parser():
         
         if self.calculation_type in ['single_cycle','eq_cycle','lattice_physics']:
             self.genome = yaml_line_reader(info, 'assembly_parameters', None)
-        elif self.calculation_type in ['function','mixed_variable']:
+        elif self.calculation_type in ['continuous_variable']:
             self.genome = yaml_line_reader(info, 'parameters', None)
             for key, value in self.genome.items():
                 if 'discrete_range' in value.items():
