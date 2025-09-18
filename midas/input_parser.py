@@ -1185,7 +1185,6 @@ class Input_Parser():
             self.genome = problem_preparation.Prepare_Problem_Values.prepare_discrete_range(self.genome)
             #Normalize all ranges for continuous variables
             self.genome = problem_preparation.Prepare_Problem_Values.normalize_continuous_variables(self.genome)
-            import pdb; pdb.set_trace()
 
         self.batches = yaml_line_reader(info, 'batches', None)
         #check that decision variable options are valid.
