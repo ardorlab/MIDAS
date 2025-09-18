@@ -387,6 +387,31 @@ class Prepare_Problem_Values():
         #!input_obj.full_core_locs = full_core_locs
         
         return input_obj
+    
+    def prepare_discrete_range(input_obj):
+        """
+        Turns discrete range into a list of possible values based on the user specified increment.
+
+        Written by Cole Howard. 09/18/2025
+        """
+
+
+        for key, value in input_obj.items():
+            if 'discrete_range' in value.items():
+                if type(input_obj[key]["increment"]) != list:
+                    new_vals = [input_obj[key]["discrete_range"][0]]
+                    while new_vals[-1] + input_obj[key]["increment"] < input_obj[key]["discrete_range"][1]:
+                        new_vals.append(new_vals[-1] + input_obj[key]["increment"])
+                    input_obj[key]["discrete_range"] = new_vals
+                else:
+                    counter = 0
+                    new_vals = [input_obj[key]["discrete_range"][0]]
+                    while new_vals[-1] + input_obj[key]["increment"][counter] < input_obj[key]["discrete_range"][1]:
+                        new_vals.append(new_vals[-1] + input_obj[key]["increment"][counter])
+                        counter += 1
+                    input_obj[key]["discrete_range"] = new_vals
+        
+        return input_obj
 
 
 class LWR_Core_Shapes():
