@@ -1181,7 +1181,11 @@ class Input_Parser():
             self.genome = yaml_line_reader(info, 'assembly_parameters', None)
         elif self.calculation_type in ['continuous_variable']:
             self.genome = yaml_line_reader(info, 'parameters', None)
+            #Create a list of possible values a gene can take for discrete ranges
             self.genome = problem_preparation.Prepare_Problem_Values.prepare_discrete_range(self.genome)
+            #Normalize all ranges for continuous variables
+            self.genome = problem_preparation.Prepare_Problem_Values.normalize_continuous_variables(self.genome)
+
         self.batches = yaml_line_reader(info, 'batches', None)
         #check that decision variable options are valid.
         if not self.genome:
