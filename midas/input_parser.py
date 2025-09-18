@@ -3,6 +3,7 @@ import yaml
 import re
 import logging
 from pathlib import Path
+from midas.utils import problem_preparation
 """
 Classes for parsing and cleansing input data from the user-specified '.yaml' MIDAS input file.
 
@@ -185,7 +186,7 @@ def validate_input(keyword, value):
                                    'max_doserate',
                                    'total_mass',
                                    'doppler_temperature_coefficient',
-                                   'function']:
+                                   'function_output']:
                     raise ValueError(f"Requested objective/constraint '{key}' not supported.")
                 if new_key == 'aplhgr':
                     logger.warning("APLHGR requires 3d plotting of pin reconstruction.")
@@ -223,8 +224,8 @@ def validate_input(keyword, value):
                         elif new_subkey == 'linear_power':
                             new_subitem = float(subitem)
                         elif new_subkey == 'equation':
-                            if new_key != 'function':
-                                raise ValueError(f"'equation' option is only available under 'function' variable, but is under '{new_key} instead'")
+                            if new_key != 'function_output':
+                                raise ValueError(f"'equation' option is only available under 'function_output' variable, but is under '{new_key}' instead")
                             new_subitem = str(subitem)
                         if new_key == 'cpr' and 'critical_power' not in item.keys():
                             raise ValueError(f"Critical power ratio is requested in objectives but the critical power is not provided.")
@@ -1180,20 +1181,7 @@ class Input_Parser():
             self.genome = yaml_line_reader(info, 'assembly_parameters', None)
         elif self.calculation_type in ['continuous_variable']:
             self.genome = yaml_line_reader(info, 'parameters', None)
-            for key, value in self.genome.items():
-                if 'discrete_range' in value.items():
-                    if type(self.genome[key]["increment"]) != list:
-                        new_vals = [self.genome[key]["discrete_range"][0]]
-                        while new_vals[-1] + self.genome[key]["increment"] < self.genome[key]["discrete_range"][1]:
-                            new_vals.append(new_vals[-1] + self.genome[key]["increment"])
-                        self.genome[key]["discrete_range"] = new_vals
-                    else:
-                        counter = 0
-                        new_vals = [self.genome[key]["discrete_range"][0]]
-                        while new_vals[-1] + self.genome[key]["increment"][counter] < self.genome[key]["discrete_range"][1]:
-                            new_vals.append(new_vals[-1] + self.genome[key]["increment"][counter])
-                            counter += 1
-                        self.genome[key]["discrete_range"] = new_vals
+            self.genome = problem_preparation.Prepare_Problem_Values.prepare_discrete_range(self.genome)
         self.batches = yaml_line_reader(info, 'batches', None)
         #check that decision variable options are valid.
         if not self.genome:
