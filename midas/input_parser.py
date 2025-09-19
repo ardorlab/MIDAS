@@ -3,6 +3,7 @@ import yaml
 import re
 import logging
 from pathlib import Path
+from midas.utils import problem_preparation
 """
 Classes for parsing and cleansing input data from the user-specified '.yaml' MIDAS input file.
 
@@ -63,12 +64,12 @@ def validate_input(keyword, value):
     
     elif keyword == 'code_type':
         value = str(value).lower().replace(' ','_')
-        if value not in ["parcs342", "parcs343", "nuscale_database", "trace50p5", "polaris624"]:
+        if value not in ["parcs342", "parcs343", "nuscale_database", "trace50p5", "polaris624","serpent","custom_function","styblinski_tang"]:
             raise ValueError("Code types currently supported: PARCS342, PARCS343, NuScale_Database, TRACE50p5.")
     
     elif keyword == 'calc_type':
         value = str(value).lower().replace(' ','_')
-        if value not in ["single_cycle","eq_cycle", "lattice_physics"]:
+        if value not in ["single_cycle","eq_cycle", "lattice_physics", "continuous_variable"]:
             raise ValueError("Data type not supported.")
     
     elif keyword == 'input_template':
@@ -181,7 +182,11 @@ def validate_input(keyword, value):
                                    'keff_diff',
                                    'cpr',
                                    'lhgr',
-                                   'aplhgr']:
+                                   'aplhgr',
+                                   'max_doserate',
+                                   'total_mass',
+                                   'doppler_temperature_coefficient',
+                                   'function_output']:
                     raise ValueError(f"Requested objective/constraint '{key}' not supported.")
                 if new_key == 'aplhgr':
                     logger.warning("APLHGR requires 3d plotting of pin reconstruction.")
@@ -218,6 +223,10 @@ def validate_input(keyword, value):
                             new_subitem = float(subitem)
                         elif new_subkey == 'linear_power':
                             new_subitem = float(subitem)
+                        elif new_subkey == 'equation':
+                            if new_key != 'function_output':
+                                raise ValueError(f"'equation' option is only available under 'function_output' variable, but is under '{new_key}' instead")
+                            new_subitem = str(subitem)
                         if new_key == 'cpr' and 'critical_power' not in item.keys():
                             raise ValueError(f"Critical power ratio is requested in objectives but the critical power is not provided.")
                         if new_key == 'lhgr' and 'linear_power' not in item.keys():
@@ -672,7 +681,55 @@ def validate_input(keyword, value):
             return new_dict
 
 ## Genome Block ##
-    elif keyword in ['parameters', 'batches']:
+    elif keyword in ['parameters']:
+        new_dict = {}
+        if isinstance(value, dict):
+            for key, item in value.items():
+                new_key = str(key)
+                new_dict[new_key] = {}
+                #check decision variable options
+                if isinstance(value[key], dict):
+                    for subkey, subitem in item.items():
+                        new_subkey = str(subkey).lower()
+                        if new_subkey in ['continuous_range','discrete_range']:
+                            if not isinstance(subitem, list):
+                                raise ValueError(f"Entry '{new_subkey}' under decision variable '{new_key}' must be a list of two numbers.")
+                            for rangebound in subitem: 
+                                if (not isinstance(rangebound, float) and not isinstance(rangebound, int)) or isinstance(rangebound, bool): 
+                                    raise ValueError(f"Entry '{new_subkey}' values under decision variable '{new_key}' must be two numeric values in ascending order.")
+                            if len(subitem) != 2: 
+                                raise ValueError(f"Entry '{new_subkey}' list under decision variable '{new_key}' must contain two numeric values in ascending order.")
+                            if subitem[0] > subitem[1]: 
+                                raise ValueError(f"Entry '{new_subkey}' list under decision variable '{new_key}' must contain two numeric values in ascending order.")
+                            new_dict[new_key][new_subkey] = subitem
+                        if new_subkey == "increment":
+                            try:
+                                if isinstance(subitem, list):
+                                    if len(subitem) == 0:
+                                        raise ValueError(f"The {new_subkey} entry is a list of length 0. It must either be a list with one or more entries for a non-uniform range, or a single number for a uniform range")
+                                    for index in range(0, len(subitem)):
+                                        subitem[index] = float(subitem[index])
+                                        if subitem[index] < 0: 
+                                            raise ValueError("Continuous variable 'increment' entries must be greater than 0")
+                                    new_dict[new_key][new_subkey] = subitem
+                                else:
+                                    new_dict[new_key][new_subkey] = float(subitem)
+                                    if new_dict[new_key][new_subkey] < 0: 
+                                        raise ValueError("Continuous variable 'increment' must be greater than 0")
+                            except TypeError:
+                                raise ValueError(f"Subkey {new_subkey} has entry of type {type(subitem)} but only accepts a list of integers/floats or a single integer/float")
+                        if new_subkey == "index":
+                            new_dict[new_key][new_subkey] = int(subitem)
+                    if "discrete_range" not in item.keys() and "continuous_range" not in item.keys():
+                        raise ValueError(f"{item} variable must include either a 'discrete_range' or 'continuous_range' entry.")
+                    if "discrete_range" in item.keys() and "increment" not in item.keys():
+                        raise ValueError(f"Increment for {item} variable with 'discrete_range' is not provided.")
+                    elif "discrete_range" in item.keys(): 
+                        if (item["increment"] / (item["discrete_range"][1] - item["discrete_range"][0]))*100 >= 10:
+                            logger.warning(f"Continuous variable increment for '{new_key}' is large relative to the range. Is this intentional?")
+        return new_dict
+    
+    elif keyword in ['assembly_parameters', 'batches']:
         new_dict = {}
         if isinstance(value, dict):
             for key, item in value.items():
@@ -938,10 +995,6 @@ def validate_input(keyword, value):
     
     return value
 
-
-
-    return value
-
 def parcs343_template_check(self):
     """
     Checks to ensure that necessary flags are present if a template input file is provided for a code interface. 
@@ -1097,19 +1150,20 @@ class Input_Parser():
         
     ## Fuel Assembly Block ##
         self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)
-        if not self.fa_options and self.code_interface not in ['nuscale_database','polaris624']:
+        if not self.fa_options and self.code_interface not in ['nuscale_database','polaris624','serpent','custom_function','styblinski_tang']:
             raise ValueError("Assembly options must be nested with reflectors, fuels, and/or blankets with their parameters.")
-        for param in ['cost_fuelcycle','av_fuelenrichment']:
-            if param in self.objectives:
-                for key in self.fa_options['fuel'].keys():
-                    if not 'enrichment' in self.fa_options['fuel'][key] and \
-                       not 'hm_loading' in self.fa_options['fuel'][key]:
-                        raise ValueError(f"Entry for 'enrichment' or 'HM_loading' missing for fuel type '{key}'. This is required by the '{param}' objective.")
-                if 'blankets' in self.fa_options:
-                    for key in self.fa_options['blankets'].keys():
-                        if not 'enrichment' in self.fa_options['blankets'][key] and \
-                           not 'hm_loading' in self.fa_options['blankets'][key]:
-                            raise ValueError(f"Entry for 'enrichment' or 'HM_loading' missing for blanket type '{key}'. This is required by the '{param}' objective.")
+        if self.calculation_type in ['single_cycle','eq_cycle']:
+            for param in ['cost_fuelcycle','av_fuelenrichment']:
+                if param in self.objectives:
+                    for key in self.fa_options['fuel'].keys():
+                        if not 'enrichment' in self.fa_options['fuel'][key] and \
+                           not 'hm_loading' in self.fa_options['fuel'][key]:
+                            raise ValueError(f"Entry for 'enrichment' or 'HM_loading' missing for fuel type '{key}'. This is required by the '{param}' objective.")
+                    if 'blankets' in self.fa_options:
+                        for key in self.fa_options['blankets'].keys():
+                            if not 'enrichment' in self.fa_options['blankets'][key] and \
+                               not 'hm_loading' in self.fa_options['blankets'][key]:
+                                raise ValueError(f"Entry for 'enrichment' or 'HM_loading' missing for blanket type '{key}'. This is required by the '{param}' objective.")
         
     ## Fuel Pin Parts Block ## (for lattice physics calcs)
         self.pin_options = yaml_line_reader(self.file_settings, 'rod_options', None)
@@ -1123,11 +1177,19 @@ class Input_Parser():
         except KeyError:
             info = None
         
-        self.genome = yaml_line_reader(info, 'parameters', None)
+        if self.calculation_type in ['single_cycle','eq_cycle','lattice_physics']:
+            self.genome = yaml_line_reader(info, 'assembly_parameters', None)
+        elif self.calculation_type in ['continuous_variable']:
+            self.genome = yaml_line_reader(info, 'parameters', None)
+            #Create a list of possible values a gene can take for discrete ranges
+            self.genome = problem_preparation.Prepare_Problem_Values.prepare_discrete_range(self.genome)
+            #Normalize all ranges for continuous variables
+            self.genome = problem_preparation.Prepare_Problem_Values.normalize_continuous_variables(self.genome)
+
         self.batches = yaml_line_reader(info, 'batches', None)
         #check that decision variable options are valid.
         if not self.genome:
-            raise ValueError("'Parameters' must be specified in Decision Variables.")
+            raise ValueError("'parameters' or 'assembly_parameters' must be specified in Decision Variables.")
         if self.calculation_type == 'eq_cycle' and not self.batches:
             raise ValueError("'Batches' must be specified in Decision Variables for the 'EQ Cycle' type.")
         for key, value in self.genome.items():
@@ -1140,25 +1202,28 @@ class Input_Parser():
         
     ## Calculation Block ## #!TODO: should each parameter set be nested under a code-specific object?
         info = None; THinfo = None; infomap = None # initialize info variables
-        try:
-            if self.code_interface in ["parcs342","parcs343"]:
-                info = self.file_settings['parcs_data']
-            elif self.code_interface == "nuscale_database":
-                info = self.file_settings['nuscale_data']
-            elif self.code_interface == "trace50p5": #multiphysics calcs must first be initialized in neutronics code.
-                try:
+        if self.code_interface not in ['custom_function','styblinski_tang']:
+            try:
+                if self.code_interface in ["parcs342","parcs343"]:
                     info = self.file_settings['parcs_data']
+                elif self.code_interface == "nuscale_database":
+                    info = self.file_settings['nuscale_data']
+                elif self.code_interface == "serpent":
+                    info = self.file_settings['serpent_data']
+                elif self.code_interface == "trace50p5": #multiphysics calcs must first be initialized in neutronics code.
+                    try:
+                        info = self.file_settings['parcs_data']
+                    except KeyError:
+                        pass
+                    THinfo = self.file_settings['trace_data']
+                elif self.code_interface == "polaris624":
+                    info = self.file_settings['polaris_data']
+                try:
+                    infomap = info['map']
                 except KeyError:
                     pass
-                THinfo = self.file_settings['trace_data']
-            elif self.code_interface == "polaris624":
-                info = self.file_settings['polaris_data']
-            try:
-                infomap = info['map']
             except KeyError:
                 pass
-        except KeyError:
-            pass
         
         # PARCS input block
         self.core_type = yaml_line_reader(info, 'core_type', "PWR")
@@ -1181,6 +1246,9 @@ class Input_Parser():
         self.depl_steps = yaml_line_reader(info, 'depletion_steps', [1, 1, 30, 30, 30, 30, 30, 30])
         if (not self.pin_power_recon and 'pinpowerpeaking' in self.objectives.keys()) or (not self.pin_power_recon and 'fdeltah' in self.objectives.keys()):
             logger.warning('Pin power reconstruction is turned off but pin peaking factors are requested in objectives.')
+        self.active_cycles = yaml_line_reader(info, "active_cycles", 500)
+        self.inactive_cycles = yaml_line_reader(info, "inactive_cycles", 50)
+        self.particles_per_history = yaml_line_reader(info, "particles_per_history", 5000)
         
         # TRACE input block
         if self.code_interface == "trace50p5":
@@ -1209,9 +1277,7 @@ class Input_Parser():
         self.cr_inserted = yaml_line_reader(info, 'controlrods_inserted', False)
         self.boronmat = yaml_line_reader(info, 'borated_material', None) #str, ppm
         self.num_meshrings = yaml_line_reader(info, 'num_mesh_rings', 3)
-        self.depl_steps = yaml_line_reader(info, 'depletion_steps', [1, 1, 30, 30, 30, 30, 30, 30])
-        
-        
+        self.depl_steps = yaml_line_reader(info, 'depletion_steps', [1, 1, 30, 30, 30, 30, 30, 30])   
         #NuScale database verification block
         if self.code_interface == 'nuscale_database':
             #Force octant symmetry for NuScale database
