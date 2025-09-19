@@ -11,25 +11,39 @@
 | '--------------' || '--------------' || '--------------' || '--------------' || '--------------' |  
  '----------------'  '----------------'  '----------------'  '----------------'  '----------------'  
 
-MIDAS Version 0.2.1
+MIDAS Version 0.2.3
 
 
 ====================================================================================================
 
-Parsed input file: /home/cahowar9/cahowar9/MIDAS/samples/bayes_opt/bayes_test.yaml
-Completed Optimizer assembly.
-Begin Optimization...
+ERROR: An error in the MIDAS execution has occurred with the following message: 
 
-Generating initial population of 30 individuals...
-Calculating fitness for generation 0...
-Done!
-Generation 0 Best Individual:
-Generation, Individual, Fitness Value, max_boron, pinpowerpeaking, fdeltah, cycle_length, Chromosome
-0,0,572.400,1190.0,2.28,1.608,721.2,NSFA23GAD,NSFA23,NSFA23,NSFA39,NSFA455GAD,NSFA455GAD,NSFA23,NSFA39GAD
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Traceback (most recent call last):
+  File "C:\Users\cahowar9\Documents\MIDAS\midas\utils\decorators.py", line 19, in wrapper
+    exitcode = func(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cahowar9\Documents\MIDAS\midas\utils\decorators.py", line 34, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cahowar9\Documents\MIDAS\midas\utils\decorators.py", line 47, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cahowar9\Documents\MIDAS\midasmain.py", line 119, in main
+    inp_lines = Input_Parser(args.cpus, args.input)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cahowar9\Documents\MIDAS\midas\input_parser.py", line 1056, in __init__
+    self.parse_input_data()
+  File "C:\Users\cahowar9\Documents\MIDAS\midas\input_parser.py", line 1271, in parse_input_data
+    if self.code_interface == 'nuscale_database':
+       ^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\bdb.py", line 100, in trace_dispatch
+    return self.dispatch_line(frame)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\Lib\bdb.py", line 125, in dispatch_line
+    if self.quitting: raise BdbQuit
+                      ^^^^^^^^^^^^^
+bdb.BdbQuit
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-Clearing all but best solution files for Generation 0...
-Done!
-
-
-Optimization completed.
 MIDAS execution completed.
