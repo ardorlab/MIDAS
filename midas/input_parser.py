@@ -1264,6 +1264,8 @@ class Input_Parser():
         self.fy_lib = yaml_line_reader(info, 'fission_yield_library_path', None)
         self.photon_xs = yaml_line_reader(info, 'photon_xs_path', None)
         self.photon_data_dir = yaml_line_reader(info, 'photon_data_directory', None)
+        self.mpi_ranks = yaml_line_reader(info,'mpi_ranks', 1)
+        self.omp_threads = yaml_line_reader(info, 'omp_threads', 1)
         dep_default = {'apply':False, 'depletion_steps':None,'depletion_units':None,'mpi_ranks':None,'omp_threads':None}
         self.depletion_settings = yaml_line_reader(info, 'depletion_settings', dep_default)
         self.xs_extension = yaml_line_reader(info, 'xs_extension', '')

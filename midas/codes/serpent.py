@@ -2,9 +2,11 @@ import numpy as np
 import logging
 import os
 import subprocess
-import regex as re
+import re
 from pathlib import Path
 import math
+from midas_data import __serpent2exe__
+from scipy.io import loadmat
 
 ## Initialize logging for the present file
 logger = logging.getLogger("MIDAS_logger")
@@ -57,6 +59,35 @@ def evaluate(solution, input):
             with open(file, "a") as f:
                 f.write(f"\nset pop {input.particles_per_history} {input.active_cycles} {input.inactive_cycles}\n")
     
+    sss2cmd = __serpent2exe__
+    if input.depletion_settings['apply']:
+        os.chdir(depletion_dir)
+        dep_cmd = ["mpirun","-np",f"{input.depletion_settings["mpi_ranks"]}",f"{sss2cmd}","-omp",f"{input.depletion_settings["omp_threads"]}","depletion_input"]
+        dep_process = subprocess.Popen(dep_cmd)
+    
+    if doppler_dir.exists():
+        os.chdir(doppler_dir)
+        dop_cmd = ["mpirun","-np",f"{input.mpi_ranks}",f"{sss2cmd}","-omp",f"{input.omp_threads}","doppler_input"]
+        dop_process = subprocess.Popen(dop_cmd)
+        dop_process.wait()
+        dop_exit_code = dop_process.returncode
+        dop_results = get_serpent_results("doppler_input_res.m")
+    
+    os.chdir(base_dir)
+    base_cmd = dop_cmd = ["mpirun","-np",f"{input.mpi_ranks}",f"{sss2cmd}","-omp",f"{input.omp_threads}","base_input"]
+    base_process = subprocess.Popen(base_cmd)
+    base_process.wait()
+    base_exit_code = base_process.returncode
+    base_results = get_serpent_results("base_input_res.m")
+    base_det_results = get_serpent_results("base_input_det0.m")
+    if depletion_dir.exists():
+        dep_process.wait()
+        dep_exit_code = dep_process.returncode
+        dep_results = get_serpent_results("depletion_input_res.m")
+        burn_days = dep_results["BURN_DAYS"]
+        burn_keff = dep_results["ABS_KEFF"]
+    
+    
 
 
     raise NotImplementedError("Serpent evaluation function is not yet implemented.")
@@ -89,3 +120,14 @@ def fill_template(template_path, output_path, template_dict):
 
     # Save to output
     Path(output_path).write_text(filled_text)
+
+def get_serpent_results(output_file):
+
+    #Run .m file in matlab to convert into a python-readable .mat file
+    subprocess.run(["matlab",
+    "-nodisplay","-nosplash","-nodesktop",
+    "-r",f"run('{output_file}'); save('{output_file}.mat'); exit"])
+
+    data = loadmat(f"{output_file}.mat")
+
+    return data

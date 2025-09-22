@@ -39,3 +39,4 @@ __parcs342exe__ = "/cm1/codes/parcs_342/Executables/Linux/parcs-v342-linux2-inte
 __parcs343exe__ = "/cm/shared/nuclearCodes/parcs-3.4.3/PARCS-v343_Exe/Executables/Linux/parcs-v343-linux2-intel-x64-release.x"
 __trace50p5exe__ = "/cm1/apps/ncsu/TRACE_PARCS/TRACE-V50P5-Exe/Executables/trace-V50p5-linux2-lahey-x64-release.exe"
 __polaris624exe__ = "/cm/shared/codes/scale/SCALE-6.2.4/bin/scalerte"
+__serpent2exe__ = "/usr/local/usrapps/rdfmg/serpent/bin/sss2"
