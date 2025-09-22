@@ -827,7 +827,19 @@ def validate_input(keyword, value):
         if value not in ['full','quarter']:
             raise ValueError("Requested core symmetry (used for printing) not valid.")
     
-    elif keyword == 'xs_library_path':
+    elif keyword in ['xs_library_path','decay_library_path','fission_yield_library_path']:
+        #Create relative filepath
+        value_rel = Path('../../') / Path(str(value))
+        #Check if relative path exists, then use absolute if not
+        if value_rel.exists():
+            value = value_rel
+        else:
+            value = Path(str(value))
+    
+    elif keyword == 'photon_xs_path':
+        value = Path('../../') / Path(str(value))
+
+    elif keyword == 'photon_data_directory':
         value = Path('../../') / Path(str(value))
     
     elif keyword == 'xs_extension':
@@ -992,6 +1004,21 @@ def validate_input(keyword, value):
     
     elif keyword=='depletion_steps':
         value = [float(x) for x in re.split(r'[, ]',str(value).strip('[]')) if x]
+    
+    elif keyword == 'active_cycles':
+        value = int(value)
+    
+    elif keyword == 'inactive_cycles':
+        value = int(value)
+    
+    elif keyword == 'particles_per_history':
+        value = int(value)
+    
+    elif keyword == 'mpi_ranks':
+        value = int(value)
+    
+    elif keyword == 'omp_threads':
+        value = int(value)
     
     return value
 
@@ -1224,7 +1251,7 @@ class Input_Parser():
                     pass
             except KeyError:
                 pass
-        
+
         # PARCS input block
         self.core_type = yaml_line_reader(info, 'core_type', "PWR")
         self.code_walltime = yaml_line_reader(info, 'exec_walltime', 600)
@@ -1232,7 +1259,13 @@ class Input_Parser():
         self.ncol = yaml_line_reader(infomap, 'num_cols', 17)
         self.num_assemblies = yaml_line_reader(infomap, 'number_assemblies', 193)
         self.map_size = yaml_line_reader(infomap, 'core_symmetry', 'full')
-        self.xs_lib = yaml_line_reader(info, 'xs_library_path', './') #!TODO: interpret this path relative to the MIDAS job base dir, not opt indv base dir.
+        self.xs_lib = yaml_line_reader(info, 'xs_library_path', None) #!TODO: interpret this path relative to the MIDAS job base dir, not opt indv base dir.
+        self.dec_lib = yaml_line_reader(info, 'decay_library_path', None)
+        self.fy_lib = yaml_line_reader(info, 'fission_yield_library_path', None)
+        self.photon_xs = yaml_line_reader(info, 'photon_xs_path', None)
+        self.photon_data_dir = yaml_line_reader(info, 'photon_data_directory', None)
+        dep_default = {'apply':False, 'depletion_steps':None,'depletion_units':None,'mpi_ranks':None,'omp_threads':None}
+        self.depletion_settings = yaml_line_reader(info, 'depletion_settings', dep_default)
         self.xs_extension = yaml_line_reader(info, 'xs_extension', '')
         self.power = yaml_line_reader(info, 'power', 3800.0)
         self.flow = yaml_line_reader(info, 'flow', 18231.89)

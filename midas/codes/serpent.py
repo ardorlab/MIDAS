@@ -1,0 +1,91 @@
+import numpy as np
+import logging
+import os
+import subprocess
+import regex as re
+from pathlib import Path
+import math
+
+## Initialize logging for the present file
+logger = logging.getLogger("MIDAS_logger")
+
+def evaluate(solution, input):
+
+    chromosome = solution.chromosome
+    genome = input.genome
+    template_dict = {}
+
+    # Convert normalized values back to real values and store them in a dictionary for easy access
+    for key, value in sorted(genome.items(), key = lambda item: item[1]['index']):
+        if 'continuous_range' in value:
+            chromosome[value['index']] = float(chromosome[value['index']]*(value['continuous_range'][1]-value['continuous_range'][0]) + value['continuous_range'][0])
+        elif 'discrete_range' in value:
+            indices = value['normalized_discrete_range'].index(chromosome[value['index']])
+            chromosome[value['index']] = value['discrete_range'][indices]
+        
+        template_dict[key] = chromosome[value['index']]
+    
+    ## Create and move to unique directory for Serpent execution
+    cwd = Path(os.getcwd())
+    indv_dir = cwd.joinpath(input.results_dir_name / Path(solution.name))
+    base_dir = indv_dir / "base"
+    doppler_dir = indv_dir / "doppler"
+    depletion_dir = indv_dir / "depletion"
+    base_file = base_dir / "base_input"
+    doppler_file = doppler_dir / "doppler_input"
+    depletion_file = depletion_dir / "depletion_input"
+    if not indv_dir.exists():
+        logger.debug(f"Creating new results directory: {indv_dir}")
+        os.mkdir(indv_dir)
+    logger.debug(f"Changing to new working directory: {indv_dir}")
+    os.chdir(indv_dir)
+    #Create subdirectories for base, DTC, and depletion runs
+    if not base_dir.exists():
+        os.mkdir(base_dir)
+    fill_template(input.template_file["loc"], base_file, template_dict)
+    if not doppler_dir.exists() and "doppler_temperature_coefficient" in genome.keys():
+        os.mkdir(doppler_dir)
+    if "doppler_temperature_coefficient" in genome.keys():
+        fill_template(input.template_file["loc"], doppler_file, template_dict)
+    if input.depletion_settings['apply'] and not depletion_dir.exists():
+        os.mkdir(depletion_dir)
+    if input.depletion_settings['apply']:
+        fill_template(input.template_file["loc"], depletion_file, template_dict)
+    
+    for file in [base_file, doppler_file, depletion_file]:
+        if file.exists():
+            with open(file, "a") as f:
+                f.write(f"\nset pop {input.particles_per_history} {input.active_cycles} {input.inactive_cycles}\n")
+    
+
+
+    raise NotImplementedError("Serpent evaluation function is not yet implemented.")
+
+def fill_template(template_path, output_path, template_dict):
+    """
+    Fill a template file with values from template_dict and save to output_path.
+    - Placeholders {var}, {var * 2}, {sin(var)}, etc. are supported.
+    """
+
+    # Safe math environment (only what you allow)
+    safe_env = {k: getattr(math, k) for k in dir(math) if not k.startswith("__")}
+    safe_env.update(template_dict)
+
+    # Read template
+    template_text = Path(template_path).read_text()
+
+    # Regex: find everything inside {}
+    pattern = re.compile(r"\{(.*?)\}")
+
+    def replace_match(match):
+        expr = match.group(1).strip()
+        try:
+            return str(eval(expr, {"__builtins__": {}}, safe_env))
+        except Exception as e:
+            raise ValueError(f"Error evaluating expression '{expr}': {e}")
+
+    # Replace placeholders
+    filled_text = pattern.sub(replace_match, template_text)
+
+    # Save to output
+    Path(output_path).write_text(filled_text)

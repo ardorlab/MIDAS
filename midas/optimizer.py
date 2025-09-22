@@ -20,6 +20,7 @@ from midas.codes import parcs342, parcs343
 from midas.codes import nuscale_lut
 from midas.codes import trace50p5
 from midas.codes import polaris624
+from midas.codes import serpent
 
 
 ## Classes ##
@@ -64,6 +65,8 @@ class Optimizer():
             self.eval_func = trace50p5.evaluate
         elif self.input.code_interface == "polaris624":
             self.eval_func = polaris624.evaluate
+        elif self.input.code_interface == "serpent":
+            self.eval_func = serpent.evaluate
         else:
             raise ValueError(f"Could not identify eval_func for code type '{self.input.code_interface}'. This is highly irregular.")
         

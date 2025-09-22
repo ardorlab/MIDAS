@@ -97,6 +97,8 @@ class Solution():
             return self.EQ_chromosome(genome, batches, LWR_core_parameters)
         elif calc_type == 'lattice_physics':
             return self.lat_chromosome(genome,LWR_core_parameters)
+        elif calc_type == 'continuous_variable':
+            return self.continuous_chromosome(genome)
         else:
             raise ValueError("Calculation Type not recognized; potential solution not generated.")
     
@@ -230,6 +232,22 @@ class Solution():
             if Gene_Validity_check.abortive_check(self.input,genes_list,genome,core_parameters,chromosome):
                 chromosome_is_valid = True
         
+        return chromosome
+    
+    def continuous_chromosome(self,genome):
+        """
+        Generates an initial solution for a continuous variable optimization.
+
+        Written by Cole Howard. 9/20/2025
+        """
+        chromosome = []
+        for key, value in sorted(genome.items(), key=lambda item: item[1]['index']):
+            if "normalized_continuous_range" in value:
+                chromosome.append(random.uniform(0.0, 1.0))
+            elif "normalized_discrete_range" in value:
+                chromosome.append(random.choice(value["normalized_discrete_range"]))
+            self.chromosome.append(value)
+
         return chromosome
 
     def SS_decoder(chromosome):

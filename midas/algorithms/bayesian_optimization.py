@@ -24,14 +24,14 @@ class Bayesian_Optimization:
 
     def __init__(self, input, noise=1e-6, random_state=None):
         self.input = input
-        self.dimensions = self.parse_dimensions()  # List of length D, each an array of categories
+        #self.dimensions = self.parse_dimensions()  # List of length D, each an array of categories
         self.population = []       # Stores categorical points
         self.fitness_values = []   # Stores fitness values
         self.random_state = np.random.RandomState(random_state) #Initialize random state used throughout problem
 
         # Precompute the total number of binary features
-        self.binary_dims = [self.calculate_binary_length(len(dim_cats)) for dim_cats in self.dimensions]
-        self.total_features = sum(self.binary_dims)  # Total number of binary features
+        #self.binary_dims = [self.calculate_binary_length(len(dim_cats)) for dim_cats in self.dimensions]
+        #self.total_features = sum(self.binary_dims)  # Total number of binary features
 
         # Scalers for input (X) and fitness values (y)
         self.scaler_x = StandardScaler()

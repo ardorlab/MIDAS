@@ -2,6 +2,7 @@
 import shutil
 import os
 import numpy as np
+from decimal import Decimal
 
 
 ## Classes ##
@@ -390,27 +391,53 @@ class Prepare_Problem_Values():
     
     def prepare_discrete_range(input_obj):
         """
-        Turns discrete range into a list of possible values based on the user specified increment.
+        Prepares a list of discrete values from the provided range and increment(s).
 
         Written by Cole Howard. 09/18/2025
         """
 
+        def get_precision(x):
+            """Return the number of decimal places needed to represent x exactly. Used for rounding in case of floating point errors"""
+            d = Decimal(str(x))
+            return -d.as_tuple().exponent
 
         for key, value in input_obj.items():
-            if 'discrete_range' in value.items():
-                if type(input_obj[key]["increment"]) != list:
-                    new_vals = [input_obj[key]["discrete_range"][0]]
-                    while new_vals[-1] + input_obj[key]["increment"] < input_obj[key]["discrete_range"][1]:
-                        new_vals.append(new_vals[-1] + input_obj[key]["increment"])
-                    input_obj[key]["discrete_range"] = new_vals
-                else:
-                    counter = 0
-                    new_vals = [input_obj[key]["discrete_range"][0]]
-                    while new_vals[-1] + input_obj[key]["increment"][counter] < input_obj[key]["discrete_range"][1]:
-                        new_vals.append(new_vals[-1] + input_obj[key]["increment"][counter])
-                        counter += 1
-                    input_obj[key]["discrete_range"] = new_vals
-        
+            if "discrete_range" not in value:
+                continue
+
+            drange = value["discrete_range"]
+            incr = value["increment"]
+
+            # Get the precison needed for rounding for avoiding floating point errors
+            range_prec = max(get_precision(drange[0]), get_precision(drange[1]))
+            if isinstance(incr, list):
+                incr_prec = max(get_precision(i) for i in incr)
+            else:
+                incr_prec = get_precision(incr)
+            prec = max(range_prec, incr_prec)
+
+            start, stop = drange
+
+            # Single increment provided
+            if not isinstance(incr, list):
+                n_steps = int(round((stop - start) / incr))
+                arr = np.linspace(start, stop, num=n_steps + 1)
+                arr = np.round(arr, prec).tolist()
+                value["discrete_range"] = arr
+
+            # List of increments provided
+            else:
+                new_vals = [round(start, prec)]
+                counter = 0
+                while counter < len(incr) and new_vals[-1] + incr[counter] <= stop + 10**(-prec):
+                    new_val = round(new_vals[-1] + incr[counter], prec)
+                    new_vals.append(new_val)
+                    counter += 1
+                # Ensure last value equals stop
+                if round(new_vals[-1], prec) != round(stop, prec):
+                    new_vals.append(round(stop, prec))
+                value["discrete_range"] = new_vals
+
         return input_obj
     
     def normalize_continuous_variables(input_obj):
