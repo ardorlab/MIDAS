@@ -91,7 +91,7 @@ def validate_input(keyword, value):
                 if 'loc' not in new_dict.keys():
                     raise ValueError("'apply' in input_template is set to true but path to template is not specified") 
             if 'loc' in new_dict.keys() and 'apply' not in new_dict.keys(): 
-                logger.warning("path to input template is specified but 'apply' flag is not given. MIDAS will assume no input tempate in calculation")
+                logger.warning("path to input template is specified but 'apply' flag is not given. MIDAS will assume no input template in calculation")
                 new_dict['apply'] = False
             return new_dict
 
@@ -1020,6 +1020,43 @@ def validate_input(keyword, value):
     elif keyword == 'omp_threads':
         value = int(value)
     
+    elif keyword == 'depletion_data':
+        if isinstance(value, dict):
+            new_dict = {}
+            for key, item in value.items():
+                new_key = str(key).lower()
+                if new_key =='apply':
+                    new_item = item
+                    if not isinstance(new_item, bool):
+                        raise ValueError("'apply' flag for input template must be true or false")
+                elif new_key == 'depletion_steps':
+                    try:
+                        new_item = [float(x) for x in new_item]
+                    except:
+                        raise ValueError("'depletion_steps' in depletion data must be a list of numbers")
+                elif new_key == 'depletion_units':
+                    new_item = str(item).lower()
+                    if new_item not in ['days','mwd_kgu']:
+                        raise ValueError("'depletion_units' in depletion data must be 'days' or 'mwd_kgu'")
+                elif new_key == 'mpi_ranks':
+                    new_item = int(item)
+                elif new_key == 'omp_threads':
+                    new_item = int(item)
+                elif new_key == 'particles_per_history':
+                    new_item = int(item)
+                elif new_key == 'active_cycles':
+                    new_item = int(item)
+                elif new_key == 'inactive_cycles':
+                    new_item = int(item)
+                else:
+                    raise ValueError(f"Unrecognized key '{new_key}' in depletion data. Currently supported keys include 'apply', 'depletion_steps', 'depletion_units', 'mpi_ranks', 'omp_threads', 'particles_per_history', 'active_cycles', and 'inactive_cycles'.")
+                new_dict[new_key] = new_item
+
+            for k in ['mpi_ranks','omp_threads','particles_per_history','active_cycles','inactive_cycles','depletion_steps','depletion_units']:
+                if k not in new_dict.keys() and new_dict['apply']:
+                    raise ValueError(f"'{k}' must be specified in depletion data if 'apply' is true.")
+            return new_dict
+    
     return value
 
 def parcs343_template_check(self):
@@ -1261,12 +1298,12 @@ class Input_Parser():
         self.map_size = yaml_line_reader(infomap, 'core_symmetry', 'full')
         self.xs_lib = yaml_line_reader(info, 'xs_library_path', None) #!TODO: interpret this path relative to the MIDAS job base dir, not opt indv base dir.
         self.dec_lib = yaml_line_reader(info, 'decay_library_path', None)
-        self.fy_lib = yaml_line_reader(info, 'fission_yield_library_path', None)
+        self.nfy_lib = yaml_line_reader(info, 'fission_yield_library_path', None)
         self.photon_xs = yaml_line_reader(info, 'photon_xs_path', None)
         self.photon_data_dir = yaml_line_reader(info, 'photon_data_directory', None)
         self.mpi_ranks = yaml_line_reader(info,'mpi_ranks', 1)
         self.omp_threads = yaml_line_reader(info, 'omp_threads', 1)
-        dep_default = {'apply':False, 'depletion_steps':None,'depletion_units':None,'mpi_ranks':None,'omp_threads':None}
+        dep_default = {'apply':False, 'depletion_steps':None,'depletion_units':None,'mpi_ranks':None,'omp_threads':None,'particles_per_history':None,'active_cycles':None,'inactive_cycles':None}
         self.depletion_settings = yaml_line_reader(info, 'depletion_settings', dep_default)
         self.xs_extension = yaml_line_reader(info, 'xs_extension', '')
         self.power = yaml_line_reader(info, 'power', 3800.0)

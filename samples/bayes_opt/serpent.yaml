@@ -50,6 +50,9 @@ serpent_data:
     depletion_units: days
     mpi_ranks: 5
     omp_threads: 5
+    particles_per_history: 500
+    active_cycles: 500
+    inactive_cycles: 50
   mpi_ranks: 5
   omp_threads: 3
   power: 2000000

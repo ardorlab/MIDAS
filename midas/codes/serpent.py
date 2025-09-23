@@ -49,15 +49,26 @@ def evaluate(solution, input):
         os.mkdir(doppler_dir)
     if "doppler_temperature_coefficient" in genome.keys():
         fill_template(input.template_file["loc"], doppler_file, template_dict)
+        update_temp(doppler_file)
     if input.depletion_settings['apply'] and not depletion_dir.exists():
         os.mkdir(depletion_dir)
     if input.depletion_settings['apply']:
         fill_template(input.template_file["loc"], depletion_file, template_dict)
+        with open(depletion_file, "a") as f:
+            if input.depletion_settings['depletion_units'].lower() == 'days':
+                f.write("\ndep daytot\n")
+            else:
+                f.write("\ndep butot\n")
+            for step in input.depletion_settings['depletion_steps']:
+                f.write(f"{step}\n")
     
     for file in [base_file, doppler_file, depletion_file]:
         if file.exists():
             with open(file, "a") as f:
                 f.write(f"\nset pop {input.particles_per_history} {input.active_cycles} {input.inactive_cycles}\n")
+                f.write(f"set acelib {input.xs_lib}\n")
+                f.write(f"set dec {input.dec_lib}\n")
+                f.write(f"set nfylib {input.fy_lib}\n")
     
     sss2cmd = __serpent2exe__
     if input.depletion_settings['apply']:
@@ -131,3 +142,26 @@ def get_serpent_results(output_file):
     data = loadmat(f"{output_file}.mat")
 
     return data
+
+def update_temp(filename):
+    tmp_pattern = re.compile(r"(tmp\s+)([-+]?\d*\.?\d+)", re.IGNORECASE)
+
+    with open(filename, "r") as f:
+        lines = f.readlines()
+
+    updated_lines = []
+    for line in lines:
+        if "mat" in line and "fuel" in line:  # quick filter
+            # Replace tmp number with number+50
+            def repl(match):
+                prefix = match.group(1)  # "tmp "
+                number = float(match.group(2))
+                return f"{prefix}{number + 50:g}"  # keep clean formatting
+
+            new_line = tmp_pattern.sub(repl, line)
+            updated_lines.append(new_line)
+        else:
+            updated_lines.append(line)
+
+    with open(filename, "w") as f:
+        f.writelines(updated_lines)
