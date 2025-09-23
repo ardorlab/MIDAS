@@ -1057,6 +1057,24 @@ def validate_input(keyword, value):
                     raise ValueError(f"'{k}' must be specified in depletion data if 'apply' is true.")
             return new_dict
     
+    elif keyword == 'mass_materials':
+        if isinstance(value,list):
+            for val in value:
+                val = str(val)
+        elif str(value).replace(" ","").lower() == 'all':
+            value == str(value)
+        else:
+            raise ValueError(f"'mass_materials' takes a list of strings containing material names in serpent file, or 'all' to denote all materials, but got {value} instead.")
+    
+    elif keyword == 'power_peaking_detectors':
+        if str(value).lower() == 'ppw':
+            value = str(value)
+        elif isinstance(value,list):
+            for val in value:
+                val = str(val)
+        else:
+            raise ValueError(f"'power_peaking_detectors' only takes 'ppw' or a list of detector names as input but got {value} of type {type(value)} instead. Check detector names")
+
     return value
 
 def parcs343_template_check(self):
@@ -1290,6 +1308,7 @@ class Input_Parser():
                 pass
 
         # PARCS input block
+        #!TODO: Separate serpent settings into own block
         self.core_type = yaml_line_reader(info, 'core_type', "PWR")
         self.code_walltime = yaml_line_reader(info, 'exec_walltime', 600)
         self.nrow = yaml_line_reader(infomap, 'num_rows', 17)
@@ -1301,6 +1320,8 @@ class Input_Parser():
         self.nfy_lib = yaml_line_reader(info, 'fission_yield_library_path', None)
         self.photon_xs = yaml_line_reader(info, 'photon_xs_path', None)
         self.photon_data_dir = yaml_line_reader(info, 'photon_data_directory', None)
+        self.mass_materials = yaml_line_reader(info, 'mass_materials','all')
+        self.power_peaking_detectors = yaml_line_reader(info, 'power_peaking_detectors', 'ppw')
         self.mpi_ranks = yaml_line_reader(info,'mpi_ranks', 1)
         self.omp_threads = yaml_line_reader(info, 'omp_threads', 1)
         dep_default = {'apply':False, 'depletion_steps':None,'depletion_units':None,'mpi_ranks':None,'omp_threads':None,'particles_per_history':None,'active_cycles':None,'inactive_cycles':None}

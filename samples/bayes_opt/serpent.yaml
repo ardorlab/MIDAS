@@ -3,7 +3,7 @@ general:
   optimizer: bayesian_optimization
   code_type: serpent
   calc_type: continuous_variable
-  #Possible types: mixed_variable, single_cycle_loading_pattern, equilibrium_loading_pattern
+  #Possible types: continuous_variable, single_cycle_loading_pattern, equilibrium_loading_pattern
   results_directory_name: output_files
   input_template: 
       apply: True
@@ -22,10 +22,6 @@ optimization:
     cost_fuelcycle:
       goal: minimize
       weight: 0.000001
-    max_doserate:
-      goal: less_than_target
-      target: 50
-      weight: 50.0
     total_mass:
       goal: less_than_target
       target: 50000
@@ -42,8 +38,10 @@ algorithm:
 
 serpent_data:
   particles_per_history: 2500
+  power_peaking_detectors: 'ppw'
   active_cycles: 500
   inactive_cycles: 50
+  mass_materials: all
   depletion_data:
     apply: True
     depletion_steps: [1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
@@ -66,17 +64,17 @@ decision_variables:
   parameters:
     fuel_height:
       continuous_range: [120,180]
-      index: 1
+      index: 0
     enrichment:
       discrete_range: [15,19.95]
       increment: 0.05
-      index: 2
+      index: 1
     fuel_pin_radius:
       continuous_range: [0.5,2.3]
-      index: 3
+      index: 2
     reflector_thickness:
       continuous_range: [10,30]
-      index: 4
+      index: 3
     triso_packing_fraction:
       discrete_range: [0.2,0.6]
       increment: 0.05

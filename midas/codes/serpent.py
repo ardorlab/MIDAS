@@ -7,23 +7,26 @@ from pathlib import Path
 import math
 from midas_data import __serpent2exe__
 from scipy.io import loadmat
+from scipy.interpolate import interp1d
 
 ## Initialize logging for the present file
 logger = logging.getLogger("MIDAS_logger")
 
 def evaluate(solution, input):
 
+    results_dict = {}
     chromosome = solution.chromosome
     genome = input.genome
     template_dict = {}
-
+    
     # Convert normalized values back to real values and store them in a dictionary for easy access
     for key, value in sorted(genome.items(), key = lambda item: item[1]['index']):
         if 'continuous_range' in value:
             chromosome[value['index']] = float(chromosome[value['index']]*(value['continuous_range'][1]-value['continuous_range'][0]) + value['continuous_range'][0])
         elif 'discrete_range' in value:
-            indices = value['normalized_discrete_range'].index(chromosome[value['index']])
-            chromosome[value['index']] = value['discrete_range'][indices]
+            #Account for floating point errors
+            indices = np.where(np.isclose(value['normalized_discrete_range'], chromosome[value['index']],atol=1e-5))[0]
+            chromosome[value['index']] = value['discrete_range'][indices[0]]
         
         template_dict[key] = chromosome[value['index']]
     
@@ -44,46 +47,45 @@ def evaluate(solution, input):
     #Create subdirectories for base, DTC, and depletion runs
     if not base_dir.exists():
         os.mkdir(base_dir)
-    fill_template(input.template_file["loc"], base_file, template_dict)
+    fill_template(input.input_template["loc"], base_file, template_dict)
     if not doppler_dir.exists() and "doppler_temperature_coefficient" in genome.keys():
         os.mkdir(doppler_dir)
     if "doppler_temperature_coefficient" in genome.keys():
-        fill_template(input.template_file["loc"], doppler_file, template_dict)
+        fill_template(input.input_template["loc"], doppler_file, template_dict)
         update_temp(doppler_file)
     if input.depletion_settings['apply'] and not depletion_dir.exists():
         os.mkdir(depletion_dir)
     if input.depletion_settings['apply']:
-        fill_template(input.template_file["loc"], depletion_file, template_dict)
+        fill_template(input.input_template["loc"], depletion_file, template_dict)
         with open(depletion_file, "a") as f:
+            f.write(f"\nset pop {input.depletion_settings["particles_per_history"]} {input.depletion_settings["active_cycles"]} {input.depletion_settings["inactive_cycles"]}\n")
             if input.depletion_settings['depletion_units'].lower() == 'days':
                 f.write("\ndep daytot\n")
             else:
                 f.write("\ndep butot\n")
             for step in input.depletion_settings['depletion_steps']:
                 f.write(f"{step}\n")
+        #Remove detector lines outside of base case to improve speed
+        remove_detector_lines(depletion_file,input.power_peaking_detectors)
     
+    #Add cross sections and population into serpent files
     for file in [base_file, doppler_file, depletion_file]:
         if file.exists():
             with open(file, "a") as f:
-                f.write(f"\nset pop {input.particles_per_history} {input.active_cycles} {input.inactive_cycles}\n")
+                if file is not depletion_file:
+                    f.write(f"\nset pop {input.particles_per_history} {input.active_cycles} {input.inactive_cycles}\n")
                 f.write(f"set acelib {input.xs_lib}\n")
                 f.write(f"set dec {input.dec_lib}\n")
                 f.write(f"set nfylib {input.fy_lib}\n")
     
+    #Start depletion calc first since it takes the longest
     sss2cmd = __serpent2exe__
     if input.depletion_settings['apply']:
         os.chdir(depletion_dir)
         dep_cmd = ["mpirun","-np",f"{input.depletion_settings["mpi_ranks"]}",f"{sss2cmd}","-omp",f"{input.depletion_settings["omp_threads"]}","depletion_input"]
         dep_process = subprocess.Popen(dep_cmd)
     
-    if doppler_dir.exists():
-        os.chdir(doppler_dir)
-        dop_cmd = ["mpirun","-np",f"{input.mpi_ranks}",f"{sss2cmd}","-omp",f"{input.omp_threads}","doppler_input"]
-        dop_process = subprocess.Popen(dop_cmd)
-        dop_process.wait()
-        dop_exit_code = dop_process.returncode
-        dop_results = get_serpent_results("doppler_input_res.m")
-    
+    #Run base calc and get results
     os.chdir(base_dir)
     base_cmd = dop_cmd = ["mpirun","-np",f"{input.mpi_ranks}",f"{sss2cmd}","-omp",f"{input.omp_threads}","base_input"]
     base_process = subprocess.Popen(base_cmd)
@@ -91,17 +93,64 @@ def evaluate(solution, input):
     base_exit_code = base_process.returncode
     base_results = get_serpent_results("base_input_res.m")
     base_det_results = get_serpent_results("base_input_det0.m")
+
+    if input.power_peaking_detectors == 'ppw':
+        peaking_results = base_results["PPW_POW"][:,1::2]
+    
+    else:
+        peaking_results = [] #!TODO: Add parsing logic for going through detector results 
+
+    peaking_results = peaking_results[peaking_results != 0]
+    mean_pow = np.mean(peaking_results)
+    peaking_factors = peaking_results / mean_pow
+
+    results_dict["fdeltah"] = np.max(peaking_factors)
+
+    mass_dict = get_masses(base_dir / "base_input.out")
+
+    #Exclude materials not to be included in mass calculation specified by user
+    results_dict["total_mass"] = 0
+    for key in mass_dict:
+        if key in input.mass_materials or input.mass_materials == 'all':
+            #Store mass of each included material and convert from g to lb
+            results_dict["total_mass"] += float(mass_dict[key])/453.6
+    
+
+    if doppler_dir.exists():
+        os.chdir(doppler_dir)
+        #Remove lines in file for power peaking detectors to improve runtime
+        remove_detector_lines(doppler_file,input.power_peaking_detectors)
+        dop_cmd = ["mpirun","-np",f"{input.mpi_ranks}",f"{sss2cmd}","-omp",f"{input.omp_threads}","doppler_input"]
+        dop_process = subprocess.Popen(dop_cmd)
+        dop_process.wait()
+        dop_exit_code = dop_process.returncode
+        dop_results = get_serpent_results("doppler_input_res.m")
+
+        rho1 = (base_results["ABS_KEFF"][-1,0] - 1)/base_results["ABS_KEFF"][-1,0]
+        rho2 = (dop_results["ABS_KEFF"][-1,0] - 1)/dop_results["ABS_KEFF"][-1,0]
+
+        results_dict["doppler_temperature_coefficient"] = ((rho2 - rho1) / 50) * 10**5
+    
     if depletion_dir.exists():
         dep_process.wait()
         dep_exit_code = dep_process.returncode
         dep_results = get_serpent_results("depletion_input_res.m")
-        burn_days = dep_results["BURN_DAYS"]
-        burn_keff = dep_results["ABS_KEFF"]
+        burn_days = dep_results["BURN_DAYS"][:,0]
+        burn_keff = dep_results["ABS_KEFF"][:,0]
+
+        burn_days = np.unique(burn_days)
+        burn_keff = np.unique(burn_keff)
+        interpolate = interp1d(burn_days,burn_keff,kind='linear',fill_value='extrapolate')
+        results_dict["cycle_length"] = interpolate(1.0)
     
     
+    for key, value in results_dict.items():
+        if key in input.objectives():
+            solution.parameters[key]["value"] = value
+        else:
+            logger.info(f"Objective {key} is available in serpent but not currently used by the optimization")
 
-
-    raise NotImplementedError("Serpent evaluation function is not yet implemented.")
+    return solution
 
 def fill_template(template_path, output_path, template_dict):
     """
@@ -165,3 +214,79 @@ def update_temp(filename):
 
     with open(filename, "w") as f:
         f.writelines(updated_lines)
+
+import re
+from pathlib import Path
+
+def get_masses(filepath):
+    """
+    Reads a Serpent output-like file and extracts the mass of all materials.
+
+    Parameters
+    ----------
+    filepath : str or Path
+        Path to the file to read.
+
+    Returns
+    -------
+    dict
+        Dictionary mapping material names to masses in grams, e.g.,
+        { "moderator": 1.13e6, "fuel": 8.7e5 }
+    """
+    filepath = Path(filepath)
+    masses = {}
+    current_material = None
+    mass_pattern = re.compile(r"- Mass\s+([0-9.E+-]+)\s+g")
+
+    with filepath.open("r") as f:
+        for line in f:
+            line_strip = line.strip()
+            # Detect start of material block
+            if line_strip.startswith("Material "):
+                # Extract material name in quotes
+                match_name = re.match(r'Material\s+"(.+?)"', line_strip)
+                if match_name:
+                    current_material = match_name.group(1)
+                else:
+                    current_material = None
+                continue
+
+            # If inside a material block, look for mass
+            if current_material:
+                match_mass = mass_pattern.search(line_strip)
+                if match_mass:
+                    masses[current_material] = float(match_mass.group(1))
+                    current_material = None  # done with this material
+
+    return masses
+
+def remove_detector_lines(filepath, detector):
+    """
+    Remove lines from a file based on detector type.
+
+    Parameters
+    ----------
+    filepath : str or Path
+        Path to the file to modify.
+    detector : str or list of str
+        If 'ppw', remove lines containing 'set adf' and 'set ppw'.
+        If a list, remove lines containing 'det {detector[i]}' for each element.
+    """
+    filepath = Path(filepath)
+
+    # Read all lines
+    with filepath.open("r") as f:
+        lines = f.readlines()
+
+    # Determine lines to remove
+    if detector == 'ppw':
+        remove_keywords = ['set adf', 'set ppw']
+    elif isinstance(detector, list):
+        remove_keywords = [f"det {d}" for d in detector]
+
+    # Filter lines
+    new_lines = [line for line in lines if not any(keyword in line for keyword in remove_keywords)]
+
+    # Write back
+    with filepath.open("w") as f:
+        f.writelines(new_lines)
