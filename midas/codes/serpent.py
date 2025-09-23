@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 import math
 from midas_data import __serpent2exe__
+from midas.utils import LWR_fuelcyclecost as fuelcyclecost
 from scipy.io import loadmat
 from scipy.interpolate import interp1d
 
@@ -143,6 +144,10 @@ def evaluate(solution, input):
         interpolate = interp1d(burn_days,burn_keff,kind='linear',fill_value='extrapolate')
         results_dict["cycle_length"] = interpolate(1.0)
     
+    if 'cost_fuelcycle' in input.objectives():
+        hm_frac = get_heavy_metal_percent(base_file)
+        cycle_cost = fuelcyclecost.calc_fuelcost_triso(template_dict["enrichment"],(mass_dict['fuel']*453.6/1000)*hm_frac)
+        results_dict['cost_fuelcycle'] = cycle_cost
     
     for key, value in results_dict.items():
         if key in input.objectives():
@@ -290,3 +295,56 @@ def remove_detector_lines(filepath, detector):
     # Write back
     with filepath.open("w") as f:
         f.writelines(new_lines)
+
+def get_heavy_metal_percent(filepath):
+    """
+    Reads a Serpent material definition and calculates the weight percent
+    of isotopes with Z = 92 (U) or 94 (Pu). Uses atomic masses from the 
+    `periodictable` library when possible.
+    """
+    with open(filepath, "r") as f:
+        lines = f.readlines()
+
+    masses = {}
+    mat_name = None
+    fractions = {}
+
+    # Regex for isotopes like 92235.06c
+    iso_pattern = re.compile(r"^\s*(\d+)\.\d+\w*\s+(-?\d+\.?\d*([Ee][+-]?\d+)?)")
+
+    for line in lines:
+        if line.strip().startswith("mat") and "fuel" in line:
+            mat_name = line.strip()
+            continue
+
+        match = iso_pattern.match(line)
+        if match:
+            zaid, frac, _ = match.groups()
+            Z = int(zaid[:-3]) // 1000     # first digits = Z
+            A = int(zaid[:-3]) % 1000      # last 3 = mass number
+
+            frac = float(frac)
+
+            # Get atomic mass from mass number
+            try:
+                from periodictable import elements
+                mass = getattr(elements, Z).isotopes[A].mass
+            except Exception:
+                mass = float(A)
+
+            # Store
+            fractions[(Z, A)] = (frac, mass)
+
+    if not fractions:
+        raise ValueError("No valid isotopes found in file.")
+
+    # Compute total mass contribution
+    total_mass = sum(abs(frac) for frac, _ in fractions.values())
+
+    # Contribution from U & Pu only
+    upu_mass = sum(abs(frac) for (Z, A), (frac, _) in fractions.items() if Z in [92, 94])
+
+    # Weight percent
+    weight_percent = (upu_mass / total_mass) * 100.0
+
+    return weight_percent

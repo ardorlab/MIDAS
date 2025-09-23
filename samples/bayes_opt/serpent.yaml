@@ -7,7 +7,7 @@ general:
   results_directory_name: output_files
   input_template: 
       apply: True
-      loc: "C:/Users/coleh/OneDrive/Documents/MIDAS/samples/bayes_opt/serpent_temp.inp"
+      loc: "~/"
 optimization:
   population_size: 20
   number_of_generations: 400
@@ -25,7 +25,7 @@ optimization:
     total_mass:
       goal: less_than_target
       target: 50000
-      weight: 50.0
+      weight: 1.0
     doppler_temperature_coefficient:
       goal: less_than_target
       target: 0
@@ -75,13 +75,6 @@ decision_variables:
     reflector_thickness:
       continuous_range: [10,30]
       index: 3
-    triso_packing_fraction:
-      discrete_range: [0.2,0.6]
-      increment: 0.05
-      index: 4
     moderator_pin_radius:
       continuous_range: [0.5,2.3]
-      index: 5
-    shield_thickness:
-      continuous_range: [1,20]
-      index: 6
+      index: 4

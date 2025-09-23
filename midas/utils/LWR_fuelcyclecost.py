@@ -106,3 +106,57 @@ def calc_fuelcost(x_p, mass_product):
     cost_fabrication = mass_product * P_fab * (1 + S_fab)**(t - t_b) # USD
     
     return cost_feed + cost_conversion + cost_enrichment + cost_fabrication # USD
+
+def calc_fuelcost_triso(x_p, mass_product):
+    """
+    x_p: weight fraction (not percent) of U235 in the enrichment product stream.
+    mass_product: initial heavy metal loading of the enrichment product stream.
+
+    Written by Cole Howard. 09/23/2025
+    Adapted from calc_fuelcost, written by Nicholas Rollins
+    """
+    x_f = 0.00711 # w.t.
+    
+    x_t = 0.00300 # w.t.
+    
+    a = 2.6 # lb_U3O8/kg_U; conversion factor of U feed
+    
+    t = 1.0 # years
+    t_b = 1.0 # years
+    
+    S_feed = 3.0 # %/year
+    S_conv = 3.0 # %/year
+    S_enr = 3.0 # %/year
+    S_fab = 3.0 # %/year
+    
+    l_feed = 0.0 # w.t.
+    l_conv = 0.005 # w.t.
+    l_enr = 0.0005 # w.t.
+    l_fab = 0.0 # w.t.
+    
+    f_feed = (1 + l_conv)*(1 + l_fab)
+    f_conv = (1 + l_fab)
+    f_enr = (1 + l_fab)
+    f_fab = 1.0
+    
+    P_feed = 31.35 # USD/lb_U3O8
+    P_conv = 5.00 # USD/kg_U3O8
+    P_enr = 105 # USD/SWU
+    P_fab = 5000 # USD/kg_U
+    
+    
+    mass_feed = mass_product * ((x_p - x_t)/(x_f - x_t)) # kg
+    mass_tails = mass_feed - mass_product # kg
+    
+    V_product = (2*x_p - 1) * np.log(x_p/(1 - x_p))
+    V_tails = (2*x_t - 1) * np.log(x_t/(1 - x_t))
+    V_feed = (2*x_f - 1) * np.log(x_f/(1 - x_f))
+    
+    SWU = mass_product * V_product + mass_tails * V_tails - mass_feed * V_feed
+    
+    cost_feed = mass_feed * a * f_feed * P_feed * (1 + S_feed)**(t - t_b) # USD
+    cost_conversion = mass_feed * f_conv * P_conv * (1 + S_conv)**(t - t_b) # USD
+    cost_enrichment = SWU * f_enr * P_enr * (1 + S_enr)**(t - t_b) # USD
+    cost_fabrication = mass_product * P_fab # USD
+    
+    return cost_feed + cost_conversion + cost_enrichment + cost_fabrication # USD
