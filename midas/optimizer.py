@@ -159,10 +159,10 @@ class Optimizer():
             logger.info("Calculating fitness for generation %s...", self.generation.current)
             ## Execute and parse objective/constraint values
             self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
-            if 'cost_fuelcycle' in self.input.objectives.keys():
+            if 'cost_fuelcycle' in self.input.objectives.keys() and self.input.code_interface not in ['serpent','function']:
                 for soln in self.population.current:
                     soln.parameters = LWR_fuelcyclecost.get_fuelcycle_cost(soln, self.input)
-            if 'av_fuelenrichment' in self.input.objectives.keys():
+            if 'av_fuelenrichment' in self.input.objectives.keys() and self.input.code_interface not in ['serpent','function']:
                 for soln in self.population.current:
                     soln.parameters = LWR_averageenrichment.get_avfuelenrichment(soln, self.input)
             ## Calculate fitness from objective/constriant values

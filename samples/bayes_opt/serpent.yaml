@@ -7,10 +7,10 @@ general:
   results_directory_name: output_files
   input_template: 
       apply: True
-      loc: "~/MIDAS/MIDAS/samples/bayes_opt/serptemptest"
+      loc: "/home/cahowar9/rdfmg/MIDAS/MIDAS/samples/bayes_opt/serptemptest"
 optimization:
-  population_size: 20
-  number_of_generations: 400
+  population_size: 1
+  number_of_generations: 2
   objectives:
     FDeltaH:
       goal: less_than_target
@@ -37,23 +37,23 @@ algorithm:
   exploration_exploitation_factor: 1.96
 
 serpent_data:
-  particles_per_history: 2500
+  particles_per_history: 500
   power_peaking_detectors: 'ppw'
   active_cycles: 500
   inactive_cycles: 50
   mass_materials: all
-  depletion_data:
+  depletion_settings:
     apply: True
-    depletion_steps: [1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
+    depletion_steps: [1500, 2000, 2500]
     depletion_units: days
     mpi_ranks: 5
-    omp_threads: 5
+    omp_threads: 2
     particles_per_history: 500
     active_cycles: 500
     inactive_cycles: 50
   mpi_ranks: 5
-  omp_threads: 3
-  power: 2000000
+  omp_threads: 2
+  power: 5000
   xs_library_path: "/usr/local/usrapps/rdfmg/serpent/lib/xs/s2v0_endfb71.xsdata"
   decay_library_path: "/usr/local/usrapps/rdfmg/serpent/lib/decay/s2v0_endfb71.dec"
   fission_yield_library_path: "/usr/local/usrapps/rdfmg/serpent/lib/decay/s2v0_endfb71.nfy"
@@ -62,19 +62,16 @@ serpent_data:
 decision_variables:
   # parameters used to fill each chromosome.
   parameters:
-    fuel_height:
-      continuous_range: [120,180]
+    pin_pitch:
+      continuous_range: [1.25,1.75]
       index: 0
     enrichment:
-      discrete_range: [15,19.95]
+      discrete_range: [1.8,3]
       increment: 0.05
       index: 1
     fuel_pin_radius:
       continuous_range: [0.5,2.3]
       index: 2
-    reflector_thickness:
-      continuous_range: [10,30]
+    fuel_height:
+      continuous_range: [15, 30]
       index: 3
-    moderator_pin_radius:
-      continuous_range: [0.5,2.3]
-      index: 4

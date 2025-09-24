@@ -62,7 +62,7 @@ def evaluate(solution, input):
     if input.depletion_settings['apply']:
         fill_template(input.input_template["loc"], depletion_file, template_dict)
         with open(depletion_file, "a") as f:
-            f.write(f"\nset pop {input.depletion_settings["particles_per_history"]} {input.depletion_settings["active_cycles"]} {input.depletion_settings["inactive_cycles"]}\n")
+            f.write(f"\nset pop {input.depletion_settings['particles_per_history']} {input.depletion_settings['active_cycles']} {input.depletion_settings['inactive_cycles']}\n")
             if input.depletion_settings['depletion_units'].lower() == 'days':
                 f.write("\ndep daytot\n")
             else:
@@ -76,27 +76,27 @@ def evaluate(solution, input):
     for file in [base_file, doppler_file, depletion_file]:
         if file.exists():
             with open(file, "a") as f:
-                if file is not depletion_file:
+                if file != depletion_file:
                     f.write(f"\nset pop {input.particles_per_history} {input.active_cycles} {input.inactive_cycles}\n")
                 f.write(f"set acelib {input.xs_lib}\n")
                 f.write(f"set dec {input.dec_lib}\n")
-                f.write(f"set nfylib {input.fy_lib}\n")
+                f.write(f"set nfylib {input.nfy_lib}\n")
     
     #Start depletion calc first since it takes the longest
     sss2cmd = __serpent2exe__
     if input.depletion_settings['apply']:
         os.chdir(depletion_dir)
-        dep_cmd = ["mpirun","-np",f"{input.depletion_settings["mpi_ranks"]}",f"{sss2cmd}","-omp",f"{input.depletion_settings["omp_threads"]}","depletion_input"]
+        dep_cmd = ["mpirun","-np",f"{input.depletion_settings['mpi_ranks']}",f"{sss2cmd}","-omp",f"{input.depletion_settings['omp_threads']}","depletion_input"]
         dep_process = subprocess.Popen(dep_cmd)
     
+    #Unrealistically bad results to return if code fails to drive optimization away from this region
+    fail_results = {'doppler_temperature_coefficient': 5, 'cycle_length': 0, 'cost_fuelcycle': 1000000000000,'total_mass': 1000000000,'fdeltah': 8,'max_doserate':50000}
     #Run base calc and get results
     os.chdir(base_dir)
     base_cmd = dop_cmd = ["mpirun","-np",f"{input.mpi_ranks}",f"{sss2cmd}","-omp",f"{input.omp_threads}","base_input"]
     base_process = subprocess.Popen(base_cmd)
     base_process.wait()
     base_exit_code = base_process.returncode
-    #Unrealistically bad results to return if code fails to drive optimization away from this region
-    fail_results = {'doppler_temperature_coefficient': 5, 'cycle_length': 0, 'cost_fuelcycle': 1000000000000,'total_mass': 1000000000,'fdeltah': 8,'max_doserate':50000}
     if base_exit_code == 0:
         base_results = get_serpent_results("base_input_res.m")
         base_det_results = get_serpent_results("base_input_det0.m")
@@ -120,8 +120,6 @@ def evaluate(solution, input):
             if key in input.mass_materials or input.mass_materials == 'all':
                 #Store mass of each included material and convert from g to lb
                 results_dict["total_mass"] += float(mass_dict[key])/453.6
-    else:
-        results_dict = fail_results
 
     
     
@@ -155,13 +153,15 @@ def evaluate(solution, input):
             interpolate = interp1d(burn_days,burn_keff,kind='linear',fill_value='extrapolate')
             results_dict["cycle_length"] = interpolate(1.0)
     
-    if 'cost_fuelcycle' in input.objectives():
+    if 'cost_fuelcycle' in input.objectives and dep_exit_code == 0 and dop_exit_code == 0 and base_exit_code == 0:
         hm_frac = get_heavy_metal_percent(base_file)
         cycle_cost = fuelcyclecost.calc_fuelcost_triso(template_dict["enrichment"],(mass_dict['fuel']*453.6/1000)*hm_frac)
         results_dict['cost_fuelcycle'] = cycle_cost
+    else:
+        results_dict = fail_results
     
     for key, value in results_dict.items():
-        if key in input.objectives():
+        if key in input.objectives:
             solution.parameters[key]["value"] = value
         else:
             logger.info(f"Objective {key} is available in serpent but not currently used by the optimization")
