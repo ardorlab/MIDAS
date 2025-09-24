@@ -7,7 +7,7 @@ general:
   results_directory_name: output_files
   input_template: 
       apply: True
-      loc: "~/"
+      loc: "~/MIDAS/MIDAS/samples/bayes_opt/serptemptest"
 optimization:
   population_size: 20
   number_of_generations: 400

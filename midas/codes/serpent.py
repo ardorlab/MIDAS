@@ -15,6 +15,9 @@ logger = logging.getLogger("MIDAS_logger")
 
 def evaluate(solution, input):
 
+    #Predefine exit codes for optional runs so later logic doesn't fail
+    dop_exit_code = 0
+    dep_exit_code = 0
     results_dict = {}
     chromosome = solution.chromosome
     genome = input.genome
@@ -92,29 +95,35 @@ def evaluate(solution, input):
     base_process = subprocess.Popen(base_cmd)
     base_process.wait()
     base_exit_code = base_process.returncode
-    base_results = get_serpent_results("base_input_res.m")
-    base_det_results = get_serpent_results("base_input_det0.m")
+    #Unrealistically bad results to return if code fails to drive optimization away from this region
+    fail_results = {'doppler_temperature_coefficient': 5, 'cycle_length': 0, 'cost_fuelcycle': 1000000000000,'total_mass': 1000000000,'fdeltah': 8,'max_doserate':50000}
+    if base_exit_code == 0:
+        base_results = get_serpent_results("base_input_res.m")
+        base_det_results = get_serpent_results("base_input_det0.m")
+        if input.power_peaking_detectors == 'ppw':
+            peaking_results = base_results["PPW_POW"][:,1::2]
 
-    if input.power_peaking_detectors == 'ppw':
-        peaking_results = base_results["PPW_POW"][:,1::2]
-    
+        else:
+            peaking_results = [] #!TODO: Add parsing logic for going through detector results 
+
+        peaking_results = peaking_results[peaking_results != 0]
+        mean_pow = np.mean(peaking_results)
+        peaking_factors = peaking_results / mean_pow
+
+        results_dict["fdeltah"] = np.max(peaking_factors)
+
+        mass_dict = get_masses(base_dir / "base_input.out")
+
+        #Exclude materials not to be included in mass calculation specified by user
+        results_dict["total_mass"] = 0
+        for key in mass_dict:
+            if key in input.mass_materials or input.mass_materials == 'all':
+                #Store mass of each included material and convert from g to lb
+                results_dict["total_mass"] += float(mass_dict[key])/453.6
     else:
-        peaking_results = [] #!TODO: Add parsing logic for going through detector results 
+        results_dict = fail_results
 
-    peaking_results = peaking_results[peaking_results != 0]
-    mean_pow = np.mean(peaking_results)
-    peaking_factors = peaking_results / mean_pow
-
-    results_dict["fdeltah"] = np.max(peaking_factors)
-
-    mass_dict = get_masses(base_dir / "base_input.out")
-
-    #Exclude materials not to be included in mass calculation specified by user
-    results_dict["total_mass"] = 0
-    for key in mass_dict:
-        if key in input.mass_materials or input.mass_materials == 'all':
-            #Store mass of each included material and convert from g to lb
-            results_dict["total_mass"] += float(mass_dict[key])/453.6
+    
     
 
     if doppler_dir.exists():
@@ -125,24 +134,26 @@ def evaluate(solution, input):
         dop_process = subprocess.Popen(dop_cmd)
         dop_process.wait()
         dop_exit_code = dop_process.returncode
-        dop_results = get_serpent_results("doppler_input_res.m")
+        if dop_exit_code ==0 and base_exit_code == 0:
+            dop_results = get_serpent_results("doppler_input_res.m")
 
-        rho1 = (base_results["ABS_KEFF"][-1,0] - 1)/base_results["ABS_KEFF"][-1,0]
-        rho2 = (dop_results["ABS_KEFF"][-1,0] - 1)/dop_results["ABS_KEFF"][-1,0]
+            rho1 = (base_results["ABS_KEFF"][-1,0] - 1)/base_results["ABS_KEFF"][-1,0]
+            rho2 = (dop_results["ABS_KEFF"][-1,0] - 1)/dop_results["ABS_KEFF"][-1,0]
 
-        results_dict["doppler_temperature_coefficient"] = ((rho2 - rho1) / 50) * 10**5
+            results_dict["doppler_temperature_coefficient"] = ((rho2 - rho1) / 50) * 10**5
     
     if depletion_dir.exists():
         dep_process.wait()
         dep_exit_code = dep_process.returncode
-        dep_results = get_serpent_results("depletion_input_res.m")
-        burn_days = dep_results["BURN_DAYS"][:,0]
-        burn_keff = dep_results["ABS_KEFF"][:,0]
-
-        burn_days = np.unique(burn_days)
-        burn_keff = np.unique(burn_keff)
-        interpolate = interp1d(burn_days,burn_keff,kind='linear',fill_value='extrapolate')
-        results_dict["cycle_length"] = interpolate(1.0)
+        if dep_exit_code == 0 and dop_exit_code == 0 and base_exit_code == 0:
+            dep_results = get_serpent_results("depletion_input_res.m")
+            burn_days = dep_results["BURN_DAYS"][:,0]
+            burn_keff = dep_results["ABS_KEFF"][:,0]
+    
+            burn_days = np.unique(burn_days)
+            burn_keff = np.unique(burn_keff)
+            interpolate = interp1d(burn_days,burn_keff,kind='linear',fill_value='extrapolate')
+            results_dict["cycle_length"] = interpolate(1.0)
     
     if 'cost_fuelcycle' in input.objectives():
         hm_frac = get_heavy_metal_percent(base_file)
