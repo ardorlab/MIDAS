@@ -473,6 +473,8 @@ class Gene_Validity_check():
 
         elif input_obj.calculation_type == 'lattice_physics':
             valid_chromosome = Gene_Validity_check.check_constraints(genes_list, genome, parameters, child)  
+        elif input_obj.calculation_type == 'continuous_variable':
+            valid_chromosome = Gene_Validity_check.check_constraints(genes_list, genome, parameters, child)
         else: 
             logger.warning('Unconstrained optimization')  
         

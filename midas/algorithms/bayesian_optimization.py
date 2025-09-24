@@ -29,9 +29,12 @@ class Bayesian_Optimization:
         self.fitness_values = []   # Stores fitness values
         self.random_state = np.random.RandomState(random_state) #Initialize random state used throughout problem
 
-        # Precompute the total number of binary features
-        #self.binary_dims = [self.calculate_binary_length(len(dim_cats)) for dim_cats in self.dimensions]
-        #self.total_features = sum(self.binary_dims)  # Total number of binary features
+        # Precompute the total number of binary features for LP problem
+        if input.calculation_type in ['single_cycle','eq_cycle']:
+            self.binary_dims = [self.calculate_binary_length(len(dim_cats)) for dim_cats in self.dimensions]
+            self.total_features = sum(self.binary_dims)  # Total number of binary features
+        else:
+            self.total_features = int(max(value["index"] for value in self.input.genome.values())+1)
 
         # Scalers for input (X) and fitness values (y)
         self.scaler_x = StandardScaler()
@@ -158,9 +161,13 @@ class Bayesian_Optimization:
 
         Written by Cole Howard. 1/1/2025
         """
-        #Encode population in binary and scale in preparation to fit data
-        encoded_population = self.binary_encode_population(self.population)
-        scaled_population = self.scaler_x.fit_transform(encoded_population)
+        if self.input.calculation_type in ['single_cycle','eq_cycle']:
+            #Encode population in binary and scale in preparation to fit data
+            encoded_population = self.binary_encode_population(self.population)
+            scaled_population = self.scaler_x.fit_transform(encoded_population)
+        else:
+            #Population is already scaled in continuous variable optimization
+            scaled_population = self.population
 
         #Scale fitness values and reshape the array as needed to fit
         scaled_fitness = self.scaler_y.fit_transform(
@@ -202,8 +209,11 @@ class Bayesian_Optimization:
 
         Written by Cole Howard. 1/1/2025
         """
-        #Scale the candidates
-        scaled_candidates = self.scaler_x.transform(candidates)
+        if self.input.calculation_type in ['single_cycle','eq_cycle']:
+            #Scale the candidates to fit the data
+            scaled_candidates = self.scaler_x.transform(candidates)
+        else:
+            scaled_candidates = candidates
         #Predict mean and standard deviation for use in EI formula
         mean, std = self.gp.predict(scaled_candidates, return_std=True)
 
@@ -224,8 +234,11 @@ class Bayesian_Optimization:
 
         Written by Cole Howard. 1/1/2025
         """
-        #Scale the candidates
-        scaled_candidates = self.scaler_x.transform(candidates)
+        if self.input.calculation_type in ['single_cycle','eq_cycle']:
+            #Scale the candidates to fit the data
+            scaled_candidates = self.scaler_x.transform(candidates)
+        else:
+            scaled_candidates = candidates
         #Predict mean and standard deviation for use in PI formula
         mean, std = self.gp.predict(scaled_candidates, return_std=True)
 
@@ -246,8 +259,11 @@ class Bayesian_Optimization:
 
         Written by Cole Howard. 1/1/2025
         """
-        #Scale the candidates to fit the data
-        scaled_candidates = self.scaler_x.transform(candidates)
+        if self.input.calculation_type in ['single_cycle','eq_cycle']:
+            #Scale the candidates to fit the data
+            scaled_candidates = self.scaler_x.transform(candidates)
+        else:
+            scaled_candidates = candidates
         #Predictions of means and standard deviations
         mean, std = self.gp.predict(scaled_candidates, return_std=True)
         #UCB formula
@@ -259,8 +275,11 @@ class Bayesian_Optimization:
 
         Written by Cole Howard. 1/1/2025
         """
-        #Scale the candidates to fit the data
-        scaled_candidates = self.scaler_x.transform(candidates)
+        if self.input.calculation_type in ['single_cycle','eq_cycle']:
+            #Scale the candidates to fit the data
+            scaled_candidates = self.scaler_x.transform(candidates)
+        else:
+            scaled_candidates = candidates
         #Get predicted means and standard deviations
         mean, std = self.gp.predict(scaled_candidates, return_std=True)
         #LCB formula
@@ -318,9 +337,23 @@ class Bayesian_Optimization:
                 best_fun = res.fun
                 best_x = res.x
 
-        #Convert candidate point into a binary vector, then convert the binary vector into a categorical point we can use
-        best_binary = self.real_vector_to_binary(best_x)
-        candidate = self.binary_vector_to_categorical(best_binary)
+        if self.input.calculation_type in ['single_cycle','eq_cycle']:
+            #Convert candidate point into a binary vector, then convert the binary vector into a categorical point we can use
+            best_binary = self.real_vector_to_binary(best_x)
+            candidate = self.binary_vector_to_categorical(best_binary)
+        else:
+            candidate = best_x
+            for key, value in self.input.genome.items():
+                if 'normalized_discrete_range' in value:
+                    idx = value['index']  # where this param lives in candidate
+                    valid_vals = value['normalized_discrete_range']
+            
+                    # Find the nearest valid value
+                    nearest_val = min(valid_vals, key=lambda v: abs(v - candidate[idx]))
+            
+                    # Replace candidate value with the nearest allowed one
+                    candidate[idx] = nearest_val
+
         return candidate
 
     def reproduction(self, pop_list, gen_obj):
@@ -340,7 +373,7 @@ class Bayesian_Optimization:
             gene_list.append(gene)
 
         #Create LWR core parameters for use in checking constraints
-        core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies, self.input.symmetry]
+        #core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies, self.input.symmetry]
         self.iterations = gen_obj.current
         
         chromosome_list = [soln.chromosome for soln in pop_list]
@@ -361,6 +394,6 @@ class Bayesian_Optimization:
                 n_restarts=5
             )
             #Check to make sure solution fits constraints, if it does not then it will not be considered
-            if optools.Gene_Validity_check.abortive_check(self.input, gene_list, self.input.genome, core_parameters, candidate):
-                candidates.append(candidate)
+            #if optools.Gene_Validity_check.abortive_check(self.input, gene_list, self.input.genome, core_parameters, candidate):
+            candidates.append(candidate)
         return candidates
