@@ -111,7 +111,7 @@ class Optimizer():
         
         core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies,
                             self.input.symmetry, self.input.calculation_type]
-        if chromosome:
+        if chromosome is not None:
             soln.chromosome = chromosome
         else: #generate random chromosome
             soln.chromosome = soln.generate_initial(self.input.calculation_type, core_parameters,\

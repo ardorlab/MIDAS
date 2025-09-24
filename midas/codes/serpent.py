@@ -52,9 +52,9 @@ def evaluate(solution, input):
     if not base_dir.exists():
         os.mkdir(base_dir)
     fill_template(input.input_template["loc"], base_file, template_dict)
-    if not doppler_dir.exists() and "doppler_temperature_coefficient" in genome.keys():
+    if not doppler_dir.exists() and "doppler_temperature_coefficient" in input.objectives:
         os.mkdir(doppler_dir)
-    if "doppler_temperature_coefficient" in genome.keys():
+    if "doppler_temperature_coefficient" in input.objectives:
         fill_template(input.input_template["loc"], doppler_file, template_dict)
         update_temp(doppler_file)
     if input.depletion_settings['apply'] and not depletion_dir.exists():
@@ -132,6 +132,7 @@ def evaluate(solution, input):
         dop_process = subprocess.Popen(dop_cmd)
         dop_process.wait()
         dop_exit_code = dop_process.returncode
+        dop_process.terminate()
         if dop_exit_code ==0 and base_exit_code == 0:
             dop_results = get_serpent_results("doppler_input_res.m")
 
@@ -157,7 +158,8 @@ def evaluate(solution, input):
         hm_frac = get_heavy_metal_percent(base_file)
         cycle_cost = fuelcyclecost.calc_fuelcost_triso(template_dict["enrichment"],(mass_dict['fuel']*453.6/1000)*hm_frac)
         results_dict['cost_fuelcycle'] = cycle_cost
-    else:
+
+    if dep_exit_code != 0 and dop_exit_code != 0 and base_exit_code != 0:
         results_dict = fail_results
     
     for key, value in results_dict.items():
@@ -165,6 +167,12 @@ def evaluate(solution, input):
             solution.parameters[key]["value"] = value
         else:
             logger.info(f"Objective {key} is available in serpent but not currently used by the optimization")
+
+    if depletion_dir.exists():
+        dep_process.kill()
+    base_process.kill()
+    if doppler_dir.exists():
+        dop_process.kill()
 
     return solution
 
@@ -200,11 +208,16 @@ def fill_template(template_path, output_path, template_dict):
 def get_serpent_results(output_file):
 
     #Run .m file in matlab to convert into a python-readable .mat file
-    subprocess.run(["matlab",
+    p = subprocess.Popen(["matlab",
     "-nodisplay","-nosplash","-nodesktop",
-    "-r",f"run('{output_file}'); save('{output_file}.mat'); exit"])
+    "-batch",f"run('{output_file}'); save('{output_file}.mat'); exit"])
+
+    p.wait(timeout=180)
 
     data = loadmat(f"{output_file}.mat")
+
+    if p.poll():
+        p.kill()
 
     return data
 

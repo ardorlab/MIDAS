@@ -311,17 +311,20 @@ class Bayesian_Optimization:
         """
         #Determine which acquisition function to use based on the problem input
         def acquisition_function(x):
-            binary_vec = self.real_vector_to_binary(x)
+            if self.calculation_type in ['single_cycle','eq_cycle']:
+                vec = self.real_vector_to_binary(x)
+            else:
+                vec = np.array(x)
             if self.input.acquisition_function == 'EI':
                 #Best point from EI has the highest value but we are using minimize, so we invert its value
-                return -self.expected_improvement(binary_vec.reshape(1, -1), kappa)
+                return -self.expected_improvement(vec.reshape(1, -1), kappa)
             elif self.input.acquisition_function == 'PI':
                 #Best point from PI has the highest value but we are using minimize, so we invert its value
-                return -self.probability_of_improvement(binary_vec.reshape(1, -1), kappa)
+                return -self.probability_of_improvement(vec.reshape(1, -1), kappa)
             elif self.input.acquisition_function == 'UCB':
-                return self.upper_confidence_bound(binary_vec.reshape(1, -1), kappa)
+                return self.upper_confidence_bound(vec.reshape(1, -1), kappa)
             elif self.input.acquisition_function == 'LCB':
-                return self.lower_confidence_bound(binary_vec.reshape(1, -1), kappa)
+                return self.lower_confidence_bound(vec.reshape(1, -1), kappa)
         #Scaled problem bounds
         bounds = [(0, 1)] * self.total_features
 
@@ -347,10 +350,10 @@ class Bayesian_Optimization:
                 if 'normalized_discrete_range' in value:
                     idx = value['index']  # where this param lives in candidate
                     valid_vals = value['normalized_discrete_range']
-            
+
                     # Find the nearest valid value
                     nearest_val = min(valid_vals, key=lambda v: abs(v - candidate[idx]))
-            
+
                     # Replace candidate value with the nearest allowed one
                     candidate[idx] = nearest_val
 
