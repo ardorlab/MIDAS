@@ -16,6 +16,7 @@ from midas.utils import termination_criteria as TC
 from midas.algorithms import genetic_algorithm as GA
 from midas.algorithms import bayesian_optimization as BO
 from midas.algorithms import simulated_annealing as SA
+from midas.algorithms import parallel_simulated_annealing as PSA
 from midas.codes import parcs342, parcs343
 from midas.codes import nuscale_lut
 from midas.codes import trace50p5
@@ -69,6 +70,8 @@ class Optimizer():
             self.algorithm = BO.Bayesian_Optimization(self.input)
         elif methodology == 'simulated_annealing' and self.input.num_procs == 1:
             self.algorithm = SA.Simulated_Annealing(self.input)
+        elif methodology == 'simulated_annealing' and self.input.num_procs > 1:
+            self.algorithm = PSA.Parallel_Simulated_Annealing(self.input, self.eval_func)
         #!TODO: Add the other algorithms back in.
         return
     
@@ -96,7 +99,6 @@ class Optimizer():
         """
         #generate blank solution object
         soln = optools.Solution(self.input, f"{name}")
-        
         #copy objectives and constraints from input
         soln.parameters = deepcopy(self.input.objectives)
         for key in soln.parameters.keys():
@@ -141,11 +143,16 @@ class Optimizer():
                 os.remove("optimizer_results.csv")
             
     ## Initialize beginning population
-            logger.info("Generating initial population of %s individuals...", self.input.population_size)
             self.population.current = []
-            for i in range(self.population.size):
-                self.population.current.append(self.generate_solution(f'Gen_0_Indv_{i}'))
-            
+            if self.input.methodology == 'simulated_annealing' and self.input.num_procs > 1:
+                # for parallel simulated annealing the initial population is the size of the buffer
+                logger.info("Generating initial population of %s individuals...", self.input.buffer_size)
+                for i in range(self.input.buffer_size):
+                    self.population.current.append(self.generate_solution(f'Gen_0_Indv_{i}'))
+            else:
+                logger.info("Generating initial population of %s individuals...", self.input.population_size)
+                for i in range(self.population.size):
+                    self.population.current.append(self.generate_solution(f'Gen_0_Indv_{i}'))
             pool = Pool(processes=self.input.num_procs) #initialize parallel execution
             
     ## Evaluate fitness
@@ -246,42 +253,53 @@ class Optimizer():
         ## Create new generation
             logger.info("Creating population of %s individuals for generation %s...", self.input.population_size, self.generation.current)
             new_chromosome_list = self.algorithm.reproduction(self.population.current, self.generation)
-            self.population.current = []
-            for i in range(len(new_chromosome_list)):
-                self.population.current.append(self.generate_solution(f'Gen_{self.generation.current}_Indv_{i}', new_chromosome_list[i]))
-        
-        ## Evaluate fitness
-            ## If chromosome exists in previous generations, skip call to external code.
-            inactive_solutions = []
-            for soln in self.population.current:
-                try:
-                    soln_index = self.population.archive['solutions'].index(soln.chromosome)
-                    soln.fitness_value = self.population.archive['fitnesses'][soln_index]
-                    soln.parameters = self.population.archive['parameters'][soln_index]
-                    inactive_solutions.append(soln)
-                    self.population.current.remove(soln)
-                    logger.debug(f"Fitness value for solution '{soln.name}' will be taken from archive entry: {soln_index}.")
-                except ValueError:
-                    continue #chromosome is unique, do nothing.
+
+            if self.input.methodology == 'simulated_annealing' and self.input.num_procs > 1: # if parallel simulated annealing skip evaluation
+                self.population.current = []
+                for i in range(len(new_chromosome_list)):
+                    os.rename(f"{self.input.results_dir_name}/{new_chromosome_list[i].name}", f'{self.input.results_dir_name}/Gen_{self.generation.current}_Indv_{i}')
+                    new_chromosome_list[i].name = f'Gen_{self.generation.current}_Indv_{i}'
+                    self.population.current.append(new_chromosome_list[i])
+                logger.info("Calculating fitness for generation %s...", self.generation.current)
+                logger.info("Done!")
+
+            else: #every other algorithm
+                self.population.current = []
+                for i in range(len(new_chromosome_list)):
+                    self.population.current.append(self.generate_solution(f'Gen_{self.generation.current}_Indv_{i}', new_chromosome_list[i]))
             
-            logger.info("Calculating fitness for generation %s...", self.generation.current)
-            ## Execute and parse objective/constraint values
-            self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
-            if 'cost_fuelcycle' in self.input.objectives.keys():
+            ## Evaluate fitness
+                ## If chromosome exists in previous generations, skip call to external code.
+                inactive_solutions = []
                 for soln in self.population.current:
-                    soln.parameters = LWR_fuelcyclecost.get_fuelcycle_cost(soln, self.input)
-            if 'av_fuelenrichment' in self.input.objectives.keys():
+                    try:
+                        soln_index = self.population.archive['solutions'].index(soln.chromosome)
+                        soln.fitness_value = self.population.archive['fitnesses'][soln_index]
+                        soln.parameters = self.population.archive['parameters'][soln_index]
+                        inactive_solutions.append(soln)
+                        self.population.current.remove(soln)
+                        logger.debug(f"Fitness value for solution '{soln.name}' will be taken from archive entry: {soln_index}.")
+                    except ValueError:
+                        continue #chromosome is unique, do nothing.
+                
+                logger.info("Calculating fitness for generation %s...", self.generation.current)
+                ## Execute and parse objective/constraint values
+                self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
+                if 'cost_fuelcycle' in self.input.objectives.keys():
+                    for soln in self.population.current:
+                        soln.parameters = LWR_fuelcyclecost.get_fuelcycle_cost(soln, self.input)
+                if 'av_fuelenrichment' in self.input.objectives.keys():
+                    for soln in self.population.current:
+                        soln.parameters = LWR_averageenrichment.get_avfuelenrichment(soln, self.input)
+                
+                ## Calculate fitness from objective/constriant values
                 for soln in self.population.current:
-                    soln.parameters = LWR_averageenrichment.get_avfuelenrichment(soln, self.input)
-            
-            ## Calculate fitness from objective/constriant values
-            for soln in self.population.current:
-                soln.fitness_value = self.fitness.calculate(soln.parameters)
-            logger.info("Done!")
-            
-            ## Recombine active and inactive solutions.
-            for soln in inactive_solutions:
-                self.population.current.append(soln)
+                    soln.fitness_value = self.fitness.calculate(soln.parameters)
+                logger.info("Done!")
+                
+                ## Recombine active and inactive solutions.
+                for soln in inactive_solutions:
+                    self.population.current.append(soln)
         
         ## Archive results
             for soln in self.population.current:

@@ -1266,9 +1266,9 @@ class Input_Parser():
         if self.code_interface == "polaris624":
             self.nrow = yaml_line_reader(info, 'num_rows', 17)
             self.ncol = yaml_line_reader(info, 'num_cols', self.nrow)
+            self.map_size = yaml_line_reader(info, 'lattice_symmetry', 'SE')
         self.system_type =  yaml_line_reader(info, 'system_type', 'PWR')
         self.pin_pitch = yaml_line_reader(info, 'pin_pitch', 1.26)
-        self.map_size = yaml_line_reader(info, 'lattice_symmetry', 'SE')
         self.box = yaml_line_reader(info, 'box', '0')
         self.hgap = yaml_line_reader(info, 'hgap', '0')
         self.powdens = yaml_line_reader(info, 'powdens', 36) #W/gIHM
@@ -1295,5 +1295,4 @@ class Input_Parser():
             for assembly in self.fa_options['fuel']:
                 if int(self.fa_options['fuel'][assembly]['type']) not in [2, 3, 4, 5, 6, 7]:
                     raise ValueError(f'Assembly {assembly} parameter "type" is incorrect. For NuScale database, types 2-7 exist.')
-                
         return
