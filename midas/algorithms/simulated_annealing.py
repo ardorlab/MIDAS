@@ -30,17 +30,20 @@ class Simulated_Annealing():
         
         Updated by Jake Mikouchi. 04/21/2025
         """
+        logger = logging.getLogger("MIDAS_logger")
+        
     ## Container for holding new list of child chromosomes
         primary_individual = [SA_reproduction.selection(self, self.temperature, pop_list).chromosome]
         individual_pairs = deepcopy(primary_individual)
     ## preserve core parameters 
-        LWR_core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies, self.input.symmetry]
+        core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies, self.input.symmetry]
     ## Perform perturbation
         if self.input.perturbation_type['method'] == "perturb_by_gene":
             individual_pairs.append(SA_reproduction.perturb_by_gene(self.input, primary_individual[0]))
         else:
             raise ValueError("Requested perturbation type not recognized.")
         self.temperature = SA_reproduction.Temperature_update_methods(self, self.temperature, self.input.cooling_schedule)
+        logger.info(f"Updated Temperature: {self.temperature}")
         self.generation += 1
 
         return individual_pairs
@@ -99,15 +102,12 @@ class SA_reproduction():
         
         updated by Jake Mikouchi. ~spring 2025
         """
-        logger = logging.getLogger("MIDAS_logger")
-
         if cooling_schedule == 'exponential_decrease':
             temperature = Cooling_Schedule.exponential_decrease(self.input.update_factor, temperature)
         if cooling_schedule == 'linear_update':
             temperature = Cooling_Schedule.linear_update(self.input.initial_temperature, self.generation, self.input.num_generations)
         if cooling_schedule == 'log_update':
             temperature = Cooling_Schedule.logarithmic_update(self.input.initial_temperature, self.generation)
-        logger.info(f"Updated Temperature: {temperature}")
 
         return temperature 
 
