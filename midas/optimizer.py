@@ -4,6 +4,7 @@ import logging
 from pathlib import Path
 from shutil import rmtree
 from copy import deepcopy
+import multiprocessing as mp
 from multiprocessing import Pool
 from itertools import repeat
 import csv
@@ -111,7 +112,7 @@ class Optimizer():
         
         core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies,
                             self.input.symmetry, self.input.calculation_type]
-        if chromosome:
+        if chromosome is not None:
             soln.chromosome = chromosome
         else: #generate random chromosome
             soln.chromosome = soln.generate_initial(self.input.calculation_type, core_parameters,\
@@ -152,7 +153,7 @@ class Optimizer():
             self.population.current = []
             for i in range(self.population.size):
                 self.population.current.append(self.generate_solution(f'Gen_0_Indv_{i}'))
-            
+            mp.set_start_method("spawn",force=True)
             pool = Pool(processes=self.input.num_procs) #initialize parallel execution
             
     ## Evaluate fitness
@@ -274,10 +275,10 @@ class Optimizer():
             logger.info("Calculating fitness for generation %s...", self.generation.current)
             ## Execute and parse objective/constraint values
             self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
-            if 'cost_fuelcycle' in self.input.objectives.keys():
+            if 'cost_fuelcycle' in self.input.objectives.keys()and self.input.code_interface not in ['serpent','function']:
                 for soln in self.population.current:
                     soln.parameters = LWR_fuelcyclecost.get_fuelcycle_cost(soln, self.input)
-            if 'av_fuelenrichment' in self.input.objectives.keys():
+            if 'av_fuelenrichment' in self.input.objectives.keys() and self.input.code_interface not in ['serpent','function']:
                 for soln in self.population.current:
                     soln.parameters = LWR_averageenrichment.get_avfuelenrichment(soln, self.input)
             
