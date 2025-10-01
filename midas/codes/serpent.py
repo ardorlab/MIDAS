@@ -1,6 +1,8 @@
 import numpy as np
 import logging
 import os
+import time
+import h5py
 import subprocess
 import re
 from pathlib import Path
@@ -16,8 +18,8 @@ logger = logging.getLogger("MIDAS_logger")
 def evaluate(solution, input):
 
     #Predefine exit codes for optional runs so later logic doesn't fail
-    dop_exit_code = 0
-    dep_exit_code = 0
+    dop_exit_code = None
+    dep_exit_code = None
     results_dict = {}
     chromosome = solution.chromosome
     genome = input.genome
@@ -52,9 +54,9 @@ def evaluate(solution, input):
     if not base_dir.exists():
         os.mkdir(base_dir)
     fill_template(input.input_template["loc"], base_file, template_dict)
-    if not doppler_dir.exists() and "doppler_temperature_coefficient" in genome.keys():
+    if not doppler_dir.exists() and "doppler_temperature_coefficient" in input.objectives:
         os.mkdir(doppler_dir)
-    if "doppler_temperature_coefficient" in genome.keys():
+    if "doppler_temperature_coefficient" in input.objectives:
         fill_template(input.input_template["loc"], doppler_file, template_dict)
         update_temp(doppler_file)
     if input.depletion_settings['apply'] and not depletion_dir.exists():
@@ -69,6 +71,7 @@ def evaluate(solution, input):
                 f.write("\ndep butot\n")
             for step in input.depletion_settings['depletion_steps']:
                 f.write(f"{step}\n")
+            f.close()
         #Remove detector lines outside of base case to improve speed
         remove_detector_lines(depletion_file,input.power_peaking_detectors)
     
@@ -78,9 +81,10 @@ def evaluate(solution, input):
             with open(file, "a") as f:
                 if file != depletion_file:
                     f.write(f"\nset pop {input.particles_per_history} {input.active_cycles} {input.inactive_cycles}\n")
-                f.write(f"set acelib {input.xs_lib}\n")
-                f.write(f"set dec {input.dec_lib}\n")
-                f.write(f"set nfylib {input.nfy_lib}\n")
+                f.write(f'set acelib "{input.xs_lib}"\n')
+                f.write(f'set declib "{input.dec_lib}"\n')
+                f.write(f'set nfylib "{input.nfy_lib}"\n')
+                f.close()
     
     #Start depletion calc first since it takes the longest
     sss2cmd = __serpent2exe__
@@ -90,7 +94,7 @@ def evaluate(solution, input):
         dep_process = subprocess.Popen(dep_cmd)
     
     #Unrealistically bad results to return if code fails to drive optimization away from this region
-    fail_results = {'doppler_temperature_coefficient': 5, 'cycle_length': 0, 'cost_fuelcycle': 1000000000000,'total_mass': 1000000000,'fdeltah': 8,'max_doserate':50000}
+    fail_results = {'doppler_temperature_coefficient': 5, 'cycle_length': 0.01, 'cost_fuelcycle': 1000000000000,'total_mass': 1000000000,'fdeltah': 8,'max_doserate':50000}
     #Run base calc and get results
     os.chdir(base_dir)
     base_cmd = dop_cmd = ["mpirun","-np",f"{input.mpi_ranks}",f"{sss2cmd}","-omp",f"{input.omp_threads}","base_input"]
@@ -98,14 +102,14 @@ def evaluate(solution, input):
     base_process.wait()
     base_exit_code = base_process.returncode
     if base_exit_code == 0:
-        base_results = get_serpent_results("base_input_res.m")
-        base_det_results = get_serpent_results("base_input_det0.m")
+        base_results = get_serpent_results(base_dir / "base_input_res.m")
+        if 'max_doserate' in input.objectives:
+            base_det_results = get_serpent_results(base_dir / "base_input_det0.m")
         if input.power_peaking_detectors == 'ppw':
-            peaking_results = base_results["PPW_POW"][:,1::2]
+            peaking_results = base_results["PPW_POW"].flatten()[0::2]
 
         else:
             peaking_results = [] #!TODO: Add parsing logic for going through detector results 
-
         peaking_results = peaking_results[peaking_results != 0]
         mean_pow = np.mean(peaking_results)
         peaking_factors = peaking_results / mean_pow
@@ -133,10 +137,10 @@ def evaluate(solution, input):
         dop_process.wait()
         dop_exit_code = dop_process.returncode
         if dop_exit_code ==0 and base_exit_code == 0:
-            dop_results = get_serpent_results("doppler_input_res.m")
+            dop_results = get_serpent_results(doppler_dir / "doppler_input_res.m")
 
-            rho1 = (base_results["ABS_KEFF"][-1,0] - 1)/base_results["ABS_KEFF"][-1,0]
-            rho2 = (dop_results["ABS_KEFF"][-1,0] - 1)/dop_results["ABS_KEFF"][-1,0]
+            rho1 = (base_results["ABS_KEFF"][0,-1] - 1)/base_results["ABS_KEFF"][0,-1]
+            rho2 = (dop_results["ABS_KEFF"][0,-1] - 1)/dop_results["ABS_KEFF"][0,-1]
 
             results_dict["doppler_temperature_coefficient"] = ((rho2 - rho1) / 50) * 10**5
     
@@ -144,9 +148,9 @@ def evaluate(solution, input):
         dep_process.wait()
         dep_exit_code = dep_process.returncode
         if dep_exit_code == 0 and dop_exit_code == 0 and base_exit_code == 0:
-            dep_results = get_serpent_results("depletion_input_res.m")
-            burn_days = dep_results["BURN_DAYS"][:,0]
-            burn_keff = dep_results["ABS_KEFF"][:,0]
+            dep_results = get_serpent_results(depletion_dir / "depletion_input_res.m")
+            burn_days = dep_results["BURN_DAYS"][0,:]
+            burn_keff = dep_results["ABS_KEFF"][0,:]
     
             burn_days = np.unique(burn_days)
             burn_keff = np.unique(burn_keff)
@@ -155,9 +159,10 @@ def evaluate(solution, input):
     
     if 'cost_fuelcycle' in input.objectives and dep_exit_code == 0 and dop_exit_code == 0 and base_exit_code == 0:
         hm_frac = get_heavy_metal_percent(base_file)
-        cycle_cost = fuelcyclecost.calc_fuelcost_triso(template_dict["enrichment"],(mass_dict['fuel']*453.6/1000)*hm_frac)
+        cycle_cost = fuelcyclecost.calc_fuelcost_triso(template_dict["enrichment"]/100,(mass_dict['fuel']*453.6/1000)*hm_frac)
         results_dict['cost_fuelcycle'] = cycle_cost
-    else:
+
+    if dep_exit_code != 0 or dop_exit_code != 0 or base_exit_code != 0:
         results_dict = fail_results
     
     for key, value in results_dict.items():
@@ -165,6 +170,13 @@ def evaluate(solution, input):
             solution.parameters[key]["value"] = value
         else:
             logger.info(f"Objective {key} is available in serpent but not currently used by the optimization")
+
+    if depletion_dir.exists() and dep_process.poll():
+        dep_process.kill()
+    if base_process.poll():
+        base_process.kill()
+    if doppler_dir.exists() and dop_process.poll():
+        dop_process.kill()
 
     return solution
 
@@ -199,20 +211,52 @@ def fill_template(template_path, output_path, template_dict):
 
 def get_serpent_results(output_file):
 
-    #Run .m file in matlab to convert into a python-readable .mat file
-    subprocess.run(["matlab",
-    "-nodisplay","-nosplash","-nodesktop",
-    "-r",f"run('{output_file}'); save('{output_file}.mat'); exit"])
+    wait_for_file(output_file)
 
-    data = loadmat(f"{output_file}.mat")
+    #Run .m file in matlab to convert into a python-readable .mat file
+    p = subprocess.run(["matlab",
+    "-nodisplay","-nosplash","-nodesktop",
+    "-batch",f"run('{output_file}'); save('{output_file}.mat','-v7.3'); exit"])
+    
+    if p.returncode!=0:
+        print(f"Matlab stdout: {p.stdout}")
+        print(f"Matlab stderr: {p.stderr}")
+        raise ValueError("Matlab did not run right")
+
+    def load_matlab_h5py(path):
+        data = {}
+        with h5py.File(path, 'r') as f:
+            def recurse(name, obj):
+                if isinstance(obj, h5py.Dataset):
+                    data[name]=obj[()]
+            f.visititems(recurse)
+        return data
+
+    data = load_matlab_h5py(f'{output_file}.mat')
 
     return data
+
+def wait_for_file(filepath, timeout=300, check_interval=5):
+    """Wait until file exists and stops growing."""
+    start = time.time()
+    last_size = -1
+
+    while time.time() - start < timeout:
+        if os.path.exists(filepath):
+            size = os.path.getsize(filepath)
+            if size > 0 and size == last_size:
+                return True  # file is done being written
+            last_size = size
+        time.sleep(check_interval)
+
+    raise TimeoutError(f"File {filepath} not ready after {timeout} seconds")
 
 def update_temp(filename):
     tmp_pattern = re.compile(r"(tmp\s+)([-+]?\d*\.?\d+)", re.IGNORECASE)
 
     with open(filename, "r") as f:
         lines = f.readlines()
+        f.close()
 
     updated_lines = []
     for line in lines:
@@ -230,9 +274,7 @@ def update_temp(filename):
 
     with open(filename, "w") as f:
         f.writelines(updated_lines)
-
-import re
-from pathlib import Path
+        f.close()
 
 def get_masses(filepath):
     """
@@ -273,7 +315,7 @@ def get_masses(filepath):
                 if match_mass:
                     masses[current_material] = float(match_mass.group(1))
                     current_material = None  # done with this material
-
+        f.close()
     return masses
 
 def remove_detector_lines(filepath, detector):
@@ -293,6 +335,7 @@ def remove_detector_lines(filepath, detector):
     # Read all lines
     with filepath.open("r") as f:
         lines = f.readlines()
+        f.close()
 
     # Determine lines to remove
     if detector == 'ppw':
@@ -306,6 +349,7 @@ def remove_detector_lines(filepath, detector):
     # Write back
     with filepath.open("w") as f:
         f.writelines(new_lines)
+        f.close()
 
 def get_heavy_metal_percent(filepath):
     """
@@ -315,6 +359,7 @@ def get_heavy_metal_percent(filepath):
     """
     with open(filepath, "r") as f:
         lines = f.readlines()
+        f.close()
 
     masses = {}
     mat_name = None
@@ -331,8 +376,9 @@ def get_heavy_metal_percent(filepath):
         match = iso_pattern.match(line)
         if match:
             zaid, frac, _ = match.groups()
-            Z = int(zaid[:-3]) // 1000     # first digits = Z
-            A = int(zaid[:-3]) % 1000      # last 3 = mass number
+            ZAI = int(zaid)
+            Z = int(ZAI // 1000)     # first digits = Z
+            A = int(ZAI % 1000)      # last 3 = mass number
 
             frac = float(frac)
 
@@ -356,6 +402,5 @@ def get_heavy_metal_percent(filepath):
     upu_mass = sum(abs(frac) for (Z, A), (frac, _) in fractions.items() if Z in [92, 94])
 
     # Weight percent
-    weight_percent = (upu_mass / total_mass) * 100.0
-
+    weight_percent = (upu_mass / total_mass)
     return weight_percent
