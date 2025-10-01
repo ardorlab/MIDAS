@@ -136,6 +136,7 @@ def evaluate(solution, input):
         dop_process = subprocess.Popen(dop_cmd)
         dop_process.wait()
         dop_exit_code = dop_process.returncode
+        dop_process.terminate()
         if dop_exit_code ==0 and base_exit_code == 0:
             dop_results = get_serpent_results(doppler_dir / "doppler_input_res.m")
 
@@ -233,6 +234,9 @@ def get_serpent_results(output_file):
         return data
 
     data = load_matlab_h5py(f'{output_file}.mat')
+
+    if p.poll():
+        p.kill()
 
     return data
 

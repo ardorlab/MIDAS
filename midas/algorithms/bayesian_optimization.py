@@ -350,10 +350,10 @@ class Bayesian_Optimization:
                 if 'normalized_discrete_range' in value:
                     idx = value['index']  # where this param lives in candidate
                     valid_vals = value['normalized_discrete_range']
-            
+
                     # Find the nearest valid value
                     nearest_val = min(valid_vals, key=lambda v: abs(v - candidate[idx]))
-            
+
                     # Replace candidate value with the nearest allowed one
                     candidate[idx] = nearest_val
 
