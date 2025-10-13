@@ -113,6 +113,34 @@ class Optimizer():
                                                     self.input.genome, self.input.batches) #'batches' is None when not applicable.
 
         return soln
+    
+    def get_initial_population(self, i):
+        """
+        Function for retrieving individuals from the inital population provided in a csv file.
+        If no initial population is provided then the chromosomes will default to None and the intial population will be randomly generated.
+
+        Written by Jake Mikouchi 10/13/2025
+        """
+        chromosome = None # returns none if no initial population is provided
+        # check if initial population file is provided
+        if self.input.initial_population: 
+            # read csv
+            with open(self.input.initial_population, 'r', newline='') as csvfile:
+                init_pop_holder = csv.reader(csvfile)
+                init_pop_holder = [indiv for indiv in init_pop_holder]
+            # ensures no reading errors
+            if i < len(init_pop_holder):
+                chromosome = init_pop_holder[i]
+            
+            # check validity of provided solutions
+            if chromosome:
+                if self.input.fa_options: #TODO add check for other variable types besides assemblies
+                    assembly_types = list(self.input.fa_options['fuel'].keys())
+                    for gene in chromosome: 
+                        if gene not in assembly_types: 
+                            raise ValueError(f"Gene '{gene}' in initial solution {i+1} is not defined in YAML file. Check provided solutions. ")
+
+        return chromosome
 
     def main(self, restart=False):
         """
@@ -144,17 +172,19 @@ class Optimizer():
             
     ## Initialize beginning population
             self.population.current = []
+            
             if self.input.methodology == 'simulated_annealing' and self.input.num_procs > 1:
                 # for parallel simulated annealing the initial population is the size of the buffer
                 logger.info("Generating initial population of %s individuals...", self.input.buffer_size)
                 for i in range(self.input.buffer_size):
-                    self.population.current.append(self.generate_solution(f'Gen_0_Indv_{i}'))
+                    chromosome = self.get_initial_population(i) 
+                    self.population.current.append(self.generate_solution(f'Gen_0_Indv_{i}', chromosome))
             else:
                 logger.info("Generating initial population of %s individuals...", self.input.population_size)
                 for i in range(self.population.size):
-                    self.population.current.append(self.generate_solution(f'Gen_0_Indv_{i}'))
+                    chromosome = self.get_initial_population(i) 
+                    self.population.current.append(self.generate_solution(f'Gen_0_Indv_{i}', chromosome))
             pool = Pool(processes=self.input.num_procs) #initialize parallel execution
-            
     ## Evaluate fitness
             logger.info("Calculating fitness for generation %s...", self.generation.current)
             ## Execute and parse objective/constraint values
@@ -203,7 +233,6 @@ class Optimizer():
                     csvwriter.writerow(soln_result_list)
                 if i == best_soln_index:
                     best_soln_string = ",".join(soln_result_list)
-            
             
             logger.info("Generation %s Best Individual:", self.generation.current)
             logger.info(', '.join(archive_header)+'\n'+best_soln_string+'\n')
@@ -357,6 +386,10 @@ class Optimizer():
         logger.info("Best solution found in optimization: \n")
         for key in best_solution_info:
             logger.info(f'{key}: {best_solution_info[key]}')
+            
+        with open("best_solution_chromosome.csv", 'w') as csvfile:
+            csvwriter = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
+            csvwriter.writerow(best_solution_info['Chromosome'])
         
         statistics = optimization_information.optimization_statistics()
         last_gen_key = max(statistics.keys(), key=lambda x: int(x.split('_')[1]))  # Extracts last generation key
