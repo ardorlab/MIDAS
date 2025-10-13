@@ -117,6 +117,7 @@ class Optimizer():
     def get_initial_population(self, i):
         """
         Function for retrieving individuals from the inital population provided in a csv file.
+        If no initial population is provided then the chromosomes will default to None and the intial population will be randomly generated.
 
         Written by Jake Mikouchi 10/13/2025
         """
