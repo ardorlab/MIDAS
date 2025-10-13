@@ -113,6 +113,10 @@ def validate_input(keyword, value):
         else:
             raise ValueError("convergence_plot only takes true or false as entries")
     
+    elif keyword == 'initial_population':
+        if value:
+            value = Path(str(value))
+    
 ## Optimization Block ##
     elif keyword == 'population_size':
         try:
@@ -729,7 +733,7 @@ def validate_input(keyword, value):
                             logger.warning(f"Continuous variable increment for '{new_key}' is large relative to the range. Is this intentional?")
         return new_dict
     
-    elif keyword in ['assembly_parameters', 'batches']:
+    elif keyword in ['lattice_parameters', 'assembly_parameters', 'batches']:
         new_dict = {}
         if isinstance(value, dict):
             for key, item in value.items():
@@ -790,6 +794,7 @@ def validate_input(keyword, value):
                         batch_num = int(new_key[-1])
                     except ValueError:
                         raise ValueError("Please restrict the 'batches' names to the form e.g. 'batch 0' (zero-indexed).")
+
             return new_dict
         else:
             if not value:
@@ -1094,6 +1099,7 @@ class Input_Parser():
         self.calculation_type = yaml_line_reader(info, 'calc_type', 'single_cycle')
         self.statistics_plots = yaml_line_reader(info, 'statistics_plots', True)
         self.convergence_plot = yaml_line_reader(info, 'convergence_plot', True)
+        self.initial_population = yaml_line_reader(info, 'initial_population', None)
         if self.input_template['apply'] and self.code_interface == 'parcs343':
             parcs343_template_check(self)
     ## Optimization Block ##
@@ -1177,8 +1183,10 @@ class Input_Parser():
         except KeyError:
             info = None
         
-        if self.calculation_type in ['single_cycle','eq_cycle','lattice_physics']:
+        if self.calculation_type in ['single_cycle','eq_cycle']:
             self.genome = yaml_line_reader(info, 'assembly_parameters', None)
+        elif self.calculation_type in ['lattice_physics']:
+            self.genome = yaml_line_reader(info, 'lattice_parameters', None)
         elif self.calculation_type in ['continuous_variable']:
             self.genome = yaml_line_reader(info, 'parameters', None)
             #Create a list of possible values a gene can take for discrete ranges
