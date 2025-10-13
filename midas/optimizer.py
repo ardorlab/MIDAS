@@ -114,11 +114,15 @@ class Optimizer():
 
         return soln
     
-    def retrieve_provided_population(self, i):
+    def get_initial_population(self, i):
+        """
+        Function for retrieving individuals from the inital population provided in a csv file.
+
+        Written by Jake Mikouchi 10/13/2025
+        """
+        chromosome = None # returns none if no initial population is provided
         # check if initial population file is provided
-        chromosome = None
-        if self.input.initial_population:
-            
+        if self.input.initial_population: 
             # read csv
             with open(self.input.initial_population, 'r', newline='') as csvfile:
                 init_pop_holder = csv.reader(csvfile)
@@ -167,16 +171,17 @@ class Optimizer():
             
     ## Initialize beginning population
             self.population.current = []
+            
             if self.input.methodology == 'simulated_annealing' and self.input.num_procs > 1:
                 # for parallel simulated annealing the initial population is the size of the buffer
                 logger.info("Generating initial population of %s individuals...", self.input.buffer_size)
                 for i in range(self.input.buffer_size):
-                    chromosome = self.retrieve_provided_population(i) 
-                    self.population.current.append(self.generate_solution(f'Gen_0_Indv_{i}', None))
+                    chromosome = self.get_initial_population(i) 
+                    self.population.current.append(self.generate_solution(f'Gen_0_Indv_{i}', chromosome))
             else:
                 logger.info("Generating initial population of %s individuals...", self.input.population_size)
                 for i in range(self.population.size):
-                    chromosome = self.retrieve_provided_population(i) 
+                    chromosome = self.get_initial_population(i) 
                     self.population.current.append(self.generate_solution(f'Gen_0_Indv_{i}', chromosome))
             pool = Pool(processes=self.input.num_procs) #initialize parallel execution
     ## Evaluate fitness

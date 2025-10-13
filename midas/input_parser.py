@@ -1183,9 +1183,9 @@ class Input_Parser():
         except KeyError:
             info = None
         
-        if self.calculation_type in ['single_cycle','eq_cycle','lattice_physics']:
+        if self.calculation_type in ['single_cycle','eq_cycle']:
             self.genome = yaml_line_reader(info, 'assembly_parameters', None)
-        if self.calculation_type in ['lattice_physics']:
+        elif self.calculation_type in ['lattice_physics']:
             self.genome = yaml_line_reader(info, 'lattice_parameters', None)
         elif self.calculation_type in ['continuous_variable']:
             self.genome = yaml_line_reader(info, 'parameters', None)
