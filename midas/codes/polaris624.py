@@ -40,8 +40,8 @@ def evaluate(solution, input):
         ofile.write("=polaris\n")
         ofile.write("%\ntitle \"MIDAS Lattice Physics Calculation\"\n%\n")
         ofile.write("% Cross Section Library alias\n")
-        ofile.write("lib \"{}\"\n%\n".format("fine_therm")) #!TODO: this value needs to be parameterized.
-        ofile.write("system {}\n%\n".format(input.system_type)) #!TODO: this value needs to be parameterized.
+        ofile.write("lib \"{}\"\n%\n".format(input.xs_library)) 
+        ofile.write("system {}\n%\n".format(input.system_type)) 
     
     ## Geometry Block ##
     with open(filename,"a") as ofile:
@@ -93,6 +93,13 @@ def evaluate(solution, input):
                 ofile.write("\n")
             ofile.write("\n")
         else: # assume full lattice
+            for y in range(int(input.ncol)):
+                ofile.write("   ")
+                for x in range(int(input.nrow)):
+                    index = int(y*input.nrow + x)
+                    ofile.write(" " + str(input.pin_options['rod_geometries'][solution.chromosome[index]]['type']))
+                ofile.write("\n")
+            ofile.write("\n")
             pass #!TODO: repeat above in all quadrants
 
         if 'control_rods' in input.pin_options.keys(): # control rod bank map
@@ -141,7 +148,21 @@ def evaluate(solution, input):
                     ofile.write("\n")
                 ofile.write("\n")
             else: # assume full lattice
-                pass #!TODO: repeat above in all quadrants
+                for y in range(int(input.ncol)):
+                    ofile.write("   ")
+                    for x in range(int(input.nrow)):
+                        index = int(y*input.nrow + x)
+                        _searching = True
+                        for rod in input.pin_options['control_rods']:
+                            if solution.chromosome[index] == input.pin_options['control_rods'][rod]['guide_tube']:
+                                ofile.write(" " + str(input.pin_options['control_rods'][rod]['type']))
+                                _searching = False
+                                break
+                        if _searching:
+                            ofile.write(" _")
+                    ofile.write("\n")
+                ofile.write("\n%\n")
+                pass #!TODO: repeat above in all quadrants, only SE is available in Polaris?
     
     ## Materials Block ##
     with open(filename,"a") as ofile:
