@@ -100,7 +100,6 @@ def evaluate(solution, input):
                     ofile.write(" " + str(input.pin_options['rod_geometries'][solution.chromosome[index]]['type']))
                 ofile.write("\n")
             ofile.write("\n")
-            pass #!TODO: repeat above in all quadrants
 
         if 'control_rods' in input.pin_options.keys(): # control rod bank map
             ofile.write("control BankA : RODLET\n")
@@ -162,7 +161,6 @@ def evaluate(solution, input):
                             ofile.write(" _")
                     ofile.write("\n")
                 ofile.write("\n%\n")
-                pass #!TODO: repeat above in all quadrants, only SE is available in Polaris?
     
     ## Materials Block ##
     with open(filename,"a") as ofile:

@@ -954,6 +954,9 @@ def validate_input(keyword, value):
     
     elif keyword == 'system_type':
         value = str(value).upper().strip()
+    
+    elif keyword == 'xs_library':
+        value = str(value).upper().strip()
 
     elif keyword == 'num_rows':
         value = int(value)
