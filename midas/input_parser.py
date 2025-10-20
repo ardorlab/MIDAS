@@ -954,6 +954,9 @@ def validate_input(keyword, value):
     
     elif keyword == 'system_type':
         value = str(value).upper().strip()
+    
+    elif keyword == 'xs_library':
+        value = str(value).upper().strip()
 
     elif keyword == 'num_rows':
         value = int(value)
@@ -1276,6 +1279,7 @@ class Input_Parser():
             self.ncol = yaml_line_reader(info, 'num_cols', self.nrow)
             self.map_size = yaml_line_reader(info, 'lattice_symmetry', 'SE')
         self.system_type =  yaml_line_reader(info, 'system_type', 'PWR')
+        self.xs_library = yaml_line_reader(info, 'xs_library', 'fine_therm') # May suffer from / need similar changes as PARCS XS library handling
         self.pin_pitch = yaml_line_reader(info, 'pin_pitch', 1.26)
         self.box = yaml_line_reader(info, 'box', '0')
         self.hgap = yaml_line_reader(info, 'hgap', '0')
