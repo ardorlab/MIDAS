@@ -165,7 +165,7 @@ def without_template(solution, input, cwd, filename):
                 ofile.write("      INT_TH     T -1\n")
             else: 
                 ofile.write("      TH_FDBK    T\n")
-                ofile.write(f"      INT_TH     T 1 '{cwd.joinpath(cwd / input.th_fdbk['loc'])}'\n")
+                ofile.write(f"      INT_TH     T 1 '{input.th_fdbk['loc']}'\n")
         else:
             ofile.write("      TH_FDBK    F\n")
         ofile.write("      CORE_POWER 100.0\n")
