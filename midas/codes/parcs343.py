@@ -517,7 +517,7 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
         results_dict["pinpowerpeaking"]["value"] = max(fq_list)
         results_dict["fdeltah"]["value"] = max(fdh_list)
         results_dict["max_boron"]["value"] = max(boron_list)
-        results_dict["chfr"]["value"] = max(chfr)
+        results_dict["chfr"]["value"] = min(chfr)
         
         results_dict["keff_min"]["value"] = min(keff_list)
         results_dict["keff_max"]["value"] = max(keff_list)
