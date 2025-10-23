@@ -185,6 +185,7 @@ def validate_input(keyword, value):
                                    'keff_max',
                                    'keff_diff',
                                    'cpr',
+                                   'chfr',
                                    'lhgr',
                                    'aplhgr',
                                    'max_doserate',

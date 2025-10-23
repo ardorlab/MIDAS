@@ -165,7 +165,7 @@ def without_template(solution, input, cwd, filename):
                 ofile.write("      INT_TH     T -1\n")
             else: 
                 ofile.write("      TH_FDBK    T\n")
-                ofile.write(f"      INT_TH     T 1 '{cwd.joinpath(cwd / input.th_fdbk['loc'])}'\n")
+                ofile.write(f"      INT_TH     T 1 '{input.th_fdbk['loc']}'\n")
         else:
             ofile.write("      TH_FDBK    F\n")
         ofile.write("      CORE_POWER 100.0\n")
@@ -461,7 +461,7 @@ def with_template(solution, input, cwd, filename):
                         ofile.write("      TH_FDBK    T\n")
                         ofile.write("      INT_TH     T -1\n")
                     else: 
-                        ofile.write(f"      INT_TH     T 1 '{cwd.joinpath(cwd / input.th_fdbk['loc'])}'\n")
+                        ofile.write(f"      INT_TH     T 1 '{input.th_fdbk['loc']}'\n")
                 else:
                     ofile.write("      TH_FDBK    F\n")
 
@@ -481,7 +481,7 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
     ## Prepare container for results
     results_dict = {}
     for res in ["cycle_length", "pinpowerpeaking", "fdeltah",'pxyz', 'pxy', "max_boron", 
-                        "keff_min", "keff_max", "keff_diff", "cpr", "lhgr", "aplhgr"]:
+                        "keff_min", "keff_max", "keff_diff", "cpr", "lhgr", "aplhgr", "chfr"]:
         results_dict[res] = {}
         results_dict[res]['value'] = []
         
@@ -496,7 +496,7 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
         res_str = res_str[0].split('\n')
         
         ## Parse raw values by timestep
-        efpd_list = []; boron_list = []; keff_list = []; pxy_list = []; pxyz_list = []; fq_list = []; fdh_list = [] 
+        efpd_list = []; boron_list = []; keff_list = []; pxy_list = []; pxyz_list = []; fq_list = []; fdh_list = []; chfr = []
         for i in range(2, len(res_str)-1):
             res_val=res_str[i].split()
             
@@ -507,6 +507,7 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
             pxy_list.append(float(res_val[6]))
             fdh_list.append(float(res_val[21]))
             fq_list.append(float(res_val[22]))
+            chfr.append(float(res_val[23]))
         
         del filestr, res_str, res_val #unload file contents to clean up memory
         
@@ -516,6 +517,7 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
         results_dict["pinpowerpeaking"]["value"] = max(fq_list)
         results_dict["fdeltah"]["value"] = max(fdh_list)
         results_dict["max_boron"]["value"] = max(boron_list)
+        results_dict["chfr"]["value"] = max(chfr)
         
         results_dict["keff_min"]["value"] = min(keff_list)
         results_dict["keff_max"]["value"] = max(keff_list)
@@ -549,6 +551,7 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
         results_dict["pxy"]["value"] = 10.0
         results_dict["pxyz"]["value"] = 10.0
         results_dict["max_boron"]["value"] = 10000
+        results_dict["chfr"]["value"] = 0.0
         results_dict["keff_min"]["value"] = 0.0
         results_dict["keff_max"]["value"] = 10.0
         results_dict["keff_diff"]["value"] = 10.0
