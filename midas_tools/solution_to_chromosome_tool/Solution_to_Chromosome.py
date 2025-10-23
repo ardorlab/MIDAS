@@ -409,7 +409,19 @@ class Solution_to_Chromosome():
                                         # contruct gene which contains batch number and index from which the assembly came from
                                         if solution_holder[loc_row_index][loc_col_index] == batch_holder:
                                             chromosome[index][0] = parameter_types["batches"][batch_index+1]
-                                            chromosome[index][1] =  sum(len(row) for row in solution_holder[:loc_row_index]) + loc_col_index 
+                                            solution_index_sum = 0 
+                                            stop = False
+                                            for k in range(len(solution_holder)):
+                                                for l in range(len(solution_holder[k])):   
+                                                    if l <= k: 
+                                                        solution_index_sum += 1
+                                                    if k == loc_row_index and l == loc_col_index:
+                                                        stop = True
+                                                        break
+                                                if stop:
+                                                    break
+                                            chromosome[index][1] =  solution_index_sum -1 #+ loc_col_index 
+
                                             solution_holder[i][j] = batch_holder + 10 
                                     index += 1
                         batch_holder += 10 
