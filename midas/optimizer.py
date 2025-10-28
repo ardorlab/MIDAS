@@ -146,7 +146,10 @@ class Optimizer():
                     batch_types = list(self.input.batches.keys())
                     # convert strings to tuples
                     for j in range(len(chromosome)):
-                        chromosome[j] =  ast.literal_eval(chromosome[j])
+                        try:
+                            chromosome[j] =  ast.literal_eval(chromosome[j])
+                        except:
+                            raise ValueError(f'Error in provided chromosome at index {j}, {chromosome[j]}. Check if chromosome structure is correct. ')
                     for gene in chromosome: 
                         if gene[0] not in batch_types: 
                             raise ValueError(f"Batch name '{gene[0]}' in initial solution {i+1} is not defined in YAML file. Check provided solutions. ")
