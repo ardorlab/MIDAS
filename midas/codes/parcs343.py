@@ -435,6 +435,7 @@ def with_template(solution, input, cwd, filename):
 ## copy input file from template
     inp_template = str(cwd.joinpath(cwd / input.input_template['loc']))
     shutil.copy(inp_template, filename)
+    soln_full_core_lattice = prepare_shuffling_map(input, solution.chromosome)
 
     with open(filename, "r") as file:
         lines = file.readlines()  
@@ -464,10 +465,36 @@ def with_template(solution, input, cwd, filename):
                         ofile.write(f"      INT_TH     T 1 '{input.th_fdbk['loc']}'\n")
                 else:
                     ofile.write("      TH_FDBK    F\n")
+            # add shuffling map
+            elif ("location" in line.lower() and "!" not in line.lower()) and input.calculation_type in ['eq_cycle']:
+                ofile.write("      LOCATION  0\n")
+                for x in range(input.full_core_locs.shape[0]):
+                    ofile.write("      ")
+                    for y in range(input.full_core_locs.shape[1]):
+                        val = input.full_core_locs[x,y]
+                        try:
+                            if not np.isnan(val):
+                                ofile.write(str(input.full_core_locs[x,y]))
+                                ofile.write("  ")
+                        except TypeError:
+                            ofile.write(str(input.full_core_locs[x,y]))
+                            ofile.write("  ")
+                    ofile.write("\n")
+                ofile.write("\n")
+            
+            elif ("shuf_map" in line.lower() and "!" not in line.lower()) and input.calculation_type in ['eq_cycle']:
+                ofile.write("      SHUF_MAP 1 1\n")
+                for x in range(soln_full_core_lattice.shape[0]):
+                    ofile.write("      ")
+                    for y in range(soln_full_core_lattice.shape[1]):
+                        val = soln_full_core_lattice[x,y]
+                        ofile.write(str(soln_full_core_lattice[x,y]))
+                        ofile.write("  ")
+                    ofile.write('\n')
+                ofile.write('\n')
 
             else:
-                ofile.write(line)     
-
+                ofile.write(line)   
 
 
 def get_results(parameters, filename, job_failed=False): #!TODO: implement pin power reconstruction.
