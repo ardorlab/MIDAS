@@ -19,6 +19,7 @@ for different M number of random trials of a problem size of N=10:
 
 import numpy as np
 import logging
+import os
 
 ## Initialize logging for the present file
 logger = logging.getLogger("MIDAS_logger")
@@ -29,6 +30,11 @@ def evaluate(solution, input):
 
     Written by Gregory Delipei. 09/10/2025
     """
+    
+    #Create results directory if it doesn't exist
+    results_path = os.path.join(input.results_dir_name, solution.name)
+    os.makedirs(results_path, exist_ok=True)
+    
     #Create separate dictionary with parameters
     new_dict = {}
     new_dict["list_sum"] = list_summation(np.array(solution.chromosome, dtype=int))
@@ -38,12 +44,11 @@ def evaluate(solution, input):
         if key in input.objectives:
             solution.parameters[key]["value"] = new_dict[key]
         else:
-            logger.info(f'Parameter {key} is available in NuScale database but not currently used')
+            logger.info(f'Parameter {key} is not used')
     return solution
 
 def list_summation(list_solution):
     return np.sum(list_solution)
-
 
 def random_best_solution(M):
     current_best_solution = None
