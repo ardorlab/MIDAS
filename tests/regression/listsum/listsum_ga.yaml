@@ -1,11 +1,12 @@
 ## Optimizer Block
 general:
-  optimizer: simulated_annealing
-  code_type: test_listsum
+  optimizer: genetic_algorithm
+  code_type: listsum
   results_directory_name: output_files
 
 optimization:
-  number_of_generations: 1000
+  population_size: 50
+  number_of_generations: 100
   objectives:
     list_sum:
       goal: maximize
@@ -13,8 +14,17 @@ optimization:
 
 ## Algorithm Settings
 algorithm:
-  cooling_schedule: linear_update
-  temperature: 10.
+  selection:
+    fitness: weighted
+    method: tournament #tournament or roulette
+  reproducer: standard
+  crossover:
+    method: two_point
+    crossover_rate: 0.5
+    num_swaps: 2
+  elites: 10
+  mutation_type: mutate_by_gene
+  mutation_rate: 0.25, 0.55
 
 ## Fuel Assembly Parts
 assembly_options:
@@ -70,7 +80,7 @@ assembly_options:
 ## Genome
 decision_variables:
   # parameters used to fill each chromosome.
-  parameters:
+  assembly_parameters:
     0:
       map: &ID001
         [1,1,1,1,1,1,1,1,1,1]

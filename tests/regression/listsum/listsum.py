@@ -65,7 +65,7 @@ if __name__ == "__main__":
 
 
     # Evaluate average performance for random search
-    M = 100000
+    M = 1000
     Mout = 100
     rnd_solutions_list = []
     rnd_fitnesses_list = []
