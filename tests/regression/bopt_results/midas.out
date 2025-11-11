@@ -1,0 +1,539 @@
+
+ .----------------.  .----------------.  .----------------.  .----------------.  .----------------.   
+| .--------------. || .--------------. || .--------------. || .--------------. || .--------------. |  
+| | ____    ____ | || |     _____    | || |  ________    | || |      __      | || |    _______   | |  
+| ||_   \  /   _|| || |    |_   _|   | || | |_   ___ `.  | || |     /  \     | || |   /  ___  |  | |  
+| |  |   \/   |  | || |      | |     | || |   | |   `. \ | || |    / /\ \    | || |  |  (__ \_|  | |  
+| |  | |\  /| |  | || |      | |     | || |   | |    | | | || |   / ____ \   | || |   '.___`-.   | |  
+| | _| |_\/_| |_ | || |     _| |_    | || |  _| |___.' / | || | _/ /    \ \_ | || |  |`\____) |  | |  
+| ||_____||_____|| || |    |_____|   | || | |________.'  | || ||____|  |____|| || |  |_______.'  | |  
+| |              | || |              | || |              | || |              | || |              | |  
+| '--------------' || '--------------' || '--------------' || '--------------' || '--------------' |  
+ '----------------'  '----------------'  '----------------'  '----------------'  '----------------'  
+
+MIDAS Version 0.2.3
+
+
+====================================================================================================
+
+Parsed input file: .\test_listsum_bayesopt.yaml
+Set global RNG Seed: 6172331822690781143
+Completed Optimizer assembly.
+Begin Optimization...
+
+Generating initial population of 20 individuals...
+Calculating fitness for generation 0...
+Done!
+Generation 0 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+0,5,64.000,64.000,5,0,9,7,8,9,8,7,7,4
+
+Clearing all but best solution files for Generation 0...
+Done!
+
+Creating population of 20 individuals for generation 1...
+Calculating fitness for generation 1...
+Done!
+Generation 1 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+1,15,77.000,77.000,1,9,4,9,9,9,9,9,9,9
+
+Clearing all but best solution files for Generation 1...
+Done!
+
+Creating population of 20 individuals for generation 2...
+Calculating fitness for generation 2...
+Done!
+Generation 2 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+2,18,87.000,87.000,7,8,9,9,9,9,9,9,9,9
+
+Clearing all but best solution files for Generation 2...
+Done!
+
+Creating population of 20 individuals for generation 3...
+Calculating fitness for generation 3...
+Done!
+Generation 3 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+3,14,81.000,81.000,9,9,1,8,9,9,9,9,9,9
+
+Clearing all but best solution files for Generation 3...
+Done!
+
+Creating population of 20 individuals for generation 4...
+Calculating fitness for generation 4...
+Done!
+Generation 4 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+4,0,86.000,86.000,9,9,9,9,9,9,9,8,9,6
+
+Clearing all but best solution files for Generation 4...
+Done!
+
+Creating population of 20 individuals for generation 5...
+Calculating fitness for generation 5...
+Done!
+Generation 5 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+5,0,85.000,85.000,9,9,9,9,9,4,9,9,9,9
+
+Clearing all but best solution files for Generation 5...
+Done!
+
+Creating population of 20 individuals for generation 6...
+Calculating fitness for generation 6...
+Done!
+Generation 6 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+6,11,82.000,82.000,9,9,9,8,6,5,9,9,9,9
+
+Clearing all but best solution files for Generation 6...
+Done!
+
+Creating population of 20 individuals for generation 7...
+Calculating fitness for generation 7...
+Done!
+Generation 7 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+7,18,77.000,77.000,9,7,9,9,9,1,9,9,6,9
+
+Clearing all but best solution files for Generation 7...
+Done!
+
+Creating population of 20 individuals for generation 8...
+Calculating fitness for generation 8...
+Done!
+Generation 8 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+8,17,83.000,83.000,9,9,9,9,9,9,9,9,2,9
+
+Clearing all but best solution files for Generation 8...
+Done!
+
+Creating population of 20 individuals for generation 9...
+Calculating fitness for generation 9...
+Done!
+Generation 9 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+9,3,82.000,82.000,9,9,9,9,9,9,1,9,9,9
+
+Clearing all but best solution files for Generation 9...
+Done!
+
+Creating population of 20 individuals for generation 10...
+Calculating fitness for generation 10...
+Done!
+Generation 10 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+10,11,84.000,84.000,9,8,9,9,4,9,9,9,9,9
+
+Clearing all but best solution files for Generation 10...
+Done!
+
+Creating population of 20 individuals for generation 11...
+Calculating fitness for generation 11...
+Done!
+Generation 11 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+11,10,82.000,82.000,8,2,9,9,9,9,9,9,9,9
+
+Clearing all but best solution files for Generation 11...
+Done!
+
+Creating population of 20 individuals for generation 12...
+Calculating fitness for generation 12...
+Done!
+Generation 12 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+12,6,88.000,88.000,9,8,9,8,9,9,9,9,9,9
+
+Clearing all but best solution files for Generation 12...
+Done!
+
+Creating population of 20 individuals for generation 13...
+Calculating fitness for generation 13...
+Done!
+Generation 13 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+13,19,85.000,85.000,9,4,9,9,9,9,9,9,9,9
+
+Clearing all but best solution files for Generation 13...
+Done!
+
+Creating population of 20 individuals for generation 14...
+Calculating fitness for generation 14...
+Done!
+Generation 14 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+14,0,90.000,90.000,9,9,9,9,9,9,9,9,9,9
+
+Clearing all but best solution files for Generation 14...
+Done!
+
+Creating population of 20 individuals for generation 15...
+Calculating fitness for generation 15...
+Done!
+Generation 15 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+15,4,85.000,85.000,7,9,9,6,9,9,9,9,9,9
+
+Clearing all but best solution files for Generation 15...
+Done!
+
+Creating population of 20 individuals for generation 16...
+Calculating fitness for generation 16...
+Done!
+Generation 16 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+16,1,79.000,79.000,9,9,9,8,6,8,9,9,8,4
+
+Clearing all but best solution files for Generation 16...
+Done!
+
+Creating population of 20 individuals for generation 17...
+Calculating fitness for generation 17...
+Done!
+Generation 17 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+17,4,82.000,82.000,9,9,9,3,9,9,7,9,9,9
+
+Clearing all but best solution files for Generation 17...
+Done!
+
+Creating population of 20 individuals for generation 18...
+Calculating fitness for generation 18...
+Done!
+Generation 18 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+18,9,87.000,87.000,9,8,9,9,7,9,9,9,9,9
+
+Clearing all but best solution files for Generation 18...
+Done!
+
+Creating population of 20 individuals for generation 19...
+Calculating fitness for generation 19...
+Done!
+Generation 19 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+19,18,89.000,89.000,9,9,9,9,9,8,9,9,9,9
+
+Clearing all but best solution files for Generation 19...
+Done!
+
+Creating population of 20 individuals for generation 20...
+Calculating fitness for generation 20...
+Done!
+Generation 20 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+20,8,81.000,81.000,9,9,7,9,9,3,9,9,8,9
+
+Clearing all but best solution files for Generation 20...
+Done!
+
+Creating population of 20 individuals for generation 21...
+Calculating fitness for generation 21...
+Done!
+Generation 21 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+21,9,87.000,87.000,9,9,9,9,9,9,9,6,9,9
+
+Clearing all but best solution files for Generation 21...
+Done!
+
+Creating population of 20 individuals for generation 22...
+Calculating fitness for generation 22...
+Done!
+Generation 22 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+22,11,82.000,82.000,9,9,7,6,6,9,9,9,9,9
+
+Clearing all but best solution files for Generation 22...
+Done!
+
+Creating population of 20 individuals for generation 23...
+Calculating fitness for generation 23...
+Done!
+Generation 23 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+23,9,85.000,85.000,9,9,9,9,9,9,9,9,9,4
+
+Clearing all but best solution files for Generation 23...
+Done!
+
+Creating population of 20 individuals for generation 24...
+Calculating fitness for generation 24...
+Done!
+Generation 24 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+24,5,82.000,82.000,9,9,9,9,1,9,9,9,9,9
+
+Clearing all but best solution files for Generation 24...
+Done!
+
+Creating population of 20 individuals for generation 25...
+Calculating fitness for generation 25...
+Done!
+Generation 25 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+25,2,87.000,87.000,6,9,9,9,9,9,9,9,9,9
+
+Clearing all but best solution files for Generation 25...
+Done!
+
+Creating population of 20 individuals for generation 26...
+Calculating fitness for generation 26...
+Done!
+Generation 26 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+26,18,79.000,79.000,9,9,7,9,9,8,9,9,9,1
+
+Clearing all but best solution files for Generation 26...
+Done!
+
+Creating population of 20 individuals for generation 27...
+Calculating fitness for generation 27...
+Done!
+Generation 27 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+27,3,89.000,89.000,9,9,9,8,9,9,9,9,9,9
+
+Clearing all but best solution files for Generation 27...
+Done!
+
+Creating population of 20 individuals for generation 28...
+Calculating fitness for generation 28...
+Done!
+Generation 28 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+28,13,83.000,83.000,5,9,9,9,7,9,8,9,9,9
+
+Clearing all but best solution files for Generation 28...
+Done!
+
+Creating population of 20 individuals for generation 29...
+Calculating fitness for generation 29...
+Done!
+Generation 29 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+29,5,83.000,83.000,9,9,9,9,5,9,9,9,6,9
+
+Clearing all but best solution files for Generation 29...
+Done!
+
+Creating population of 20 individuals for generation 30...
+Calculating fitness for generation 30...
+Done!
+Generation 30 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+30,7,82.000,82.000,8,6,7,7,9,9,9,9,9,9
+
+Clearing all but best solution files for Generation 30...
+Done!
+
+Creating population of 20 individuals for generation 31...
+Calculating fitness for generation 31...
+Done!
+Generation 31 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+31,12,83.000,83.000,9,4,9,7,9,9,9,9,9,9
+
+Clearing all but best solution files for Generation 31...
+Done!
+
+Creating population of 20 individuals for generation 32...
+Calculating fitness for generation 32...
+Done!
+Generation 32 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+32,14,85.000,85.000,6,9,9,7,9,9,9,9,9,9
+
+Clearing all but best solution files for Generation 32...
+Done!
+
+Creating population of 20 individuals for generation 33...
+Calculating fitness for generation 33...
+Done!
+Generation 33 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+33,13,82.000,82.000,3,7,9,9,9,9,9,9,9,9
+
+Clearing all but best solution files for Generation 33...
+Done!
+
+Creating population of 20 individuals for generation 34...
+Calculating fitness for generation 34...
+Done!
+Generation 34 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+34,4,82.000,82.000,9,9,9,9,2,9,8,9,9,9
+
+Clearing all but best solution files for Generation 34...
+Done!
+
+Creating population of 20 individuals for generation 35...
+Calculating fitness for generation 35...
+Done!
+Generation 35 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+35,18,83.000,83.000,9,9,9,9,9,3,9,9,8,9
+
+Clearing all but best solution files for Generation 35...
+Done!
+
+Creating population of 20 individuals for generation 36...
+Calculating fitness for generation 36...
+Done!
+Generation 36 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+36,3,82.000,82.000,9,9,9,9,4,6,9,9,9,9
+
+Clearing all but best solution files for Generation 36...
+Done!
+
+Creating population of 20 individuals for generation 37...
+Calculating fitness for generation 37...
+Done!
+Generation 37 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+37,3,81.000,81.000,5,9,8,9,7,9,9,9,7,9
+
+Clearing all but best solution files for Generation 37...
+Done!
+
+Creating population of 20 individuals for generation 38...
+Calculating fitness for generation 38...
+Done!
+Generation 38 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+38,11,83.000,83.000,9,9,5,9,7,9,9,9,9,8
+
+Clearing all but best solution files for Generation 38...
+Done!
+
+Creating population of 20 individuals for generation 39...
+Calculating fitness for generation 39...
+Done!
+Generation 39 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+39,10,87.000,87.000,9,9,7,9,8,9,9,9,9,9
+
+Clearing all but best solution files for Generation 39...
+Done!
+
+Creating population of 20 individuals for generation 40...
+Calculating fitness for generation 40...
+Done!
+Generation 40 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+40,19,86.000,86.000,9,9,9,9,9,9,9,8,9,6
+
+Clearing all but best solution files for Generation 40...
+Done!
+
+Creating population of 20 individuals for generation 41...
+Calculating fitness for generation 41...
+Done!
+Generation 41 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+41,7,88.000,88.000,9,9,9,9,9,8,9,8,9,9
+
+Clearing all but best solution files for Generation 41...
+Done!
+
+Creating population of 20 individuals for generation 42...
+Calculating fitness for generation 42...
+Done!
+Generation 42 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+42,11,82.000,82.000,9,9,7,5,9,9,9,7,9,9
+
+Clearing all but best solution files for Generation 42...
+Done!
+
+Creating population of 20 individuals for generation 43...
+Calculating fitness for generation 43...
+Done!
+Generation 43 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+43,10,83.000,83.000,9,9,9,9,6,8,9,6,9,9
+
+Clearing all but best solution files for Generation 43...
+Done!
+
+Creating population of 20 individuals for generation 44...
+Calculating fitness for generation 44...
+Done!
+Generation 44 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+44,13,88.000,88.000,8,9,9,8,9,9,9,9,9,9
+
+Clearing all but best solution files for Generation 44...
+Done!
+
+Creating population of 20 individuals for generation 45...
+Calculating fitness for generation 45...
+Done!
+Generation 45 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+45,12,82.000,82.000,1,9,9,9,9,9,9,9,9,9
+
+Clearing all but best solution files for Generation 45...
+Done!
+
+Creating population of 20 individuals for generation 46...
+Calculating fitness for generation 46...
+Done!
+Generation 46 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+46,16,88.000,88.000,9,9,8,9,9,9,8,9,9,9
+
+Clearing all but best solution files for Generation 46...
+Done!
+
+Creating population of 20 individuals for generation 47...
+Calculating fitness for generation 47...
+Done!
+Generation 47 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+47,14,85.000,85.000,9,9,9,9,9,5,9,9,9,8
+
+Clearing all but best solution files for Generation 47...
+Done!
+
+Creating population of 20 individuals for generation 48...
+Calculating fitness for generation 48...
+Done!
+Generation 48 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+48,12,80.000,80.000,8,9,5,9,6,9,9,9,9,7
+
+Clearing all but best solution files for Generation 48...
+Done!
+
+Creating population of 20 individuals for generation 49...
+Calculating fitness for generation 49...
+Done!
+Generation 49 Best Individual:
+Generation, Individual, Fitness Value, list_sum, Chromosome
+49,10,81.000,81.000,9,9,9,9,6,9,9,3,9,9
+
+Clearing all but best solution files for Generation 49...
+Done!
+
+Best solution found in optimization: 
+
+Generation: 14
+Individual: 0
+Fitness Value: 90.0
+list_sum: 90.0
+Chromosome: ['9', '9', '9', '9', '9', '9', '9', '9', '9', '9']
+
+Statistics for last generation: 
+
+Average_Fitness: 70.15
+Max_Fitness: 81.0
+Std_Fitness: 5.772997488307094
+
+Optimization completed.
+MIDAS execution completed.
