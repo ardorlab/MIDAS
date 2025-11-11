@@ -1,7 +1,7 @@
 ## Optimizer Block
 general:
   optimizer: bayesian_optimization
-  code_type: test_listsum
+  code_type: listsum
   results_directory_name: output_files
 
 optimization:
@@ -71,7 +71,7 @@ assembly_options:
 ## Genome
 decision_variables:
   # parameters used to fill each chromosome.
-  parameters:
+  assembly_parameters:
     0:
       map: &ID001
         [1,1,1,1,1,1,1,1,1,1]
