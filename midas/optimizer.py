@@ -7,6 +7,7 @@ from copy import deepcopy
 from multiprocessing import Pool
 from itertools import repeat
 import csv
+import ast
 import pickle
 
 from midas.utils import optimizer_tools as optools
@@ -134,12 +135,26 @@ class Optimizer():
             
             # check validity of provided solutions
             if chromosome:
-                if self.input.fa_options: #TODO add check for other variable types besides assemblies
+                #TODO add check for other variable types besides assemblies
+                if self.input.fa_options and not self.input.batches: # fresh fuel chromosome
                     assembly_types = list(self.input.fa_options['fuel'].keys())
                     for gene in chromosome: 
                         if gene not in assembly_types: 
                             raise ValueError(f"Gene '{gene}' in initial solution {i+1} is not defined in YAML file. Check provided solutions. ")
-
+                elif self.input.fa_options and self.input.batches: # equilibrium core chromosome
+                    assembly_types = list(self.input.fa_options['fuel'].keys())
+                    batch_types = list(self.input.batches.keys())
+                    # convert strings to tuples
+                    for j in range(len(chromosome)):
+                        try:
+                            chromosome[j] =  ast.literal_eval(chromosome[j])
+                        except:
+                            raise ValueError(f'Error in provided chromosome at index {j}, {chromosome[j]}. Check if chromosome structure is correct. ')
+                    for gene in chromosome: 
+                        if gene[0] not in batch_types: 
+                            raise ValueError(f"Batch name '{gene[0]}' in initial solution {i+1} is not defined in YAML file. Check provided solutions. ")
+                        if isinstance(gene[1],str) and gene[1] not in assembly_types:
+                            raise ValueError(f"Ammebly type '{gene[1]}' in initial solution {i+1} is not defined in YAML file. Check provided solutions. ")
         return chromosome
 
     def main(self, restart=False):
