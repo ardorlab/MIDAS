@@ -344,8 +344,11 @@ class Gene_Validity_check():
         if input_obj.calculation_type == 'single_cycle':
             valid_genes_list = Gene_Validity_check.calc_LWR_gene_options(genes_list, genome, parameters, child+chromosome[len(child):], indx)
         elif input_obj.calculation_type == 'eq_cycle':
-            child_zone = [loc[0] for loc in child+chromosome[len(child):]]
-            valid_genes_list = Gene_Validity_check.calc_LWR_gene_options(genes_list, genome, parameters, child_zone, indx)
+            if None in chromosome:
+                child_zone = chromosome
+            else: 
+                child_zone = [loc[0] for loc in child+chromosome[len(child):]]
+            valid_genes_list = Gene_Validity_check.calc_LWR_gene_options(genes_list, genome, parameters, child_zone, indx)            
         elif input_obj.calculation_type == 'lattice_physics':
             valid_genes_list = Gene_Validity_check.calc_lat_gene_options(genes_list, genome, parameters, child+chromosome[len(child):], indx)
         else: 
