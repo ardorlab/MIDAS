@@ -51,6 +51,7 @@ class Optimizer():
         self.population = optools.Population(self.input.population_size, num_gene_combos)
         self.generation = optools.Generation(self.input.num_generations, num_gene_combos)
         self.fitness    = optools.Fitness()
+        import pdb; pdb.set_trace()
         if self.input.code_interface == "parcs342":
             self.eval_func = parcs342.evaluate #assign, don't execute.
         elif self.input.code_interface == "parcs343":
@@ -63,6 +64,7 @@ class Optimizer():
             self.eval_func = polaris624.evaluate
         elif self.input.code_interface == "test_listsum":
             self.eval_func = test_listsum.evaluate
+            # getattr(globals()[self.input.code_interface],'evaluate') this command can be used to avoid a list of if else statements. The requirement is that the option matches the intended class.
         else:
             raise ValueError(f"Could not identify eval_func for code type '{self.input.code_interface}'. This is highly irregular.")
         
