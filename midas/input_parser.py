@@ -64,7 +64,7 @@ def validate_input(keyword, value):
     
     elif keyword == 'code_type':
         value = str(value).lower().replace(' ','_')
-        if value not in ["parcs342", "parcs343", "nuscale_database", "trace50p5", "polaris624","serpent","custom_function","styblinski_tang"]:
+        if value not in ["parcs342", "parcs343", "nuscale_database", "trace50p5", "polaris624","serpent","custom_function","styblinski_tang","listsum"]:
             raise ValueError("Code types currently supported: PARCS342, PARCS343, NuScale_Database, TRACE50p5.")
     
     elif keyword == 'calc_type':
@@ -191,7 +191,8 @@ def validate_input(keyword, value):
                                    'max_doserate',
                                    'total_mass',
                                    'doppler_temperature_coefficient',
-                                   'function_output']:
+                                   'function_output',
+                                   'list_sum']:
                     raise ValueError(f"Requested objective/constraint '{key}' not supported.")
                 if new_key == 'aplhgr':
                     logger.warning("APLHGR requires 3d plotting of pin reconstruction.")
@@ -1187,7 +1188,7 @@ class Input_Parser():
         except KeyError:
             info = None
         
-        if self.calculation_type in ['single_cycle','eq_cycle']:
+        if self.calculation_type in ['single_cycle','eq_cycle','listsum']:
             self.genome = yaml_line_reader(info, 'assembly_parameters', None)
         elif self.calculation_type in ['lattice_physics']:
             self.genome = yaml_line_reader(info, 'lattice_parameters', None)
@@ -1214,7 +1215,7 @@ class Input_Parser():
         
     ## Calculation Block ## #!TODO: should each parameter set be nested under a code-specific object?
         info = None; THinfo = None; infomap = None # initialize info variables
-        if self.code_interface not in ['custom_function','styblinski_tang']:
+        if self.code_interface not in ['custom_function','styblinski_tang','listsum']:
             try:
                 if self.code_interface in ["parcs342","parcs343"]:
                     info = self.file_settings['parcs_data']

@@ -1,0 +1,105 @@
+## Optimizer Block
+general:
+  optimizer: genetic_algorithm
+  code_type: listsum
+  results_directory_name: output_files
+
+optimization:
+  population_size: 50
+  number_of_generations: 100
+  objectives:
+    list_sum:
+      goal: maximize
+      weight: 1.0
+
+## Algorithm Settings
+algorithm:
+  selection:
+    fitness: weighted
+    method: tournament #tournament or roulette
+  reproducer: standard
+  crossover:
+    method: two_point
+    crossover_rate: 0.5
+    num_swaps: 2
+  elites: 10
+  mutation_type: mutate_by_gene
+  mutation_rate: 0.25, 0.55
+
+## Fuel Assembly Parts
+assembly_options:
+  reflectors:
+    NSFA: 
+      refl_type: all
+      serial: None
+  blankets:
+    None:
+      serial: None
+  fuel: 
+    0: 
+      type: 0
+      serial: None
+      blanket: None
+    1: 
+      type: 1
+      serial: None
+      blanket: None
+    2: 
+      type: 2
+      serial: None
+      blanket: None
+    3: 
+      type: 3
+      serial: None
+      blanket: None
+    4: 
+      type: 4
+      serial: None
+      blanket: None
+    5: 
+      type: 5
+      serial: None
+      blanket: None
+    6: 
+      type: 6
+      serial: None
+      blanket: None
+    7: 
+      type: 7
+      serial: None
+      blanket: None
+    8: 
+      type: 8
+      serial: None
+      blanket: None
+    9: 
+      type: 9
+      serial: None
+      blanket: None
+
+## Genome
+decision_variables:
+  # parameters used to fill each chromosome.
+  assembly_parameters:
+    0:
+      map: &ID001
+        [1,1,1,1,1,1,1,1,1,1]
+    1:
+      map: *ID001 
+    2:
+      map: *ID001 
+    3:
+      map: *ID001
+    4:
+      map: *ID001
+    5:
+      map: *ID001
+    6:
+      map: *ID001
+    7:
+      map: *ID001
+    8:
+      map: *ID001
+    9:
+      map: *ID001
+
