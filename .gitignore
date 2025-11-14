@@ -137,3 +137,5 @@ ppo*
 a2c*
 error.txt
 output.txt
+*_results/
+output_files/

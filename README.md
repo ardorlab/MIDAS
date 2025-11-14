@@ -41,6 +41,11 @@ required dependencies entering the following commands:
 	
 	conda install h5py
 
+	conda install scipy 
+
+	conda install scikit-learn
+
+
     git clone https://github.com/ardorlab/MIDAS.git
 
 If you want to use the newly added reinforcement learning algorithms, the python version in the environment should be 3.9 and some additional dependencies will need to be installed:
