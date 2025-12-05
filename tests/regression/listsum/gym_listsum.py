@@ -91,7 +91,8 @@ class Gym_Listsum_Env(gym.Env):
         cmap_range=np.arange(0,self.list_size)
         for i in range(self.list_size):
             self.cmap[str(i)]=cmap_range[i]
-            self.action_space = spaces.Discrete(self.list_size)
+        
+        self.action_space = spaces.Discrete(self.list_size)
         
         self.observation_space = spaces.Box(low=-1.0, high=1.0, shape=(2,len(self.start)), dtype=np.float32)
         self.reset()
@@ -131,6 +132,8 @@ class Gym_Listsum_Env(gym.Env):
             mid = 0
             self.total_run +=1
             reward = list_summation(np.array(self.current, dtype=int))
+            info = {'list_sum':reward,
+                    'State':self.current}
             if self.total_run ==1:
                 self.best_solution=copy.deepcopy(self.current)
                 self.best_reward = reward
@@ -141,6 +144,7 @@ class Gym_Listsum_Env(gym.Env):
         else:
             mid = self.counter + 1
             reward=0
+            info={}
         self.counter+=1
         terminated = bool(self.counter==len(self.start))
         truncated = False
@@ -149,7 +153,7 @@ class Gym_Listsum_Env(gym.Env):
         loc_state = np.zeros(cstate.shape[0])
         loc_state[mid]=1
         rstate=np.r_[[cstate],[loc_state]]
-        return((rstate, reward, terminated, truncated, {}))
+        return((rstate, reward, terminated, truncated, info))
     
     def render(self, mode='console'):
         if mode != 'console':
@@ -163,17 +167,17 @@ if __name__ == "__main__":
     N=10
     population_size=1 
     number_of_generations=1000
-    policy_net= [64, 64]
-    qvalue_net= [64, 64]
-    train_freq= 4
+    policy_net= [16, 32, 16]
+    qvalue_net= [16, 32, 16]
+    train_freq= 10
     gradient_steps= 1
     exploration_fraction= 0.5
     exploration_final_eps= 0.02
     target_update_interval= 1
     learning_starts= 1
     buffer_size= 10
-    batch_size= 16
-    learning_rate= 0.0005
+    batch_size= 32
+    learning_rate= 0.0001
     gamma= 0.99
     tensorboard_log= False
     model_save= 'listsum_rl'
@@ -184,13 +188,12 @@ if __name__ == "__main__":
     os.makedirs(log_dir, exist_ok=True)
 
     
-    info_kwd=list('list_sum')
-    info_kwd.append('State')
+    info_kwd=['list_sum','State']
     info_kwd = tuple(info_kwd)
     
     env = Gym_Listsum_Env(N)
     #env = gym.make("CartPole-v1", render_mode="rgb_array")
-    env = Monitor(env,log_dir)
+    env = Monitor(env,log_dir,info_keywords=info_kwd)
     env = DummyVecEnv([lambda: env])
     net1 = policy_net
     net2 = qvalue_net
@@ -221,9 +224,9 @@ if __name__ == "__main__":
 
     vec_env = model.get_env()
     obs = vec_env.reset()
-    for i in range(10):
+    for i in range(N):
         action, _state = model.predict(obs, deterministic=True)
-        if i == 9:
+        if i == N-1:
             last_solution = obs[0,0,:] 
             last_solution[-1]=int(action)
         obs, reward, done, info = vec_env.step(action)
