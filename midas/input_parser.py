@@ -688,6 +688,7 @@ def validate_input(keyword, value):
 
 ## Genome Block ##
     elif keyword in ['parameters']:
+        logger.warning(f"Handeling continuous variables in MIDAS is still in development and continuous variable optimization may not work as indented. ")
         new_dict = {}
         if isinstance(value, dict):
             for key, item in value.items():
@@ -1193,6 +1194,7 @@ class Input_Parser():
         elif self.calculation_type in ['lattice_physics']:
             self.genome = yaml_line_reader(info, 'lattice_parameters', None)
         elif self.calculation_type in ['continuous_variable']:
+            logger.warning("'parameters' decision variable is reserved for continous variables")
             self.genome = yaml_line_reader(info, 'parameters', None)
             #Create a list of possible values a gene can take for discrete ranges
             self.genome = problem_preparation.Prepare_Problem_Values.prepare_discrete_range(self.genome)
@@ -1202,7 +1204,7 @@ class Input_Parser():
         self.batches = yaml_line_reader(info, 'batches', None)
         #check that decision variable options are valid.
         if not self.genome:
-            raise ValueError("'parameters' or 'assembly_parameters' must be specified in Decision Variables.")
+            raise ValueError("'assembly_parameters', 'lattice_parameters', or 'parameters' must be specified in Decision Variables.")
         if self.calculation_type == 'eq_cycle' and not self.batches:
             raise ValueError("'Batches' must be specified in Decision Variables for the 'EQ Cycle' type.")
         for key, value in self.genome.items():
