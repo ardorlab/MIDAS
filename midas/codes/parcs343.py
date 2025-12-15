@@ -324,7 +324,7 @@ def without_template(solution, input, cwd, filename):
         ofile.write("DEPL\n")
         if input.calculation_type == 'single_cycle':
             ofile.write(f"      TIME_STP  {str(input.depl_steps).strip('[]')}\n")
-        ofile.write("      INP_HST   './boc_exp.dep' -2 1\n")
+        # ofile.write("      INP_HST   './boc_exp.dep' -2 1\n") TODO add functionality in through input yaml files
         ofile.write("      OUT_OPT   T  T  T  T  F\n")
         # Write reflector cross sections
         ofile.write("      PMAXS_F   1 '{}{}' 1\n".format(input.xs_lib / Path(input.xs_list['reflectors']['bot'][0]),\
