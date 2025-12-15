@@ -586,7 +586,7 @@ def validate_input(keyword, value):
                                 for subsubkey, subsubitem in subitem.items():
                                     new_subsubkey =str(subsubkey).lower().replace(' ','_')
                                     if new_subsubkey == 'type':
-                                        new_subsubitem = str(subsubitem)[0]
+                                        new_subsubitem = str(subsubitem)
                                     elif new_subsubkey == 'radii':
                                         new_subsubitem = [float(x) for x in re.split(r'[, ]',str(subsubitem).strip('[]')) if x]
                                     elif new_subsubkey == 'materials':
