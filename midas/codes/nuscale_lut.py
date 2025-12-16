@@ -30,8 +30,6 @@ def evaluate(solution, input):
     for key in new_dict:
         if key in input.objectives:
             solution.parameters[key]["value"] = new_dict[key]
-        # else:
-        #     logger.info(f'Parameter {key} is available in NuScale database but not currently used')
 
     return solution
 
@@ -49,7 +47,7 @@ def read_hdf5(soln, input): #TODO!: Comment code better
     individual = [input.fa_options['fuel'][sol]['type'] for sol in soln if sol in input.fa_options['fuel']]
     assembly_name = ''.join(map(str,individual))
     file_number = f'{individual[0]}{individual[1]}' #The number in the hdf5 file is the same as the first and second number of the loading pattern
-    filepath = f"/usr/local/usrapps/ardor/shared/Simulate_IPWR_DB/Solutions_{file_number}.hdf5"
+    filepath = f"/cm/shared/databases/SMR_IPWR_DATABASE/Solutions_{file_number}.hdf5"
 
     if not os.path.exists(filepath): #Check here to make sure the file being looked up actually exists
         raise FileNotFoundError(f'The file Solutions_{file_number}.hdf5 does not exist. Make sure all assemblies in the LP are between 2-7.')
