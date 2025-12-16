@@ -1,6 +1,7 @@
 import h5py
 import os
 import logging
+from midas_data import __ipwr_lut__
 
 ## Initialize logging for the present file
 logger = logging.getLogger("MIDAS_logger")
@@ -43,14 +44,15 @@ def read_hdf5(soln, input): #TODO!: Comment code better
             array containing loading pattern for NuScale SMR (8 assemblies)
 
     Written by Cole Howard. 10/29/2024
+    Updated by Jake Mikouchi. 12/16/25
     """
     individual = [input.fa_options['fuel'][sol]['type'] for sol in soln if sol in input.fa_options['fuel']]
     assembly_name = ''.join(map(str,individual))
     file_number = f'{individual[0]}{individual[1]}' #The number in the hdf5 file is the same as the first and second number of the loading pattern
-    filepath = f"/cm/shared/databases/SMR_IPWR_DATABASE/Solutions_{file_number}.hdf5"
+    filepath = f"{__ipwr_lut__}/Solutions_{file_number}.hdf5"
 
     if not os.path.exists(filepath): #Check here to make sure the file being looked up actually exists
-        raise FileNotFoundError(f'The file Solutions_{file_number}.hdf5 does not exist. Make sure all assemblies in the LP are between 2-7.')
+        raise FileNotFoundError(f'The file {filepath} does not exist. Make sure all assemblies in the LP are between 2-7.')
     #Open hdf5 file and index to the correct value, output the parameters
     with h5py.File(filepath,'r') as hdf5_file:
 
