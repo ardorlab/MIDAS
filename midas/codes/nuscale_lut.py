@@ -30,8 +30,6 @@ def evaluate(solution, input):
     for key in new_dict:
         if key in input.objectives:
             solution.parameters[key]["value"] = new_dict[key]
-        else:
-            logger.info(f'Parameter {key} is available in NuScale database but not currently used')
 
     return solution
 
