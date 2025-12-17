@@ -123,6 +123,7 @@ class Parallel_Simulated_Annealing():
         from midas.optimizer import  Optimizer # this has to be here
         best_in_current_gen = 0
         proc_total_moves = 0
+        os.system(f'rm -rf ./{self.input.results_dir_name}/tmp_Proc_{proc}_*')
 
         # iterate for population size
         for iter_pops in range(self.input.population_size):

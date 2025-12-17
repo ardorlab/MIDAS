@@ -271,7 +271,7 @@ class Optimizer():
                 os.system(f'rm -rf ./{self.input.results_dir_name}/Gen_0_Indv_*')
                 os.system(f'mv ./{self.input.results_dir_name}/safeGen_0_Indv_{best_soln_index} ./{self.input.results_dir_name}/Gen_0_Indv_{best_soln_index}')
                 logger.info("Done!\n")
-            os.system(f'rm -rf ./{self.input.results_dir_name}/tmp_Proc_*')
+            
     
 ## restart previous optimization routine ##
         else:
@@ -393,7 +393,6 @@ class Optimizer():
                 os.system(f'rm -rf ./{self.input.results_dir_name}/Gen_{self.generation.current}_Indv_*')
                 os.system(f'mv ./{self.input.results_dir_name}/safeGen_{self.generation.current}_Indv_{best_soln_index} ./{self.input.results_dir_name}/Gen_{self.generation.current}_Indv_{best_soln_index}')
                 logger.info("Done!\n")
-        
             terminate = self.termination_criteria.TC_methods(self.population.current, self.input.termination_criteria)
             if terminate == True: 
                 logger.info("--Run terminated due to termination criterion being met--\n")

@@ -559,7 +559,7 @@ class GA_reproduction():
         # Calculate number of elites (requested as either a quantity or percent of the population)
         if elites_requested < 1.0:
             Num_Elites = round(elites_requested * population_size)
-        elif elites_requested > 1.0:
+        elif elites_requested >= 1.0:
             Num_Elites = int(elites_requested)
 
         # Save the most fit individuals as Elites
