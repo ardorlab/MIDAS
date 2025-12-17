@@ -126,7 +126,6 @@ def main(args):
 ## Seed the global RNG
     if not inp_lines.set_seed:
         inp_lines.set_seed = random.randrange(2**(32-1)) # generate an artibtrary RNG seed
-    import pdb; pdb.set_trace()
     random.seed(inp_lines.set_seed)
     np.random.seed(inp_lines.set_seed)
     logger.info("Set global RNG Seed: %s", inp_lines.set_seed)
