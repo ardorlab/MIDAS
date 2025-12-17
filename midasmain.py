@@ -11,6 +11,7 @@ import logging.config
 from copy import deepcopy
 import random
 import pickle
+import numpy as np
 import midas_data
 from midas.input_parser import  Input_Parser
 from midas.optimizer import Optimizer
@@ -87,6 +88,7 @@ def restart(args):
 ## Seed the global RNG
     optimizer.input.set_seed = random.randrange(sys.maxsize) # generate an artibtrary RNG seed
     random.seed(optimizer.input.set_seed)
+    np.random.seed(optimizer.input.set_seed)
     logger.info("Set global RNG Seed: %s", optimizer.input.set_seed)
 
 ## Update initial generation number
@@ -125,6 +127,7 @@ def main(args):
     if not inp_lines.set_seed:
         inp_lines.set_seed = random.randrange(sys.maxsize) # generate an artibtrary RNG seed
     random.seed(inp_lines.set_seed)
+    np.random.seed(inp_lines.set_seed)
     logger.info("Set global RNG Seed: %s", inp_lines.set_seed)
 
 ## Update logger level
