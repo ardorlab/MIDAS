@@ -435,7 +435,8 @@ def with_template(solution, input, cwd, filename):
 ## copy input file from template
     inp_template = str(cwd.joinpath(cwd / input.input_template['loc']))
     shutil.copy(inp_template, filename)
-    soln_full_core_lattice = prepare_shuffling_map(input, solution.chromosome)
+    if input.calculation_type in ['eq_cycle']:
+        soln_full_core_lattice = prepare_shuffling_map(input, solution.chromosome)
 
     with open(filename, "r") as file:
         lines = file.readlines()  
