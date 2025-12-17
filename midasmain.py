@@ -86,7 +86,7 @@ def restart(args):
         logger.setLevel(logging.DEBUG)
     
 ## Seed the global RNG
-    optimizer.input.set_seed = random.randrange(sys.maxsize) # generate an artibtrary RNG seed
+    optimizer.input.set_seed = random.randrange(2**(32-1)) # generate an artibtrary RNG seed
     random.seed(optimizer.input.set_seed)
     np.random.seed(optimizer.input.set_seed)
     logger.info("Set global RNG Seed: %s", optimizer.input.set_seed)
@@ -125,7 +125,7 @@ def main(args):
     
 ## Seed the global RNG
     if not inp_lines.set_seed:
-        inp_lines.set_seed = random.randrange(sys.maxsize) # generate an artibtrary RNG seed
+        inp_lines.set_seed = random.randrange(2**(32-1)) # generate an artibtrary RNG seed
     random.seed(inp_lines.set_seed)
     np.random.seed(inp_lines.set_seed)
     logger.info("Set global RNG Seed: %s", inp_lines.set_seed)
