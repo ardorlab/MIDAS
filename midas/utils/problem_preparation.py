@@ -67,7 +67,6 @@ class Problem_Preparation_Tools():
         core_id = np.array(core_id).reshape((nrows,ncols,2))
         
         core_sym_map = Problem_Preparation_Tools.symmetric_core(input_obj.symmetry,nrows,ncols,core_map,core_id)
-        
         return core_sym_map
 
     def symmetric_core(symmetry,nrows,ncols,core_map,core_id):
@@ -92,8 +91,9 @@ class Problem_Preparation_Tools():
         elif symmetry == 'octant':
             sym_corner   = (nrows-1,ncols-1)
         
-        row_iter = np.arange(sym_center[0],sym_vertical[0]+1,1)
-        col_iter = np.arange(sym_center[1],sym_corner[1]+1,1)
+        if symmetry in ["quarter", "octant"]:
+            row_iter = np.arange(sym_center[0],sym_vertical[0]+1,1)
+            col_iter = np.arange(sym_center[1],sym_corner[1]+1,1)
         
         if nrows % 2 == 0: # find symetric locations for cores with even number of rows and cols (BWRS)
             if symmetry == 'quarter':
