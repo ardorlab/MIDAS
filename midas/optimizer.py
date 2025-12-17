@@ -430,7 +430,7 @@ class Optimizer():
         if self.input.statistics_plots:
             optimization_information.plot_optimization_statistics()
         #Plot convergence if user turned on convergence
-        if self.input.convergence_plot:
+        if self.input.convergence_plots:
             optimization_information.plot_optimization_convergence()
     
         return
