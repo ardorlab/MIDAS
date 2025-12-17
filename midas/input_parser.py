@@ -1104,7 +1104,7 @@ class Input_Parser():
         self.input_template = yaml_line_reader(info, 'input_template', template_default)
         self.calculation_type = yaml_line_reader(info, 'calc_type', 'single_cycle')
         self.statistics_plots = yaml_line_reader(info, 'statistics_plots', True)
-        self.convergence_plot = yaml_line_reader(info, 'convergence_plot', True)
+        self.convergence_plots = yaml_line_reader(info, 'convergence_plots', True)
         self.initial_population = yaml_line_reader(info, 'initial_population', None)
         if self.input_template['apply'] and self.code_interface == 'parcs343':
             parcs343_template_check(self)
