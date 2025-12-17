@@ -271,6 +271,7 @@ class Optimizer():
                 os.system(f'rm -rf ./{self.input.results_dir_name}/Gen_0_Indv_*')
                 os.system(f'mv ./{self.input.results_dir_name}/safeGen_0_Indv_{best_soln_index} ./{self.input.results_dir_name}/Gen_0_Indv_{best_soln_index}')
                 logger.info("Done!\n")
+            
     
 ## restart previous optimization routine ##
         else:
@@ -304,7 +305,8 @@ class Optimizer():
             if self.input.methodology == 'simulated_annealing' and self.input.num_procs > 1: # if parallel simulated annealing skip evaluation
                 self.population.current = []
                 for i in range(len(new_chromosome_list)):
-                    os.rename(f"{self.input.results_dir_name}/{new_chromosome_list[i].name}", f'{self.input.results_dir_name}/Gen_{self.generation.current}_Indv_{i}')
+                    if os.path.exists(f"{self.input.results_dir_name}/{new_chromosome_list[i].name}"): 
+                        os.rename(f"{self.input.results_dir_name}/{new_chromosome_list[i].name}", f'{self.input.results_dir_name}/Gen_{self.generation.current}_Indv_{i}')
                     new_chromosome_list[i].name = f'Gen_{self.generation.current}_Indv_{i}'
                     self.population.current.append(new_chromosome_list[i])
                 logger.info("Calculating fitness for generation %s...", self.generation.current)
@@ -391,7 +393,6 @@ class Optimizer():
                 os.system(f'rm -rf ./{self.input.results_dir_name}/Gen_{self.generation.current}_Indv_*')
                 os.system(f'mv ./{self.input.results_dir_name}/safeGen_{self.generation.current}_Indv_{best_soln_index} ./{self.input.results_dir_name}/Gen_{self.generation.current}_Indv_{best_soln_index}')
                 logger.info("Done!\n")
-        
             terminate = self.termination_criteria.TC_methods(self.population.current, self.input.termination_criteria)
             if terminate == True: 
                 logger.info("--Run terminated due to termination criterion being met--\n")
