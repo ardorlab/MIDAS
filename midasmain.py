@@ -89,11 +89,13 @@ def restart(args):
     optimizer.input.set_seed = random.randrange(2**(32-1)) # generate an artibtrary RNG seed
     random.seed(optimizer.input.set_seed)
     np.random.seed(optimizer.input.set_seed)
-    logger.info("Set global RNG Seed: %s", optimizer.input.set_seed)
+    logger.info("Set global RNG seed: %s", optimizer.input.set_seed)
 
 ## Update initial generation number
     optimizer.generation.initial = optimizer.generation.current + 1
     
+    logger.info(f"Optimizer: {optimizer.input.methodology}")
+
 ## Execute
     logger.info("Restart Optimization...\n")
     optimizer.main(restart=True) #execute optimization through the algorithm class.
@@ -128,8 +130,11 @@ def main(args):
         inp_lines.set_seed = random.randrange(2**(32-1)) # generate an artibtrary RNG seed
     random.seed(inp_lines.set_seed)
     np.random.seed(inp_lines.set_seed)
-    logger.info("Set global RNG Seed: %s", inp_lines.set_seed)
+    logger.info("Set global RNG seed: %s", inp_lines.set_seed)
 
+
+    logger.info(f"Optimizer: {inp_lines.methodology}")
+    
 ## Update logger level
     if inp_lines.debug_mode:
         logger.setLevel(logging.DEBUG)
@@ -137,7 +142,7 @@ def main(args):
 ## Generate optimizer
     optimizer = Optimizer(inp_lines)
     optimizer.build_optimizer()
-    logger.info("Completed Optimizer assembly.")
+    logger.info("Completed Optimizer assembly.\n")
 
 ## Execute
     logger.info("Begin Optimization...\n")
