@@ -671,6 +671,7 @@ class GA_selection():
         """
         kway = method['k']
         unused_solutions = deepcopy(pop_list)
+        used_solutions = []
         winners = []
 
         for i in range(desired_pop_size):
@@ -679,6 +680,7 @@ class GA_selection():
 
             winners.append(ksols[ksolsfit.index(max(ksolsfit))].chromosome)
             unused_solutions.remove(ksols[ksolsfit.index(max(ksolsfit))])
+            used_solutions.append(ksols[ksolsfit.index(max(ksolsfit))])
 
             if len(unused_solutions) < 2:
                 if len(winners) > 2:
@@ -714,7 +716,7 @@ class GA_selection():
                 winners.append(i.chromosome)
             if len(winners) >= desired_pop_size:
                 break
-
+        
         return winners
     
     def sus(pop_list, desired_pop_size):
@@ -734,7 +736,6 @@ class GA_selection():
                     unused_solutions_fitness[i], unused_solutions_fitness[j] = unused_solutions_fitness[j],unused_solutions_fitness[i]
                     unused_solutions[i], unused_solutions[j] = unused_solutions[j],unused_solutions[i]
 
-
         while len(winners) < desired_pop_size:
             # calculates average fitness of all solutions
             average_unused_solutions_fitness = sum(unused_solutions_fitness) / len(unused_solutions_fitness)
@@ -753,6 +754,13 @@ class GA_selection():
 
                 else: 
                     Sum += unused_solutions_fitness[i]
+                
+
+            if len(unused_solutions) < 2: 
+                winners.append(unused_solutions[-1].chromosome)
+                unused_solutions.remove(unused_solutions[-1])
+                unused_solutions_fitness.remove(unused_solutions_fitness[-1])
+                delta = delta + average_unused_solutions_fitness
 
         return winners
 
