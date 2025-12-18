@@ -1160,7 +1160,7 @@ class Input_Parser():
         self.buffer_size = yaml_line_reader(info, 'buffer_size', 10)
 
         
-    ## Fuel Assembly Block ##
+    ## Fuel Assembly Block ##   
         self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)
         if not self.fa_options and self.code_interface not in ['nuscale_database','polaris624','serpent','custom_function','styblinski_tang']:
             raise ValueError("Assembly options must be nested with reflectors, fuels, and/or blankets with their parameters.")
