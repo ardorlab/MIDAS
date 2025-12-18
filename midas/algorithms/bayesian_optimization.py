@@ -340,7 +340,7 @@ class Bayesian_Optimization:
             gene_list.append(gene)
 
         #Create LWR core parameters for use in checking constraints
-        core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies, self.input.symmetry]
+        core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies, self.input.symmetry, self.input.calculation_type]
         self.iterations = gen_obj.current
         
         chromosome_list = [soln.chromosome for soln in pop_list]
