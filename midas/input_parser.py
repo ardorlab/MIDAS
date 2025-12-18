@@ -391,8 +391,6 @@ def validate_input(keyword, value):
         value = str(value).lower().replace(' ','_')
         if value not in ["exponential_decrease", "linear_update", "log_update", "lam"]:
             raise ValueError(f"Cooling schedule '{value}' not supported.")
-        if value == "lam":
-            logger.warning(f"Cooling schedule '{value}' only available for parallel simulated annealing.")
 
     elif keyword == 'secondary_cooling_schedule':
         value = str(value).lower().replace(' ','_')
@@ -1151,6 +1149,8 @@ class Input_Parser():
             self.cooling_schedule = yaml_line_reader(info, 'cooling_schedule', 'lam')
         if self.num_procs <= 1:
             self.cooling_schedule = yaml_line_reader(info, 'cooling_schedule', 'exponential_decrease')
+            if self.cooling_schedule == "lam":
+                raise ValueError(f"Cooling schedule '{self.cooling_schedule}' only available for parallel simulated annealing.")
         self.secondary_cooling_schedule = yaml_line_reader(info, 'secondary_cooling_schedule', 'exponential_decrease')
         self.update_factor = yaml_line_reader(info, 'update_factor', 0.95)
         self.quality_factor = yaml_line_reader(info, 'quality_factor', 1.1)
