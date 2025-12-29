@@ -129,7 +129,7 @@ class Parallel_Simulated_Annealing():
 
         # iterate for population size
         for iter_pops in range(self.input.population_size):
-            proc_total_moves += self.SA_threads(self.active_solutions[proc], proc)
+            proc_total_moves += self.SA_threads(self.active_solutions[proc], proc, iter_pops)
             self.holder.current = []
             for i in range(len(self.active_solutions[proc])):
                 self.holder.current.append(Optimizer.generate_solution(self, f'tmp_Proc_{proc}_Gen_{gen_obj.current}_Indv_{iter_pops}', self.active_solutions[proc][i]))
@@ -180,7 +180,7 @@ class Parallel_Simulated_Annealing():
 
         return best_in_current_gen, proc_total_moves
 
-    def SA_threads(self, pop_list, proc):
+    def SA_threads(self, pop_list, proc, current_step):
         """
         Generates a new individual by perturbing the origional solution. The perturbation 
         operates in a similar manner to mutations in genetic algorithm. 
@@ -203,10 +203,11 @@ class Parallel_Simulated_Annealing():
         else:
             raise ValueError("Requested perturbation type not recognized.")
         # update temperature
-        self.local_temperatures[proc] = SA_reproduction.Temperature_update_methods(self, self.local_temperatures[proc], self.input.secondary_cooling_schedule)
+
+        self.local_temperatures[proc] = self.Temperature_update_methods(self.local_temperatures[proc], self.input.secondary_cooling_schedule, current_step, Global=False)
 
         self.active_solutions[proc] = individual_pairs
-        
+
         # returns if the solution moved or not
         return moved
 
@@ -271,6 +272,8 @@ class Parallel_Simulated_Annealing():
                 temperature = SA_Cooling_Schedules.linear_update(self.global_temperature, current_step, self.input.population_size)
             if cooling_schedule == 'log_update':
                 temperature = SA_Cooling_Schedules.logarithmic_update(self.global_temperature, current_step)
+            if cooling_schedule == 'none':
+                temperature = temperature
     
         return temperature 
     
