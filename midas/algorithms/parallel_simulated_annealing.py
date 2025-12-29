@@ -5,6 +5,8 @@ import random
 import numpy as np
 import os
 from midas.utils import optimizer_tools as optools
+from midas.utils import LWR_fuelcyclecost
+from midas.utils import LWR_averageenrichment
 from midas.algorithms.simulated_annealing import Cooling_Schedule as SA_Cooling_Schedules
 from midas.algorithms.simulated_annealing import SA_reproduction 
 
