@@ -203,6 +203,10 @@ class Optimizer():
                     chromosome = self.get_initial_population(i) 
                     self.population.current.append(self.generate_solution(f'Gen_0_Indv_{i}', chromosome))
             pool = Pool(processes=self.input.num_procs) #initialize parallel execution
+
+            if self.input.methodology == 'simulated_annealing'and self.input.num_procs == 1:
+                logger.info(f"Initial Temperature: {self.input.initial_temperature}")
+            
     ## Evaluate fitness
             logger.info("Calculating fitness for generation %s...", self.generation.current)
             ## Execute and parse objective/constraint values
