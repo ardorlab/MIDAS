@@ -254,9 +254,9 @@ class Parallel_Simulated_Annealing():
         if Global:
             # updates the global temperatures
             if cooling_schedule == 'exponential_decrease':
-                temperature = SA_Cooling_Schedules.exponential_decrease(temperature)
+                temperature = SA_Cooling_Schedules.exponential_decrease(self.input.update_factor, temperature)
             if cooling_schedule == 'linear_update':
-                temperature = SA_Cooling_Schedules.linear_update(self.input.initial_temperature, current_step, self.input.num_generations)
+                temperature = SA_Cooling_Schedules.linear_update(self.input.initial_temperature, current_step-2, self.input.num_generations-1)
             if cooling_schedule == 'log_update':
                 temperature = SA_Cooling_Schedules.logarithmic_update(self.input.initial_temperature, current_step)
             if cooling_schedule == 'lam':
@@ -264,7 +264,7 @@ class Parallel_Simulated_Annealing():
         else: 
             # updates the local temperatures
             if cooling_schedule == 'exponential_decrease':
-                temperature = SA_Cooling_Schedules.exponential_decrease(temperature)
+                temperature = SA_Cooling_Schedules.exponential_decrease(self.input.update_factor, temperature)
             if cooling_schedule == 'linear_update':
                 temperature = SA_Cooling_Schedules.linear_update(self.global_temperature, current_step, self.input.population_size)
             if cooling_schedule == 'log_update':
