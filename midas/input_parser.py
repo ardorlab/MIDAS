@@ -458,7 +458,7 @@ def validate_input(keyword, value):
                                     new_subsubkey =str(subsubkey).lower().replace(' ','_')
                                     if new_subsubkey == 'refl_type':
                                         new_subsubitem = str(subsubitem).lower()
-                                        if new_subsubitem not in ['all','radial','top','bot']:
+                                        if new_subsubitem not in ['all','radial','top','bottom']:
                                             raise ValueError(f"Reflector type for '{subsubkey}' must be radial, top, bottom, or all.")
                                     elif new_subsubkey == 'serial':
                                         new_subsubitem = str(subsubitem)

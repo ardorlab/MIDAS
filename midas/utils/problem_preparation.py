@@ -16,7 +16,7 @@ class Problem_Preparation_Tools():
         
         Written by Nicholas Rollins. 10/04/2024
         """
-        xs_list = {'fuel':[], 'reflectors':{'top':[], 'radial':[], 'bot':[]}, 'blankets':[]}
+        xs_list = {'fuel':[], 'reflectors':{'top':[], 'radial':[], 'bottom':[]}, 'blankets':[]}
         tag_list = {'fuel':[], 'reflectors':[]}
         
         for key, param in input_obj.fa_options['fuel'].items():
@@ -26,15 +26,15 @@ class Problem_Preparation_Tools():
             if param['refl_type'] == 'all':
                 xs_list['reflectors']['top'].append(param['serial'])
                 xs_list['reflectors']['radial'].append(param['serial'])
-                xs_list['reflectors']['bot'].append(param['serial'])
+                xs_list['reflectors']['bottom'].append(param['serial'])
                 tag_list['reflectors'].append((str(10+len(tag_list['reflectors'])),key))
             elif param['refl_type'] == 'top':
                 xs_list['reflectors']['top'].append(param['serial'])
             elif param['refl_type'] == 'radial':
                 xs_list['reflectors']['radial'].append(param['serial'])
                 tag_list['reflectors'].append((str(10+len(tag_list['reflectors'])),key))
-            elif param['refl_type'] == 'bot':
-                xs_list['reflectors']['bot'].append(param['serial'])
+            elif param['refl_type'] == 'bottom':
+                xs_list['reflectors']['bottom'].append(param['serial'])
         if 'blankets' in input_obj.fa_options:
             for key, param in input_obj.fa_options['blankets'].items():
                 xs_list['blankets'].append(param['serial'])
