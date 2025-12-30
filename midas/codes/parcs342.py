@@ -270,7 +270,7 @@ def evaluate(solution, input):
         ofile.write("      INP_HST   './boc_exp.dep' -2 1\n")
         ofile.write("      OUT_OPT   T  T  T  T  F\n")
         # Write reflector cross sections
-        ofile.write("      PMAXS_F   1 '{}{}' 1\n".format(input.xs_lib / Path(input.xs_list['reflectors']['bot'][0]),\
+        ofile.write("      PMAXS_F   1 '{}{}' 1\n".format(input.xs_lib / Path(input.xs_list['reflectors']['bottom'][0]),\
                                                         input.xs_extension))
         for i in range(len(input.xs_list['reflectors']['radial'])):
             rxs_index = 2 + i
