@@ -1244,7 +1244,7 @@ class Input_Parser():
         self.core_type = yaml_line_reader(info, 'core_type', "PWR")
         self.code_walltime = yaml_line_reader(info, 'exec_walltime', 600)
         self.nrow = yaml_line_reader(infomap, 'num_rows', 17)
-        self.ncol = yaml_line_reader(infomap, 'num_cols', 17)
+        self.ncol = yaml_line_reader(infomap, 'num_cols', self.nrow)
         self.num_assemblies = yaml_line_reader(infomap, 'number_assemblies', 193)
         self.map_size = yaml_line_reader(infomap, 'core_symmetry', 'full')
         self.xs_lib = yaml_line_reader(info, 'xs_library_path', './') #!TODO: interpret this path relative to the MIDAS job base dir, not opt indv base dir.
