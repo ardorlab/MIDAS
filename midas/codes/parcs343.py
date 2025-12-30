@@ -232,15 +232,15 @@ def without_template(solution, input, cwd, filename):
     
         assembly_width = 21.50 #!TODO: change this to an input with default.
         if input.map_size == 'quarter':
-            ofile.write(f"      GRID_X      1*{assembly_width/2} {dim_size[0]-1}*{assembly_width}\n")
-            ofile.write(f"      NEUTMESH_X  1*1 {dim_size[0]-1}*1\n")
-            ofile.write(f"      GRID_Y      1*{assembly_width/2} {dim_size[0]-1}*{assembly_width}\n")
-            ofile.write(f"      NEUTMESH_Y  1*1 {dim_size[0]-1}*1\n")
+            ofile.write(f"      GRID_X      1*{assembly_width/2} {int(dim_size[0]-1)}*{assembly_width}\n")
+            ofile.write(f"      NEUTMESH_X  1*1 {int(dim_size[0]-1)}*1\n")
+            ofile.write(f"      GRID_Y      1*{assembly_width/2} {int(dim_size[0]-1)}*{assembly_width}\n")
+            ofile.write(f"      NEUTMESH_Y  1*1 {int(dim_size[0]-1)}*1\n")
         else: #assume full geometry if not quarter-core
-            ofile.write(f"      GRID_X      {dim_size[0]}*{assembly_width}\n")
-            ofile.write(f"      NEUTMESH_X  {dim_size[0]}*1\n")
-            ofile.write(f"      GRID_Y      {dim_size[1]}*{assembly_width}\n")
-            ofile.write(f"      NEUTMESH_Y  {dim_size[1]}*1\n")
+            ofile.write(f"      GRID_X      {int(dim_size[0])}*{assembly_width}\n")
+            ofile.write(f"      NEUTMESH_X  {int(dim_size[0])}*1\n")
+            ofile.write(f"      GRID_Y      {int(dim_size[1])}*{assembly_width}\n")
+            ofile.write(f"      NEUTMESH_Y  {int(dim_size[1])}*1\n")
         ofile.write("      GRID_Z      {}\n".format('  '.join([str(x) for x in input.axial_nodes])))
         # Write radial reflectors
         xsnum_radtop = 2 + len(input.xs_list['reflectors']['radial'])
