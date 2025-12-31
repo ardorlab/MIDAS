@@ -325,7 +325,7 @@ class Prepare_Problem_Values():
                     pincal_loc[x,y]=0
                 elif loc == "00":
                     if input_obj.map_size == 'quarter':
-                        pincal_loc[x,y]=float('NaN')
+                        pincal_loc[x,y]=' '
                     else: #assume full geometry for printing
                         pincal_loc[x,y] = ' '
                 else:
