@@ -303,7 +303,7 @@ def without_template(solution, input, cwd, filename):
         ofile.write("TH\n")
         if input.th_fdbk['apply'] and not input.th_fdbk['loc']:
             ofile.write("      FLU_TYP       0\n")
-            ofile.write("      N_PINGT    264 25\n")
+            ofile.write("      N_PINGT    {} {}\n".format(input.assembly_pins, input.assembly_guide_tubes))
             ofile.write("      PIN_DIM      4.1 4.75 0.58 6.13\n")
             ofile.write("      FLOW_COND    {}  {}\n".format(np.round(input.inlet_temp-273.15,2),\
                                                             np.round(input.flow/input.num_assemblies,4)))
