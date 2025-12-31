@@ -307,14 +307,14 @@ def without_template(solution, input, cwd, filename):
             ofile.write("      PIN_DIM      {}\n".format(input.pin_dimensions))
             ofile.write("      FLOW_COND    {}  {}\n".format(np.round(input.inlet_temp-273.15,2),\
                                                             np.round(input.flow/input.num_assemblies,4)))
-            ofile.write("      STATE_CORE   {}  1301.86  1.5789E7\n".format(np.round(input.flow)))
             ofile.write("      HGAP     11356.0\n") #!TODO:check this value, should it be parameterized?
             ofile.write("      N_RING   6\n")
             ofile.write(f"      THMESH_X       {dim_size[0]}*1\n")
             ofile.write(f"      THMESH_Y       {dim_size[1]}*1\n")
             ofile.write(f"      THMESH_Z       {str([x+1 for x in range(input.number_axial)]).strip('[]').replace(',','')}\n")
         elif not input.th_fdbk['apply']:
-            ofile.write("      UNIF_TH   0.740    626.85     {}\n".format(np.round(input.inlet_temp-273.15,2))) #!TODO: how to deal with av. fuel temp?
+            ofile.write("      UNIF_TH   {}    {}     {}\n".format(input.coolant_dens, np.round(input.fuel_temp-273.15,2),\
+                                            np.round(input.inlet_temp-273.15,2))) 
         ofile.write("\n")
         ofile.write("!******************************************************************************\n\n")
 
