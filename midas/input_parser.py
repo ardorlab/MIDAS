@@ -863,8 +863,9 @@ def validate_input(keyword, value):
                     if not isinstance(new_item, bool):
                         raise ValueError("'apply' flag for th_fdbk must be boolean")
                 if new_key == 'loc':
-                    if item == None:
-                        new_item = item
+                    new_item = str(item).lower()
+                    if new_item == 'none':
+                        new_item = None
                     else:
                         new_item = Path(str(item))
                 new_dict[new_key] = new_item
@@ -880,6 +881,12 @@ def validate_input(keyword, value):
     
     elif keyword == 'pin_power_recon':
         value = bool(value)
+
+    elif keyword == 'assembly_pins':
+        value = int(value)
+    
+    elif keyword == 'assembly_guide_tubes':
+        value = int(value)
     
     elif keyword == 'num_axial_nodes':
         value = int(value)
@@ -1259,6 +1266,8 @@ class Input_Parser():
         th_default = {'apply':True, 'loc': None}
         self.th_fdbk = yaml_line_reader(info, 'th_fdbk', th_default)
         self.pin_power_recon = yaml_line_reader(info, 'pin_power_recon', True)
+        self.assembly_pins = yaml_line_reader(info, 'assembly_pins', 264)
+        self.assembly_guide_tubes = yaml_line_reader(info, 'assembly_guide_tubes', 25)
         self.number_axial = yaml_line_reader(info, 'num_axial_nodes', 19)
         self.axial_nodes = yaml_line_reader(info, 'axial_nodes', [16.12, "15*25.739", 16.12])
         self.boc_exposure = yaml_line_reader(info, 'boc_core_exposure', 0.0)
