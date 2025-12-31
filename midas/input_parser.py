@@ -827,6 +827,9 @@ def validate_input(keyword, value):
     
     elif keyword == 'number_assemblies':
         value = int(value)
+
+    elif keyword == 'assembly_pitch':
+        value = float(value)
     
     elif keyword == 'core_symmetry':
         value = str(value).lower()
@@ -1246,6 +1249,7 @@ class Input_Parser():
         self.nrow = yaml_line_reader(infomap, 'num_rows', 17)
         self.ncol = yaml_line_reader(infomap, 'num_cols', self.nrow)
         self.num_assemblies = yaml_line_reader(infomap, 'number_assemblies', 193)
+        self.assembly_pitch = yaml_line_reader(infomap, 'assembly_pitch', 21.50)
         self.map_size = yaml_line_reader(infomap, 'core_symmetry', 'full')
         self.xs_lib = yaml_line_reader(info, 'xs_library_path', './') #!TODO: interpret this path relative to the MIDAS job base dir, not opt indv base dir.
         self.xs_extension = yaml_line_reader(info, 'xs_extension', '')

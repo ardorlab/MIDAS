@@ -230,16 +230,15 @@ def without_template(solution, input, cwd, filename):
             ofile.write("\n")
         ofile.write("\n")
     
-        assembly_width = 21.50 #!TODO: change this to an input with default.
         if input.map_size == 'quarter':
-            ofile.write(f"      GRID_X      1*{assembly_width/2} {int(dim_size[0]-1)}*{assembly_width}\n")
+            ofile.write(f"      GRID_X      1*{input.assembly_pitch/2} {int(dim_size[0]-1)}*{input.assembly_pitch}\n")
             ofile.write(f"      NEUTMESH_X  1*1 {int(dim_size[0]-1)}*1\n")
-            ofile.write(f"      GRID_Y      1*{assembly_width/2} {int(dim_size[0]-1)}*{assembly_width}\n")
+            ofile.write(f"      GRID_Y      1*{input.assembly_pitch/2} {int(dim_size[0]-1)}*{input.assembly_pitch}\n")
             ofile.write(f"      NEUTMESH_Y  1*1 {int(dim_size[0]-1)}*1\n")
         else: #assume full geometry if not quarter-core
-            ofile.write(f"      GRID_X      {int(dim_size[0])}*{assembly_width}\n")
+            ofile.write(f"      GRID_X      {int(dim_size[0])}*{input.assembly_pitch}\n")
             ofile.write(f"      NEUTMESH_X  {int(dim_size[0])}*1\n")
-            ofile.write(f"      GRID_Y      {int(dim_size[1])}*{assembly_width}\n")
+            ofile.write(f"      GRID_Y      {int(dim_size[1])}*{input.assembly_pitch}\n")
             ofile.write(f"      NEUTMESH_Y  {int(dim_size[1])}*1\n")
         ofile.write("      GRID_Z      {}\n".format('  '.join([str(x) for x in input.axial_nodes])))
         # Write radial reflectors
@@ -293,7 +292,7 @@ def without_template(solution, input, cwd, filename):
     ## FDBK Block ##
     with open(filename,"a") as ofile:
         ofile.write("FDBK\n")
-        ofile.write("      FA_POWPIT     {} {}\n".format(np.round(input.power/input.num_assemblies,4),assembly_width))
+        ofile.write("      FA_POWPIT     {} {}\n".format(np.round(input.power/input.num_assemblies,4),input.assembly_pitch))
         ofile.write("      GAMMA_FRAC    0.0208    0.0    0.0\n")
         ofile.write("      EFF_DOPLT   T  0.5556\n")
         ofile.write("\n")
