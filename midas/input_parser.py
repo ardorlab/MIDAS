@@ -852,6 +852,12 @@ def validate_input(keyword, value):
     
     elif keyword == 'inlet_temperature':
         value = float(value)
+
+    elif keyword == 'coolant_density':
+        value = float(value)
+
+    elif keyword == 'fuel_temperature':
+        value = float(value)
     
     elif keyword == 'th_fdbk':
         if isinstance(value, dict):
@@ -1266,6 +1272,8 @@ class Input_Parser():
         self.power = yaml_line_reader(info, 'power', 3800.0)
         self.flow = yaml_line_reader(info, 'flow', 18231.89)
         self.inlet_temp = yaml_line_reader(info, 'inlet_temperature', 565.0)
+        self.coolant_dens = yaml_line_reader(info, 'coolant_density', 0.740)
+        self.fuel_temp = yaml_line_reader(info, 'fuel_temperature', 900.0)
         th_default = {'apply':True, 'loc': None}
         self.th_fdbk = yaml_line_reader(info, 'th_fdbk', th_default)
         self.pin_power_recon = yaml_line_reader(info, 'pin_power_recon', True)
