@@ -1269,9 +1269,9 @@ class Input_Parser():
         th_default = {'apply':True, 'loc': None}
         self.th_fdbk = yaml_line_reader(info, 'th_fdbk', th_default)
         self.pin_power_recon = yaml_line_reader(info, 'pin_power_recon', True)
-        self.assembly_pins = yaml_line_reader(info, 'assembly_pins', '4.1 4.75 0.58 6.13')
+        self.assembly_pins = yaml_line_reader(info, 'assembly_pins', 264)
         self.assembly_guide_tubes = yaml_line_reader(info, 'assembly_guide_tubes', 25)
-        self.pin_dimensions = yaml_line_reader(info, 'pin_dimensions', 25)
+        self.pin_dimensions = yaml_line_reader(info, 'pin_dimensions', '4.1 4.75 0.58 6.13')
         self.number_axial = yaml_line_reader(info, 'num_axial_nodes', 19)
         self.axial_nodes = yaml_line_reader(info, 'axial_nodes', [16.12, "15*25.739", 16.12])
         self.boc_exposure = yaml_line_reader(info, 'boc_core_exposure', 0.0)
