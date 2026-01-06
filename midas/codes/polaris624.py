@@ -185,9 +185,7 @@ def evaluate(solution, input):
         ofile.write("%\n% % % % % % % % % % % %\n% %   STATEPOINTS   % %\n% % % % % % % % % % % %\n%\n")
         ofile.write("% Properties of stated materials\n")
         ofile.write(f"state ALL : temp={input.bulk_temps} ")
-        for name, mat in input.pin_options['materials'].items():
-            if mat['fueltype']:
-                ofile.write(f" {name.split('.')[0]} : temp={input.fuel_temps} ")
+        ofile.write(f" FUEL : temp={input.fuel_temps} ")
         if 'control_rods' in input.pin_options.keys():
             ofile.write(f" BankA : in={str(input.cr_inserted).lower()} ")
         if input.boronmat:
@@ -195,9 +193,7 @@ def evaluate(solution, input):
         ofile.write("%\n")
         ofile.write(f"power {input.powdens} %W/gIHM\n%\n")
         ofile.write("deplete")
-        for name, mat in input.pin_options['materials'].items():
-            if mat['fueltype']:
-                ofile.write(f" {name.split('.')[0]}=True")
+        ofile.write(f" FUEL=True")
         ofile.write("\n")
         ofile.write(f"bu")
         for step in input.depl_steps:
