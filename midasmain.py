@@ -14,10 +14,12 @@ from copy import deepcopy
 import random
 import pickle
 import midas_data
+import time as TT
 from midas.input_parser import  Input_Parser
 from midas.optimizer import Optimizer
 from midas.utils.problem_preparation import Prepare_Problem_Values as prep_inp
 from midas.utils.decorators import error_handler, timer, profiler
+
 
 
 # # # # # # # # # # #
@@ -113,6 +115,7 @@ def main(args):
     exitcode = 0
 
 ## Print MIDAS header
+    ts = TT.time()
     logger.info(midas_data.__logo__)
     logger.info("MIDAS Version %s\n\n", midas_data.__version__)
     logger.info("====================================================================================================\n")
@@ -142,6 +145,7 @@ def main(args):
     logger.info("Begin Optimization...\n")
     optimizer.main() #execute optimization through the algorithm class.
     logger.info("\nOptimization completed.")
+    print(f'Executed completed after {TT.time()-ts:.5f} seconds')
 
     return exitcode
 

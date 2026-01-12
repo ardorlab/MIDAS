@@ -232,15 +232,15 @@ def without_template(solution, input, cwd, filename):
     
         assembly_width = 21.50 #!TODO: change this to an input with default.
         if input.map_size == 'quarter':
-            ofile.write(f"      GRID_X      1*{assembly_width/2} {dim_size[0]-1}*{assembly_width}\n")
-            ofile.write(f"      NEUTMESH_X  1*1 {dim_size[0]-1}*1\n")
-            ofile.write(f"      GRID_Y      1*{assembly_width/2} {dim_size[0]-1}*{assembly_width}\n")
-            ofile.write(f"      NEUTMESH_Y  1*1 {dim_size[0]-1}*1\n")
+            ofile.write(f"      GRID_X      1*{assembly_width/2} {dim_size[0]-1:.0f}*{assembly_width}\n")
+            ofile.write(f"      NEUTMESH_X  1*1 {dim_size[0]-1:.0f}*1\n")
+            ofile.write(f"      GRID_Y      1*{assembly_width/2} {dim_size[0]-1:.0f}*{assembly_width}\n")
+            ofile.write(f"      NEUTMESH_Y  1*1 {dim_size[0]-1:.0f}*1\n")
         else: #assume full geometry if not quarter-core
-            ofile.write(f"      GRID_X      {dim_size[0]}*{assembly_width}\n")
-            ofile.write(f"      NEUTMESH_X  {dim_size[0]}*1\n")
-            ofile.write(f"      GRID_Y      {dim_size[1]}*{assembly_width}\n")
-            ofile.write(f"      NEUTMESH_Y  {dim_size[1]}*1\n")
+            ofile.write(f"      GRID_X      {dim_size[0]:.0f}*{assembly_width}\n")
+            ofile.write(f"      NEUTMESH_X  {dim_size[0]:.0f}*1\n")
+            ofile.write(f"      GRID_Y      {dim_size[1]:.0f}*{assembly_width}\n")
+            ofile.write(f"      NEUTMESH_Y  {dim_size[1]:.0f}*1\n")
         ofile.write("      GRID_Z      {}\n".format('  '.join([str(x) for x in input.axial_nodes])))
         # Write radial reflectors
         xsnum_radtop = 2 + len(input.xs_list['reflectors']['radial'])
@@ -259,9 +259,16 @@ def without_template(solution, input, cwd, filename):
             if 'blanket' in fuel:
                 xsnum_blanket = xsnum_radtop + \
                                 input.xs_list['blankets'].index(input.fa_options['blankets'][fuel['blanket']]['serial']) + 1
-                ofile.write("      ASSY_TYPE   {}   1*1  1*{} {}*{}  1*{}  1*{} FUEL\n".format(fuel['type'],xsnum_blanket,\
-                                                                                    input.number_axial-4,xsnum_fuel,\
-                                                                                    xsnum_blanket,xsnum_radtop))
+                # ofile.write("      ASSY_TYPE   {}   1*1  1*{} {}*{}  1*{}  1*{} FUEL\n".format(fuel['type'],xsnum_blanket,\
+                #                                                                     input.number_axial-4,xsnum_fuel,\
+                #                                                                     xsnum_blanket,xsnum_radtop))
+                ofile.write("      ASSY_TYPE   {}   1*1  1*{} 1*{} {}*{}  1*{} 1*{}  1*{} FUEL\n".format(fuel['type'],xsnum_blanket,
+                                                                                                         xsnum_blanket,
+                                                                                                         input.number_axial-6,
+                                                                                                         xsnum_fuel,
+                                                                                                         xsnum_blanket,
+                                                                                                         xsnum_blanket,
+                                                                                                         xsnum_radtop))
             else:
                 ofile.write("      ASSY_TYPE   {}   1*1  {}*{}  1*{} FUEL\n".format(fuel['type'],input.number_axial-2,\
                                                                                 xsnum_fuel,xsnum_radtop))
@@ -284,8 +291,9 @@ def without_template(solution, input, cwd, filename):
                         ofile.write(str(input.pincal_loc[x,y]))
                         ofile.write("  ")
                 except TypeError:
-                    ofile.write(str(input.pincal_loc[x,y]))
-                    ofile.write("  ")
+                    if str(input.pincal_loc[x,y]) not in ['nan']:
+                        ofile.write(str(input.pincal_loc[x,y]))
+                        ofile.write("  ")
             ofile.write("\n")
         ofile.write("\n")
         ofile.write("!******************************************************************************\n\n")
@@ -495,7 +503,6 @@ def with_template(solution, input, cwd, filename):
 
             else:
                 ofile.write(line)   
-
 
 def get_results(parameters, filename, job_failed=False): #!TODO: implement pin power reconstruction.
     """
