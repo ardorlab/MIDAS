@@ -258,9 +258,16 @@ def without_template(solution, input, cwd, filename):
             if 'blanket' in fuel:
                 xsnum_blanket = xsnum_radtop + \
                                 input.xs_list['blankets'].index(input.fa_options['blankets'][fuel['blanket']]['serial']) + 1
-                ofile.write("      ASSY_TYPE   {}   1*1  1*{} {}*{}  1*{}  1*{} FUEL\n".format(fuel['type'],xsnum_blanket,\
-                                                                                    input.number_axial-4,xsnum_fuel,\
-                                                                                    xsnum_blanket,xsnum_radtop))
+                # ofile.write("      ASSY_TYPE   {}   1*1  1*{} {}*{}  1*{}  1*{} FUEL\n".format(fuel['type'],xsnum_blanket,\
+                #                                                                     input.number_axial-4,xsnum_fuel,\
+                #                                                                     xsnum_blanket,xsnum_radtop))
+                ofile.write("      ASSY_TYPE   {}   1*1  1*{} 1*{} {}*{}  1*{} 1*{}  1*{} FUEL\n".format(fuel['type'],xsnum_blanket,
+                                                                                                         xsnum_blanket,
+                                                                                                         input.number_axial-6,
+                                                                                                         xsnum_fuel,
+                                                                                                         xsnum_blanket,
+                                                                                                         xsnum_blanket,
+                                                                                                         xsnum_radtop))
             else:
                 ofile.write("      ASSY_TYPE   {}   1*1  {}*{}  1*{} FUEL\n".format(fuel['type'],input.number_axial-2,\
                                                                                 xsnum_fuel,xsnum_radtop))
@@ -283,8 +290,9 @@ def without_template(solution, input, cwd, filename):
                         ofile.write(str(input.pincal_loc[x,y]))
                         ofile.write("  ")
                 except TypeError:
-                    ofile.write(str(input.pincal_loc[x,y]))
-                    ofile.write("  ")
+                    if str(input.pincal_loc[x,y]) not in ['nan']:
+                        ofile.write(str(input.pincal_loc[x,y]))
+                        ofile.write("  ")
             ofile.write("\n")
         ofile.write("\n")
         ofile.write("!******************************************************************************\n\n")
