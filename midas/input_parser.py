@@ -24,6 +24,7 @@ def yaml_line_reader(data,keyword,default):
     
     Written by Nicholas Rollins. 10/03/2024
     """
+    print(keyword)
     try:
         parsed_val = data[keyword]
     except:
@@ -64,7 +65,9 @@ def validate_input(keyword, value):
     
     elif keyword == 'code_type':
         value = str(value).lower().replace(' ','_')
-        if value not in ["parcs342", "parcs343", "nuscale_database", "trace50p5", "polaris624","serpent","custom_function","styblinski_tang","listsum"]:
+        # if value not in ["parcs342", "parcs343", "nuscale_database", "trace50p5", "polaris624","serpent","custom_function","styblinski_tang","listsum"]:
+        if value not in ["parcs342", "parcs343", "nuscale_database", 
+                         "trace50p5", "polaris624","serpent","custom_function","styblinski_tang","listsum", "surrogate"]:
             raise ValueError("Code types currently supported: PARCS342, PARCS343, NuScale_Database, TRACE50p5.")
     
     elif keyword == 'calc_type':
@@ -1219,7 +1222,8 @@ class Input_Parser():
         info = None; THinfo = None; infomap = None # initialize info variables
         if self.code_interface not in ['custom_function','styblinski_tang','listsum']:
             try:
-                if self.code_interface in ["parcs342","parcs343"]:
+                # if self.code_interface in ["parcs342","parcs343"]:
+                if self.code_interface in ["parcs342","parcs343","surrogate"]:
                     info = self.file_settings['parcs_data']
                 elif self.code_interface == "nuscale_database":
                     info = self.file_settings['nuscale_data']

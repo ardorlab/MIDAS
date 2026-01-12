@@ -22,6 +22,7 @@ from midas.codes import parcs342, parcs343
 from midas.codes import nuscale_lut
 from midas.codes import trace50p5
 from midas.codes import polaris624
+from midas.codes import surrogatemodel
 from tests.regression.listsum import listsum
 
 ## Classes ##
@@ -64,6 +65,10 @@ class Optimizer():
             self.eval_func = polaris624.evaluate
         elif self.input.code_interface == "listsum":
             self.eval_func = listsum.evaluate
+        ## test surrogate 
+        elif self.input.code_interface == "surrogate":
+            self.eval_func = surrogatemodel.evaluate
+            ## need to modify the evaluate function in surrogate model first 
         # getattr(globals()[self.input.code_interface],'evaluate') this command can be used to avoid a list of if else statements. The requirement is that the option matches the intended class.
         else:
             raise ValueError(f"Could not identify eval_func for code type '{self.input.code_interface}'. This is highly irregular.")
@@ -206,7 +211,9 @@ class Optimizer():
     ## Evaluate fitness
             logger.info("Calculating fitness for generation %s...", self.generation.current)
             ## Execute and parse objective/constraint values
-            self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
+            # self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
+            for i in range(self.population.size):
+                self.population.current[i] = self.eval_func(self.population.current[i], self.input) ## serial test
             if 'cost_fuelcycle' in self.input.objectives.keys():
                 for soln in self.population.current:
                     soln.parameters = LWR_fuelcyclecost.get_fuelcycle_cost(soln, self.input)
@@ -331,7 +338,9 @@ class Optimizer():
                 
                 logger.info("Calculating fitness for generation %s...", self.generation.current)
                 ## Execute and parse objective/constraint values
-                self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
+                # self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
+                for i in range(len(self.population.current)):
+                    self.population.current[i] = self.eval_func(self.population.current[i], self.input) ## serial test 
                 if 'cost_fuelcycle' in self.input.objectives.keys():
                     for soln in self.population.current:
                         soln.parameters = LWR_fuelcyclecost.get_fuelcycle_cost(soln, self.input)
