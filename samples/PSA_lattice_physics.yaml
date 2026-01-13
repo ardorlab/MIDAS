@@ -1,0 +1,231 @@
+## General Settings Block
+general:
+  debug_mode: False
+  methodology: simulated_annealing
+  code_type: POLARIS624
+  calc_type: lattice_physics
+  results_directory_name: output_files
+
+## Optimizer Block
+
+optimization:
+  population_size: 4
+  number_of_generations: 12
+  solution_symmetry: octant
+  objectives:
+    PinPowerPeaking:
+      goal: minimize
+      weight: 1.0
+    peak_reactivity:
+      goal: less_than_target
+      target: 1.193
+      weight: 1.0
+    max_critical_exposure:
+      goal: greater_than_target
+      target: 80.0
+      weight: 0.1
+
+## Algorithm Settings
+
+algorithm:
+  buffer_size: 10
+  coooling_schedule: lam
+  secondary_cooling_schedule: exponential_decrease
+  update_factor: 0.95
+  perturbation_type:
+    method: perturb_by_gene
+    num_perturbations: 1
+  buffer_size: 12
+
+
+## Fuel Pin Parts
+
+rod_options:
+  rod_geometries:
+    GUIDETUBE:
+      type: 3
+      radii: 0.5715 0.612
+      materials: COOL.1 CLAD.1 COOL.1
+    INSTRTUBE:
+      type: 2
+      radii: 0.5715 0.612
+      materials: COOL.1 CLAD.1 COOL.1
+    FUEL1:
+      type: 1
+      radii: 0.4096 0.4178 0.4750
+      materials: FUEL.1 GAP.1 CLAD.1 COOL.1
+    UGAD4:
+      type: 4
+      radii: 0.4096 0.4178 0.4750
+      materials: UGAD4.1 GAP.1 CLAD.1 COOL.1
+    UGAD8:
+      type: 8
+      radii: 0.4096 0.4178 0.4750
+      materials: UGAD8.1 GAP.1 CLAD.1 COOL.1
+  control_rods:
+    CONTROLROD:
+      type: C
+      radii: 0.4331 0.4369 0.4839 0.5715 0.612
+      materials: ROD.1 GAP.1 CLADSS.1 COOL.1 CLAD.1 COOL.1
+      guide_tube: GUIDETUBE
+  compositions: #!WARNING: this input is order-sensitive (printed in listed order i
+    uenr_1:
+      type: WT
+      values: U235=7.50 U238=-100
+    uenr_2:
+      type: WT
+      values: U235=4.50 U238=-100
+    uenr_3:
+      type: WT
+      values: U235=6.00 U238=-100
+    f235:
+      type: NUM
+      values: norm=yes uenr_1=1 O16=2
+    g8f235:
+      type: NUM
+      values: norm=yes uenr_2=1 O16=2
+    g4f235:
+      type: NUM
+      values: norm=yes uenr_3=1 O16=2
+    gd2o3:
+      type: FORM
+      values: Gd157=2 O16=3
+    fgad4:
+      type: WT
+      values: gd2o3=4.0 g4f235=-100
+    fgad8:
+      type: WT
+      values: gd2o3=8.0 g8f235=-100
+    water:
+      type: NUM
+      values: norm=yes H1=2 O16=1
+    solboron:
+      type: WT
+      values: scale=PPM norm=yes water=1e6 B=1
+    zirlo:
+      type: WT
+      values: Nb=1.0 Sn=1.2 Fe=1.0 Cr=0.05 Ni=0.05 Zr=-100
+    hegas:
+      type: FORM
+      values: He=1
+    agincd:
+      type: WT
+      values: scale=ABS Ag=0.8 In=0.15 Cd=0.05
+    ss304:
+      type: NUM
+      values: scale=ABS
+        Si28=0.0108359555982723
+        Si29=0.000550219035668072
+        Si30=0.000362711047984736
+        Cr50=0.00873149458900485
+        Cr52=0.168379625523986
+        Cr53=0.0190931077463339
+        Cr54=0.0047526360463818
+        Mn55=0.0200199576369326
+        Fe54=0.0393712186656787
+        Fe56=0.618032604964272
+        Fe57=0.0142734883152205
+        Fe58=0.0018995305181191
+        Ni58=0.0637866055383955
+        Ni60=0.0245700513943382
+        Ni61=0.00106806087331732
+        Ni62=0.00340546257349436
+        Ni64=0.000867269932600613
+
+  materials:
+    FUEL.1:
+      comp: f235
+      dens: 10.412
+      fueltype: True #defines a depletable material at fuel temperature
+    UGAD4.1:
+      comp: fgad4
+      dens: 10.36
+      fueltype: True
+    UGAD8.1:
+      comp: fgad8
+      dens: 10.22
+      fueltype: True
+    GAP.1:
+      comp: hegas
+      dens: 0.166
+    CLAD.1:
+      comp: zirlo
+      dens: 6.56
+    CLADSS.1:
+      comp: ss304
+      dens: 8.03
+    COOL.1:
+      comp: solboron
+      dens: 0.740
+    ROD.1:
+      comp: agincd
+      dens: 10.16
+
+## Genome
+
+decision_variables:
+# parameters used to fill each chromosome.
+  lattice_parameters:
+    FUEL1:
+      map: &ID001
+        [0,
+        1, 1,
+        1, 1, 1,
+        0, 1, 1, 0,
+        1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 0,
+        0, 1, 1, 0, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1]
+      rodtype: FUEL1
+    GUIDETUBE:
+      map: &ID002
+        [0,
+        0, 0,
+        0, 0, 0,
+        1, 0, 0, 1,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 1,
+        1, 0, 0, 1, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0]
+      rodtype: GUIDETUBE
+    INSTRTUBE:
+      map: &ID003
+        [1,
+        0, 0,
+        0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0]
+      rodtype: INSTRTUBE
+    UGAD4:
+      map: *ID001
+      rodtype: UGAD4
+      constraint:
+        type: max_quantity
+        value: 128
+    UGAD8:
+      map: *ID001
+      rodtype: UGAD8
+      constraint:
+        type: max_quantity
+        value: 128
+
+## Calculation Settings
+
+polaris_data:
+  exec_walltime: 43200
+  system_type: PWR
+  num_rows: 17
+  lattice_symmetry: SE #printing symmetry
+  powdens: 18.9 #W/gIHM
+  bulk_temperatures: 566.0 #K
+  fuel_temperatures: 900.0 #K
+  controlrods_inserted: TRUE
+  borated_material: COOL.1, 0 #material name, boron concentration (in ppm)
+  num_mesh_rings: 2
+  depletion_steps: 0 0.1 0.5 

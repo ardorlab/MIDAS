@@ -1,0 +1,126 @@
+## General Settings Block
+general:
+  optimizer: simulated_annealing
+  code_type: PARCS343
+  calc_type: eq_cycle
+  results_directory_name: output_files
+
+## Optimizer Block
+optimization:
+  population_size: 1
+  number_of_generations: 20
+  solution_symmetry: quarter #chromosome symmetry
+  objectives:
+    max_boron:
+      goal: less_than_target
+      target: 1300
+      weight: 1.0
+    PinPowerPeaking:
+      goal: less_than_target
+      weight: 400.0 
+      target: 2.1
+    FDeltaH:
+      goal: less_than_target
+      target: 1.48
+      weight: 600.0     
+    cycle_length:
+      goal: maximize
+      weight: 1.00
+
+## Algorithm Settings
+algorithm:
+  temperature: 100
+  cooling_schedule: exponential_decrease
+  update_factor: 0.98
+  perturbation_type:
+    method: perturb_by_gene
+    num_perturbations: 2
+
+## Fuel Assembly Parts
+assembly_options:
+  reflectors:
+    FA420REFL:
+      refl_type: all #all, radial, top, or bottom
+      serial: ne512_250REFL
+  blankets:
+    blanket_name:
+      serial: 3VAN_HG
+      enrichment: 1.50
+      hm_loading: 1000
+  fuel: 
+    FA420IFBA064: 
+      type: 20
+      serial: ne512_320gd #cross section name in library
+      blanket: blanket_name
+    FA420IFBA104: 
+      type: 30
+      serial: ne512_200
+    FA420IFBA128: 
+      type: 40
+      serial: ne512_250gd
+    FA460IFBA128: 
+      type: 50
+      serial: ne512_250
+
+## Genome
+decision_variables:
+  # parameters used to fill each chromosome.
+  assembly_parameters:
+    FA420IFBA064:
+      map: &ID001
+        [1,
+         1, 1, 1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1,                        
+         1, 1, 1, 1]
+      constraint:
+        type: max_quantity
+        value: 300
+  batches:
+    batch_0:
+      map: *ID001
+      constraint:
+        type: max_quantity
+        value: 200
+    batch_1:
+      map: *ID001
+      constraint:
+        type: max_quantity
+        value: 200
+    batch_2:
+      map: *ID001
+      constraint:
+        type: less_than_variable
+        value: batch_1
+    
+
+## Calculation Settings
+parcs_data:
+  core_type: PWR
+  map:
+    num_rows: 17
+    num_cols: 17
+    number_assemblies: 193
+    core_symmetry: full #printing symmetry
+    assembly_pitch: 21.5
+  xs_library_path: ../XS #!../../../../MIDAS/samples/xs_lib/ #this MUST be a relative path.
+  xs_extension: .PMAXS
+  power: 3800.0 #MW_th
+  flow: 18231.89
+  inlet_temperature: 565.0 #K
+  coolant_density: 1.000 
+  fuel_temperature: 1000.0 #K
+  assembly_pins: 264 
+  assembly_guide_tubes: 25
+  pin_dimensions: 4.1 4.75 0.58 6.13
+  th_fdbk:
+    apply: True 
+    loc: none
+  pin_power_recon: True
+  num_axial_nodes: 10
+  axial_nodes: 16.12, 8*20.32, 16.12
+  depletion_steps: 5*100.0
+  boc_core_exposure: 100.0
