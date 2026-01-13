@@ -224,10 +224,11 @@ class Parallel_Simulated_Annealing():
                 self.buffer.append(pop_list[i])
 
         else: 
+            buffer_chromosomes = [sol.chromosome for sol in self.buffer]
             potential_candidates = []
             for candidate in self.best_in_gen:
-                if candidate not in self.buffer:
-                    potential_candidates.append(candidate)
+                if candidate.chromosome not in buffer_chromosomes:
+                    potential_candidates.append(candidate)    
 
             for candidate in potential_candidates:
                 # find smallest fitness value in buffer
@@ -419,7 +420,7 @@ class PSA_Cooling_Schedules(object):
         sk = (1 / self.global_temperature)
         sk1 = sk + (self.input.quality_factor * (1 / deviation) * (1 / ((sk ** 2) * (deviation ** 2)))) * Gp
         temperature = 1 / sk1
-
+        
         return temperature 
 
     def lam_set_intial(self):
@@ -436,7 +437,7 @@ class PSA_Cooling_Schedules(object):
         
         if deviation == 0: 
             deviation = 0.01
-        
+
         temperature = deviation * self.input.scaling_factor 
 
         return temperature
