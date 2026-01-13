@@ -1,15 +1,15 @@
 ## General Settings Block
 general:
-  debug_mode: True
-  methodology: genetic_algorithm
-  code_type: PARCS342
+  # debug_mode: True
+  optimizer: genetic_algorithm
+  code_type: PARCS343
   calc_type: single cycle
   results_directory_name: output_files
 
 ## Optimizer Block
 optimization:
-  population_size: 200
-  number_of_generations: 15
+  population_size: 2
+  number_of_generations: 4
   solution_symmetry: octant #chromosome symmetry
   objectives:
     max_boron:
@@ -42,32 +42,31 @@ assembly_options:
   reflectors:
     FA420REFL:
       refl_type: all #all, radial, top, or bottom
-      serial: stp_FA420REFL
+      serial: ne512_250REFL
   blankets:
-    FA260BLANKET:
-      serial: stp_FA260BLANKET
+    blanket_name:
+      serial: 3VAN_HG
+      enrichment: 1.50
+      hm_loading: 1000
   fuel: 
     FA420IFBA064: 
       type: 20
-      serial: stp_FA420IFBA064 #cross section name in library
-      blanket: FA260BLANKET
+      serial: ne512_320gd #cross section name in library
+      blanket: blanket_name
     FA420IFBA104: 
       type: 30
-      serial: stp_FA420IFBA104
-      blanket: FA260BLANKET
+      serial: ne512_200
     FA420IFBA128: 
       type: 40
-      serial: stp_FA420IFBA128
-      blanket: FA260BLANKET
+      serial: ne512_250gd
     FA460IFBA128: 
       type: 50
-      serial: stp_FA460IFBA128
-      blanket: FA260BLANKET
+      serial: ne512_250
 
 ## Genome
 decision_variables:
   # parameters used to fill each chromosome.
-  parameters:
+  assembly_parameters:
     FA420IFBA064:
       map: &ID001
         [1,
@@ -75,12 +74,12 @@ decision_variables:
          1, 1, 1,
          1, 1, 1, 1,
          1, 1, 1, 1, 1,
-         1, 1, 1, 1, 1, 1,
-         1, 1, 1, 1, 1, 1,                        
-         1, 1, 1, 1]
+         1, 1, 1, 1, 1,
+         1, 1, 1, 1,                       
+         1, 1]
       constraint:
         type: max_quantity
-        value: 20
+        value: 100
     FA420IFBA104:
       map: *ID001 #this is natively interpreted by yaml, which is super nice.
       constraint:
@@ -95,22 +94,32 @@ decision_variables:
       map: *ID001
       constraint:
         type: max_quantity
-        value: 20
+        value: 100
 
 ## Calculation Settings
 parcs_data:
+  core_type: PWR
   map:
     num_rows: 17
     num_cols: 17
-    number_assemblies: 193
-    core_symmetry: full #printing symmetry
-  xs_library_path: ../../ #!../../../../MIDAS/samples/xs_lib/ #this MUST be a relative path.
+    number_assemblies: 157
+    core_symmetry: quarter #printing symmetry
+    assembly_pitch: 21.5
+  xs_library_path: ../XS #!../../../../MIDAS/samples/xs_lib/ #this MUST be a relative path.
   xs_extension: .PMAXS
   power: 3800.0 #MW_th
   flow: 18231.89
   inlet_temperature: 565.0 #K
-  th_fdbk: False
-  pin_power_recon: False
-  num_axial_nodes: 19
-  axial_nodes: 16.12, 20.32, 15*25.739, 20.32, 16.12
-  depletion_steps: 5*-0.1 -0.5 9*-1.0 6*-5.0
+  coolant_density: 1.000 
+  fuel_temperature: 1000.0 #K
+  assembly_pins: 264 
+  assembly_guide_tubes: 25
+  pin_dimensions: 4.1 4.75 0.58 6.13
+  th_fdbk:
+    apply: True 
+    loc: none
+  pin_power_recon: True
+  num_axial_nodes: 10
+  axial_nodes: 16.12, 8*20.32, 16.12
+  depletion_steps: 5*100.0
+  boc_core_exposure: 100.0
