@@ -56,7 +56,6 @@ class Parallel_Simulated_Annealing():
         self.buffer = []
         self.active_solutions = [[] for i in range(self.input.num_procs)]
         self.selected_solutions = [0 for i in range(self.input.num_procs)]
-        self.generated_solutions = [[] for i in range(self.input.num_procs)]
         self.best_in_gen = [0 for i in range(self.input.num_procs)]
         self.total_moves = 0
         self.holder = optools.Population(2, None)
