@@ -56,6 +56,7 @@ class Parallel_Simulated_Annealing():
         self.buffer = []
         self.active_solutions = [[] for i in range(self.input.num_procs)]
         self.selected_solutions = [0 for i in range(self.input.num_procs)]
+        self.generated_solutions = [[] for i in range(self.input.num_procs)]
         self.best_in_gen = [0 for i in range(self.input.num_procs)]
         self.total_moves = 0
         self.holder = optools.Population(2, None)
@@ -72,8 +73,9 @@ class Parallel_Simulated_Annealing():
         """
         logger = logging.getLogger("MIDAS_logger")
 
-        # update / populate buffer
-        self.update_buffer(pop_list, gen_obj.current)
+        # populate buffer
+        if gen_obj.current == 1: 
+            self.update_buffer(pop_list, gen_obj.current)
 
         # calculate initial temperature only if lam
         if gen_obj.current == 1:
@@ -102,10 +104,16 @@ class Parallel_Simulated_Annealing():
         with Pool(self.input.num_procs) as p:
             holder = p.starmap(self.optimizer_thread,  zip(range(self.input.num_procs), repeat(gen_obj)))
 
+        solns_for_buffer = []
+
         # retrieve information
-        for i, (best, moves) in enumerate(holder):
+        for i, (best, moves, generated_solutions) in enumerate(holder):
             self.best_in_gen[i] = best
             self.total_moves += moves
+            solns_for_buffer.extend(generated_solutions)
+
+        # update buffer
+        self.update_buffer(solns_for_buffer, gen_obj.current)
 
         return self.best_in_gen
 
@@ -125,6 +133,7 @@ class Parallel_Simulated_Annealing():
         from midas.optimizer import  Optimizer # this has to be here
         best_in_current_gen = 0
         proc_total_moves = 0
+        generated_solutions = []
         os.system(f'rm -rf ./{self.input.results_dir_name}/tmp_Proc_{proc}_*')
 
         # iterate for population size
@@ -178,7 +187,9 @@ class Parallel_Simulated_Annealing():
                 except:
                     best_in_current_gen =  soln
 
-        return best_in_current_gen, proc_total_moves
+            generated_solutions.append(self.active_solutions[proc][0])
+
+        return best_in_current_gen, proc_total_moves, generated_solutions
 
     def SA_threads(self, pop_list, proc, current_step):
         """
@@ -226,7 +237,7 @@ class Parallel_Simulated_Annealing():
         else: 
             buffer_chromosomes = [sol.chromosome for sol in self.buffer]
             potential_candidates = []
-            for candidate in self.best_in_gen:
+            for candidate in pop_list:
                 if candidate.chromosome not in buffer_chromosomes:
                     potential_candidates.append(candidate)    
 
