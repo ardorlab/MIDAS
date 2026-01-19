@@ -14,6 +14,7 @@ import numpy as np
 import copy
 import time as TT
 import matplotlib.pyplot as plt
+st = TT.time()
 
 from loadmodel_Nov25 import minmaxReverse, minmaxscale
 from loadmodel_Nov25 import model
@@ -23,6 +24,7 @@ from loadmodelcore import trunks as trunk_core
 from loadmodelcore import scalerparam as scaler_core
 from loadmodelcore import model as modelcore
 from loadmodelpin import best_model as pinmodel
+# from loadpinmodel_new import best_model as pinmodel
 
 import tensorflow as tf
 import os
@@ -799,7 +801,6 @@ def getdata_fully_vectorized(bumap, xsdict, coremap, fabulist, scalerparam):
 
 
 ## core map
-
 xsdict = pickle.load(open('/home/khnguy22/Deeponet-midas/MIDAS/surmodel/xsdata/axialFAtypeXS.pkl','rb'))
 ## type --> BU value --> xs type --> axial node --> value
 
@@ -1081,265 +1082,18 @@ def get_result(LPs, bustep=bustep, count=count,
     t2 = TT.time()
     print(f'one cycle take {(t2-t0):.5f}')
     return Fd_all, Fq_all, np.max(boron_his), interpolatecycle(10,boron_his,cycle_his)
-# # Output
-# elapsed_time = TT.time() - start_time
-# # print(Fd_all, Fq_all)
 
-# print(f"Elapsed time: {elapsed_time:.2f} s")
-# print(f"Elapsed time per case: {elapsed_time/count:.2f} s")
+LPs = ['526  526  526  566  501  526  526  501  10 \n', 
+       '526  526  462  502  526  566  501  501  10 \n', 
+       '462  526  566  501  526  502  526  501  10 \n', 
+       '566  462  526  526  501  526  462  501  10 \n', 
+       '526  501  566  526  501  526  566  10   10 \n',
+       '462  566  526  502  462  526  501  10   00 \n',
+       '526  462  501  462  526  526  10   10   00 \n',
+       '526  526  501  501  10   10   10   00   00 \n',
+       '10   10   10   10   10   00   00   00   00 \n']
 
-# ### save data 
-# dir = 'save_depletion_numpy_pin_07'
-# os.makedirs(dir, exist_ok=True)
-# np.save(os.path.join(dir, 'boronmax_pred.npy'),boronmax_pred)
-# np.save(os.path.join(dir, 'boronmax_true.npy'),boronmax_true)
-# np.save(os.path.join(dir, 'cycle_length_pred.npy'),cycle_length_pred)
-# np.save(os.path.join(dir, 'boronmax_true.npy'),boronmax_true)
-# np.save(os.path.join(dir, 'cycle_length_true.npy'),cycle_length_true)
-# np.save(os.path.join(dir, 'Fdmax_pinrecon_model_06.npy'),np.array(Fdmax))
-# np.save(os.path.join(dir, 'Fqmax_pinrecon_model_06.npy'),np.array(Fqmax))
-# print(np.array(Fqmax).shape)
-
-
-# stop
-
-# # np.save('Fdmax_2k_model_06.npy', np.array(Fdmax))
-# # np.save('Fqmax_2k_model_06.npy', np.array(Fqmax))
-# # Fqmax=np.load('Fqmax_2k.npy')
-# # Fdmax=np.load('Fdmax_2k.npy')
-# ## load and compare
-# yfd_testr  = np.load(testdatapath+'fqfdmax.npy').astype(np.float32)[:len(Fdmax),1]
-# yfq_testr  = np.load(testdatapath+'fqfdmax.npy').astype(np.float32)[:len(Fqmax),0]
-# yfd_predr = np.array(Fdmax)
-# yfq_predr = np.array(Fqmax)
-# print('Fq error')
-# relative_diff = np.abs(yfq_predr - yfq_testr) / (np.abs(yfq_testr) + 1e-8) * 100
-# # Compute max and min relative difference
-# max_diff = np.max(relative_diff)
-# min_diff = np.min(relative_diff)
-# mean_diff = np.mean(relative_diff)
-
-# print(f"Max relative difference: {max_diff:.4f}%")
-# print(f"Min relative difference: {min_diff:.4f}%")
-# print(f"Mean relative difference: {mean_diff:.4f}%")
-# # print(relative_diff)
-# # print(yfq_predr)
-# # print(yfq_testr)
-
-# print('Fd error')
-# relative_diff = np.abs(yfd_predr - yfd_testr) / (np.abs(yfd_testr) + 1e-8) * 100
-
-
-# # Compute max and min relative difference
-# max_diff = np.max(relative_diff)
-# min_diff = np.min(relative_diff)
-# mean_diff = np.mean(relative_diff)
-
-# print(f"Max relative difference: {max_diff:.4f}%")
-# print(f"Min relative difference: {min_diff:.4f}%")
-# print(f"Mean relative difference: {mean_diff:.4f}%")
-# # print(relative_diff)
-# # print(yfd_predr)
-# # print(yfd_testr)
-# import numpy as np
-# import pyvista as pv
-# import matplotlib.pyplot as plt
-# from sklearn.metrics import r2_score
-
-
-# def evaluate_pred(y_testr, y_predr, sufix):
-#     plt.figure()
-#     plt.scatter(y_testr.flatten(), y_predr.flatten(), alpha=0.2, s=2, color='red')
-#     plt.plot(y_testr.flatten(), y_testr.flatten(), color='blue', linestyle='-', label='0% error')
-#     plt.plot(y_testr.flatten(), y_testr.flatten() * 1.05, color='black', linestyle=':', label='+-5% Error')
-#     plt.plot(y_testr.flatten(), y_testr.flatten() * 0.95, color='black', linestyle=':')
-#     # plt.plot([0, 10], [0, 10], color='red', linestyle='--')
-#     plt.xlabel('True Values')
-#     # plt.ylabel('Calculated Values')
-#     plt.ylabel('Predicted Values')
-#     # plt.title('True vs. Predicted')
-#     plt.legend()
-#     plt.grid(True)
-#     plt.savefig('predotest'+sufix+'.png')
-    
-#     plt.figure()
-#     residuals = y_predr.flatten() - y_testr.flatten()
-#     plt.hist(residuals, bins=50)
-#     plt.title("Prediction Error (Residuals) Distribution")
-#     plt.xlabel("Prediction Error")
-#     plt.grid(True)
-#     plt.savefig('residual'+sufix+'.png')
-    
-    
-#     r2 = r2_score(y_testr.flatten(), y_predr.flatten())
-#     print("R² Score:", r2)
-    
-#     mae = np.mean(np.abs(y_testr - y_predr))
-#     rmse = np.sqrt(np.mean((y_testr - y_predr)**2))
-    
-#     normalized_mae = mae / (y_testr.max() - y_predr.min())
-#     normalized_rmse = rmse / (y_testr.max() - y_predr.min())
-    
-#     print("Normalized MAE (%):", normalized_mae * 100)
-#     print("Normalized RMSE (%):", normalized_rmse * 100)
-
-# print('Evaluate Fq')
-# evaluate_pred(yfq_testr, yfq_predr, 'Fqmod6')
-# print('Evaluate Fd')
-# evaluate_pred(yfd_testr, yfd_predr, 'Fdmod6')
-
-# stop
-
-
-
-
-# # def export_to_vtk(A, B, filename="output.vtk"):
-# #     """
-# #     Export 3D arrays A and B (shape (1, 1296)) to a StructuredGrid VTK file
-# #     with given x, y spacing and custom z spacing. Also saves percentage difference.
-# #     """
-# #     # --- Reshape arrays ---
-# #     nx, ny, nz = 9, 9, 16
-# #     A3 = A.reshape(nx, ny, nz)
-# #     B3 = B.reshape(nx, ny, nz)
-
-# #     # --- Compute percentage difference ---
-# #     diff_pct = []
-# #     for i in range (A.shape[0]):
-# #         if abs(A[i]) >1e-6 and A[i] !=-1:
-# #             d = (B[i]-A[i])/(A[i])*100
-# #             # print(d, i, A[i], B[i])
-# #             diff_pct.append((B[i]-A[i])/(A[i])*100)
-# #         else:
-# #             diff_pct.append(0.0)
-    
-# #     diff_pct = np.array(diff_pct)
-# #     print(f'Error range: {np.max(diff_pct)} {np.min(diff_pct)}')
-# #     diff_pct = B-A
-
-# #     # --- Grid definition ---
-# #     xgrid_sta = 10.75
-# #     ygrid_sta = 10.75
-# #     zgrid = [
-# #         15.24, 10.16, 5.08,
-# #         30.48, 30.48, 30.48, 30.48, 30.48,
-# #         30.48, 30.48, 30.48, 30.48, 30.48,
-# #         5.08, 10.16, 15.24 
-# #     ]
-
-# #     # Coordinates
-# #     x = np.arange(1, nx + 1) * xgrid_sta
-# #     y = np.arange(1, ny + 1) * ygrid_sta
-# #     z = np.cumsum(zgrid)
-
-# #     # Build meshgrid
-# #     xx, yy, zz = np.meshgrid(x, y, z, indexing="ij")
-
-# #     # --- Create structured grid ---
-# #     grid = pv.StructuredGrid(xx, yy, zz)
-
-# #     # --- Attach data ---
-# #     grid.point_data["test"] = A3.flatten(order="F")
-# #     grid.point_data["pred"] = B3.flatten(order="F")
-# #     grid.point_data["Diff(%)"] = diff_pct.flatten(order="F")
-
-# #     # --- Save ---
-# #     grid.save(filename)
-# #     print('Saving vtk file!')
-# #     return 
-
-# # def cal_MAE_vtk(A,B, filename='mae.vtk'):
-# #     nx, ny, nz = 9, 9, 16
-# #     N, M = A.shape
-# #     diff_pct = []
-# #     tempA = A.flatten()
-# #     tempB = B.flatten()
-# #     for i in range (len(tempA)):
-# #         if abs(tempA[i]) >1e-6:
-# #             d = (tempB[i]-tempA[i])/(tempA[i])*100
-# #             # print(d, i, A[i], B[i])
-# #             diff_pct.append(d)
-# #         else:
-# #             diff_pct.append(0.0)
-# #     ## reshape 
-# #     mean_diff = np.mean(np.array(diff_pct).reshape(N,M),axis=0)
-# #     mean_diff = mean_diff.reshape(nx,ny,nz)
-# #     # --- Grid definition ---
-# #     xgrid_sta = 10.75
-# #     ygrid_sta = 10.75
-# #     zgrid = [
-# #         15.24, 10.16, 5.08,
-# #         30.48, 30.48, 30.48, 30.48, 30.48,
-# #         30.48, 30.48, 30.48, 30.48, 30.48,
-# #         5.08, 10.16, 15.24 
-# #     ]
-
-# #     # Coordinates
-# #     x = np.arange(1, nx + 1) * xgrid_sta
-# #     y = np.arange(1, ny + 1) * ygrid_sta
-# #     z = np.cumsum(zgrid)
-
-# #     # Build meshgrid
-# #     xx, yy, zz = np.meshgrid(x, y, z, indexing="ij")
-
-# #     # --- Create structured grid ---
-# #     grid = pv.StructuredGrid(xx, yy, zz)
-# #     grid.point_data["MAE"] = mean_diff.flatten(order="F")
-
-# #     # --- Save ---
-# #     grid.save(filename)
-# #     print('Saving MAE vtk file!')
-
-# #     return 
-
-# # def plot_errorp (A,B,figurename):
-# #     A = A.flatten()
-# #     B = B.flatten()
-# #     diff_pct = []
-# #     tempA = A.flatten()
-# #     tempB = B.flatten()
-# #     for i in range (len(tempA)):
-# #         if abs(tempA[i]) >1e-6:
-# #             d = (tempB[i]-tempA[i])/(tempA[i])*100
-# #             # print(d, i, A[i], B[i])
-# #             diff_pct.append(d)
-# #         else:
-# #             diff_pct.append(0.0)
-# #     relative_diff = np.array(diff_pct)
-# #     p50 = np.percentile(abs(relative_diff), 50)
-# #     p90 = np.percentile(abs(relative_diff), 90)
-# #     p99 = np.percentile(abs(relative_diff), 99)
-# #     plt.figure(figsize=(10, 6))
-# #     plt.hist(relative_diff, bins=30, color='skyblue', edgecolor='black', alpha=0.7)
-    
-# #     for p, label, color in zip([p50, p90, p99], ['50th', '90th', '99th'], ['green', 'orange', 'red']):
-# #         plt.axvline(p, color=color, linestyle='--', linewidth=2, label=f'{label} percentile: {p:.4f}')
-    
-# #     plt.title('Histogram of Relative Differences')
-# #     plt.xlabel('Relative Difference')
-# #     plt.ylabel('Frequency')
-# #     plt.legend()
-# #     plt.grid(True)
-# #     plt.tight_layout()
-# #     plt.savefig(figurename+'.png',dpi=300)
-
-
-# # export_to_vtk(y_testr[imin], y_predr[imin], filename="depminRMSE.vtk")
-# # export_to_vtk(y_testr[imax], y_predr[imax], filename="depmaxRMSE.vtk")
-# # cal_MAE_vtk(y_testr,y_predr, filename='maedepletion.vtk')
-# # ### calculate the error distribution in percentile 
-# # plot_errorp (y_testr,y_predr,'depletionAbsolute_dif_percent')
-# # ## test the last burn step
-# # eocmap_pred = initbumap.reshape(-1, 1296)
-# # eocmap_test = np.load(testdatapath+'buout.npy').astype(np.float32)[-1].reshape(-1, 1296)
-# # plot_errorp (eocmap_test,eocmap_pred,'budepletionAbsolute_dif_percent')
-# # export_to_vtk(eocmap_test.flatten(), eocmap_pred.flatten(), filename="bumapEOC.vtk")
-# # cal_MAE_vtk(eocmap_test,eocmap_pred, filename='bumaedepletion.vtk')
-
-
-
-
-
-
-
-
+LPs = " ".join(LPs).strip().split()
+for kk in range(100):
+    print(get_result(LPs))
+print((TT.time()-st)/100)
