@@ -264,6 +264,7 @@ class Solution():
                 gene_options_dict is decided differently.
         
         Written by Nicholas Rollins. 10/15/2024
+        Updated by Jake Mikouchi. 1/19/2026
         """
         ## Extract zones map
         zone_chromosome = [loc[0] for loc in chromosome]
@@ -294,32 +295,82 @@ class Solution():
                     gene_options_dict[batch_num].remove(chromosome[i][1])
                 except ValueError: #previous selection at this location made invalid by mutation.
                     chromosome[i] = (chromosome[i][0],None)
-        
-        ## Randomly load fuel into empty locations in shuffling scheme.
-        for i in range(len(zone_chromosome)):
-            batch_num = int(zone_chromosome[i].replace(' ','_').split('_')[-1])
-            
-            if not chromosome[i][1]: #location is missing a FA
-            ## choose valid loading option before continuing.
-                if not gene_options_dict[batch_num]:
-                    raise ValueError(f"Failed to reload fuel; no source locations available for unassigned location of batch {batch_num}.\n{chromosome}") #!TODO: remove chromosome printout?
-                valid = False
-                attempt = 0
-                while not valid:
-                    attempt += 1
-                    gene = random.choice(gene_options_dict[batch_num])
-                    if batch_num == 0:
-                        #!if genome[gene]['map'][i]: #check that the selected gene option is viable at this location. this requires decoding.
+        if 'octant' not in LWR_core_parameters:
+            ## Randomly load fuel into empty locations in shuffling scheme.
+            for i in range(len(zone_chromosome)):
+                batch_num = int(zone_chromosome[i].replace(' ','_').split('_')[-1])
+                
+                if not chromosome[i][1]: #location is missing a FA
+                ## choose valid loading option before continuing.
+                    if not gene_options_dict[batch_num]:
+                        raise ValueError(f"Failed to reload fuel; no source locations available for unassigned location of batch {batch_num}.\n{chromosome}") #!TODO: remove chromosome printout?
+                    valid = False
+                    attempt = 0
+                    while not valid:
+                        attempt += 1
+                        gene = random.choice(gene_options_dict[batch_num])
+                        if batch_num == 0:
+                            #!if genome[gene]['map'][i]: #check that the selected gene option is viable at this location. this requires decoding.
+                            valid = True
+                        #there must be enough symmetrical locs in the source to fill the symmetric locs in the target.
+                        elif multdict[i] <= multdict[gene]:
+                            valid = True
+                        if attempt > 1000:
+                            raise ValueError(f"Failed to reload fuel in shuffling scheme after 1,000 attempts for unassigned location of batch {batch_num}.\n{chromosome}") #!TODO: remove chromosome printout?
+                        
+                    chromosome[i] = (chromosome[i][0],gene)
+                    if batch_num != 0:
+                        gene_options_dict[batch_num].remove(gene)
+        elif 'octant' in LWR_core_parameters and num_rows % 2 == 0: 
+            ## BWR octant core symmetry for equilibrium cycle
+            ## will force fresh fuel in diagonal to compensate for impossible solutions
+
+            ## Randomly load fuel into empty locations in shuffling scheme.
+            for i in range(len(zone_chromosome)):
+                fresh_replacement = None
+                batch_num = int(zone_chromosome[i].replace(' ','_').split('_')[-1])
+                
+                if not chromosome[i][1]: #location is missing a FA
+                ## choose valid loading option before continuing.
+                    valid = False
+                    if not gene_options_dict[batch_num]:
+                        fresh_replacement = ( zone_chromosome[0][:-1] +'0',  random.choice(gene_options_dict[0]))
                         valid = True
-                    #there must be enough symmetrical locs in the source to fill the symmetric locs in the target.
-                    elif multdict[i] <= multdict[gene]:
-                        valid = True
-                    if attempt > 1000:
-                        raise ValueError(f"Failed to reload fuel in shuffling scheme after 1,000 attempts for unassigned location of batch {batch_num}.\n{chromosome}") #!TODO: remove chromosome printout?
-                    
-                chromosome[i] = (chromosome[i][0],gene)
-                if batch_num != 0:
-                    gene_options_dict[batch_num].remove(gene)
+                    attempt = 0
+                    while not valid:
+                        attempt += 1
+                        gene = random.choice(gene_options_dict[batch_num])
+                        if symmetry != 'octant':
+                            if batch_num == 0:
+                                valid = True
+                            #there must be enough symmetrical locs in the source to fill the symmetric locs in the target.
+                            if multdict[i] <= multdict[gene]:
+                                valid = True
+                            if attempt > 1000:
+                                raise ValueError(f"Failed to reload fuel in shuffling scheme after 1,000 attempts for unassigned location of batch {batch_num}.\n{chromosome}") #!TODO: remove chromosome printout?
+                        else: 
+                            if batch_num == 0:
+                                valid = True
+                            #there must be enough symmetrical locs in the source to fill the symmetric locs in the target.
+                            elif multdict[i] == multdict[gene]:
+                                valid = True
+                            if attempt > 1000:
+                                # try 1000 times and if all fail then forced fresh fuel may occur
+                                if batch_num > 0 and (not any(v >= multdict[i] for v in [multdict[g] for g in gene_options_dict.get(batch_num, [])])):
+                                    fresh_replacement = ( zone_chromosome[0][:-1] +'0',  random.choice(gene_options_dict[0]))
+                                    valid = True
+                                if multdict[i] <= multdict[gene]:
+                                    valid = True
+                                if attempt > 2000:
+                                    raise ValueError(f"Failed to reload fuel in shuffling scheme after 2,000 attempts for unassigned location of batch {batch_num}.\n{chromosome}") #!TODO: remove chromosome printout?
+                    if fresh_replacement:
+                        chromosome[i] = fresh_replacement
+                    else:
+                        chromosome[i] = (chromosome[i][0],gene)
+                        if batch_num != 0:
+                            gene_options_dict[batch_num].remove(gene)
+
+        return chromosome
 
         return chromosome
 
