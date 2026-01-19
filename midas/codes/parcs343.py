@@ -77,6 +77,8 @@ def evaluate(solution, input):
 
     ## Run PARCS INPUT DECK #!TODO: separate the input writing and execution into two different functions that are called in sequence.
         parcscmd = __parcs343exe__
+        # import time as TT
+        # st = TT.time()
         try:
             output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=input.code_walltime) #wait until calculation finishes
         ## Get Results
@@ -188,8 +190,8 @@ def without_template(solution, input, cwd, filename):
             ofile.write("      PIN_POWER  T\n")
         else:
             ofile.write("      PIN_POWER  F\n")
-        ofile.write("      PRINT_OPT  T T T T T F T T T T  T  T  T  T  F  T  T")
-        #!ofile.write("      PLOT_OPTS 0 0 0 0 0 2\n")
+        ofile.write("      PRINT_OPT  T T T T T F T T T T  T  T  T  T  F  T  T\n")
+        ofile.write("      PLOT_OPTS 0 0 0 0 0 2\n")
         ofile.write("\n")
         ofile.write("!******************************************************************************\n\n")
         
@@ -198,14 +200,15 @@ def without_template(solution, input, cwd, filename):
         ofile.write("PARAM\n")
         ofile.write("      LSOLVER     1 1 20\n")
         if input.th_fdbk: #!TODO: temporary solution. This should be replaced with an actual parameter for the kernal.
-            ofile.write("      NODAL_KERN  HYBRID\n")
+            # ofile.write("      NODAL_KERN  HYBRID\n")
+            ofile.write("      NODAL_KERN  NEMMG\n")
         else:
             ofile.write("      NODAL_KERN  NEMMG\n")
         ofile.write("      CMFD        2\n")
         ofile.write("      DECUSP      2\n")
         ofile.write("      INIT_GUESS  0\n")
         ofile.write("      CONV_SS     1.e-6 5.e-5 1.e-3\n")
-        #!ofile.write("      EPS_ERF     0.010\n")
+        ofile.write("      EPS_ERF     0.010\n")
         ofile.write("      EPS_ANM     0.000001\n")
         ofile.write("      NLUPD_SS    3 5 1\n")
         #!if input.th_fdbk:

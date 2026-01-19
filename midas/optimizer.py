@@ -68,7 +68,6 @@ class Optimizer():
         ## test surrogate 
         elif self.input.code_interface == "surrogate":
             self.eval_func = surrogatemodel.evaluate
-            ## need to modify the evaluate function in surrogate model first 
         # getattr(globals()[self.input.code_interface],'evaluate') this command can be used to avoid a list of if else statements. The requirement is that the option matches the intended class.
         else:
             raise ValueError(f"Could not identify eval_func for code type '{self.input.code_interface}'. This is highly irregular.")
@@ -207,13 +206,28 @@ class Optimizer():
                 for i in range(self.population.size):
                     chromosome = self.get_initial_population(i) 
                     self.population.current.append(self.generate_solution(f'Gen_0_Indv_{i}', chromosome))
-            pool = Pool(processes=self.input.num_procs) #initialize parallel execution
+            if self.input.code_interface == "surrogate":
+                import multiprocessing as mp
+                mp.set_start_method('spawn', force=True)
+                from surmodel.paralel_MLmodel import init_worker
+                chunksize = max(1, self.population.size // (self.input.num_procs * 4))
+                pool = Pool(processes=self.input.num_procs, initializer=init_worker)
+                # pool = Pool(processes=self.input.num_procs) #initialize parallel execution
+            else:
+                pool = Pool(processes=self.input.num_procs) #initialize parallel execution
     ## Evaluate fitness
             logger.info("Calculating fitness for generation %s...", self.generation.current)
             ## Execute and parse objective/constraint values
-            # self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
-            for i in range(self.population.size):
-                self.population.current[i] = self.eval_func(self.population.current[i], self.input) ## serial test
+            if self.input.code_interface == "surrogate":
+                ### initial with PARCRs running first 
+                print(self.generation.current)
+                stop
+                self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)), chunksize=chunksize)
+                # for i in range(self.population.size):
+                #     self.population.current[i] = self.eval_func(self.population.current[i], self.input) ## serial test
+            else:
+                self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
+            
             if 'cost_fuelcycle' in self.input.objectives.keys():
                 for soln in self.population.current:
                     soln.parameters = LWR_fuelcyclecost.get_fuelcycle_cost(soln, self.input)
@@ -338,9 +352,13 @@ class Optimizer():
                 
                 logger.info("Calculating fitness for generation %s...", self.generation.current)
                 ## Execute and parse objective/constraint values
-                # self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
-                for i in range(len(self.population.current)):
-                    self.population.current[i] = self.eval_func(self.population.current[i], self.input) ## serial test 
+                if self.input.code_interface == "surrogate":
+                    self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)), chunksize=chunksize)
+                    # for i in range(len(self.population.current)):
+                    #     self.population.current[i] = self.eval_func(self.population.current[i], self.input) ## serial test 
+                else:
+                    self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
+        
                 if 'cost_fuelcycle' in self.input.objectives.keys():
                     for soln in self.population.current:
                         soln.parameters = LWR_fuelcyclecost.get_fuelcycle_cost(soln, self.input)
