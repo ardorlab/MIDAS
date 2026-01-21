@@ -148,7 +148,10 @@ class SA_reproduction():
                     old_gene = new_soln[loc_to_mutate]
                     gene_options = optools.Gene_Validity_check.contraceptive_check(input_obj, all_genes_list, all_gene_options,
                                                                                     core_parameters, old_soln, [], loc_to_mutate)
-                    new_gene = random.choice(gene_options)
+                    try:
+                        new_gene = random.choice(gene_options)
+                    except:
+                        break
                     if new_gene != old_gene:
                         if all_gene_options[new_gene]['map'][loc_to_mutate] == 1:
                             new_soln[loc_to_mutate] = new_gene

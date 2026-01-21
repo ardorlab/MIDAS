@@ -240,10 +240,14 @@ class GA_reproduction():
                 
             attempts += 1
             # final check for adherence to input constraints
-
-            if optools.Gene_Validity_check.abortive_check(input_obj, genes_list,genome,core_parameters,child_one) and \
-                optools.Gene_Validity_check.abortive_check(input_obj, genes_list,genome,core_parameters,child_two):
-                chromosome_is_valid = True
+            if batches:
+                if optools.Gene_Validity_check.abortive_check(input_obj, genes_list,batches,core_parameters,child_one) and \
+                    optools.Gene_Validity_check.abortive_check(input_obj, genes_list,batches,core_parameters,child_two):
+                    chromosome_is_valid = True
+            else:
+                if optools.Gene_Validity_check.abortive_check(input_obj, genes_list,genome,core_parameters,child_one) and \
+                    optools.Gene_Validity_check.abortive_check(input_obj, genes_list,genome,core_parameters,child_two):
+                    chromosome_is_valid = True
 
         if batches: #reload fuel in 'None' locations.
             child_one = optools.Solution.EQ_reload_fuel(genome,core_parameters,child_one)
@@ -339,9 +343,14 @@ class GA_reproduction():
                 attempts += 1
                 
                 # final check for adherence to input constraints
-                if optools.Gene_Validity_check.abortive_check(input_obj, genes_list,genome,core_parameters,child_one) and \
-                    optools.Gene_Validity_check.abortive_check(input_obj, genes_list,genome,core_parameters,child_two):
-                    chromosome_is_valid = True
+                if batches:
+                    if optools.Gene_Validity_check.abortive_check(input_obj, genes_list,batches,core_parameters,child_one) and \
+                        optools.Gene_Validity_check.abortive_check(input_obj, genes_list,batches,core_parameters,child_two):
+                        chromosome_is_valid = True
+                else:
+                    if optools.Gene_Validity_check.abortive_check(input_obj, genes_list,genome,core_parameters,child_one) and \
+                        optools.Gene_Validity_check.abortive_check(input_obj, genes_list,genome,core_parameters,child_two):
+                        chromosome_is_valid = True
             
         if batches: #reload fuel in 'None' locations and resolve conflicts.
             child_one = optools.Solution.EQ_reload_fuel(genome,core_parameters,child_one)
@@ -382,9 +391,14 @@ class GA_reproduction():
             
             attempts += 1
             # final check for adherence to input constraints
-            if optools.Gene_Validity_check.abortive_check(input_obj, genes_list,genome,core_parameters,child_one) and \
-                optools.Gene_Validity_check.abortive_check(input_obj, genes_list,genome,core_parameters,child_two):
-                chromosome_is_valid = True
+            if batches:
+                if optools.Gene_Validity_check.abortive_check(input_obj, genes_list,batches,core_parameters,child_one) and \
+                    optools.Gene_Validity_check.abortive_check(input_obj, genes_list,batches,core_parameters,child_two):
+                    chromosome_is_valid = True
+            else:
+                if optools.Gene_Validity_check.abortive_check(input_obj, genes_list,genome,core_parameters,child_one) and \
+                    optools.Gene_Validity_check.abortive_check(input_obj, genes_list,genome,core_parameters,child_two):
+                    chromosome_is_valid = True
 
         if batches: #reload fuel in 'None' locations and resolve conflicts.
             child_one = optools.Solution.EQ_reload_fuel(genome,core_parameters,child_one)
@@ -437,9 +451,14 @@ class GA_reproduction():
             
             attempts += 1
             # final check for adherence to input constraints
-            if optools.Gene_Validity_check.abortive_check(input_obj, genes_list,genome,core_parameters,child_one) and \
-                optools.Gene_Validity_check.abortive_check(input_obj, genes_list,genome,core_parameters,child_two):
-                chromosome_is_valid = True
+            if batches:
+                if optools.Gene_Validity_check.abortive_check(input_obj, genes_list,batches,core_parameters,child_one) and \
+                    optools.Gene_Validity_check.abortive_check(input_obj, genes_list,batches,core_parameters,child_two):
+                    chromosome_is_valid = True
+            else:
+                if optools.Gene_Validity_check.abortive_check(input_obj, genes_list,genome,core_parameters,child_one) and \
+                    optools.Gene_Validity_check.abortive_check(input_obj, genes_list,genome,core_parameters,child_two):
+                    chromosome_is_valid = True
             
         if batches: #reload fuel in 'None' locations and resolve conflicts.
             child_one = optools.Constrain_Input.EQ_reload_fuel(genome,core_parameters,child_one)
