@@ -194,7 +194,7 @@ class Optimizer():
             
     ## Initialize beginning population
             self.population.current = []
-            
+            namedir = []
             if self.input.methodology == 'simulated_annealing' and self.input.num_procs > 1:
                 # for parallel simulated annealing the initial population is the size of the buffer
                 logger.info("Generating initial population of %s individuals...", self.input.buffer_size)
@@ -206,13 +206,13 @@ class Optimizer():
                 for i in range(self.population.size):
                     chromosome = self.get_initial_population(i) 
                     self.population.current.append(self.generate_solution(f'Gen_0_Indv_{i}', chromosome))
+                    namedir.append(f'Gen_0_Indv_{i}')
             if self.input.code_interface == "surrogate":
                 import multiprocessing as mp
                 mp.set_start_method('spawn', force=True)
                 from surmodel.paralel_MLmodel import init_worker
                 chunksize = max(1, self.population.size // (self.input.num_procs * 4))
                 pool = Pool(processes=self.input.num_procs, initializer=init_worker)
-                # pool = Pool(processes=self.input.num_procs) #initialize parallel execution
             else:
                 pool = Pool(processes=self.input.num_procs) #initialize parallel execution
     ## Evaluate fitness
@@ -220,11 +220,26 @@ class Optimizer():
             ## Execute and parse objective/constraint values
             if self.input.code_interface == "surrogate":
                 ### initial with PARCRs running first 
-                print(self.generation.current)
-                stop
-                self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)), chunksize=chunksize)
-                # for i in range(self.population.size):
-                #     self.population.current[i] = self.eval_func(self.population.current[i], self.input) ## serial test
+                if self.generation.current in [0, 20, 40 , 60, 80, 100]:
+                    self.eval_func = parcs343.evaluate
+                    print('Run parcs initially ', self.generation.current )
+                    self.population.current= pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
+                    surrogatemodel.extract_data(namedir, self.input) ## extract data after PARCs done
+                    # temparcs = self.population.current
+                    # print ('odadaddada')
+                    # stop
+                    ## reset pool to run surrogate ?
+                    # pool = Pool(processes=self.input.num_procs, initializer=init_worker)
+                    # tempsurogate = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)), chunksize=chunksize)
+                    # print(temparcs, tempsurogate)
+                    # stop
+                    self.eval_func = surrogatemodel.evaluate ## reset
+
+
+                else:
+                    self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)), chunksize=chunksize)
+                    # for i in range(self.population.size):
+                    #     self.population.current[i] = self.eval_func(self.population.current[i], self.input) ## serial test
             else:
                 self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
             
@@ -333,8 +348,10 @@ class Optimizer():
 
             else: #every other algorithm
                 self.population.current = []
+                namedir = []
                 for i in range(len(new_chromosome_list)):
                     self.population.current.append(self.generate_solution(f'Gen_{self.generation.current}_Indv_{i}', new_chromosome_list[i]))
+                    namedir.append(f'Gen_{self.generation.current}_Indv_{i}')
             
             ## Evaluate fitness
                 ## If chromosome exists in previous generations, skip call to external code.
@@ -346,6 +363,8 @@ class Optimizer():
                         soln.parameters = self.population.archive['parameters'][soln_index]
                         inactive_solutions.append(soln)
                         self.population.current.remove(soln)
+                        ## take out some in active solution 
+                        namedir.remove(soln.name)
                         logger.debug(f"Fitness value for solution '{soln.name}' will be taken from archive entry: {soln_index}.")
                     except ValueError:
                         continue #chromosome is unique, do nothing.
@@ -353,9 +372,25 @@ class Optimizer():
                 logger.info("Calculating fitness for generation %s...", self.generation.current)
                 ## Execute and parse objective/constraint values
                 if self.input.code_interface == "surrogate":
-                    self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)), chunksize=chunksize)
-                    # for i in range(len(self.population.current)):
-                    #     self.population.current[i] = self.eval_func(self.population.current[i], self.input) ## serial test 
+                    if self.generation.current in [0, 20, 40 , 60, 80, 100]:
+                        self.eval_func = parcs343.evaluate
+                        print('Run parcs initially ', self.generation.current )
+                        self.population.current= pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
+                        ## extract data after PARCS done 
+                        surrogatemodel.extract_data(namedir, self.input)
+                        # temparcs = self.population.current
+                        # print ('odadaddada')
+                        # stop
+                        ## reset pool to run surrogate ?
+                        # pool = Pool(processes=self.input.num_procs, initializer=init_worker)
+                        # tempsurogate = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)), chunksize=chunksize)
+                        # print(temparcs, tempsurogate)
+                        # stop
+                        self.eval_func = surrogatemodel.evaluate ## reset
+                    else:
+                        self.population.current= pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)), chunksize=chunksize)
+
+
                 else:
                     self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
         
@@ -443,7 +478,12 @@ class Optimizer():
         logger.info("\nStatistics for last generation: \n")
         for key in last_gen_data:
             logger.info(f'{key}: {last_gen_data[key]}')
-        
+        ## cleaning and close pool 
+        pool.close()
+        pool.join()
+        # Processes should be done now:
+        import gc
+        gc.collect() # ensure garbage collection
         #Create output statistics file
         with open('optimization_statistics.csv','w') as file:
             file.write('Generation, Average Fitness, Maximum Fitness, Standard Deviation of Fitness\n')

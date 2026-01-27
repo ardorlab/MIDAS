@@ -216,10 +216,10 @@ def evaluate(solution, input):
         corebulist = [0.1, 0.4, 0.5, 1.0, 1.0] + [1.0]*28
         idx11 = [0]
         idx22 = [1,2,3,4,5,6,7,9,18,27,36,40,54,63]
-        st = TT.time()
+        # st = TT.time()
         Fd_all, Fq_all, maxboron, cycle_length = get_result(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, idx22)
         # Fd_all, Fq_all, maxboron, cycle_length = get_result_serial(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, idx22)
-        print(TT.time()-st)
+        # print(TT.time()-st)
         # stop
         # print( Fd_all, Fq_all, np.max(boron_his), interpolatecycle(10,boron_his,cycle_his))
         # param = ["cycle_length", "pinpowerpeaking", "fdeltah", "max_boron"]
@@ -260,6 +260,120 @@ def evaluate(solution, input):
         gc.collect()
 
         return solution
+
+def extract_data(solution,input):
+    """
+    Extract data for retraining models 
+    
+    :param solution: list of solution 
+    :param input: input object form yaml
+    """
+    cwd = Path(os.getcwd())
+    listFA = [461,462,501,502,526,566,586] ## for now
+    xsdict = pickle.load(open('/home/khnguy22/Deeponet-midas/MIDAS/surmodel/xsdata/axialFAtypeXS.pkl','rb'))
+    fabulist = np.array([0, 0.1, 0.5, 1.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.5, 15.0, 
+                         17.5, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 
+                         60.0, 65.0, 70.0, 75.0, 80.0])
+    faaxial = np.array([15.24, 10.16, 5.08, 30.48, 30.48, 30.48, 30.48, 30.48,
+                        30.48, 30.48, 30.48, 30.48, 30.48, 5.08, 10.16, 15.24])
+    branchXS_1 = []
+    branchXS_2 = []
+    branchXS_3 = []
+    branchXS_4 = []
+    branchXS_5 = []
+    branchXS_6 = []
+    branchXS_7 = []
+    outputRPF  = []
+    outputcore = []
+    for dir in solution:
+        folder_path = cwd.joinpath(input.results_dir_name / Path(dir))
+        of_filename = f"{dir}.parcs_dep"
+        input_filename = f"{dir}.inp"
+        dpl_filename = f"{dir}.parcs_dpl"
+        output_path = os.path.join(folder_path, of_filename)
+        bu3d = get_burnup(output_path)
+        rpf3d = get_rpf(output_path)
+        coreparam = get_boron_cycle(output_path)
+        nbu = len(bu3d)
+        LPs = getLP(os.path.join(folder_path, input_filename))
+        if nbu !=0:
+            nz = len(bu3d[0][0])
+            for bu in range(nbu):
+                idx = 0 
+                tempbranchXS_1 = np.zeros((81,nz))
+                tempbranchXS_2 = np.zeros((81,nz))
+                tempbranchXS_3 = np.zeros((81,nz))
+                tempbranchXS_4 = np.zeros((81,nz))
+                tempbranchXS_5 = np.zeros((81,nz))
+                tempbranchXS_6 = np.zeros((81,nz))
+                tempbranchXS_7 = np.zeros((81,nz))
+                tempoutput = np.zeros((81,nz))
+                for loc,fa in enumerate(LPs):
+                    if fa =='10':
+                        tempbranchXS_1[loc][:]=[-1]*nz
+                        tempbranchXS_2[loc][:]=[-1]*nz
+                        tempbranchXS_3[loc][:]=[-1]*nz
+                        tempbranchXS_4[loc][:]=[-1]*nz
+                        tempbranchXS_5[loc][:]=[-1]*nz
+                        tempbranchXS_6[loc][:]=[-1]*nz
+                        tempbranchXS_7[loc][:]=[-1]*nz
+                        tempoutput[loc][:]=[0.0]*nz
+                    elif fa != '00':
+                        for node in range(nz):
+                            buval = bu3d[bu][idx][node]
+                            ## Doing interpolation 
+                            XSdifc = getXSlist(xsdict,fa,'difc',str(node))
+                            XSnufis = getXSlist(xsdict,fa,'nufission',str(node))
+                            XSabs = getXSlist(xsdict,fa,'absorption',str(node))
+                            XSrem = getXSlist(xsdict,fa,'removal',str(node))
+                            XS1 = [float(xs[0]) for xs in XSdifc]
+                            XS2 = [float(xs[1]) for xs in XSdifc]
+                            XS3 = [float(xs[0]) for xs in XSnufis]
+                            XS4 = [float(xs[1]) for xs in XSnufis]
+                            XS5 = [float(xs[0]) for xs in XSabs]
+                            XS6 = [float(xs[1]) for xs in XSabs]
+                            XS7 = [float(xs[0]) for xs in XSrem]
+                            tempbranchXS_1[loc][node]=np.interp(buval, fabulist, XS1)
+                            tempbranchXS_2[loc][node]=np.interp(buval, fabulist, XS2)
+                            tempbranchXS_3[loc][node]=np.interp(buval, fabulist, XS3)
+                            tempbranchXS_4[loc][node]=np.interp(buval, fabulist, XS4)
+                            tempbranchXS_5[loc][node]=np.interp(buval, fabulist, XS5)
+                            tempbranchXS_6[loc][node]=np.interp(buval, fabulist, XS6)
+                            tempbranchXS_7[loc][node]=np.interp(buval, fabulist, XS7)
+                            tempoutput[loc][node]=rpf3d[bu][idx][node]
+                        idx = idx + 1
+                outputcore.append(coreparam[bu])
+                outputRPF.append(tempoutput)        
+                branchXS_1.append(tempbranchXS_1)        
+                branchXS_2.append(tempbranchXS_2)        
+                branchXS_3.append(tempbranchXS_3)        
+                branchXS_4.append(tempbranchXS_4)        
+                branchXS_5.append(tempbranchXS_5)        
+                branchXS_6.append(tempbranchXS_6)        
+                branchXS_7.append(tempbranchXS_7)        
+
+    branchXS_1 = np.array(branchXS_1)
+    branchXS_2 = np.array(branchXS_2)
+    branchXS_3 = np.array(branchXS_3)
+    branchXS_4 = np.array(branchXS_4)
+    branchXS_5 = np.array(branchXS_5)
+    branchXS_6 = np.array(branchXS_6)
+    branchXS_7 = np.array(branchXS_7)
+    outputRPF  = np.array(outputRPF)
+    outputcore  = np.array(outputcore)
+    ## save to a temporary directory for retraining later 
+    retrain_path = '/home/khnguy22/Deeponet-midas/MIDAS/surmodel/retraindata'
+    os.makedirs(retrain_path, exist_ok=True)
+    np.save(os.path.join(retrain_path, 'outputRFP.npy'),outputRPF)
+    np.save(os.path.join(retrain_path, 'outputcore.npy'),outputcore)
+    np.save(os.path.join(retrain_path, 'branchXS_1.npy'),branchXS_1)
+    np.save(os.path.join(retrain_path, 'branchXS_2.npy'),branchXS_2)
+    np.save(os.path.join(retrain_path, 'branchXS_3.npy'),branchXS_3)
+    np.save(os.path.join(retrain_path, 'branchXS_4.npy'),branchXS_4)
+    np.save(os.path.join(retrain_path, 'branchXS_5.npy'),branchXS_5)
+    np.save(os.path.join(retrain_path, 'branchXS_6.npy'),branchXS_6)
+    np.save(os.path.join(retrain_path, 'branchXS_7.npy'),branchXS_7)
+    return
 
 def without_template(solution, input, cwd, filename):    
 ## Prepare values for file writing
@@ -1061,3 +1175,192 @@ def next_binary_search(search_list):
         return float(x1 - (x1-x2)/2)
     else:
         return float(x2 - (x2-x1)/2)
+    
+
+## function to get EXPOSURE each step for surrogate 
+
+def getLP(inpfile):
+    """
+    Extract LPs from input
+    
+    :param inpfile: inputfile path
+    """
+    with open(inpfile,'r') as f:
+        txt = f.readlines()
+    for i,line in enumerate(txt):
+        if line.find("GEO_DIM")>=0:
+            coresize = int(float(line.split()[1]))
+        elif line.find('RAD_CONF')>=0:
+            st = i+1
+            break
+    LPs=''
+    for ii in range(st, st+coresize):
+        LPs+=txt[ii]
+    LPs = "".join(LPs).strip().split()
+
+    return LPs
+
+def get_boron_cycle(ofile):
+    """
+    Get boron and cycle at all burn up step 
+    
+    :param ofile: depletion file 
+    """
+    with open(ofile,'r') as f:
+        txt = f.readlines()
+    bo_cyc = []
+    key = 'PT   RE     Keff '
+    for i,line in enumerate(txt):
+        if line.find(key)>=0:
+            temp = line.split()
+            bor_idx = temp.index("ppm")
+            cyc_idx = temp.index("Days")
+            val = txt[i+1].split()
+            bo_cyc.append([float(val[bor_idx]), float(val[cyc_idx])])
+    return bo_cyc
+
+def get_burnup(ofile,FULL_CORE=False):
+    '''
+    3D burnup from PARCS .dep output files
+    Some geometry predefined parameters are required.
+    '''
+    nfa=56
+    z_id=[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]
+    nz=len(z_id)
+    refl_id=[9,18,27,36,44,45,53,60,61,66,67,68,69,70,71,72,73]
+    if FULL_CORE:
+        refl_id=[1,2,3,4,5,6,7,8,9,10,11,12,
+                    20,21,22,23,24,
+                    36,37,38,
+                    52,53,54,
+                    68,69,70,
+                    86,87,
+                    103,104,
+                    120,121,
+                    137,138,
+                    154,155,
+                    171,172,
+                    188,189,190,
+                    204,205,206,
+                    220,221,222,
+                    234,235,236,237,238,
+                    246,247,248,249,250,251,252,253,254,255,256,257]
+    with open(ofile,'r') as f:
+        txt = f.readlines()
+    alldeplines = []
+    k_sta = 'EXP 3D MAP'
+    k_end = ' I_D 2D MAP'
+    for i,line in enumerate(txt):
+        if line.find(k_sta)>=0:
+            i_sta = i+1
+        if line.find(k_end)>=0:
+            i_end = i-1
+            depline = [txt[ii] for ii in range(i_sta, i_end+1)]
+            depline = "".join(depline)
+            alldeplines.append(depline)
+    nbu=len(alldeplines)
+    bu_3d=np.zeros((nbu,nfa,nz))
+    for bu,step in enumerate(alldeplines):
+        txt_dep=step.split('\n')
+        txt_dep=list(filter(lambda a: a != '', txt_dep))
+        txt_dep=list(filter(lambda a: a != ' ', txt_dep))
+        asb_counter=0
+        fasb_counter=0
+        ifass = 0
+        iass = 0
+        for i in range(1,len(txt_dep)):
+            line_dep = txt_dep[i].split()
+            if line_dep[0]=='k':
+                asb_counter=copy.deepcopy(iass)
+                fasb_counter=copy.deepcopy(ifass)
+            elif int(line_dep[0]) not in z_id: 
+                pass
+            else:
+                iz = z_id[-1] - int(line_dep[0])
+                ifass = copy.deepcopy(fasb_counter)
+                iass = copy.deepcopy(asb_counter)
+                for j in range(1,len(line_dep)):
+                    iass +=1
+                    if iass in refl_id:
+                        pass
+                    else:
+                        ifass +=1
+                        val = float(line_dep[j])
+                        bu_3d[bu, ifass-1, iz]=val
+    
+    return bu_3d
+
+def get_rpf(ofile,FULL_CORE=False):
+    '''
+    3D RPF from PARCS .dep output files
+    Some geometry predefined parameters are required.
+    '''
+    nfa=56
+    z_id=[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]
+    nz=len(z_id)
+    refl_id=[9,18,27,36,44,45,53,60,61,66,67,68,69,70,71,72,73]
+    if FULL_CORE:
+        refl_id=[1,2,3,4,5,6,7,8,9,10,11,12,
+                    20,21,22,23,24,
+                    36,37,38,
+                    52,53,54,
+                    68,69,70,
+                    86,87,
+                    103,104,
+                    120,121,
+                    137,138,
+                    154,155,
+                    171,172,
+                    188,189,190,
+                    204,205,206,
+                    220,221,222,
+                    234,235,236,237,238,
+                    246,247,248,249,250,251,252,253,254,255,256,257]
+    with open(ofile,'r') as f:
+        txt = f.readlines()
+    alldeplines = []
+    k_sta = ' RPF 3D MAP'
+    k_end = ' EXP 2D MAP'
+    for i,line in enumerate(txt):
+        if line.find(k_sta)>=0:
+            i_sta = i+1
+        if line.find(k_end)>=0:
+            i_end = i-1
+            depline = [txt[ii] for ii in range(i_sta, i_end+1)]
+            depline = "".join(depline)
+            alldeplines.append(depline)
+    nbu=len(alldeplines)
+    rpf_3d=np.zeros((nbu,nfa,nz))
+    for bu,step in enumerate(alldeplines):
+        txt_dep=step.split('\n')
+        txt_dep=list(filter(lambda a: a != '', txt_dep))
+        txt_dep=list(filter(lambda a: a != ' ', txt_dep))
+        asb_counter=0
+        fasb_counter=0
+        ifass = 0
+        iass = 0
+        for i in range(1,len(txt_dep)):
+            line_dep = txt_dep[i].split()
+            if line_dep[0]=='k':
+                asb_counter=copy.deepcopy(iass)
+                fasb_counter=copy.deepcopy(ifass)
+            elif int(line_dep[0]) not in z_id: 
+                pass
+            else:
+                iz = z_id[-1] - int(line_dep[0])
+                ifass = copy.deepcopy(fasb_counter)
+                iass = copy.deepcopy(asb_counter)
+                for j in range(1,len(line_dep)):
+                    iass +=1
+                    if iass in refl_id:
+                        pass
+                    else:
+                        ifass +=1
+                        val = float(line_dep[j])
+                        rpf_3d[bu, ifass-1, iz]=val
+    return rpf_3d
+
+def getXSlist(xsdict,fatype,xstype,axialnode):
+    bukeys=xsdict[fatype].keys()
+    xsval = [xsdict[fatype][key][xstype][axialnode] for key in bukeys]
+    return xsval
