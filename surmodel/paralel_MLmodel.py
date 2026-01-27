@@ -333,7 +333,7 @@ def interpolatecycle(x, X, Y):
     ## only take 2 last element for cycle length calculation 
     a = (Y[-2]-Y[-1])/(X[-2]-X[-1])
     b = Y[-2] - a*X[-2]
-    y = a*x+b 
+    y = a*x+b - Y[0] ## normalize to make the first value is 0 
     return y
 
 
@@ -646,9 +646,16 @@ def get_result(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, 
 
     return Fd_all, Fq_all, np.max(boron_his), cycle_length
 
-def retrained_models():
+
+def retrained_models_1(datafile):
+    from .loadmodel_Nov25 import model as m1, scalerparam as s1, trunks as t1, minmaxReverse as mm1re, minmaxscale as mm1
     return 
 
+def retrained_models_2():
+    return 
+
+def retrained_models_3():
+    return 
 
 def get_result_serial(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, idx22) :
     """
