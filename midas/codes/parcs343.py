@@ -370,9 +370,11 @@ def without_template(solution, input, cwd, filename):
                     val = input.full_core_locs[x,y]
                     try:
                         if not np.isnan(val):
+                            ofile.write("  ")
                             ofile.write(str(input.full_core_locs[x,y]))
                             ofile.write("  ")
                     except TypeError:
+                        ofile.write("  ")
                         ofile.write(str(input.full_core_locs[x,y]))
                         ofile.write("  ")
                 ofile.write("\n")
@@ -382,13 +384,14 @@ def without_template(solution, input, cwd, filename):
             for x in range(soln_full_core_lattice.shape[0]):
                 for y in range(soln_full_core_lattice.shape[1]):
                     val = soln_full_core_lattice[x,y]
+                    ofile.write("  ")
                     ofile.write(str(soln_full_core_lattice[x,y]))
                     ofile.write("  ")
                 ofile.write('\n')
             ofile.write('\n')
             
             ofile.write("    CYCLE_IND    1  0  1\n")
-            max_convergence_cycles = 10 #!TODO: this max number of cycles could easily be a parameter.
+            max_convergence_cycles = input.equilibrium_cycles #!TODO: this max number of cycles could easily be a parameter.
             for i in range(2,max_convergence_cycles+1):
                 ofile.write(f"    CYCLE_IND    {i}  1  1\n")
             ofile.write(f"    CONV_EC    0.1  {i}\n")

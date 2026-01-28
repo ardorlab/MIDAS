@@ -929,6 +929,9 @@ def validate_input(keyword, value):
                     new_value.append(float(step))
         return new_value
     
+    elif keyword == 'equilibrium_cycles':
+        value = int(value)
+
     ## TRACE DATA ##
     elif keyword == 'initialize_code':
         value = str(value).lower().replace(' ','_')
@@ -1284,8 +1287,10 @@ class Input_Parser():
         self.axial_nodes = yaml_line_reader(info, 'axial_nodes', [16.12, "15*25.739", 16.12])
         self.boc_exposure = yaml_line_reader(info, 'boc_core_exposure', 0.0)
         self.depl_steps = yaml_line_reader(info, 'depletion_steps', [1, 1, 30, 30, 30, 30, 30, 30])
+        self.equilibrium_cycles = yaml_line_reader(info, "equilibrium_cycles", 10)
         if (not self.pin_power_recon and 'pinpowerpeaking' in self.objectives.keys()) or (not self.pin_power_recon and 'fdeltah' in self.objectives.keys()):
             logger.warning('Pin power reconstruction is turned off but pin peaking factors are requested in objectives.')
+            
         self.active_cycles = yaml_line_reader(info, "active_cycles", 500)
         self.inactive_cycles = yaml_line_reader(info, "inactive_cycles", 50)
         self.particles_per_history = yaml_line_reader(info, "particles_per_history", 5000)
