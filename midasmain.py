@@ -6,6 +6,8 @@
 # Import Block  #
 # # # # # # # # #
 import os
+import glob
+import gc
 import sys
 import argparse
 import logging
@@ -14,13 +16,19 @@ from copy import deepcopy
 import random
 import pickle
 import midas_data
+import joblib
+import multiprocessing
 import time as TT
 from midas.input_parser import  Input_Parser
 from midas.optimizer import Optimizer
 from midas.utils.problem_preparation import Prepare_Problem_Values as prep_inp
 from midas.utils.decorators import error_handler, timer, profiler
+import shutil 
 
-
+## prevent data leak
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+os.environ["OMP_NUM_THREADS"] = "1"
 
 # # # # # # # # # # #
 # Define Functions  #
@@ -146,14 +154,25 @@ def main(args):
     optimizer.main() #execute optimization through the algorithm class.
     logger.info("\nOptimization completed.")
     print(f'Executed completed after {TT.time()-ts:.5f} seconds')
+    logger.info(f'Executed completed after {TT.time()-ts:.5f} seconds')
 
     return exitcode
 
+def cleanup_system_resources():
+    """Clean up before starting."""
+    for shm_file in glob.glob('/dev/shm/sem.mp-*') + glob.glob('/dev/shm/sem.loky-*'):
+        try:
+            os.remove(shm_file)
+        except OSError:
+            pass
 
 # # # # # # # # # # # # # # # #
 #  Primary Execution Pathway  #
 # # # # # # # # # # # # # # # #
 if __name__ == "__main__":
+    ## check zombies process and clean up 
+    cleanup_system_resources()
+
     #Clear output file
     if os.path.exists(midas_data.__ofile__):
         os.remove(midas_data.__ofile__)
@@ -177,15 +196,35 @@ if __name__ == "__main__":
     if not args.input and not args.restart: #no execution type specified
         raise NameError("One of the following arguments is required: '--input', '--restart'.")
     
+    ## try to clean up 
+    try:
+        if not args.restart: # Execute MIDAS optimization
+            exitcode = main(args)
+        
+        else: # perform restart
+            exitcode = restart(args)
+    finally:
+        if 'pool' in locals():
+            pool.close()
+            pool.join()
+        try:
+            from joblib.externals.loky import get_reusable_executor
+            executor = get_reusable_executor()
+            executor.shutdown(wait=True)
+            print("Joblib resources cleaned up successfully.")
+        except Exception as e:
+            pass
 
-    if not args.restart: # Execute MIDAS optimization
-        exitcode = main(args)
-    
-    else: # perform restart
-        exitcode = restart(args)
+        try:
+            from multiprocessing import resource_tracker
+            resource_tracker._resource_tracker._stop() 
+        except (ImportError, AttributeError):
+            pass
 
-    
-    #Clean up code
-    logger.info("MIDAS execution completed.")
-    logging.shutdown()
-    sys.exit(exitcode)
+        logger.info("MIDAS execution completed.")
+        logging.shutdown()
+        
+    # Use os exit to forceflully cleanup 
+    os._exit(exitcode)
+    # sys.exit(exitcode)
+

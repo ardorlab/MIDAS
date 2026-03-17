@@ -26,65 +26,134 @@ Each worker process maintains its own instances of the three pretrained models.
 # worker_models = {}
 
 import os
-import pickle 
+import importlib
+from pathlib import Path
+import sys
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ["AUTOGRAPH_VERBOSITY"] = "0"
+os.environ["TF_AUTOGRAPH_DISABLE"] = "1"
+os.environ["TMPDIR"] = "/tmp"
+import socket
 import numpy as np
 import tensorflow as tf
 import deepxde as dde
 
-# Global container for this process's models
-worker_data = {}
-# from .loadmodel_Nov25 import model as m1, scalerparam as s1, trunks as t1, minmaxReverse as mm1re, minmaxscale as mm1
-
-# from .loadmodelcore import model as m2, scalerparam as s2, trunks as t2
-# from .loadmodelpin import best_model as pin_m
-# worker_data['model'] = m1
-# worker_data['scalerparam'] = s1
-# worker_data['trunks'] = t1
-# worker_data['minmaxscale']=mm1
-# worker_data['minmaxReverse']=mm1re
-# worker_data['modelcore'] = m2
-# worker_data['scaler_core'] = s2
-# worker_data['trunk_core'] = t2
-# # worker_data['pinmodel'] = load_pin_model()
-# worker_data['pinmodel'] = pin_m
 
 def init_worker():
     """ 
     Initializes each worker process. This function loads the models 
     only once when the process starts.
     """
-    # 1. Threading optimization to prevent hangs
-    # tf.config.threading.set_intra_op_parallelism_threads(1)
-    # tf.config.threading.set_inter_op_parallelism_threads(1)
-
-    # 2. Local imports to avoid global scope deadlocks
-    from .loadmodel_Nov25 import model as m1, scalerparam as s1, trunks as t1, minmaxReverse as mm1re, minmaxscale as mm1
-
-    from .loadmodelcore import model as m2, scalerparam as s2, trunks as t2
-    from .loadmodelpin import best_model as pin_m
-    # from loadpinmodel_new import load_pin_model
     
     global worker_data
-    worker_data['model'] = m1
-    worker_data['scalerparam'] = s1
-    worker_data['trunks'] = t1
-    worker_data['minmaxscale']=mm1
-    worker_data['minmaxReverse']=mm1re
-    worker_data['modelcore'] = m2
-    worker_data['scaler_core'] = s2
-    worker_data['trunk_core'] = t2
-    # worker_data['pinmodel'] = load_pin_model()
-    worker_data['pinmodel'] = pin_m
     
-    print(f"Worker {os.getpid()} successfully loaded all 3 models.")
-# --- HELPER FUNCTIONS (UNCHANGED LOGIC) ---
-## new version
+    import gc
+    if 'worker_data' in globals():
+        del worker_data
+    gc.collect()
+    worker_data = {}
+    current_file_path = Path(__file__).resolve()
+    source_path = str(current_file_path.parent) 
+
+    # 2. Add it to sys.path if it's not already there
+    if source_path not in sys.path:
+        sys.path.insert(0, source_path)
+    import loadmodel_Nov25
+    import loadmodelcore
+    import loadmodelpin
+    importlib.reload(loadmodel_Nov25)
+    importlib.reload(loadmodelcore)
+    importlib.reload(loadmodelpin)
+    worker_data['model'] = loadmodel_Nov25.model
+    worker_data['scalerparam'] = loadmodel_Nov25.scalerparam
+    worker_data['trunks'] = loadmodel_Nov25.trunks
+    worker_data['minmaxscale'] = loadmodel_Nov25.minmaxscale
+    worker_data['minmaxReverse'] = loadmodel_Nov25.minmaxReverse
+    worker_data['modelcore'] = loadmodelcore.model
+    worker_data['scaler_core'] = loadmodelcore.scalerparam
+    worker_data['trunk_core'] = loadmodelcore.trunks
+    worker_data['pinmodel'] = loadmodelpin.best_model
+    try:
+      cpu_id = os.sched_getcpu()
+    except AttributeError:
+       cpu_id = "N/A"
+    pid = os.getpid()
+    hostname = socket.gethostname()
+    slurm_task = os.environ.get("SLURM_PROCID", "N/A")
+    slurm_localid = os.environ.get("SLURM_LOCALID", "N/A")
+    
+    print(
+        f"[Node: {hostname}] "
+        f"[PID: {pid}] "
+        f"[CPU: {cpu_id}] "
+        f"[SLURM_PROCID: {slurm_task}] "
+        f"[SLURM_LOCALID: {slurm_localid}] "
+        f"successfully loaded all 3 models."
+    )
+    #print(f"Worker {os.getpid()} successfully loaded all 3 models.")
+
+def init_worker_updated():
+    """ 
+    Initializes each worker process. This function loads the models 
+    only once when the process starts.
+    """
+
+    # from .loadmodelrpf_retrained import model as m1, scalerparam as s1, trunks as t1, minmaxReverse as mm1re, minmaxscale as mm1
+    # from .loadmodelcore_retrained import model as m2, scalerparam as s2, trunks as t2
+    # from .loadmodelpin import best_model as pin_m
+    
+    global worker_data
+    
+    import gc
+    if 'worker_data' in globals():
+        del worker_data
+    gc.collect()
+    worker_data = {}
+    current_file_path = Path(__file__).resolve()
+    source_path = str(current_file_path.parent)
+    if source_path not in sys.path:
+        sys.path.insert(0, source_path)
+    import loadmodelrpf_retrained
+    import loadmodelcore_retrained
+    import loadmodelpin
+    importlib.reload(loadmodelrpf_retrained)
+    importlib.reload(loadmodelcore_retrained)
+    importlib.reload(loadmodelpin)
+
+    worker_data['model'] = loadmodelrpf_retrained.model
+    worker_data['scalerparam'] = loadmodelrpf_retrained.scalerparam
+    worker_data['trunks'] = loadmodelrpf_retrained.trunks
+    worker_data['minmaxscale']=loadmodelrpf_retrained.minmaxscale
+    worker_data['minmaxReverse']=loadmodelrpf_retrained.minmaxReverse
+    worker_data['modelcore'] = loadmodelcore_retrained.model
+    worker_data['scaler_core'] = loadmodelcore_retrained.scalerparam
+    worker_data['trunk_core'] = loadmodelcore_retrained.trunks
+    worker_data['pinmodel'] = loadmodelpin.best_model
+    
+    try:
+      cpu_id = os.sched_getcpu()
+    except AttributeError:
+       cpu_id = "N/A"
+    pid = os.getpid()
+    hostname = socket.gethostname()
+    slurm_task = os.environ.get("SLURM_PROCID", "N/A")
+    slurm_localid = os.environ.get("SLURM_LOCALID", "N/A")
+    
+    print(
+        f"[Node: {hostname}] "
+        f"[PID: {pid}] "
+        f"[CPU: {cpu_id}] "
+        f"[SLURM_PROCID: {slurm_task}] "
+        f"[SLURM_LOCALID: {slurm_localid}] "
+        f"successfully loaded all 3 models."
+    )
+
 def getXSlist(xsdict, fatype, xstype, axialnode):
     return [xsdict[fatype][key][xstype][axialnode] for key in xsdict[fatype]]
 
 def depletion_power(model, modelinput, scaler,idx1, idx2, total_height, faaxial):
     '''
-    Predict the new powdistribution based on new burnup distribution 
+    Predict the new powdistribution based on new burnup distribution for 193 core
     input: bustep: bu step on the burnup distribution (1)
     input: model: DeepOnet model 
     input: modelinput: (7FA data, trunk) to generate input for model 
@@ -96,15 +165,31 @@ def depletion_power(model, modelinput, scaler,idx1, idx2, total_height, faaxial)
     # print('pred time, ',TT.time() -t0)
     tmp_pred = newpow.reshape(-1,81, 16)
     ### assign 0 to reflector and void region 
-    tmp_pred[:,8, :] = 0
-    tmp_pred[:,17, :] = 0
-    tmp_pred[:,26, :] = 0
-    tmp_pred[:,35, :] = 0
-    tmp_pred[:, 43:45, :] = 0
-    tmp_pred[:, 52:54, :] = 0
-    tmp_pred[:, 60:63, :] = 0
-    tmp_pred[:, 68:73, :] = 0
-    tmp_pred[:, 73:, :] = 0
+    idx = np.r_[8, 17, 25, 26, 35, 43:45, 52:54, 60:63, 67:tmp_pred.shape[1]]
+
+    # tmp_pred[abs(tmp_pred)<1e-4] = 0
+    tmp_pred = normalize(tmp_pred,idx2, idx1,total_height, faaxial)
+    # y_predr = minmaxReverse(tmp_pred.reshape(tmp_pred.shape[0],newpow.shape[-1]),scaler['omax'],scaler['omin'])
+    y_predr = tmp_pred.reshape(newpow.shape)
+    return y_predr
+
+def depletion_power_157(model, modelinput, scaler,idx1, idx2, total_height, faaxial):
+    '''
+    Predict the new powdistribution based on new burnup distribution for 157 core
+    input: bustep: bu step on the burnup distribution (1)
+    input: model: DeepOnet model 
+    input: modelinput: (7FA data, trunk) to generate input for model 
+    input: scaler for scaling input output of model 
+    ouput: new power distribution (1,81,16)
+    '''
+    # t0 = TT.time()
+    newpow = model.predict(modelinput)
+    # print('pred time, ',TT.time() -t0)
+    tmp_pred = newpow.reshape(-1,81, 16)
+    ### assign 0 to reflector and void region 
+    idx = np.r_[8, 17, 25, 26, 34, 35, 42:45, 50:54, 58:63, 65:tmp_pred.shape[1]]
+
+    tmp_pred[:, idx, :] = 0
     # tmp_pred[abs(tmp_pred)<1e-4] = 0
     tmp_pred = normalize(tmp_pred,idx2, idx1,total_height, faaxial)
     # y_predr = minmaxReverse(tmp_pred.reshape(tmp_pred.shape[0],newpow.shape[-1]),scaler['omax'],scaler['omin'])
@@ -330,10 +415,24 @@ def interpolatecycle(x, X, Y):
     """
     X=list(X)
     Y=list(Y)
+
+    ## test 
+    idx = next((i for i in range(len(X)-1) if abs(X[i+1][0] - X[i][0]) < 10 and X[i][0]<500) , -1)
+    idx=idx-4 ## take 3 step back 
+
+
+    # idx = -5
+    # for j in range(len(X)):
+    #     if X[j][0]<x:
+    #         idx = j-5 ## take one idx back
+    #         break 
     ## only take 2 last element for cycle length calculation 
-    a = (Y[-2]-Y[-1])/(X[-2]-X[-1])
-    b = Y[-2] - a*X[-2]
-    y = a*x+b - Y[0] ## normalize to make the first value is 0 
+    a = (X[idx-1][0]-X[idx][0])/(Y[idx-1][0]-Y[idx][0])
+    b = X[idx-1][0] - a*Y[idx-1][0]
+    if Y[0][0]>0:
+        y = (x-b)/a - Y[0][0] ## normalize to make the first value is 0 
+    else:
+        y = (x-b)/a
     return y
 
 
@@ -623,6 +722,7 @@ def get_result(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, 
             if not converged:
                 print(f"BU={bu} → ❌ Unconverged after 100 iterations")
                 raise ValueError("Solution did not converge.")
+                stop
     ## get the Fdmax and Fqmax here 
     pinpower = np.array(pinpower).reshape(-1,153,153,1)
     pinpower_reconstruct = pinmodel.predict(pinpower, verbose=0) # verbose=0 suppresses Keras logs for speed
@@ -642,20 +742,121 @@ def get_result(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, 
     
     # Multiply and find max
     Fd_all = np.max(np.sum(pinpower_reconstruct.reshape(34,16,153,153) * ax_factor,axis = 1))
-    cycle_length = interpolatecycle(10,boron_his,cycle_his)[0]
+    cycle_length = interpolatecycle(10,boron_his,cycle_his)
+    if cycle_length>1000:
+       print('boron list',boron_his)
+       print('cycle list',cycle_his)
+       print(LPs)
+       
+
+    return Fd_all, Fq_all, np.max(boron_his), cycle_length
+
+def get_result_157(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, idx22) :
+    """
+    Function executed by worker processes for core 157 FAs.
+    """
+    # Access the process-specific models
+    global worker_data
+    model = worker_data['model']
+    modelcore = worker_data['modelcore']
+    pinmodel = worker_data['pinmodel']
+    scalerparam = worker_data['scalerparam']
+    trunks = worker_data['trunks']
+    scaler_core = worker_data['scaler_core']
+    trunk_core = worker_data['trunk_core']
+    minmaxReverse = worker_data['minmaxReverse']
+    minmaxscale = worker_data['minmaxscale']
+    
+    pinpower =[]
+    test = " ".join(LPs).strip().split()
+    ## initializing 
+    initbumap = np.zeros((1,81,16))
+    inputdata = getdata_fully_vectorized(initbumap, xsdict, test, fabulist, scalerparam, minmaxscale)
+    pow_0 = depletion_power_157(model, tuple(inputdata+[trunks]), scalerparam,idx11, idx22, total_height, faaxial)
+    pinpowerbu = getfqFd_pinrecontruct(initbumap, pow_0, test, fabulist, xsdict, faaxial, total_height) # first step
+    pinpower.append(pinpowerbu)
+    bor_pred0, cyc_pred0 = depletion_boroncycle(modelcore, tuple(inputdata+[trunk_core]), scaler_core,minmaxReverse)
+    # bustep+=1
+    # Initialize
+    power_history = [pow_0]
+    boron_his = [bor_pred0]
+    cycle_his = [cyc_pred0]
+    for bu in corebulist:
+            converged = False
+            for iteration in range(100):
+                if iteration == 0:
+                    delE = bu * pow_0
+                    bumap = initbumap + delE.reshape((1, 81, 16))
+                else:
+                    delE = bu * (0.5 * pow_0 + 0.5 * pow_prev)
+                    bumap = initbumap + delE.reshape((1, 81, 16))
+                input_data = getdata_fully_vectorized(bumap, xsdict, test, fabulist, scalerparam, minmaxscale)
+                pow_new = depletion_power_157(model, tuple(input_data+[trunks]), scalerparam,idx11, idx22, total_height,faaxial)
+                # Check convergence
+                if iteration > 0:
+                    max_delta = np.max(np.abs(pow_new - pow_prev))
+                    if max_delta < 1e-4:
+                        pinpowerbu= getfqFd_pinrecontruct(bumap, pow_new, test, fabulist, xsdict, faaxial, total_height)
+                        pinpower.append(pinpowerbu)
+                        bor_pred0, cyc_pred0 = depletion_boroncycle(modelcore, 
+                                                                    tuple(input_data+[trunk_core]), 
+                                                                    scaler_core, minmaxReverse)
+                        # print(f"BU={bu}, iter={iteration} → Converged (tol={max_delta:.2e})")
+                        # Update for next burnup
+                        initbumap = bumap
+                        power_history.append(pow_new)
+                        boron_his.append(bor_pred0)
+                        cycle_his.append(cyc_pred0)
+                        pow_0 = pow_new
+                        converged = True
+                        # bustep+=1
+                        break
+        
+                pow_prev = pow_new
+        
+            if not converged:
+                print(f"BU={bu} → ❌ Unconverged after 100 iterations")
+                raise ValueError("Solution did not converge.")
+                stop
+    ## get the Fdmax and Fqmax here 
+    pinpower = np.array(pinpower).reshape(-1,153,153,1)
+    pinpower_reconstruct = pinmodel.predict(pinpower, verbose=0) # verbose=0 suppresses Keras logs for speed
+    # 6. Apply Mask and Calculate Statistics
+    # Create mask from the first node (assuming geometry is axially constant)
+    # Using np.not_equal is slightly faster/cleaner than != 0
+    keep_mask = np.not_equal(pinpower[0], 0) 
+    
+    # Broadcast multiply: (16,153,153,1) * (153,153,1)
+    pinpower_reconstruct *= keep_mask
+    # Calculate Max Fq
+    Fq_all = np.max(pinpower_reconstruct)
+    
+    # Calculate Max Fdel (Fdelta-H equivalent?)
+    # Pre-calculate axial shape factor
+    ax_factor = (np.array(faaxial) / total_height).reshape(1, 16, 1, 1)
+    
+    # Multiply and find max
+    Fd_all = np.max(np.sum(pinpower_reconstruct.reshape(34,16,153,153) * ax_factor,axis = 1))
+    cycle_length = interpolatecycle(10,boron_his,cycle_his)
+    if cycle_length>1000:
+       print('boron list',boron_his)
+       print('cycle list',cycle_his)
+       print(LPs)
+       
 
     return Fd_all, Fq_all, np.max(boron_his), cycle_length
 
 
-def retrained_models_1(datafile):
-    from .loadmodel_Nov25 import model as m1, scalerparam as s1, trunks as t1, minmaxReverse as mm1re, minmaxscale as mm1
-    return 
+# def retrained_models_1(datafile):
+#     from .loadmodel_Nov25 import model as m1, scalerparam as s1, trunks as t1, minmaxReverse as mm1re, minmaxscale as mm1
+#     return 
 
-def retrained_models_2():
-    return 
+# def retrained_models_2():
+#     return 
 
-def retrained_models_3():
-    return 
+# def retrained_models_3():
+#     return 
+
 
 def get_result_serial(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, idx22) :
     """

@@ -16,7 +16,7 @@ class Problem_Preparation_Tools():
         
         Written by Nicholas Rollins. 10/04/2024
         """
-        xs_list = {'fuel':[], 'reflectors':{'top':[], 'radial':[], 'bot':[]}, 'blankets':[]}
+        xs_list = {'fuel':[], 'reflectors':{'top':[], 'radial':[], 'bottom':[]}, 'blankets':[]}
         tag_list = {'fuel':[], 'reflectors':[]}
         
         for key, param in input_obj.fa_options['fuel'].items():
@@ -26,15 +26,15 @@ class Problem_Preparation_Tools():
             if param['refl_type'] == 'all':
                 xs_list['reflectors']['top'].append(param['serial'])
                 xs_list['reflectors']['radial'].append(param['serial'])
-                xs_list['reflectors']['bot'].append(param['serial'])
+                xs_list['reflectors']['bottom'].append(param['serial'])
                 tag_list['reflectors'].append((str(10+len(tag_list['reflectors'])),key))
             elif param['refl_type'] == 'top':
                 xs_list['reflectors']['top'].append(param['serial'])
             elif param['refl_type'] == 'radial':
                 xs_list['reflectors']['radial'].append(param['serial'])
                 tag_list['reflectors'].append((str(10+len(tag_list['reflectors'])),key))
-            elif param['refl_type'] == 'bot':
-                xs_list['reflectors']['bot'].append(param['serial'])
+            elif param['refl_type'] == 'bottom':
+                xs_list['reflectors']['bottom'].append(param['serial'])
         if 'blankets' in input_obj.fa_options:
             for key, param in input_obj.fa_options['blankets'].items():
                 xs_list['blankets'].append(param['serial'])
@@ -67,7 +67,6 @@ class Problem_Preparation_Tools():
         core_id = np.array(core_id).reshape((nrows,ncols,2))
         
         core_sym_map = Problem_Preparation_Tools.symmetric_core(input_obj.symmetry,nrows,ncols,core_map,core_id)
-        
         return core_sym_map
 
     def symmetric_core(symmetry,nrows,ncols,core_map,core_id):
@@ -92,8 +91,9 @@ class Problem_Preparation_Tools():
         elif symmetry == 'octant':
             sym_corner   = (nrows-1,ncols-1)
         
-        row_iter = np.arange(sym_center[0],sym_vertical[0]+1,1)
-        col_iter = np.arange(sym_center[1],sym_corner[1]+1,1)
+        if symmetry in ["quarter", "octant"]:
+            row_iter = np.arange(sym_center[0],sym_vertical[0]+1,1)
+            col_iter = np.arange(sym_center[1],sym_corner[1]+1,1)
         
         if nrows % 2 == 0: # find symetric locations for cores with even number of rows and cols (BWRS)
             if symmetry == 'quarter':
@@ -325,7 +325,7 @@ class Prepare_Problem_Values():
                     pincal_loc[x,y]=0
                 elif loc == "00":
                     if input_obj.map_size == 'quarter':
-                        pincal_loc[x,y]=float('NaN')
+                        pincal_loc[x,y]=' '
                     else: #assume full geometry for printing
                         pincal_loc[x,y] = ' '
                 else:
@@ -475,24 +475,6 @@ class LWR_Core_Shapes():
                                     None , None , None  ,"R1403","R1404", "E14" , "F14" , "G14" , "H14" , "I14" , "J14" , "K14" ,"R1412","R1413", None , None ,  None ,
                                     None , None , None  , None ,"R1504","R1505","R1506", "G15" , "H15" , "I15" ,"R1510","R1511","R1512", None , None ,  None ,  None ,
                                     None , None , None  , None , None  , None ,"R1606","R1607","R1608","R1609","R1610", None  , None ,  None , None ,  None ,  None ]
-        core_shape[(17,17)][157] = [None , None , None  , None , None , None ,"R0006","R0007","R0008","R0009","R0010", None  , None ,  None , None ,  None ,   None ,
-                                    None , None , None  , None ,"R0104","R0105","R0106", "G01" , "H01" , "I01" ,"R0110","R0111","R0112", None , None ,  None ,  None ,
-                                    None , None , None  ,"R0203","R0204", "E02" , "F02" , "G02" , "H02" , "I02" , "J02" , "K02" ,"R0212","R0213", None , None ,  None ,
-                                    None , None ,"R0302","R0303", "D03" , "E03" , "F03" , "G03" , "H03" , "I03" , "J03" , "K03" , "L03" ,"R0313","R0314", None ,  None ,
-                                    None ,"R0401","R0402", "C04" , "D04" , "E04" , "F04" , "G04" , "H04" , "I04" , "J04" , "K04" , "L04" , "M04" ,"R0414","R0415",  None ,
-                                    None ,"R0501", "B05" , "C05" , "D05" , "E05" , "F05" , "G05" , "H05" , "I05" , "J05" , "K05" , "L05" , "M05" , "N05" ,"R0515",  None ,
-                                   "R0600","R0601", "B06" , "C06" , "D06" , "E06" , "F06" , "G06" , "H06" , "I06" , "J06" , "K06" , "L06" , "M06" , "N06" ,"R0615","R0616",
-                                   "R0700", "A07" , "B07" , "C07" , "D07" , "E07" , "F07" , "G07" , "H07" , "I07" , "J07" , "K07" , "L07" , "M07" , "N07" , "O07" ,"R0716",
-                                   "R0800", "A08" , "B08" , "C08" , "D08" , "E08" , "F08" , "G08" , "H08" , "I08" , "J08" , "K08" , "L08" , "M08" , "N08" , "O08" ,"R0816",
-                                   "R0900", "A09" , "B09" , "C09" , "D09" , "E09" , "F09" , "G09" , "H09" , "I09" , "J09" , "K09" , "L09" , "M09" , "N09" , "O09" ,"R0916",
-                                   "R1000","R1001", "B10" , "C10" , "D10" , "E10" , "F10" , "G10" , "H10" , "I10" , "J10" , "K10" , "L10" , "M10" , "N10" ,"R1015","R1016",
-                                    None ,"R1101", "B11" , "C11" , "D11" , "E11" , "F11" , "G11" , "H11" , "I11" , "J11" , "K11" , "L11" , "M11" , "N11" ,"R1115",  None ,
-                                    None ,"R1201","R1202", "C12" , "D12" , "E12" , "F12" , "G12" , "H12" , "I12" , "J12" , "K12" , "L12" , "M12" ,"R1214","R1215",  None ,
-                                    None , None ,"R1302","R1303", "D13" , "E13" , "F13" , "G13" , "H13" , "I13" , "J13" , "K13" , "L13" ,"R1313","R1314", None ,  None ,
-                                    None , None , None  ,"R1403","R1404", "E14" , "F14" , "G14" , "H14" , "I14" , "J14" , "K14" ,"R1412","R1413", None , None ,  None ,
-                                    None , None , None  , None ,"R1504","R1505","R1506", "G15" , "H15" , "I15" ,"R1510","R1511","R1512", None , None ,  None ,  None ,
-                                    None , None , None  , None , None  , None ,"R1606","R1607","R1608","R1609","R1610", None  , None ,  None , None ,  None ,  None ]
-    
         core_shape[(32,32)] = {}
         core_shape[(32,32)][764] = [ None  ,  None  ,  None  ,  None  ,  None  ,  None  ,  None  ,  None  , 'R0008', 'R0009', 'R0010', 'R0011', 'R0012', 'R0013', 'R0014', 'R0015', 'R0016', 'R0017', 'R0018', 'R0019', 'R0020', 'R0021', 'R0022', 'R0023',  None  ,  None  ,  None  ,  None  ,  None  ,  None  ,  None  ,  None  ,
                                      None  ,  None  ,  None  ,  None  ,  None  ,  None  ,  None  , 'R0107', 'R0108',   'I01',   'J01',   'K01',   'L01',   'M01',   'N01',   'O01',   'P01',   'Q01',   'AE01',   'S01',   'T01',   'U01',   'V01', 'R0123', 'R0124',  None  ,  None  ,  None  ,  None  ,  None  ,  None  ,  None  ,
@@ -566,6 +548,14 @@ class LWR_Core_Shapes():
                                              29:4, 30:4, 31:4, 32:4, 33:4,\
                                              34:4, 35:4, 36:4, 37:4,\
                                              38:4, 39:4}
+        multdict[(17,17)][157]['octant'] = {  0:1,\
+                                              1:4,  2:4,\
+                                              3:4,  4:8,  5:4,\
+                                              6:4,  7:8,  8:8, 9:4,\
+                                             10:4, 11:8, 12:8, 13:8, 14:4,\
+                                             15:4, 16:8, 17:8, 18:8, 19:8,\
+                                             20:4, 21:8, 22:8, 23:8,\
+                                             24:4, 25:8}
         multdict[(32,32)] = {}
         multdict[(32,32)][764] = {}
         multdict[(32,32)][764]['octant'] = { 0:4,\

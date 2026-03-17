@@ -9,6 +9,7 @@ from itertools import repeat
 import csv
 import ast
 import pickle
+import time
 
 from midas.utils import optimizer_tools as optools
 from midas.utils import LWR_fuelcyclecost
@@ -22,9 +23,15 @@ from midas.codes import parcs342, parcs343
 from midas.codes import nuscale_lut
 from midas.codes import trace50p5
 from midas.codes import polaris624
-from midas.codes import surrogatemodel
+# from midas.codes import surrogatemodel
+from midas.codes import surrogatemodel_BK
 from tests.regression.listsum import listsum
-
+## for surrogate retrain 
+from surmodel.trainmodelRPF import trainmodelrpf
+from surmodel.trainmodelcore import traincoremodel_update
+import gc
+import midas_data
+import joblib
 ## Classes ##
 class Optimizer():
     """
@@ -67,7 +74,7 @@ class Optimizer():
             self.eval_func = listsum.evaluate
         ## test surrogate 
         elif self.input.code_interface == "surrogate":
-            self.eval_func = surrogatemodel.evaluate
+            self.eval_func = surrogatemodel_BK.evaluate
         # getattr(globals()[self.input.code_interface],'evaluate') this command can be used to avoid a list of if else statements. The requirement is that the option matches the intended class.
         else:
             raise ValueError(f"Could not identify eval_func for code type '{self.input.code_interface}'. This is highly irregular.")
@@ -181,10 +188,13 @@ class Optimizer():
             results_dir = cwd.joinpath(self.input.results_dir_name)
             if os.path.exists(results_dir):
                 logger.debug("Overwriting existing results directory...")
-                rmtree(results_dir, ignore_errors=True)
-                os.mkdir(results_dir)
+                rmtree(results_dir)
+                os.makedirs(results_dir)
             else:
-                os.mkdir(results_dir)
+                os.makedirs(results_dir)
+            ## cleaning retrain data if any
+            if os.path.exists(midas_data.__path_to_store_retrain_data__):
+                rmtree(midas_data.__path_to_store_retrain_data__)
         
     ## Delete old results file, if necessary, to avoid confusion
             # this step is useful since the new results file won't be written until after Generation 0 is completed.
@@ -210,8 +220,10 @@ class Optimizer():
             if self.input.code_interface == "surrogate":
                 import multiprocessing as mp
                 mp.set_start_method('spawn', force=True)
-                from surmodel.paralel_MLmodel import init_worker
+                from surmodel.paralel_MLmodel import init_worker, init_worker_updated
                 chunksize = max(1, self.population.size // (self.input.num_procs * 4))
+                xsdict = joblib.load(midas_data.__path_xs_pickle__,mmap_mode='r')
+                ### set pool once 
                 pool = Pool(processes=self.input.num_procs, initializer=init_worker)
             else:
                 pool = Pool(processes=self.input.num_procs) #initialize parallel execution
@@ -220,28 +232,58 @@ class Optimizer():
             ## Execute and parse objective/constraint values
             if self.input.code_interface == "surrogate":
                 ### initial with PARCRs running first 
-                if self.generation.current in [0, 20, 40 , 60, 80, 100]:
+                if self.generation.current in self.input.parcs_steps:
                     self.eval_func = parcs343.evaluate
                     print('Run parcs initially ', self.generation.current )
+                    # if 'pool' in locals():
+                    #        pool.close()
+                    #        pool.join()
+                    #        del pool
+                    #        gc.collect()
+                    #        pool = Pool(processes=self.input.num_procs)
                     self.population.current= pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
-                    surrogatemodel.extract_data(namedir, self.input) ## extract data after PARCs done
-                    # temparcs = self.population.current
-                    # print ('odadaddada')
-                    # stop
-                    ## reset pool to run surrogate ?
-                    # pool = Pool(processes=self.input.num_procs, initializer=init_worker)
-                    # tempsurogate = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)), chunksize=chunksize)
-                    # print(temparcs, tempsurogate)
-                    # stop
-                    self.eval_func = surrogatemodel.evaluate ## reset
-
-
+                    surrogatemodel_BK.extract_data(namedir,self.input, xsdict) ## extract data after PARCs done
+                    # # temparcs = self.population.current
+                    if self.generation.current in self.input.retrain_steps:
+                        trainmodelrpf()
+                        traincoremodel_update()
+                        if self.input.keep_retraindata=='no': ## delete retrain data after retrainning
+                            rmtree(midas_data.__path_to_store_retrain_data__)
+                        ## update pool 
+                        if 'pool' in locals():
+                           pool.close()
+                           pool.join()
+                           del pool
+                           gc.collect()
+                           pool = Pool(processes=self.input.num_procs, initializer=init_worker_updated)
+                        ## for printing out fitness value at this step 
+                        self.eval_func = surrogatemodel_BK.evaluate
+                        surrogate_sol = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input), repeat(xsdict)),)# chunksize=chunksize)
+                        for soln in surrogate_sol:
+                            soln.fitness_value = self.fitness.calculate(soln.parameters)
+                        for i in range(len(self.population.current)):
+                            soln = surrogate_sol[i]
+                            soln_result_list = [str(self.generation.current),str(i),'{0:.3f}'.format(soln.fitness_value)]
+                            for param in soln.parameters.keys():
+                                if param == 'av_fuelenrichment': #reformat this parameter prior to printing
+                                    soln_result_list.append('{0:.3f}'.format(100*soln.parameters[param]['value'])) #convert w.t. to wo%
+                                else:
+                                    soln_result_list.append('{0:.3f}'.format(soln.parameters[param]['value']))
+                            for gene in soln.chromosome:
+                                soln_result_list.append(str(gene))
+                            ## write to output file
+                            with open("optimizer_results_at_retrain.csv", 'a') as csvfile:
+                                csvwriter = csv.writer(csvfile, delimiter=',')
+                                csvwriter.writerow(soln_result_list)
+                    self.eval_func = surrogatemodel_BK.evaluate ## reset
                 else:
-                    self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)), chunksize=chunksize)
+                    self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input), repeat(xsdict)),)# chunksize=chunksize)
+        
                     # for i in range(self.population.size):
                     #     self.population.current[i] = self.eval_func(self.population.current[i], self.input) ## serial test
             else:
                 self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
+        
             
             if 'cost_fuelcycle' in self.input.objectives.keys():
                 for soln in self.population.current:
@@ -355,42 +397,73 @@ class Optimizer():
             
             ## Evaluate fitness
                 ## If chromosome exists in previous generations, skip call to external code.
-                inactive_solutions = []
-                for soln in self.population.current:
-                    try:
-                        soln_index = self.population.archive['solutions'].index(soln.chromosome)
-                        soln.fitness_value = self.population.archive['fitnesses'][soln_index]
-                        soln.parameters = self.population.archive['parameters'][soln_index]
-                        inactive_solutions.append(soln)
-                        self.population.current.remove(soln)
-                        ## take out some in active solution 
-                        namedir.remove(soln.name)
-                        logger.debug(f"Fitness value for solution '{soln.name}' will be taken from archive entry: {soln_index}.")
-                    except ValueError:
-                        continue #chromosome is unique, do nothing.
+                ### testtttttttttt
+                # inactive_solutions = []
+                # for soln in self.population.current:
+                #     try:
+                #         soln_index = self.population.archive['solutions'].index(soln.chromosome)
+                #         soln.fitness_value = self.population.archive['fitnesses'][soln_index]
+                #         soln.parameters = self.population.archive['parameters'][soln_index]
+                #         inactive_solutions.append(soln)
+                #         ## skip the removal for test??
+                #         self.population.current.remove(soln)
+                #         ## take out some in active solution 
+                #         namedir.remove(soln.name)
+                #         logger.debug(f"Fitness value for solution '{soln.name}' will be taken from archive entry: {soln_index}.")
+                #     except ValueError:
+                #         continue #chromosome is unique, do nothing.
                 
                 logger.info("Calculating fitness for generation %s...", self.generation.current)
                 ## Execute and parse objective/constraint values
                 if self.input.code_interface == "surrogate":
-                    if self.generation.current in [0, 20, 40 , 60, 80, 100]:
+                    if self.generation.current in self.input.parcs_steps:
                         self.eval_func = parcs343.evaluate
                         print('Run parcs initially ', self.generation.current )
+                        # if 'pool' in locals():
+                        #    pool.close()
+                        #    pool.join()
+                        #    del pool
+                        #    gc.collect()
+                        #    pool = Pool(processes=self.input.num_procs)
+                        ## new pool 
                         self.population.current= pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
-                        ## extract data after PARCS done 
-                        surrogatemodel.extract_data(namedir, self.input)
-                        # temparcs = self.population.current
-                        # print ('odadaddada')
-                        # stop
-                        ## reset pool to run surrogate ?
-                        # pool = Pool(processes=self.input.num_procs, initializer=init_worker)
-                        # tempsurogate = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)), chunksize=chunksize)
-                        # print(temparcs, tempsurogate)
-                        # stop
-                        self.eval_func = surrogatemodel.evaluate ## reset
+                        # ## extract data after PARCS done 
+                        surrogatemodel_BK.extract_data(namedir, self.input, xsdict)
+                        if self.generation.current in self.input.retrain_steps:
+                            trainmodelrpf()
+                            traincoremodel_update()
+                            if self.input.keep_retraindata=='no': ## delete retrain data after retrainning
+                                rmtree(midas_data.__path_to_store_retrain_data__)
+                            # update pool
+                            if 'pool' in locals():
+                                pool.close()
+                                pool.join()
+                                del pool
+                                gc.collect()
+                            pool = Pool(processes=self.input.num_procs, initializer=init_worker_updated)
+                            ## for printing out fitness value at this step 
+                            self.eval_func = surrogatemodel_BK.evaluate
+                            surrogate_sol = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input), repeat(xsdict)),)# chunksize=chunksize)
+                            for soln in surrogate_sol:
+                                soln.fitness_value = self.fitness.calculate(soln.parameters)
+                            for i in range(len(self.population.current)):
+                                soln = surrogate_sol[i]
+                                soln_result_list = [str(self.generation.current),str(i),'{0:.3f}'.format(soln.fitness_value)]
+                                for param in soln.parameters.keys():
+                                    if param == 'av_fuelenrichment': #reformat this parameter prior to printing
+                                        soln_result_list.append('{0:.3f}'.format(100*soln.parameters[param]['value'])) #convert w.t. to wo%
+                                    else:
+                                        soln_result_list.append('{0:.3f}'.format(soln.parameters[param]['value']))
+                                for gene in soln.chromosome:
+                                    soln_result_list.append(str(gene))
+                                ## write to output file
+                                with open("optimizer_results_at_retrain.csv", 'a') as csvfile:
+                                    csvwriter = csv.writer(csvfile, delimiter=',')
+                                    csvwriter.writerow(soln_result_list)
+
+                        self.eval_func = surrogatemodel_BK.evaluate ## reset
                     else:
-                        self.population.current= pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)), chunksize=chunksize)
-
-
+                        self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input), repeat(xsdict)),)# chunksize=chunksize)
                 else:
                     self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
         
@@ -407,8 +480,8 @@ class Optimizer():
                 logger.info("Done!")
                 
                 ## Recombine active and inactive solutions.
-                for soln in inactive_solutions:
-                    self.population.current.append(soln)
+                # for soln in inactive_solutions:
+                #     self.population.current.append(soln)
         
         ## Archive results
             for soln in self.population.current:
@@ -460,6 +533,11 @@ class Optimizer():
                 break
 
         ## Optimization concluded
+        ## cleanning
+        if 'pool' in locals():
+            pool.close()
+            pool.join()
+            gc.collect()
         # Report best solution information in output file
         optimization_information = optools.Solution_Reporting()
         best_solution_info = optimization_information.best_solution_information("optimizer_results.csv")
@@ -479,11 +557,7 @@ class Optimizer():
         for key in last_gen_data:
             logger.info(f'{key}: {last_gen_data[key]}')
         ## cleaning and close pool 
-        pool.close()
-        pool.join()
-        # Processes should be done now:
-        import gc
-        gc.collect() # ensure garbage collection
+        #gc.collect() 
         #Create output statistics file
         with open('optimization_statistics.csv','w') as file:
             file.write('Generation, Average Fitness, Maximum Fitness, Standard Deviation of Fitness\n')

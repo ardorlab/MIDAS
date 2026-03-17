@@ -119,7 +119,16 @@ def validate_input(keyword, value):
     elif keyword == 'initial_population':
         if value:
             value = Path(str(value))
-    
+    ## surrogate model related blocks for setting # of PARCs or surrogate models to turns on and off 
+    elif keyword == 'parcs_steps':
+        if value:
+            value = [ int(i) for i in str(value).split(',') if i.strip()] ## must be seperated by ','
+    elif keyword == 'retrain_steps':
+        if value: 
+            value = [ int(i) for i in str(value).split(',') if i.strip()] ## must be seperated by ','
+    elif keyword == 'keep_retraindata':
+        if value:
+            value = str(value).lower()
 ## Optimization Block ##
     elif keyword == 'population_size':
         try:
@@ -463,7 +472,7 @@ def validate_input(keyword, value):
                                     new_subsubkey =str(subsubkey).lower().replace(' ','_')
                                     if new_subsubkey == 'refl_type':
                                         new_subsubitem = str(subsubitem).lower()
-                                        if new_subsubitem not in ['all','radial','top','bot']:
+                                        if new_subsubitem not in ['all','radial','top','bot', 'bottom']:
                                             raise ValueError(f"Reflector type for '{subsubkey}' must be radial, top, bottom, or all.")
                                     elif new_subsubkey == 'serial':
                                         new_subsubitem = str(subsubitem)
@@ -1109,6 +1118,11 @@ class Input_Parser():
         self.statistics_plots = yaml_line_reader(info, 'statistics_plots', True)
         self.convergence_plot = yaml_line_reader(info, 'convergence_plot', True)
         self.initial_population = yaml_line_reader(info, 'initial_population', None)
+        ## for surrogate 
+        self.parcs_steps = yaml_line_reader(info, 'parcs_steps', None)
+        self.retrain_steps = yaml_line_reader(info, 'retrain_steps', None)
+        self.keep_retraindata = yaml_line_reader(info, 'keep_retraindata', 'no')
+        # self.checkstep = 
         if self.input_template['apply'] and self.code_interface == 'parcs343':
             parcs343_template_check(self)
     ## Optimization Block ##
@@ -1121,6 +1135,7 @@ class Input_Parser():
         if self.methodology == 'simulated_annealing' and self.num_procs <= 1:
             self.population_size = 1
         self.num_generations = yaml_line_reader(info, 'number_of_generations', 1)
+        ### set the parcs step if none is provided ?? TO DO later 
         self.symmetry = yaml_line_reader(info, 'solution_symmetry', 'octant')
         self.objectives = yaml_line_reader(info, 'objectives', None)
         termination_criteria_default = {'method':'None','termination_generations':0}
