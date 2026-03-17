@@ -2,7 +2,11 @@
 Load model and create some functions
 Model 6 final
 '''
-
+import os
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ["AUTOGRAPH_VERBOSITY"] = "0"
+os.environ["TF_AUTOGRAPH_DISABLE"] = "1"
+os.environ["TMPDIR"] = "/tmp"
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,20 +15,20 @@ from sklearn.model_selection import train_test_split
 from deepxde.backend import tf
 import joblib
 import pickle
-tf.config.optimizer.set_jit(False)
+
+# import logging
+# tf.get_logger().setLevel("ERROR")
+# tf.config.optimizer.set_jit(False)
 import os
 import deepxde as dde
 import time as TT
-st = TT.time()
-batch_size = 32
+import midas_data 
 seed = 199478
 tf.keras.backend.clear_session()
 # tf.keras.utils.set_random_seed(seed) # fro tf 1.0
 tf.set_random_seed(seed) # for tf 2.0 .compat.v1.set_random_seed(seed)
 
-dde.config.set_default_float("float32")
-datapath ='/home/khnguy22/Deeponet-midas/MIDAS/surmodel/traindataall_coredata/' ## need to use abs path
-
+# dde.config.set_default_float("float32")
 BatchSampler = dde.data.sampler.BatchSampler
 Data = dde.data.Data
 ## create new class
@@ -101,6 +105,11 @@ class PWRCustomCartesianProd(Data):
     def test(self):
         return self.test_x, self.test_y
     
+
+st = TT.time()
+batch_size = 32
+datapath =midas_data.__path_base_data__[1] ## need to use abs path
+
 ## randomly create test and train data
 X1_train = np.random.rand(1,1296)
 X2_train = np.random.rand(1,1296)
@@ -121,7 +130,8 @@ X7_test = np.random.rand(1,1296)
 y_test  = np.random.rand(1,1296)
 
 ## load global max min value 
-scalerparam = pickle.load(open(datapath+'scaler.pkl','rb'))
+scalerparam = joblib.load(datapath+'scaler.joblib', mmap_mode='r') ## load joblib
+# scalerparam = pickle.load(open(datapath+'scaler.pkl','rb'))
 ##
 trunks = np.array([1,2]).reshape(2,1)
 
@@ -159,11 +169,6 @@ net = dde.maps.mionet.MIONetCartesianProd_custom7(
        "Glorot normal"
 )
 model = dde.Model(data, net)
-# early_stopping_callback = dde.callbacks.EarlyStopping(
-#     monitor="loss_train",
-#     min_delta=1e-5,
-#     patience=5000,
-# )
 model.compile(
 	"adam",
 	lr=5e-4,
@@ -172,5 +177,6 @@ model.compile(
 	# metrics=["accuracy"],
 )
 # model.restore(r'./PWR-model03/MIONet_PWR3D_03-200000.ckpt') 
-model.restore(r'/home/khnguy22/Deeponet-midas/MIDAS/surmodel/PWR-modelcoredata/MIONet_PWR3D_core-200000.ckpt') 
+model.restore(midas_data.__path_base_model__[1]) 
 print('Load model core time: ', TT.time()-st)
+

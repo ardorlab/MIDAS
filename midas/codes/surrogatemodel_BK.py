@@ -12,137 +12,23 @@ from midas.utils import optimizer_tools as optools
 from midas_data import __parcs343exe__
 ## for surrogate model
 import midas_data 
-from surmodel.trainmodelRPF import trainmodelrpf
-from surmodel.trainmodelcore import traincoremodel_update
+from pathlib import Path
 
 
 ### import surrogate model here 
 import itertools
 import pickle 
+import joblib
 import copy
 import time as TT
 import matplotlib.pyplot as plt
-from surmodel.paralel_MLmodel import get_result, get_result_serial
+from surmodel.paralel_MLmodel import get_result
 
 
 ## Initialize logging for the present file
 logger = logging.getLogger("MIDAS_logger")
 
-def depltion_cal():
-    return 
-
-def comparewithPARCS():
-
-    return
-
-def retrain():
-
-    return
-
-
-
-## Functions ##
-def evaluate_old(solution, input):
-    """
-    Interface used to run PARCSv343 calculations.
-    
-    evaluate function creates working directory and prepares depletion file.
-    if a parcs input file template is provided by the user in the yaml file, the parcs input will be created in with_template()
-    if no template is provided (base case) then the files will be created using without_template()
-
-    Updated by Nicholas Rollins. 10/03/2024
-    Updated by Jake Mikouchi. 03/18/2025
-    """
-    
-## Create and move to unique directory for PARCS execution
-    cwd = Path(os.getcwd())
-    indv_dir = cwd.joinpath(input.results_dir_name / Path(solution.name))
-    if not indv_dir.exists():
-        logger.debug(f"Creating new results directory: {indv_dir}")
-        os.mkdir(indv_dir)
-    logger.debug(f"Changing to new working directory: {indv_dir}")
-    os.chdir(indv_dir)
-
-## Prepare depletion file template
-    with open('boc_exp.dep',"w") as depfile:
-        depfile.write("\n BEGIN STEP\n\n EXP 3D MAP 1.0E+00\n\n")
-        columncount = 0
-        for i in range(1,input.num_assemblies+1):
-            ## write column headers
-            if columncount == 0:
-                depfile.write(" k lb ")
-            depfile.write(str(i).ljust(8))
-            columncount += 1
-            ## write rows for every 10 columns
-            if columncount == 10:
-                depfile.write('\n')
-                for j in range(input.number_axial-2,0,-1): #iterate in reverse; assume 1 node each top and bottom reflectors.
-                    depfile.write(' '+str(j).ljust(3))
-                    for k in range(columncount):
-                        depfile.write('{:.3f}'.format(input.boc_exposure).rjust(8))
-                    depfile.write('\n')
-                depfile.write('\n')
-                columncount = 0
-        ## write rows for leftover columns
-        if columncount!= 0:
-            depfile.write('\n')
-            for j in range(input.number_axial-2,0,-1): #iterate in reverse; assume 1 node each top and bottom reflectors.
-                depfile.write(' '+str(j).ljust(3))
-                for k in range(columncount):
-                    depfile.write('{:.3f}'.format(input.boc_exposure).rjust(8))
-                depfile.write('\n')
-            depfile.write('\n')
-        depfile.write(' END STEP\n')
-    
-        filename = solution.name + '.inp'
-        # create input file based on if an input template is given
-        if not input.input_template['apply']: 
-            without_template(solution, input, cwd, filename)
-        elif input.input_template['apply']:
-            with_template(solution, input, cwd, filename)
-
-    ## Run PARCS INPUT DECK #!TODO: separate the input writing and execution into two different functions that are called in sequence.
-        parcscmd = __parcs343exe__
-        print(solution.parameters)
-        stop
-        try:
-            output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=input.code_walltime) #wait until calculation finishes
-        ## Get Results
-            if 'Finished' in str(output): #job completed
-                logger.debug(f"Job {solution.name} completed successfully in PARCSv343.")
-                solution.parameters = get_results(solution.parameters, solution.name)
-                print(solution.parameters)
-                stop
-            
-            else: #job failed
-                if input.calculation_type in ['eq_cycle']:
-                    try:
-                        solution.parameters = eq_cycle_convergence(input, solution, filename, parcscmd, input.code_walltime) #iteratively try to find an intial guess that will converge
-                    except Exception as e:
-                        logger.error(f"Job {solution.name} has failed to converge with the following exception: {e}")
-                        solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
-                        
-                else: #standard execution pathway
-                    logger.warning(f"Job {solution.name} has failed!")
-                    solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
-        
-        except subprocess.TimeoutExpired: #job timed out
-            os.system('rm -f {}.parcs_pin*'.format(solution.name))
-            logger.error(f"Job {solution.name} has timed out!")
-            solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
-        except subprocess.CalledProcessError as e: #PARCS returned an abort signal
-            logger.error(f"Job {solution.name} has failed with the following exception: {e}")
-            solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
-        
-        logger.debug(f"Returning to original working directory: {cwd}")
-        os.chdir(cwd)
-        gc.collect()
-        print(solution.__dir__())
-        stop
-
-        return solution
-
-def evaluate(solution, input):
+def evaluate(solution, input,xsdict):
     """
     Interface used to run surrogate model calculations.
     
@@ -154,7 +40,7 @@ def evaluate(solution, input):
     Updated by Jake Mikouchi. 03/18/2025
     """
     
-## Create and move to unique directory for PARCS execution
+    ## Create and move to unique directory for PARCS execution
     cwd = Path(os.getcwd())
     indv_dir = cwd.joinpath(input.results_dir_name / Path(solution.name))
     if not indv_dir.exists():
@@ -163,244 +49,245 @@ def evaluate(solution, input):
     logger.debug(f"Changing to new working directory: {indv_dir}")
     os.chdir(indv_dir)
 
-## Prepare depletion file template
-    with open('boc_exp.dep',"w") as depfile:
-        depfile.write("\n BEGIN STEP\n\n EXP 3D MAP 1.0E+00\n\n")
-        columncount = 0
-        for i in range(1,input.num_assemblies+1):
-            ## write column headers
-            if columncount == 0:
-                depfile.write(" k lb ")
-            depfile.write(str(i).ljust(8))
-            columncount += 1
-            ## write rows for every 10 columns
-            if columncount == 10:
-                depfile.write('\n')
-                for j in range(input.number_axial-2,0,-1): #iterate in reverse; assume 1 node each top and bottom reflectors.
-                    depfile.write(' '+str(j).ljust(3))
-                    for k in range(columncount):
-                        depfile.write('{:.3f}'.format(input.boc_exposure).rjust(8))
-                    depfile.write('\n')
-                depfile.write('\n')
-                columncount = 0
-        ## write rows for leftover columns
-        if columncount!= 0:
-            depfile.write('\n')
-            for j in range(input.number_axial-2,0,-1): #iterate in reverse; assume 1 node each top and bottom reflectors.
-                depfile.write(' '+str(j).ljust(3))
-                for k in range(columncount):
-                    depfile.write('{:.3f}'.format(input.boc_exposure).rjust(8))
-                depfile.write('\n')
-            depfile.write('\n')
-        depfile.write(' END STEP\n')
+    ## Prepare depletion file template
+    # with open('boc_exp.dep',"w") as depfile:
+    #     depfile.write("\n BEGIN STEP\n\n EXP 3D MAP 1.0E+00\n\n")
+    #     columncount = 0
+    #     for i in range(1,input.num_assemblies+1):
+    #         ## write column headers
+    #         if columncount == 0:
+    #             depfile.write(" k lb ")
+    #         depfile.write(str(i).ljust(8))
+    #         columncount += 1
+    #         ## write rows for every 10 columns
+    #         if columncount == 10:
+    #             depfile.write('\n')
+    #             for j in range(input.number_axial-2,0,-1): #iterate in reverse; assume 1 node each top and bottom reflectors.
+    #                 depfile.write(' '+str(j).ljust(3))
+    #                 for k in range(columncount):
+    #                     depfile.write('{:.3f}'.format(input.boc_exposure).rjust(8))
+    #                 depfile.write('\n')
+    #             depfile.write('\n')
+    #             columncount = 0
+    #     ## write rows for leftover columns
+    #     if columncount!= 0:
+    #         depfile.write('\n')
+    #         for j in range(input.number_axial-2,0,-1): #iterate in reverse; assume 1 node each top and bottom reflectors.
+    #             depfile.write(' '+str(j).ljust(3))
+    #             for k in range(columncount):
+    #                 depfile.write('{:.3f}'.format(input.boc_exposure).rjust(8))
+    #             depfile.write('\n')
+    #         depfile.write('\n')
+    #     depfile.write(' END STEP\n')
     
-        filename = solution.name + '.inp'
-        # create input file based on if an input template is given
-        if not input.input_template['apply']: 
-            LPs = without_template(solution, input, cwd, filename)
-        elif input.input_template['apply']:
-            with_template(solution, input, cwd, filename)
+    filename = solution.name + '.inp'
+    # create input file based on if an input template is given
+    if not input.input_template['apply']: 
+        LPs = without_template(solution, input, cwd, filename)
+    elif input.input_template['apply']:
+        with_template(solution, input, cwd, filename)
 
-
-        ## create input then take the LPs here 
-
-    ## Run PARCS INPUT DECK #!TODO: separate the input writing and execution into two different functions that are called in sequence.
-        parcscmd = __parcs343exe__
-        ### surrogate depletion here 
-        # print(LPs)
-        LPs = "".join(LPs).strip().split()
-        ## initializing 
-        xsdict = pickle.load(open(midas_data.__path_xs_pickle__,'rb'))
-        fabulist = np.array([0, 0.1, 0.5, 1.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.5, 15.0, 
-                             17.5, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 
-                             60.0, 65.0, 70.0, 75.0, 80.0])
-        faaxial = np.array([15.24, 10.16, 5.08, 30.48, 30.48, 30.48, 30.48, 30.48,
-                            30.48, 30.48, 30.48, 30.48, 30.48, 5.08, 10.16, 15.24])
-        total_height = np.sum(faaxial)
-        corebulist = [0.1, 0.4, 0.5, 1.0, 1.0] + [1.0]*28
-        idx11 = [0]
-        idx22 = [1,2,3,4,5,6,7,9,18,27,36,40,54,63]
-        # st = TT.time()
-        Fd_all, Fq_all, maxboron, cycle_length = get_result(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, idx22)
-        # Fd_all, Fq_all, maxboron, cycle_length = get_result_serial(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, idx22)
-        # print(TT.time()-st)
-        # stop
-        # print( Fd_all, Fq_all, np.max(boron_his), interpolatecycle(10,boron_his,cycle_his))
-        # param = ["cycle_length", "pinpowerpeaking", "fdeltah", "max_boron"]
-        solution.parameters["cycle_length"]['value'] = cycle_length
-        solution.parameters["pinpowerpeaking"]['value'] = Fq_all
-        solution.parameters["fdeltah"]['value'] = Fd_all
-        solution.parameters["max_boron"]['value'] = maxboron
-
-        # try:
-        #     output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=input.code_walltime) #wait until calculation finishes
-        # ## Get Results
-        #     if 'Finished' in str(output): #job completed
-        #         logger.debug(f"Job {solution.name} completed successfully in PARCSv343.")
-        #         solution.parameters = get_results(solution.parameters, solution.name)
-            
-        #     else: #job failed
-        #         if input.calculation_type in ['eq_cycle']:
-        #             try:
-        #                 solution.parameters = eq_cycle_convergence(input, solution, filename, parcscmd, input.code_walltime) #iteratively try to find an intial guess that will converge
-        #             except Exception as e:
-        #                 logger.error(f"Job {solution.name} has failed to converge with the following exception: {e}")
-        #                 solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
-                        
-        #         else: #standard execution pathway
-        #             logger.warning(f"Job {solution.name} has failed!")
-        #             solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
-        
-        # except subprocess.TimeoutExpired: #job timed out
-        #     os.system('rm -f {}.parcs_pin*'.format(solution.name))
-        #     logger.error(f"Job {solution.name} has timed out!")
-        #     solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
-        # except subprocess.CalledProcessError as e: #PARCS returned an abort signal
-        #     logger.error(f"Job {solution.name} has failed with the following exception: {e}")
-        #     solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
-        
-        logger.debug(f"Returning to original working directory: {cwd}")
-        os.chdir(cwd)
-        gc.collect()
-
-        return solution
-
-def extract_data(solution,input):
-    """
-    Extract data for retraining models 
-    
-    :param solution: list of solution 
-    :param input: input object form yaml
-    """
-    cwd = Path(os.getcwd())
-    listFA = [461,462,501,502,526,566,586,250,280,320,400,567,587] ## for now
-    xsdict = pickle.load(open(midas_data.__path_xs_pickle__,'rb'))
+    ### surrogate depletion here 
+    # print(LPs)
+    LPs = "".join(LPs).strip().split()
+    ## initializing 
+    # xsdict = pickle.load(open(midas_data.__path_xs_pickle__,'rb'))
+    # xsdict = joblib.load(midas_data.__path_xs_pickle__,mmap_mode='r')
     fabulist = np.array([0, 0.1, 0.5, 1.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.5, 15.0, 
                          17.5, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 
                          60.0, 65.0, 70.0, 75.0, 80.0])
     faaxial = np.array([15.24, 10.16, 5.08, 30.48, 30.48, 30.48, 30.48, 30.48,
                         30.48, 30.48, 30.48, 30.48, 30.48, 5.08, 10.16, 15.24])
-    branchXS_1 = []
-    branchXS_2 = []
-    branchXS_3 = []
-    branchXS_4 = []
-    branchXS_5 = []
-    branchXS_6 = []
-    branchXS_7 = []
-    outputRPF  = []
-    outputcore = []
-    for dir in solution:
-        folder_path = cwd.joinpath(input.results_dir_name / Path(dir))
-        of_filename = f"{dir}.parcs_dep"
-        input_filename = f"{dir}.inp"
-        dpl_filename = f"{dir}.parcs_dpl"
-        output_path = os.path.join(folder_path, of_filename)
-        if os.path.exists(output_path):
-            bu3d = get_burnup(output_path)
-            rpf3d = get_rpf(output_path)
-            coreparam = get_boron_cycle(output_path)
-            nbu = len(bu3d)
-            LPs = getLP(os.path.join(folder_path, input_filename))
-            if nbu !=0:
-                nz = len(bu3d[0][0])
-                for bu in range(nbu):
-                    idx = 0 
-                    tempbranchXS_1 = np.zeros((81,nz))
-                    tempbranchXS_2 = np.zeros((81,nz))
-                    tempbranchXS_3 = np.zeros((81,nz))
-                    tempbranchXS_4 = np.zeros((81,nz))
-                    tempbranchXS_5 = np.zeros((81,nz))
-                    tempbranchXS_6 = np.zeros((81,nz))
-                    tempbranchXS_7 = np.zeros((81,nz))
-                    tempoutput = np.zeros((81,nz))
-                    for loc,fa in enumerate(LPs):
-                        if fa =='10':
-                            # tempbranchXS_1[loc][:]=[-1]*nz
-                            # tempbranchXS_2[loc][:]=[-1]*nz
-                            # tempbranchXS_3[loc][:]=[-1]*nz
-                            # tempbranchXS_4[loc][:]=[-1]*nz
-                            # tempbranchXS_5[loc][:]=[-1]*nz
-                            # tempbranchXS_6[loc][:]=[-1]*nz
-                            # tempbranchXS_7[loc][:]=[-1]*nz 
-                            # use 0 for reflector 
-                            tempoutput[loc][:]=[0.0]*nz
-                            tempbranchXS_1[loc][:]=[0.0]*nz
-                            tempbranchXS_2[loc][:]=[0.0]*nz
-                            tempbranchXS_3[loc][:]=[0.0]*nz
-                            tempbranchXS_4[loc][:]=[0.0]*nz
-                            tempbranchXS_5[loc][:]=[0.0]*nz
-                            tempbranchXS_6[loc][:]=[0.0]*nz
-                            tempbranchXS_7[loc][:]=[0.0]*nz
-                        elif fa != '00':
-                            for node in range(nz):
-                                buval = bu3d[bu][idx][node]
-                                ## Doing interpolation 
-                                XSdifc = getXSlist(xsdict,fa,'difc',str(node))
-                                XSnufis = getXSlist(xsdict,fa,'nufission',str(node))
-                                XSabs = getXSlist(xsdict,fa,'absorption',str(node))
-                                XSrem = getXSlist(xsdict,fa,'removal',str(node))
-                                XS1 = [float(xs[0]) for xs in XSdifc]
-                                XS2 = [float(xs[1]) for xs in XSdifc]
-                                XS3 = [float(xs[0]) for xs in XSnufis]
-                                XS4 = [float(xs[1]) for xs in XSnufis]
-                                XS5 = [float(xs[0]) for xs in XSabs]
-                                XS6 = [float(xs[1]) for xs in XSabs]
-                                XS7 = [float(xs[0]) for xs in XSrem]
-                                tempbranchXS_1[loc][node]=np.interp(buval, fabulist, XS1)
-                                tempbranchXS_2[loc][node]=np.interp(buval, fabulist, XS2)
-                                tempbranchXS_3[loc][node]=np.interp(buval, fabulist, XS3)
-                                tempbranchXS_4[loc][node]=np.interp(buval, fabulist, XS4)
-                                tempbranchXS_5[loc][node]=np.interp(buval, fabulist, XS5)
-                                tempbranchXS_6[loc][node]=np.interp(buval, fabulist, XS6)
-                                tempbranchXS_7[loc][node]=np.interp(buval, fabulist, XS7)
-                                tempoutput[loc][node]=rpf3d[bu][idx][node]
-                            idx = idx + 1
-                    outputcore.append(coreparam[bu])
-                    outputRPF.append(tempoutput)        
-                    branchXS_1.append(tempbranchXS_1)        
-                    branchXS_2.append(tempbranchXS_2)        
-                    branchXS_3.append(tempbranchXS_3)        
-                    branchXS_4.append(tempbranchXS_4)        
-                    branchXS_5.append(tempbranchXS_5)        
-                    branchXS_6.append(tempbranchXS_6)        
-                    branchXS_7.append(tempbranchXS_7)        
+    total_height = np.sum(faaxial)
+    corebulist = [0.1, 0.4, 0.5, 1.0, 1.0] + [1.0]*28 # modify later to get from input parser
+    idx11 = [0]
+    idx22 = [1,2,3,4,5,6,7,9,18,27,36,45,54,63]
+    # st = TT.time()
+    Fd_all, Fq_all, maxboron, cycle_length = get_result(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, idx22)
+    # Fd_all, Fq_all, maxboron, cycle_length = get_result_serial(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, idx22)
+    # print(TT.time()-st)
+    # stop
+    # print( Fd_all, Fq_all, np.max(boron_his), interpolatecycle(10,boron_his,cycle_his))
+    # param = ["cycle_length", "pinpowerpeaking", "fdeltah", "max_boron"]
+    solution.parameters["cycle_length"]['value'] = cycle_length
+    solution.parameters["pinpowerpeaking"]['value'] = Fq_all
+    solution.parameters["fdeltah"]['value'] = Fd_all
+    solution.parameters["max_boron"]['value'] = maxboron
+    # try:
+    #     output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=input.code_walltime) #wait until calculation finishes
+    # ## Get Results
+    #     if 'Finished' in str(output): #job completed
+    #         logger.debug(f"Job {solution.name} completed successfully in PARCSv343.")
+    #         solution.parameters = get_results(solution.parameters, solution.name)
+        
+    #     else: #job failed
+    #         if input.calculation_type in ['eq_cycle']:
+    #             try:
+    #                 solution.parameters = eq_cycle_convergence(input, solution, filename, parcscmd, input.code_walltime) #iteratively try to find an intial guess that will converge
+    #             except Exception as e:
+    #                 logger.error(f"Job {solution.name} has failed to converge with the following exception: {e}")
+    #                 solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+                    
+    #         else: #standard execution pathway
+    #             logger.warning(f"Job {solution.name} has failed!")
+    #             solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
     
-    if not branchXS_1:
-        ## empty data
-        raise ValueError("Failed to extract data due to empty list -- Check output PARCS.")
+    # except subprocess.TimeoutExpired: #job timed out
+    #     os.system('rm -f {}.parcs_pin*'.format(solution.name))
+    #     logger.error(f"Job {solution.name} has timed out!")
+    #     solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+    # except subprocess.CalledProcessError as e: #PARCS returned an abort signal
+    #     logger.error(f"Job {solution.name} has failed with the following exception: {e}")
+    #     solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+    
+    logger.debug(f"Returning to original working directory: {cwd}")
+    os.chdir(cwd)
+    ## clean xsdict 
+    # del xsdict 
+    # gc.collect()
 
-    branchXS_1 = np.array(branchXS_1)
-    branchXS_2 = np.array(branchXS_2)
-    branchXS_3 = np.array(branchXS_3)
-    branchXS_4 = np.array(branchXS_4)
-    branchXS_5 = np.array(branchXS_5)
-    branchXS_6 = np.array(branchXS_6)
-    branchXS_7 = np.array(branchXS_7)
-    outputRPF  = np.array(outputRPF)
-    outputcore  = np.array(outputcore)
-    ## save to a temporary directory for retraining later 
+    return solution
+
+def extract_data(solution, input, xsdict):
+    """
+    Optimized data extraction for retraining models using vectorization.
+    """
+    # 1. Configuration and Path Setup
     retrain_path = midas_data.__path_to_store_retrain_data__
     os.makedirs(retrain_path, exist_ok=True)
-    np.save(os.path.join(retrain_path, 'outputRFP.npy'),outputRPF)
-    np.save(os.path.join(retrain_path, 'outputcore.npy'),outputcore)
-    np.save(os.path.join(retrain_path, 'branchXS_1.npy'),branchXS_1)
-    np.save(os.path.join(retrain_path, 'branchXS_2.npy'),branchXS_2)
-    np.save(os.path.join(retrain_path, 'branchXS_3.npy'),branchXS_3)
-    np.save(os.path.join(retrain_path, 'branchXS_4.npy'),branchXS_4)
-    np.save(os.path.join(retrain_path, 'branchXS_5.npy'),branchXS_5)
-    np.save(os.path.join(retrain_path, 'branchXS_6.npy'),branchXS_6)
-    np.save(os.path.join(retrain_path, 'branchXS_7.npy'),branchXS_7)
-    print('affafafaafafa shape output')
-    print(outputRPF.shape)
-    print(outputcore.shape)
-    ## retraining 
-    trainmodelrpf()
-    traincoremodel_update()
-    # print(midas_data.__path_to_restore_model__)
-    return
+    
+    cwd = Path(os.getcwd())
+    fabulist = np.array([0, 0.1, 0.5, 1.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.5, 15.0, 
+                         17.5, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 
+                         60.0, 65.0, 70.0, 75.0, 80.0])
+
+    # Pre-allocate master lists for this generation
+    list_branch_data = [[] for _ in range(7)]
+    list_outputRPF = []
+    list_outputcore = []
+    list_outputdata = [] # for storing true data to perform validation 
+    if input.num_assemblies==193:
+        flag17 = True
+    else:
+        flag17 = False
+
+    # 2. Process each individual directory
+    for dir_name in solution:
+        folder_path = cwd.joinpath(input.results_dir_name / Path(dir_name))
+        output_path = os.path.join(folder_path, f"{dir_name}.parcs_dep")
+        input_path = os.path.join(folder_path, f"{dir_name}.parcs_out")
+        dplfile_path = os.path.join(folder_path, f"{dir_name}.parcs_dpl")
+
+        if not os.path.exists(output_path):
+            continue
+
+        # Load data from PARCS files
+        # Converting to numpy arrays immediately is key for speed
+        if flag17:
+            bu3d = np.array(get_burnup_17(output_path))     # Shape: (Steps, Active_FA, Nodes)
+            rpf3d = np.array(get_rpf_17(output_path))       # Shape: (Steps, Active_FA, Nodes)
+        else:
+            bu3d = np.array(get_burnup_15(output_path))     # Shape: (Steps, Active_FA, Nodes)
+            rpf3d = np.array(get_rpf_15(output_path))       # Shape: (Steps, Active_FA, Nodes)
+        coreparam = get_boron_cycle(output_path)     # List of (boron, cycle) for model 2 
+        core_data = get_core_data(dplfile_path) ## array of [cyclelength, CBC,Fq,Fd] for retrain purpose
+        LPs = getLP(input_path)              
+        
+
+        n_steps, n_fa_active, nz = bu3d.shape
+        n_locations = len(LPs)
+
+        # Pre-allocate temporary arrays for this specific PARCS run
+        # Using (Steps, 81, Nodes) to maintain spatial structure
+        temp_gen_rpf = np.zeros((n_steps, n_locations, nz))
+        temp_gen_xs = [np.zeros((n_steps, n_locations, nz)) for _ in range(7)]
+
+        active_fa_idx = 0
+        for loc, fa in enumerate(LPs):
+            # Skip reflectors or empty slots
+            if fa == '10' or fa == '00':
+                continue
+
+            # Vectorization starts here: Iterate nodes, but vectorize burnup steps
+            for node in range(nz):
+                # 1. Pull XS library data for all 25 burnup points in the library once per node
+                # This removes the "float(xs[0])" list comprehension from the inner-most loop
+                raw_difc = np.array(getXSlist(xsdict, fa, 'difc', str(node)), dtype=float)
+                raw_nufis = np.array(getXSlist(xsdict, fa, 'nufission', str(node)), dtype=float)
+                raw_abs = np.array(getXSlist(xsdict, fa, 'absorption', str(node)), dtype=float)
+                raw_rem = np.array(getXSlist(xsdict, fa, 'removal', str(node)), dtype=float)
+
+                # 2. Get burnup values for ALL steps at this specific node
+                bu_values = bu3d[:, active_fa_idx, node]
+
+                # 3. Vectorized Interpolation: np.interp handles the whole array at once
+                temp_gen_xs[0][:, loc, node] = np.interp(bu_values, fabulist, raw_difc[:, 0])
+                temp_gen_xs[1][:, loc, node] = np.interp(bu_values, fabulist, raw_difc[:, 1])
+                temp_gen_xs[2][:, loc, node] = np.interp(bu_values, fabulist, raw_nufis[:, 0])
+                temp_gen_xs[3][:, loc, node] = np.interp(bu_values, fabulist, raw_nufis[:, 1])
+                temp_gen_xs[4][:, loc, node] = np.interp(bu_values, fabulist, raw_abs[:, 0])
+                temp_gen_xs[5][:, loc, node] = np.interp(bu_values, fabulist, raw_abs[:, 1])
+                temp_gen_xs[6][:, loc, node] = np.interp(bu_values, fabulist, raw_rem[:, 0])
+
+                # Store RPF values across all steps
+                temp_gen_rpf[:, loc, node] = rpf3d[:, active_fa_idx, node]
+
+            active_fa_idx += 1
+
+        # Collect successful data blocks
+        list_outputcore.extend(coreparam)
+        list_outputdata.append(core_data)
+        list_outputRPF.append(temp_gen_rpf)
+        for i in range(7):
+            list_branch_data[i].append(temp_gen_xs[i])
+
+    # 3. Final Aggregation and Disk Saving
+    if not list_outputRPF:
+        raise ValueError("Extraction failed: No valid PARCS data found. Check your .parcs_dep files.")
+    # Combine new data with existing .npy files on disk
+    # We load them, stack them, and save them.
+    # Note: load_or_empty is your helper that returns an empty array if file missing.
+    try:
+        # Process RPF and Core parameters
+        outputRPF = np.vstack((load_or_empty(os.path.join(retrain_path, 'outputRFP.npy'), (0, 81, 16)), 
+                               np.vstack(list_outputRPF)))
+        outputcore = np.vstack((load_or_empty(os.path.join(retrain_path, 'outputcore.npy'), (0, 2)), 
+                                np.array(list_outputcore)))
+        outputdata = np.vstack((load_or_empty(os.path.join(retrain_path, 'outputdata.npy'), (0, 4)), 
+                                np.array(list_outputdata)))
+
+
+        np.save(os.path.join(retrain_path, 'outputRFP.npy'), outputRPF)
+        np.save(os.path.join(retrain_path, 'outputcore.npy'), outputcore)
+        np.save(os.path.join(retrain_path, 'outputdata.npy'), outputdata)
+
+        # Process the 7 XS branches
+        for i in range(7):
+            filename = f'branchXS_{i+1}.npy'
+            current_stacked = np.vstack(list_branch_data[i])
+            existing_data = load_or_empty(os.path.join(retrain_path, filename), (0, 81, 16))
+            
+            final_branch = np.vstack((existing_data, current_stacked))
+            np.save(os.path.join(retrain_path, filename), final_branch)
+            
+            # Explicit cleanup to keep RAM low during large stacks
+            del existing_data, final_branch, current_stacked
+
+        print(f"Data extraction complete. Current RPF shape: {outputRPF.shape}")
+
+    except Exception as e:
+        print(f"Error during final data save: {e}")
+        raise
+
+def load_or_empty(file_path, shape=(0,)):
+    """Loads a numpy file if it exists, otherwise returns an empty array."""
+    if os.path.exists(file_path):
+        return np.load(file_path)
+    else:
+        return np.empty(shape)
 
 def without_template(solution, input, cwd, filename):    
-## Prepare values for file writing
+    ## Prepare values for file writing
     list_unique_xs = np.concatenate([value if isinstance(value,list) else np.concatenate(list(value.values()))\
                                     for value in input.xs_list.values()])
 
@@ -437,7 +324,7 @@ def without_template(solution, input, cwd, filename):
                     else:
                         soln_core_lattice[j][i] = vals['Value']
 
-## Generate Input File   
+    ## Generate Input File   
     ## CaseID Block ##
     with open(filename,"w") as ofile:
         ofile.write("!******************************************************************************\n")
@@ -478,7 +365,7 @@ def without_template(solution, input, cwd, filename):
         else:
             ofile.write("      PIN_POWER  F\n")
         ofile.write("      PRINT_OPT  T T T T T F T T T T  T  T  T  T  F  T  T")
-        #!ofile.write("      PLOT_OPTS 0 0 0 0 0 2\n")
+        # ofile.write("      PLOT_OPTS 0 0 0 0 0 2\n")
         ofile.write("\n")
         ofile.write("!******************************************************************************\n\n")
         
@@ -618,7 +505,6 @@ def without_template(solution, input, cwd, filename):
             ofile.write("      UNIF_TH   0.740    626.85     {}\n".format(np.round(input.inlet_temp-273.15,2))) #!TODO: how to deal with av. fuel temp?
         ofile.write("\n")
         ofile.write("!******************************************************************************\n\n")
-
     ## DEPL Block ##
     with open(filename,"a") as ofile:
         ofile.write("DEPL\n")
@@ -627,7 +513,7 @@ def without_template(solution, input, cwd, filename):
         # ofile.write("      INP_HST   './boc_exp.dep' -2 1\n") TODO add functionality in through input yaml files
         ofile.write("      OUT_OPT   T  T  T  T  F\n")
         # Write reflector cross sections
-        ofile.write("      PMAXS_F   1 '{}{}' 1\n".format(input.xs_lib / Path(input.xs_list['reflectors']['bot'][0]),\
+        ofile.write("      PMAXS_F   1 '{}{}' 1\n".format(input.xs_lib / Path(input.xs_list['reflectors']['bottom'][0]),\
                                                         input.xs_extension))
         for i in range(len(input.xs_list['reflectors']['radial'])):
             rxs_index = 2 + i
@@ -702,7 +588,7 @@ def without_template(solution, input, cwd, filename):
 
 def with_template(solution, input, cwd, filename): 
 
-## Prepare values for file writing
+    ## Prepare values for file writing
     ## Fill loading pattern with chromosome (core_dict from Prepare_Problem_Values.prepare_cycle)
     fuel_locations = [loc for loc in input.core_dict.keys() if 2 < len(loc) <  5]
     soln_fuel_locations = {}
@@ -734,7 +620,7 @@ def with_template(solution, input, cwd, filename):
                         soln_core_lattice[j][i] = "10" #!TODO: add support more multiple radial refls.
                     else:
                         soln_core_lattice[j][i] = vals['Value']
-## copy input file from template
+    ## copy input file from template
     inp_template = str(cwd.joinpath(cwd / input.input_template['loc']))
     shutil.copy(inp_template, filename)
     soln_full_core_lattice = prepare_shuffling_map(input, solution.chromosome)
@@ -1060,7 +946,7 @@ def eq_cycle_convergence(input, solution, filename, parcscmd, walltime):
     boc_exp = input.boc_exposure
     conv_list = [[],[]] #track convergence
     skip_convwrite = False
-## fetch best cycle from previous attempt
+    ## fetch best cycle from previous attempt
     depfiles_list = []
     for file in os.listdir('./'):
         if '.parcs_cyc-' in file:
@@ -1071,7 +957,7 @@ def eq_cycle_convergence(input, solution, filename, parcscmd, walltime):
         lastcycle_dep = depfiles_list[-2]
     else:
         lastcycle_dep = depfiles_list[-1]
-## reattempt convergence
+    ## reattempt convergence
     convergence_attempts = 0
     while convergence_attempts < 8: # number of attempts to make
         convergence_attempts += 1
@@ -1243,7 +1129,7 @@ def get_boron_cycle(ofile):
             bo_cyc.append([float(val[bor_idx]), float(val[cyc_idx])])
     return bo_cyc
 
-def get_burnup(ofile,FULL_CORE=False):
+def get_burnup_17(ofile,FULL_CORE=False):
     '''
     3D burnup from PARCS .dep output files
     Some geometry predefined parameters are required.
@@ -1314,7 +1200,7 @@ def get_burnup(ofile,FULL_CORE=False):
     
     return bu_3d
 
-def get_rpf(ofile,FULL_CORE=False):
+def get_rpf_17(ofile,FULL_CORE=False):
     '''
     3D RPF from PARCS .dep output files
     Some geometry predefined parameters are required.
@@ -1384,7 +1270,179 @@ def get_rpf(ofile,FULL_CORE=False):
                         rpf_3d[bu, ifass-1, iz]=val
     return rpf_3d
 
+def get_burnup_15(ofile,FULL_CORE=False):
+    '''
+    3D burnup from PARCS .dep output files
+    Some geometry predefined parameters are required.
+    '''
+    nfa=47
+    z_id=[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]
+    nz=len(z_id)
+    refl_id=[9, 18, 26, 27, 35, 42, 43, 49, 50, 55, 56, 59, 60, 61, 62, 63, 64]
+    if FULL_CORE:
+        refl_id=[1,2,3,4,5,6,7,8,9,10,11,12,
+                    20,21,22,23,24,
+                    36,37,38,
+                    52,53,54,
+                    68,69,70,
+                    86,87,
+                    103,104,
+                    120,121,
+                    137,138,
+                    154,155,
+                    171,172,
+                    188,189,190,
+                    204,205,206,
+                    220,221,222,
+                    234,235,236,237,238,
+                    246,247,248,249,250,251,252,253,254,255,256,257]
+    with open(ofile,'r') as f:
+        txt = f.readlines()
+    alldeplines = []
+    k_sta = 'EXP 3D MAP'
+    k_end = ' I_D 2D MAP'
+    for i,line in enumerate(txt):
+        if line.find(k_sta)>=0:
+            i_sta = i+1
+        if line.find(k_end)>=0:
+            i_end = i-1
+            depline = [txt[ii] for ii in range(i_sta, i_end+1)]
+            depline = "".join(depline)
+            alldeplines.append(depline)
+    nbu=len(alldeplines)
+    bu_3d=np.zeros((nbu,nfa,nz))
+    for bu,step in enumerate(alldeplines):
+        txt_dep=step.split('\n')
+        txt_dep=list(filter(lambda a: a != '', txt_dep))
+        txt_dep=list(filter(lambda a: a != ' ', txt_dep))
+        asb_counter=0
+        fasb_counter=0
+        ifass = 0
+        iass = 0
+        for i in range(1,len(txt_dep)):
+            line_dep = txt_dep[i].split()
+            if line_dep[0]=='k':
+                asb_counter=copy.deepcopy(iass)
+                fasb_counter=copy.deepcopy(ifass)
+            elif int(line_dep[0]) not in z_id: 
+                pass
+            else:
+                iz = z_id[-1] - int(line_dep[0])
+                ifass = copy.deepcopy(fasb_counter)
+                iass = copy.deepcopy(asb_counter)
+                for j in range(1,len(line_dep)):
+                    iass +=1
+                    if iass in refl_id:
+                        pass
+                    else:
+                        ifass +=1
+                        val = float(line_dep[j])
+                        bu_3d[bu, ifass-1, iz]=val
+    
+    return bu_3d
+
+def get_rpf_15(ofile,FULL_CORE=False):
+    '''
+    3D RPF from PARCS .dep output files
+    Some geometry predefined parameters are required.
+    '''
+    nfa=47
+    z_id=[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]
+    nz=len(z_id)
+    refl_id=[9, 18, 26, 27, 35, 42, 43, 49, 50, 55, 56, 59, 60, 61, 62, 63, 64]
+    if FULL_CORE:
+        refl_id=[1,2,3,4,5,6,7,8,9,10,11,12,
+                    20,21,22,23,24,
+                    36,37,38,
+                    52,53,54,
+                    68,69,70,
+                    86,87,
+                    103,104,
+                    120,121,
+                    137,138,
+                    154,155,
+                    171,172,
+                    188,189,190,
+                    204,205,206,
+                    220,221,222,
+                    234,235,236,237,238,
+                    246,247,248,249,250,251,252,253,254,255,256,257]
+    with open(ofile,'r') as f:
+        txt = f.readlines()
+    alldeplines = []
+    k_sta = ' RPF 3D MAP'
+    k_end = ' EXP 2D MAP'
+    for i,line in enumerate(txt):
+        if line.find(k_sta)>=0:
+            i_sta = i+1
+        if line.find(k_end)>=0:
+            i_end = i-1
+            depline = [txt[ii] for ii in range(i_sta, i_end+1)]
+            depline = "".join(depline)
+            alldeplines.append(depline)
+    nbu=len(alldeplines)
+    rpf_3d=np.zeros((nbu,nfa,nz))
+    for bu,step in enumerate(alldeplines):
+        txt_dep=step.split('\n')
+        txt_dep=list(filter(lambda a: a != '', txt_dep))
+        txt_dep=list(filter(lambda a: a != ' ', txt_dep))
+        asb_counter=0
+        fasb_counter=0
+        ifass = 0
+        iass = 0
+        for i in range(1,len(txt_dep)):
+            line_dep = txt_dep[i].split()
+            if line_dep[0]=='k':
+                asb_counter=copy.deepcopy(iass)
+                fasb_counter=copy.deepcopy(ifass)
+            elif int(line_dep[0]) not in z_id: 
+                pass
+            else:
+                iz = z_id[-1] - int(line_dep[0])
+                ifass = copy.deepcopy(fasb_counter)
+                iass = copy.deepcopy(asb_counter)
+                for j in range(1,len(line_dep)):
+                    iass +=1
+                    if iass in refl_id:
+                        pass
+                    else:
+                        ifass +=1
+                        val = float(line_dep[j])
+                        rpf_3d[bu, ifass-1, iz]=val
+    return rpf_3d
+
 def getXSlist(xsdict,fatype,xstype,axialnode):
     bukeys=xsdict[fatype].keys()
     xsval = [xsdict[fatype][key][xstype][axialnode] for key in bukeys]
     return xsval
+
+def get_core_data(dplfile):
+    '''
+    Get cycle length, CBC, Fq,Fd for retrain purpose
+    '''
+    with open(dplfile) as ofile:
+        filestr = ofile.read()
+        
+    ## Split file by section
+    res_str = filestr.split('===============================================================================')
+    res_str = res_str[-1].split('_______________________________________________________________________________')
+    res_str = res_str[0].split('\n')
+    
+    ## Parse raw values by timestep
+    efpd_list = []; boron_list = []; keff_list = []; pxy_list = []; pxyz_list = []; fq_list = []; fdh_list = []; chfr = []
+    for i in range(2, len(res_str)-1):
+        res_val=res_str[i].split()
+        
+        efpd_list.append(float(res_val[9]))
+        boron_list.append(float(res_val[14]))
+        keff_list.append(float(res_val[2]))            
+        pxyz_list.append(float(res_val[7]))
+        pxy_list.append(float(res_val[6]))
+        fdh_list.append(float(res_val[21]))
+        fq_list.append(float(res_val[22]))
+        chfr.append(float(res_val[23]))
+    cycle = calc_cycle_length(efpd_list,boron_list,keff_list)
+    cbc = max(boron_list)
+    fq = max(fq_list)
+    fd = max(fdh_list)
+    return np.array([cycle,cbc,fq,fd])

@@ -190,8 +190,8 @@ def without_template(solution, input, cwd, filename):
             ofile.write("      PIN_POWER  T\n")
         else:
             ofile.write("      PIN_POWER  F\n")
-        # ofile.write("      PRINT_OPT  T T T T T F T T T T  T  T  T  T  F  T  T\n")
-        ofile.write("      PLOT_OPTS 0 0 0 0 0 2\n")
+        ofile.write("      PRINT_OPT  T T T T T F T T T T  T  T  T  T  F  T  T\n")
+        # ofile.write("      PLOT_OPTS 0 0 0 0 0 2\n")
         ofile.write("\n")
         ofile.write("!******************************************************************************\n\n")
         
@@ -328,7 +328,10 @@ def without_template(solution, input, cwd, filename):
                                             np.round(input.inlet_temp-273.15,2))) 
         ofile.write("\n")
         ofile.write("!******************************************************************************\n\n")
-
+    # print(input.xs_list['reflectors'].keys())
+    # for key in input.xs_list['reflectors'].keys():
+    #     print(key, input.xs_list['reflectors'][key])
+    # stop
     ## DEPL Block ##
     with open(filename,"a") as ofile:
         ofile.write("DEPL\n")
@@ -339,6 +342,8 @@ def without_template(solution, input, cwd, filename):
         # Write reflector cross sections
         ofile.write("      PMAXS_F   1 '{}{}' 1\n".format(input.xs_lib / Path(input.xs_list['reflectors']['bottom'][0]),\
                                                         input.xs_extension))
+        # ofile.write("      PMAXS_F   1 '{}{}' 1\n".format(input.xs_lib / Path(input.xs_list['reflectors']['bot'][0]),\
+        #                                                 input.xs_extension))
         for i in range(len(input.xs_list['reflectors']['radial'])):
             rxs_index = 2 + i
             radpath = input.xs_lib / Path(input.xs_list['reflectors']['radial'][i])

@@ -2,7 +2,11 @@
 Load model and create some functions
 Model 6 final
 '''
-
+import os
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ["AUTOGRAPH_VERBOSITY"] = "0"
+os.environ["TF_AUTOGRAPH_DISABLE"] = "1"
+os.environ["TMPDIR"] = "/tmp"
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,19 +15,19 @@ from sklearn.model_selection import train_test_split
 from deepxde.backend import tf
 import joblib
 import pickle
-tf.config.optimizer.set_jit(False)
+
+# import logging
+# tf.get_logger().setLevel("ERROR")
+# tf.config.optimizer.set_jit(False)
 import os
 import deepxde as dde
 import time as TT
-st = TT.time()
-batch_size = 32
-seed = 199478
+import midas_data 
+# seed = 199478
 tf.keras.backend.clear_session()
 # tf.keras.utils.set_random_seed(seed) # fro tf 1.0
-tf.set_random_seed(seed) # for tf 2.0 .compat.v1.set_random_seed(seed)
-
-dde.config.set_default_float("float32")
-datapath ='/home/khnguy22/Deeponet-midas/MIDAS/surmodel/traindataall/'
+# tf.set_random_seed(seed) # for tf 2.0 .compat.v1.set_random_seed(seed)
+# dde.config.set_default_float("float32")
 
 BatchSampler = dde.data.sampler.BatchSampler
 Data = dde.data.Data
@@ -100,26 +104,7 @@ class PWRCustomCartesianProd(Data):
 
     def test(self):
         return self.test_x, self.test_y
-    
-## randomly create test and train data
-X1_train = np.random.rand(1,1296)
-X2_train = np.random.rand(1,1296)
-X3_train = np.random.rand(1,1296)
-X4_train = np.random.rand(1,1296)
-X5_train = np.random.rand(1,1296)
-X6_train = np.random.rand(1,1296)
-X7_train = np.random.rand(1,1296)
-trunk = np.load(datapath+'trunk.npy').astype(np.float32)
-y_train = np.random.rand(1,1296)
-### test data 
-X1_test = np.random.rand(1,1296)
-X2_test = np.random.rand(1,1296)
-X3_test = np.random.rand(1,1296)
-X4_test = np.random.rand(1,1296)
-X5_test = np.random.rand(1,1296)
-X6_test = np.random.rand(1,1296)
-X7_test = np.random.rand(1,1296)
-y_test  = np.random.rand(1,1296)
+
 
 def minmaxscale(X, globalmax, globalmin):
     '''
@@ -138,8 +123,36 @@ def minmaxReverse(Xscaled, globalmax, globalmin):
 
     return temp 
 
+
+st = TT.time()
+batch_size = 32
+datapath = midas_data.__path_base_data__[0]
+
+
+
+## randomly create test and train data
+X1_train = np.random.rand(1,1296)
+X2_train = np.random.rand(1,1296)
+X3_train = np.random.rand(1,1296)
+X4_train = np.random.rand(1,1296)
+X5_train = np.random.rand(1,1296)
+X6_train = np.random.rand(1,1296)
+X7_train = np.random.rand(1,1296)
+trunk = np.load(datapath+'trunk.npy', mmap_mode='r').astype(np.float32)
+y_train = np.random.rand(1,1296)
+### test data 
+X1_test = np.random.rand(1,1296)
+X2_test = np.random.rand(1,1296)
+X3_test = np.random.rand(1,1296)
+X4_test = np.random.rand(1,1296)
+X5_test = np.random.rand(1,1296)
+X6_test = np.random.rand(1,1296)
+X7_test = np.random.rand(1,1296)
+y_test  = np.random.rand(1,1296)
 ## load global max min value 
-scalerparam = pickle.load(open(datapath+'scaler.pkl','rb'))
+scalerparam = joblib.load(datapath+'scaler.joblib', mmap_mode='r') ## load joblib
+
+# scalerparam = pickle.load(open(datapath+'scaler.pkl','rb'))
 ##
 trunks = minmaxscale(trunk,scalerparam['tmax'], scalerparam['tmin'])
 
@@ -162,8 +175,6 @@ y_test = y_test
 
 from deepxde.nn.tensorflow_compat_v1.mionet import MIONetCartesianProd_custom7
 from deepxde.data.quadruple import QuadrupleCartesianProd
-
-
 data = PWRCustomCartesianProd(X_train, y_train, X_test, y_test)
 m = 1296
 net = dde.maps.mionet.MIONetCartesianProd_custom7(
@@ -178,11 +189,6 @@ net = dde.maps.mionet.MIONetCartesianProd_custom7(
        "Glorot normal"
 )
 model = dde.Model(data, net)
-# early_stopping_callback = dde.callbacks.EarlyStopping(
-#     monitor="loss_test",
-#     min_delta=1e-6,
-#     patience=10000,
-# )
 model.compile(loss='MSE',
 	optimizer="adam",
 	lr=5e-4,
@@ -192,5 +198,5 @@ model.compile(loss='MSE',
 	# metrics=["accuracy"],
 )
 # model.restore(r'./PWR-model03/MIONet_PWR3D_03-200000.ckpt') 
-model.restore(r'/home/khnguy22/Deeponet-midas/MIDAS/surmodel/PWR-model07/MIONet_PWR3D_07-200000.ckpt') 
+model.restore(midas_data.__path_base_model__[0]) 
 print('Load model 07 time: ', TT.time()-st)
