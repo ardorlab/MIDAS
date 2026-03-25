@@ -64,8 +64,8 @@ def validate_input(keyword, value):
     
     elif keyword == 'code_type':
         value = str(value).lower().replace(' ','_')
-        if value not in ["parcs342", "parcs343", "nuscale_database", "trace50p5", "polaris624","serpent","custom_function","styblinski_tang","listsum"]:
-            raise ValueError("Code types currently supported: PARCS342, PARCS343, NuScale_Database, TRACE50p5.")
+        if value not in ["parcs342", "parcs343", "ipwr_database", "ipwr_database_legacy", "trace50p5", "polaris624","serpent","custom_function","styblinski_tang","listsum"]:
+            raise ValueError("Code types currently supported: PARCS342, PARCS343, ipwr_database, TRACE50p5.")
     
     elif keyword == 'calc_type':
         value = str(value).lower().replace(' ','_')
@@ -150,7 +150,7 @@ def validate_input(keyword, value):
                     if new_item not in ['consecutive','spearman','none']:
                         raise ValueError(f"Requested termination criteria method '{item}' not supported.")
                     if new_item == 'spearman':
-                        logger.warning("Spearman rank requires burnup data for each assembly, currently only the NuScale look up table has this functionality")
+                        logger.warning("Spearman rank requires burnup data for each assembly, currently only the ipwr database has this functionality")
                     if 'termination_generations' not in value.keys():
                         raise ValueError(f"'termination_generations' must be provided if termination criteria is requested in yaml file")
                     
@@ -1075,8 +1075,8 @@ def parcs343_template_check(self):
                 if "depl" in line.lower() and "!" not in line.lower():
                     necessary_flags['depl'] = True
 
-    if self.code_interface.lower() == "nuscale_database":
-        raise ValueError(f'input templates are not supported for nuscale_database')
+    if self.code_interface.lower() in ["ipwr_database", "ipwr_database_legacy"]:
+        raise ValueError(f'input templates are not supported for ipwr_database')
 
     for key, value in necessary_flags.items():
         if not necessary_flags[key]:
@@ -1184,7 +1184,7 @@ class Input_Parser():
         
     ## Fuel Assembly Block ##   
         self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)
-        if not self.fa_options and self.code_interface not in ['nuscale_database','polaris624','serpent','custom_function','styblinski_tang']:
+        if not self.fa_options and self.code_interface not in ['ipwr_database', 'ipwr_database_legacy','polaris624','serpent','custom_function','styblinski_tang']:
             raise ValueError("Assembly options must be nested with reflectors, fuels, and/or blankets with their parameters.")
         if self.calculation_type in ['single_cycle','eq_cycle']:
             for param in ['cost_fuelcycle','av_fuelenrichment']:
@@ -1243,8 +1243,8 @@ class Input_Parser():
             try:
                 if self.code_interface in ["parcs342","parcs343"]:
                     info = self.file_settings['parcs_data']
-                elif self.code_interface == "nuscale_database":
-                    info = self.file_settings['nuscale_data']
+                elif self.code_interface in ["ipwr_database", 'ipwr_database_legacy']:
+                    info = self.file_settings['ipwr_data']
                 elif self.code_interface == "serpent":
                     info = self.file_settings['serpent_data']
                 elif self.code_interface == "trace50p5": #multiphysics calcs must first be initialized in neutronics code.
@@ -1324,11 +1324,11 @@ class Input_Parser():
         self.boronmat = yaml_line_reader(info, 'borated_material', None) #str, ppm
         self.num_meshrings = yaml_line_reader(info, 'num_mesh_rings', 3)
         self.depl_steps = yaml_line_reader(info, 'depletion_steps', [1, 1, 30, 30, 30, 30, 30, 30])   
-        #NuScale database verification block
-        if self.code_interface == 'nuscale_database':
-            #Force octant symmetry for NuScale database
+        #ipwr database verification block
+        if self.code_interface in ['ipwr_database', 'ipwr_database_legacy']:
+            #Force octant symmetry for ipwr database
             if self.symmetry != 'octant':
-                logger.warning(f'Core symmetry has been changed from {self.symmetry} to octant. NuScale database only supports octant symmetry.')
+                logger.warning(f'Core symmetry has been changed from {self.symmetry} to octant. ipwr database only supports octant symmetry.')
                 self.symmetry == 'octant'
             
             #Verify assembly map length for each parameter in input file
@@ -1339,6 +1339,6 @@ class Input_Parser():
             
             #Verify that the type parameter for each assembly is between 2-7, as these are the only assemblies available
             for assembly in self.fa_options['fuel']:
-                if int(self.fa_options['fuel'][assembly]['type']) not in [2, 3, 4, 5, 6, 7]:
-                    raise ValueError(f'Assembly {assembly} parameter "type" is incorrect. For NuScale database, types 2-7 exist.')
+                if int(self.fa_options['fuel'][assembly]['type']) not in [1, 2, 3, 4, 5, 6, 7]:
+                    raise ValueError(f'Assembly {assembly} parameter "type" is incorrect. For ipwr database, types 1-6 exist. (type 7 exists for legacy versions)')
         return
