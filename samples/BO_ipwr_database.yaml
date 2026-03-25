@@ -1,12 +1,12 @@
 ## Optimizer Block
 general:
   optimizer: bayesian_optimization
-  code_type: ipwr_database
+  code_type: nuscale_database
   results_directory_name: output_files
 
 optimization:
   population_size: 20
-  number_of_generations: 4
+  number_of_generations: 400
   objectives:
     max_boron:
       goal: less_than_target
@@ -22,6 +22,12 @@ optimization:
       weight: 800.0     
     cycle_length:
       goal: maximize
+      weight: 1.0
+    cycle_cost:
+      goal: minimize
+      weight: 0.000001
+    max_burnup:
+      goal: minimize
       weight: 1.0
 
 ## Algorithm Settings
@@ -40,34 +46,34 @@ assembly_options:
       serial: None
   fuel: 
     NSFA23: 
-      type: 1
-      serial: None
-      blanket: None
-    NSFA23GAD: 
       type: 2
       serial: None
       blanket: None
-    NSFA39: 
+    NSFA23GAD: 
       type: 3
       serial: None
       blanket: None
-    NSFA39GAD: 
+    NSFA39: 
       type: 4
       serial: None
       blanket: None
-    NSFA455: 
+    NSFA39GAD: 
       type: 5
       serial: None
       blanket: None
-    NSFA455GAD: 
+    NSFA455: 
       type: 6
+      serial: None
+      blanket: None
+    NSFA455GAD: 
+      type: 7
       serial: None
       blanket: None
 
 ## Genome
 decision_variables:
   # parameters used to fill each chromosome.
-  assembly_parameters:
+  parameters:
     NSFA23:
       map: &ID001
         [1,

@@ -1,6 +1,4 @@
 import h5py
-import pandas as pd
-import pyarrow.parquet as pq
 import os
 import logging
 from midas_data import __ipwr_lut__
@@ -15,25 +13,19 @@ def evaluate(solution, input):
 
     Written by Cole Howard. 10/29/2024
     updated by Jake Mikouchi. 1/3/25
-    updated by Jake Mikouchi. 3/25/2026
     """
-    if input.code_interface == 'ipwr_database_legacy':
-        #Each objective is stored as one index in a single array within the hdf5 file, so I am getting each specific value
-        objectives, BU, cost = read_hdf5(solution.chromosome, input)
-        #Create separate dictionary with parameters
-        new_dict = {}
-        new_dict["cycle_length"] = objectives[0]
-        new_dict["fdeltah"] = objectives[1]
-        new_dict["pinpowerpeaking"] = objectives[2]
-        new_dict["max_boron"] = objectives[3]
-        new_dict["cycle_cost"] = cost
+    #Each objective is stored as one index in a single array within the hdf5 file, so I am getting each specific value
+    objectives, BU, cost = read_hdf5(solution.chromosome, input)
+    #Create separate dictionary with parameters
+    new_dict = {}
+    new_dict["cycle_length"] = objectives[0]
+    new_dict["fdeltah"] = objectives[1]
+    new_dict["pinpowerpeaking"] = objectives[2]
+    new_dict["max_boron"] = objectives[3]
+    new_dict["cycle_cost"] = cost
 
-        # Adding in burnup parameters
-        new_dict["assembly_burnup"] = BU
-
-    if input.code_interface == 'ipwr_database':
-        #extract data from parquet file and return a dictionary 
-        new_dict = read_parquet(solution.chromosome, input)
+    # Adding in burnup parameters
+    new_dict["assembly_burnup"] = BU
 
     #Only give the optimizer the parameters which were included in the input file
     for key in new_dict:
@@ -71,28 +63,3 @@ def read_hdf5(soln, input): #TODO!: Comment code better
         cost = assembly["Cost"][()]
         hdf5_file.close()
         return objectives, BU, cost
-    
-def read_parquet(soln, input): #TODO!: Comment code better
-    """
-    This function will extract the LP parameters from the parquet database.
-    Unlike the hdf5, all LPs are saved in a single file making extraction easier.
-
-    Written by Jake Mikouchi. 3/25/2026 
-    """
-    individual = [input.fa_options['fuel'][sol]['type'] for sol in soln if sol in input.fa_options['fuel']]
-    core_name = ''.join(map(str,individual))
-    filepath = f"{__ipwr_lut__}"
-
-    if not os.path.exists(filepath): #ensures file exists
-        raise FileNotFoundError(f'The file {filepath} does not exist.')
-
-    data = pq.read_table(filepath, filters=[("Group", "=", core_name)]).to_pandas().set_index("Group")
-
-    new_dict = {}
-    new_dict["cycle_length"] = data.loc[core_name]["CL"]
-    new_dict["fdeltah"] = data.loc[core_name]["FH"]
-    new_dict["pinpowerpeaking"] = data.loc[core_name]["FQ"]
-    new_dict["max_boron"] = data.loc[core_name]["BC"]
-    new_dict["assembly_burnup"] = data.loc[core_name]["BU"]
-
-    return new_dict
