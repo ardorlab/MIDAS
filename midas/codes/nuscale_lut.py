@@ -1,5 +1,4 @@
 import h5py
-import pandas as pd
 import pyarrow.parquet as pq
 import os
 import logging
