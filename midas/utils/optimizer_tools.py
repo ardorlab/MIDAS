@@ -106,23 +106,34 @@ class Solution():
         for gene in genes_list:
             chromosome_length.append(len(genome[gene]['map']))
         
-        chromosome = []
-        for i in range(max(chromosome_length)):
-                gene_options = Gene_Validity_check.contraceptive_check(self.input, genes_list, genome, LWR_core_parameters,
-                                                                                        [], chromosome, i)
-                invalid = True
-                antihang = 0
-                while invalid:
-                    antihang +=1
-                    if antihang > 1000:
-                        raise ValueError("Random solution generation failed after 1000 attempts. Check the variables maps and constraints.")
-                    gene = random.choice(gene_options)
-                    if genome[gene]['map'][i]: #check that the selected gene option is viable at this location.
-                        chromosome.append(gene)
-                        invalid = False
-                    else:
-                        gene_options.remove(gene)
-        
+
+        chromosome_is_valid = False
+        attempts = 0
+        while not chromosome_is_valid:
+            chromosome = []
+            for i in range(max(chromosome_length)):
+                    gene_options = Gene_Validity_check.contraceptive_check(self.input, genes_list, genome, LWR_core_parameters,
+                                                                                            [], chromosome, i)
+                    if gene_options:
+                        invalid = True
+                        antihang = 0
+                        while invalid:
+                            antihang +=1
+                            if antihang > 1000:
+                                raise ValueError("Random solution generation failed after 1000 attempts. Check the variables maps and constraints.")
+                            gene = random.choice(gene_options)
+                            if genome[gene]['map'][i]: #check that the selected gene option is viable at this location.
+                                chromosome.append(gene)
+                                invalid = False
+                            else:
+                                gene_options.remove(gene)
+
+            if len(chromosome) >= max(chromosome_length):    
+                chromosome_is_valid = True
+            attempts += 1
+            if attempts > 10000:
+                raise ValueError("Random chromosome generation has failed after 10,000 attempts. Is the input space over-constrained?")
+            
         return chromosome
     
     def EQ_chromosome(self,genome,batches,LWR_core_parameters):
@@ -152,18 +163,19 @@ class Solution():
             for i in chromosome_randindex:
                 batch_options = Gene_Validity_check.contraceptive_check(self.input, batches_list, batches, LWR_core_parameters,
                                                                                         [], zone_chromosome, i)
+                if not batch_options:
+                    break
+
                 valid = False
                 while not valid:
-                    try:
-                        batch = random.choice(batch_options)
-                    except IndexError:
-                        raise IndexError("Random chromosome generation has no valid solution. Is the input space over-constrained?")
+                    batch = random.choice(batch_options)
                     if batches[batch]['map'][i]: #check that the selected gene option is viable at this location.
                         zone_chromosome[i] = batch
                         valid = True
                     else:
                         batch_options.remove(batch)
-            chromosome_is_valid = Gene_Validity_check.abortive_check(self.input,batches_list, batches, LWR_core_parameters, zone_chromosome)
+            if None not in zone_chromosome:
+                chromosome_is_valid = Gene_Validity_check.abortive_check(self.input,batches_list, batches, LWR_core_parameters, zone_chromosome)
             attempts += 1
             if attempts > 10000:
                 raise ValueError("Random chromosome generation has failed after 10,000 attempts. Is the input space over-constrained?")
