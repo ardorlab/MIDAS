@@ -19,7 +19,7 @@ from midas.algorithms import bayesian_optimization as BO
 from midas.algorithms import simulated_annealing as SA
 from midas.algorithms import parallel_simulated_annealing as PSA
 from midas.codes import parcs342, parcs343
-from midas.codes import nuscale_lut
+from midas.codes import ipwr_lut
 from midas.codes import trace50p5
 from midas.codes import polaris624
 from tests.regression.listsum import listsum

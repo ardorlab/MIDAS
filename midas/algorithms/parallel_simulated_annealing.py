@@ -13,7 +13,7 @@ from midas.algorithms.simulated_annealing import SA_reproduction
 from itertools import repeat
 from multiprocessing import Pool
 from midas.codes import parcs342, parcs343
-from midas.codes import nuscale_lut
+from midas.codes import ipwr_lut
 from midas.codes import trace50p5
 from midas.codes import polaris624
 
