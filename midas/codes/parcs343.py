@@ -82,7 +82,7 @@ def evaluate(solution, input):
         ## Get Results
             if 'Finished' in str(output): #job completed
                 logger.debug(f"Job {solution.name} completed successfully in PARCSv343.")
-                solution.parameters = get_results(solution.parameters, solution.name)
+                solution.parameters = get_results(solution.parameters, solution.name, input)
             
             else: #job failed
                 if input.calculation_type in ['eq_cycle']:
@@ -90,19 +90,19 @@ def evaluate(solution, input):
                         solution.parameters = eq_cycle_convergence(input, solution, filename, parcscmd, input.code_walltime) #iteratively try to find an intial guess that will converge
                     except Exception as e:
                         logger.error(f"Job {solution.name} has failed to converge with the following exception: {e}")
-                        solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+                        solution.parameters = get_results(solution.parameters, solution.name, input, job_failed=True)
                         
                 else: #standard execution pathway
                     logger.warning(f"Job {solution.name} has failed!")
-                    solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+                    solution.parameters = get_results(solution.parameters, solution.name, input, job_failed=True)
         
         except subprocess.TimeoutExpired: #job timed out
             os.system('rm -f {}.parcs_pin*'.format(solution.name))
             logger.error(f"Job {solution.name} has timed out!")
-            solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+            solution.parameters = get_results(solution.parameters, solution.name, input, job_failed=True)
         except subprocess.CalledProcessError as e: #PARCS returned an abort signal
             logger.error(f"Job {solution.name} has failed with the following exception: {e}")
-            solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+            solution.parameters = get_results(solution.parameters, solution.name, input, job_failed=True)
         
         logger.debug(f"Returning to original working directory: {cwd}")
         os.chdir(cwd)
@@ -500,7 +500,7 @@ def with_template(solution, input, cwd, filename):
                 ofile.write(line)   
 
 
-def get_results(parameters, filename, job_failed=False): #!TODO: implement pin power reconstruction.
+def get_results(parameters, filename, input, job_failed=False): #!TODO: implement pin power reconstruction.
     """
     Currently supports cycle length, F_q, F_dh, max boron, keff, critical power ratio,
     linear heat generation rate, average planar linear heat generation rate.
@@ -541,7 +541,7 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
         
         del filestr, res_str, res_val #unload file contents to clean up memory
         
-        results_dict["cycle_length"]["value"] = calc_cycle_length(efpd_list,boron_list,keff_list)
+        results_dict["cycle_length"]["value"] = calc_cycle_length(efpd_list,boron_list,keff_list,input.eoc_extrapolate)
         results_dict["pxy"]["value"] = max(pxy_list)
         results_dict["pxyz"]["value"] = max(pxyz_list)
         results_dict["pinpowerpeaking"]["value"] = max(fq_list)
@@ -595,44 +595,55 @@ def get_results(parameters, filename, job_failed=False): #!TODO: implement pin p
         #!else: #!TODO: is this practical? It would need to have all the TRACE parameters whitelisted as well.
         #!    if param not in ['cost_fuelcycle','av_fuelenrichment']: #check whitelist
         #!        logger.warning(f"Parameter '{param}' not supported in PARCS343 results parsing.")
-    
     return parameters
 
-def calc_cycle_length(efpd,boron,keff):
-    if boron[-1]==0.1: #boron went to zero before end of cycle.
+def calc_cycle_length(efpd,boron,keff,extrapolate):
+    if not extrapolate:
         eoc1_ind = 0
-        eco2_ind = len(efpd)-1
-        for i in range(len(efpd)):
-            if boron[i] > 0.1 and boron[i+1] == 0.1:
-                eoc1_ind = i
-                eco2_ind = i+1
-                break
-        if eoc1_ind != 0:
-            dbor = abs(boron[eoc1_ind]-boron[eoc1_ind-1])
-            defpd = abs(efpd[eoc1_ind]-efpd[eoc1_ind-1])
-        else:
-            dbor = abs(boron[eco2_ind]-boron[eoc1_ind])
-            defpd = abs(efpd[eco2_ind]-efpd[eoc1_ind])
-        try:
-            def_dbor = defpd/dbor
-        except ZeroDivisionError:
-            def_dbor = 0.0
-        eoc = efpd[eoc1_ind] + def_dbor*(boron[eoc1_ind]-boron[eco2_ind]) #linear extrapolation to efpd at boron=0.1
-    elif boron[-1]==boron[0]: #true boron exceeds initial guess
-        drho_dcb=10 #pcm/ppm
-        drho1 = (keff[-2]-1.0)*10**5 #pcm
-        cb1= boron[-2] + drho1/drho_dcb #corrected boron concentration
-        drho2 = (keff[-1]-1.0)*10**5 #pcm
-        cb2= boron[-1] + drho2/drho_dcb #corrected boron concentration
-        dbor = abs(cb1-cb2) #ppm
-        defpd = abs(efpd[-2]-efpd[-1]) #efpd
-        def_dbor = defpd/dbor #efpd/ppm
-        eoc = efpd[-1] + def_dbor*(cb2-0.1)
-    else: #EOC boron is greater than 0.1
-        dbor = abs(boron[-2]-boron[-1])
-        defpd = abs(efpd[-2]-efpd[-1])
-        def_dbor = defpd/dbor #slope
-        eoc = efpd[-1] + def_dbor*(boron[-1]-0.1) #linear extrapolation
+        if boron[-1]==0.1: #boron went to zero before end of cycle.
+            for i in range(len(efpd)):
+                if boron[i] > 0.1 and boron[i+1] == 0.1:
+                    eoc1_ind = i
+                    break
+        else: 
+            eoc1_ind = len(efpd)-1
+
+        eoc = efpd[eoc1_ind]
+    else:
+        if boron[-1]==0.1: #boron went to zero before end of cycle.
+            eoc1_ind = 0
+            eco2_ind = len(efpd)-1
+            for i in range(len(efpd)):
+                if boron[i] > 0.1 and boron[i+1] == 0.1:
+                    eoc1_ind = i
+                    eco2_ind = i+1
+                    break
+            if eoc1_ind != 0:
+                dbor = abs(boron[eoc1_ind]-boron[eoc1_ind-1])
+                defpd = abs(efpd[eoc1_ind]-efpd[eoc1_ind-1])
+            else:
+                dbor = abs(boron[eco2_ind]-boron[eoc1_ind])
+                defpd = abs(efpd[eco2_ind]-efpd[eoc1_ind])
+            try:
+                def_dbor = defpd/dbor
+            except ZeroDivisionError:
+                def_dbor = 0.0
+            eoc = efpd[eoc1_ind] + def_dbor*(boron[eoc1_ind]-boron[eco2_ind]) #linear extrapolation to efpd at boron=0.1
+        elif boron[-1]==boron[0]: #true boron exceeds initial guess
+            drho_dcb=10 #pcm/ppm
+            drho1 = (keff[-2]-1.0)*10**5 #pcm
+            cb1= boron[-2] + drho1/drho_dcb #corrected boron concentration
+            drho2 = (keff[-1]-1.0)*10**5 #pcm
+            cb2= boron[-1] + drho2/drho_dcb #corrected boron concentration
+            dbor = abs(cb1-cb2) #ppm
+            defpd = abs(efpd[-2]-efpd[-1]) #efpd
+            def_dbor = defpd/dbor #efpd/ppm
+            eoc = efpd[-1] + def_dbor*(cb2-0.1)
+        else: #EOC boron is greater than 0.1
+            dbor = abs(boron[-2]-boron[-1])
+            defpd = abs(efpd[-2]-efpd[-1])
+            def_dbor = defpd/dbor #slope
+            eoc = efpd[-1] + def_dbor*(boron[-1]-0.1) #linear extrapolation
     return eoc
 
 def calc_cpr(filename, parameters): #TODO update this to use CHFR output by parcs
@@ -861,10 +872,10 @@ def eq_cycle_convergence(input, solution, filename, parcscmd, walltime):
         output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=walltime) #wait until calculation finishes
     if 'Finished' in str(output): #job completed
         logger.debug(f"Job {solution.name} completed successfully in PARCSv343.")
-        solution.parameters = get_results(solution.parameters, solution.name)
+        solution.parameters = get_results(solution.parameters, solution.name, input)
     else:
         logger.warning(f"Job {solution.name} has failed!")
-        solution.parameters = get_results(solution.parameters, solution.name, job_failed=True)
+        solution.parameters = get_results(solution.parameters, solution.name, input, job_failed=True)
     
     return solution.parameters
 

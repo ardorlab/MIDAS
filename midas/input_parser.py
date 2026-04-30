@@ -929,6 +929,15 @@ def validate_input(keyword, value):
                     new_value.append(float(step))
         return new_value
     
+    elif keyword=='eoc_extrapolate':
+        value = str(value).lower().replace(' ','')
+        if value == 'true':
+            value = True
+        elif value == 'false':
+            value = False
+        else:
+            raise ValueError("eoc_extrapolate only takes true or false as entries")
+            
     elif keyword == 'equilibrium_cycles':
         value = int(value)
 
@@ -1287,6 +1296,7 @@ class Input_Parser():
         self.axial_nodes = yaml_line_reader(info, 'axial_nodes', [16.12, "15*25.739", 16.12])
         self.boc_exposure = yaml_line_reader(info, 'boc_core_exposure', 0.0)
         self.depl_steps = yaml_line_reader(info, 'depletion_steps', [1, 1, 30, 30, 30, 30, 30, 30])
+        self.eoc_extrapolate = yaml_line_reader(info, 'eoc_extrapolate', True)
         self.equilibrium_cycles = yaml_line_reader(info, "equilibrium_cycles", 10)
         if (not self.pin_power_recon and 'pinpowerpeaking' in self.objectives.keys()) or (not self.pin_power_recon and 'fdeltah' in self.objectives.keys()):
             logger.warning('Pin power reconstruction is turned off but pin peaking factors are requested in objectives.')
