@@ -166,9 +166,6 @@ def cleanup_system_resources():
         except OSError:
             pass
 
-# # # # # # # # # # # # # # # #
-#  Primary Execution Pathway  #
-# # # # # # # # # # # # # # # #
 if __name__ == "__main__":
     ## check zombies process and clean up 
     cleanup_system_resources()
@@ -208,9 +205,9 @@ if __name__ == "__main__":
             pool.close()
             pool.join()
         try:
-            from joblib.externals.loky import get_reusable_executor
-            executor = get_reusable_executor()
-            executor.shutdown(wait=True)
+            #from joblib.externals.loky import get_reusable_executor
+            #executor = get_reusable_executor()
+            #executor.shutdown(wait=True)
             print("Joblib resources cleaned up successfully.")
         except Exception as e:
             pass
@@ -225,6 +222,6 @@ if __name__ == "__main__":
         logging.shutdown()
         
     # Use os exit to forceflully cleanup 
-    os._exit(exitcode)
-    # sys.exit(exitcode)
+    # os._exit(exitcode)
+    sys.exit(exitcode)
 

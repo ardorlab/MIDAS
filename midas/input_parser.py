@@ -72,7 +72,7 @@ def validate_input(keyword, value):
     
     elif keyword == 'calc_type':
         value = str(value).lower().replace(' ','_')
-        if value not in ["single_cycle","eq_cycle", "lattice_physics", "continuous_variable"]:
+        if value not in ["single_cycle","eq_cycle", "lattice_physics", "continuous_variable", "multi_cycle"]:
             raise ValueError("Data type not supported.")
     
     elif keyword == 'input_template':
@@ -318,7 +318,7 @@ def validate_input(keyword, value):
     
     elif keyword == 'mutation_type':
         value = str(value).lower().replace(' ','_')
-        if value not in ["mutate_by_gene"]:
+        if value not in ["mutate_by_gene", "mutate_by_scramble"]:
             raise ValueError("Mutation type not supported.")
     
     elif keyword == 'mutation_rate':
@@ -911,7 +911,17 @@ def validate_input(keyword, value):
             value = float(value)
         except ValueError:
             raise ValueError("'boc_core_exposure' must be a real number.")
-    
+    ## depleted map for reload core
+    elif keyword =='depleted_map':
+        if value:
+            value = value.strip().split()
+    elif keyword =='depletion_file':
+        if value:
+            value = str(value)
+            #value = value.resolve()
+    elif keyword =='depletion_restart_point':
+        if value:
+            value = int(value)
     elif keyword=='depletion_steps':
         value = [x.strip() for x in re.split(r'[, ]',str(value).strip('[]')) if x]
         if isinstance(value, list):
@@ -923,6 +933,7 @@ def validate_input(keyword, value):
                 else:
                     new_value.append(float(step))
         return new_value
+    
     
     ## TRACE DATA ##
     elif keyword == 'initialize_code':
@@ -1122,7 +1133,6 @@ class Input_Parser():
         self.parcs_steps = yaml_line_reader(info, 'parcs_steps', None)
         self.retrain_steps = yaml_line_reader(info, 'retrain_steps', None)
         self.keep_retraindata = yaml_line_reader(info, 'keep_retraindata', 'no')
-        # self.checkstep = 
         if self.input_template['apply'] and self.code_interface == 'parcs343':
             parcs343_template_check(self)
     ## Optimization Block ##
@@ -1182,7 +1192,7 @@ class Input_Parser():
         self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)
         if not self.fa_options and self.code_interface not in ['nuscale_database','polaris624','serpent','custom_function','styblinski_tang']:
             raise ValueError("Assembly options must be nested with reflectors, fuels, and/or blankets with their parameters.")
-        if self.calculation_type in ['single_cycle','eq_cycle']:
+        if self.calculation_type in ['single_cycle','eq_cycle','multi_cycle']:
             for param in ['cost_fuelcycle','av_fuelenrichment']:
                 if param in self.objectives:
                     for key in self.fa_options['fuel'].keys():
@@ -1207,7 +1217,7 @@ class Input_Parser():
         except KeyError:
             info = None
         
-        if self.calculation_type in ['single_cycle','eq_cycle','listsum']:
+        if self.calculation_type in ['single_cycle','eq_cycle','listsum','multi_cycle']:
             self.genome = yaml_line_reader(info, 'assembly_parameters', None)
         elif self.calculation_type in ['lattice_physics']:
             self.genome = yaml_line_reader(info, 'lattice_parameters', None)
@@ -1283,6 +1293,10 @@ class Input_Parser():
         self.active_cycles = yaml_line_reader(info, "active_cycles", 500)
         self.inactive_cycles = yaml_line_reader(info, "inactive_cycles", 50)
         self.particles_per_history = yaml_line_reader(info, "particles_per_history", 5000)
+        # for multicycle
+        self.depleted_map = yaml_line_reader(info, 'depleted_map','')
+        self.depletion_file = yaml_line_reader(info, 'depletion_file','')
+        self.depletion_restart_point = yaml_line_reader(info, 'depletion_restart_point',0)
         
         # TRACE input block
         if self.code_interface == "trace50p5":

@@ -181,7 +181,6 @@ class Optimizer():
         """
     ## Initialize logging for the present file
         logger = logging.getLogger("MIDAS_logger")
-        
         if not restart:
     ## Create results directory and/or clear old
             cwd = Path(os.getcwd())
@@ -219,7 +218,7 @@ class Optimizer():
                     namedir.append(f'Gen_0_Indv_{i}')
             if self.input.code_interface == "surrogate":
                 import multiprocessing as mp
-                mp.set_start_method('spawn', force=True)
+                mp.set_start_method('spawn', force=True) ### NOTE: do not use this for debug mode!!!!!
                 from surmodel.paralel_MLmodel import init_worker, init_worker_updated
                 chunksize = max(1, self.population.size // (self.input.num_procs * 4))
                 xsdict = joblib.load(midas_data.__path_xs_pickle__,mmap_mode='r')
@@ -242,12 +241,13 @@ class Optimizer():
                     #        gc.collect()
                     #        pool = Pool(processes=self.input.num_procs)
                     self.population.current= pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
+                    temppop = self.population.current
                     surrogatemodel_BK.extract_data(namedir,self.input, xsdict) ## extract data after PARCs done
                     # # temparcs = self.population.current
                     if self.generation.current in self.input.retrain_steps:
                         trainmodelrpf()
                         traincoremodel_update()
-                        if self.input.keep_retraindata=='no': ## delete retrain data after retrainning
+                        if self.input.keep_retraindata==False: ## delete retrain data after retrainning
                             rmtree(midas_data.__path_to_store_retrain_data__)
                         ## update pool 
                         if 'pool' in locals():
@@ -256,12 +256,12 @@ class Optimizer():
                            del pool
                            gc.collect()
                            pool = Pool(processes=self.input.num_procs, initializer=init_worker_updated)
-                        ## for printing out fitness value at this step 
+                        # ## for printing out fitness value at this step 
                         self.eval_func = surrogatemodel_BK.evaluate
-                        surrogate_sol = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input), repeat(xsdict)),)# chunksize=chunksize)
+                        surrogate_sol = pool.starmap(self.eval_func, zip(temppop, repeat(self.input), repeat(xsdict)),)# chunksize=chunksize)
                         for soln in surrogate_sol:
                             soln.fitness_value = self.fitness.calculate(soln.parameters)
-                        for i in range(len(self.population.current)):
+                        for i in range(len(temppop)):
                             soln = surrogate_sol[i]
                             soln_result_list = [str(self.generation.current),str(i),'{0:.3f}'.format(soln.fitness_value)]
                             for param in soln.parameters.keys():
@@ -427,12 +427,13 @@ class Optimizer():
                         #    pool = Pool(processes=self.input.num_procs)
                         ## new pool 
                         self.population.current= pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
+                        temppop = self.population.current 
                         # ## extract data after PARCS done 
                         surrogatemodel_BK.extract_data(namedir, self.input, xsdict)
                         if self.generation.current in self.input.retrain_steps:
                             trainmodelrpf()
                             traincoremodel_update()
-                            if self.input.keep_retraindata=='no': ## delete retrain data after retrainning
+                            if self.input.keep_retraindata==False: ## delete retrain data after retrainning
                                 rmtree(midas_data.__path_to_store_retrain_data__)
                             # update pool
                             if 'pool' in locals():
@@ -440,13 +441,13 @@ class Optimizer():
                                 pool.join()
                                 del pool
                                 gc.collect()
-                            pool = Pool(processes=self.input.num_procs, initializer=init_worker_updated)
+                                pool = Pool(processes=self.input.num_procs, initializer=init_worker_updated)
                             ## for printing out fitness value at this step 
                             self.eval_func = surrogatemodel_BK.evaluate
-                            surrogate_sol = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input), repeat(xsdict)),)# chunksize=chunksize)
+                            surrogate_sol = pool.starmap(self.eval_func, zip(temppop, repeat(self.input), repeat(xsdict)),)# chunksize=chunksize)
                             for soln in surrogate_sol:
                                 soln.fitness_value = self.fitness.calculate(soln.parameters)
-                            for i in range(len(self.population.current)):
+                            for i in range(len(temppop)):
                                 soln = surrogate_sol[i]
                                 soln_result_list = [str(self.generation.current),str(i),'{0:.3f}'.format(soln.fitness_value)]
                                 for param in soln.parameters.keys():

@@ -2,6 +2,7 @@
 import logging
 from copy import deepcopy
 import random
+import warnings
 from midas.utils import optimizer_tools as optools
 
 
@@ -99,6 +100,8 @@ class Genetic_Algorithm():
         for chromosome in mutation_list:
             if self.input.mutation_type == "mutate_by_gene":
                 child = GA_reproduction.mutate_by_gene(self.input, chromosome)
+            elif self.input.mutation_type =="mutate_by_scramble":
+                child = GA_reproduction.mutate_by_scramble(self.input, chromosome)
             else:
                 raise ValueError("Requested mutation type not recognized.")
             child_chromosome_list.append(child)
@@ -191,7 +194,10 @@ class GA_reproduction():
 
         while not chromosome_is_valid:
             if attempts > 10000:
-                raise ValueError("Uniform Crossover has failed after 10,000 attempts. Consider relaxing the constraints on the input space.")
+                logger = logging.getLogger("MIDAS_logger")
+                logger.error("Uniform Crossover has failed after 10,000 attempts. Consider relaxing the constraints on the input space.")
+                return chromosome_one, chromosome_two
+                # raise ValueError("Uniform Crossover has failed after 10,000 attempts. Consider relaxing the constraints on the input space.")
             
             child_one = []
             child_two = []
@@ -240,6 +246,11 @@ class GA_reproduction():
                 
             attempts += 1
             # final check for adherence to input constraints
+            # print(optools.Gene_Validity_check.abortive_check(input_obj, genes_list,genome,core_parameters,child_one))
+            # print(child_one)
+            # print(optools.Gene_Validity_check.abortive_check(input_obj, genes_list,genome,core_parameters,child_two))
+            # print(child_two)
+            # stop
 
             if optools.Gene_Validity_check.abortive_check(input_obj, genes_list,genome,core_parameters,child_one) and \
                 optools.Gene_Validity_check.abortive_check(input_obj, genes_list,genome,core_parameters,child_two):
@@ -369,7 +380,10 @@ class GA_reproduction():
         chromosome_is_valid = False
         while chromosome_is_valid == False:
             if attempts > 100000:
-                raise ValueError("One Point Crossover has failed after 100,000 attempts. Consider relaxing the constraints on the input space.")
+                logger = logging.getLogger("MIDAS_logger")
+                logger.error("One Point Crossover has failed after 100,000 attempts. Consider relaxing the constraints on the input space.")
+                return chromosome_one, chromosome_two
+                # raise ValueError("One Point Crossover has failed after 100,000 attempts. Consider relaxing the constraints on the input space.")
 
             child_one_seq_a = chromosome_one[:crossover_position]
             child_one_seq_b = chromosome_one[crossover_position:]
@@ -409,7 +423,10 @@ class GA_reproduction():
         chromosome_is_valid = False
         while chromosome_is_valid == False:
             if attempts > 1000:
-                raise ValueError("Two Point Crossover has failed after 1,000 attempts. Consider relaxing the constraints on the input space.")
+                logger = logging.getLogger("MIDAS_logger")
+                logger.error("Two Point Crossover has failed after 1,000 attempts. Consider relaxing the constraints on the input space.")
+                return chromosome_one, chromosome_two
+                # raise ValueError("Two Point Crossover has failed after 1,000 attempts. Consider relaxing the constraints on the input space.")
             
             # selects both position to be swapped
             crossover_position_1 = random.choice(chromosome_elements)
@@ -510,7 +527,7 @@ class GA_reproduction():
                     loc_to_mutate = random.randint(0, len(new_soln)-1) #choose a random gene
                     old_gene = new_soln[loc_to_mutate]
                     gene_options = optools.Gene_Validity_check.contraceptive_check(input_obj, all_genes_list, all_gene_options,
-                                                                                    core_parameters, old_soln, [], loc_to_mutate)
+                                                                                    core_parameters, old_soln, [], loc_to_mutate)                    
                     new_gene = random.choice(gene_options)
                     if new_gene != old_gene:
                         if all_gene_options[new_gene]['map'][loc_to_mutate] == 1:
@@ -537,6 +554,71 @@ class GA_reproduction():
             child_chromosome = new_soln
 
         return child_chromosome
+    
+    def mutate_by_scramble(input_obj, chromosome):
+        """
+        Generates a new solution by randomly mutating a single gene by scramble the location.
+        Partially copied from mutate _by_gene
+        Rev history: khnguy22 03/26
+        """
+        ## Initialize logging for the present file
+        logger = logging.getLogger("MIDAS_logger")
+        
+        core_parameters = [input_obj.nrow, input_obj.ncol, input_obj.num_assemblies,
+                            input_obj.symmetry, input_obj.calculation_type]
+        
+        if input_obj.calculation_type in ["eq_cycle"]:
+            zone_chromosome = [loc[0] for loc in chromosome]
+            child_zone_chromosome = deepcopy(zone_chromosome)
+            old_soln = zone_chromosome
+            new_soln = child_zone_chromosome
+            all_gene_options = input_obj.batches
+            all_genes_list = list(input_obj.batches.keys())
+        else:
+            child_chromosome = deepcopy(chromosome)
+            old_soln = chromosome
+            new_soln = child_chromosome
+            all_gene_options = input_obj.genome
+            all_genes_list = list(input_obj.genome.keys())
+
+        num_mutations = 1 #!TODO: this was hardcoded to 1 in old MIDAS. Should probably be parameterized.
+        chromosome_is_valid = False
+        attempts = 0
+        while not chromosome_is_valid:
+            new_soln = deepcopy(old_soln) #in the case of abortion, start from scratch.
+            while new_soln == old_soln:
+                for i in range(num_mutations):
+                    loc_to_mutate = random.randint(0, len(new_soln)-1) #choose a random gene
+                    tail = new_soln[loc_to_mutate:]
+                    random.shuffle(tail)
+                    # Rebuild solution
+                    new_soln = new_soln[:loc_to_mutate] + tail
+            chromosome_is_valid = optools.Gene_Validity_check.abortive_check(input_obj, all_genes_list,all_gene_options,\
+                                                                            core_parameters,new_soln)
+            if not chromosome_is_valid:
+                attempts += 1
+                if attempts > 1000:
+                    logger.error("Scramble mutatation has failed after 100,000 attempts; the Individual will be restored. Consider relaxing the constraints on the input space.")
+                    return chromosome
+
+        if input_obj.calculation_type in ["eq_cycle"]:
+            #recreate child_chromosome
+            child_chromosome = []
+            for i in range(len(new_soln)):
+                if new_soln[i] == chromosome[i][0]:
+                    child_chromosome.append(chromosome[i])
+                else:
+                    child_chromosome.append((new_soln[i],None))
+            child_chromosome = optools.Solution.EQ_reload_fuel(input_obj.genome,core_parameters,child_chromosome)
+
+        else:
+            child_chromosome = new_soln
+
+        return child_chromosome
+
+
+
+
 
     def linear_update(initial_rate, final_rate, current_generation, initial_generation, num_generations): #!TODO: this method doesn't account for restarts, which is likely to result in unintended extrapolation (current_generation > num_generations)
         """

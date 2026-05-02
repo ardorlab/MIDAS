@@ -1,0 +1,26 @@
+Compiling model...
+Building MIONetCartesianProd...
+'build' took 0.208542 s
+
+'compile' took 0.617797 s
+
+Load model 07 time:  0.700244665145874
+Compiling model...
+Building MIONetCartesianProd...
+'build' took 0.195149 s
+
+'compile' took 0.765982 s
+
+Load model core time:  0.8530857563018799
+load model pin ok 
+--- Processing for /home/khnguy22/Deeponet-midas/MIDAS/corereload197-surrogate/output_files_case02p_new/Gen_99_Indv_74/Gen_99_Indv_74.inp ---
+before predccccc
+after get data
+predictin
+Deeponet time 1.0991287231445312
+pred pin time 1.7530364990234375
+one cycle take 1.76354
+1.6111219268706112 2.052903 1381.564 346.15208145246515
+True data [345.71999999999997, 1368.1, 2.083, 1.65]
+Prediction 346.15208145246515 1381.564 2.052903 1.6111219268706112
+Parallel processing complete: /home/khnguy22/Deeponet-midas/MIDAS/corereload197-surrogate/output_files_case02p_new/Gen_99_Indv_74/Gen_99_Indv_74.inp
