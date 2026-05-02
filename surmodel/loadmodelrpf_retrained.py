@@ -127,7 +127,7 @@ def minmaxReverse(Xscaled, globalmax, globalmin):
 
 st = TT.time()
 batch_size = 32
-datapath = midas_data.__path_base_data__[0]
+datapath = midas_data.__path_new_data__[0]
 
 
 
@@ -139,7 +139,7 @@ X4_train = np.random.rand(1,1296)
 X5_train = np.random.rand(1,1296)
 X6_train = np.random.rand(1,1296)
 X7_train = np.random.rand(1,1296)
-trunk = np.load(datapath+'trunk.npy', mmap_mode='r').astype(np.float32)
+trunk = np.load(datapath+'trunk.npy').astype(np.float32)
 y_train = np.random.rand(1,1296)
 ### test data 
 X1_test = np.random.rand(1,1296)
@@ -151,7 +151,7 @@ X6_test = np.random.rand(1,1296)
 X7_test = np.random.rand(1,1296)
 y_test  = np.random.rand(1,1296)
 ## load global max min value 
-scalerparam = joblib.load(datapath+'scaler.joblib', mmap_mode='r') ## load joblib
+scalerparam = joblib.load(datapath+'scaler.joblib') ## load joblib
 # scalerparam = pickle.load(open(datapath+'scaler.pkl','rb'))
 ##
 trunks = minmaxscale(trunk,scalerparam['tmax'], scalerparam['tmin'])

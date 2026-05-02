@@ -107,7 +107,7 @@ class PWRCustomCartesianProd(Data):
 
 st = TT.time()
 batch_size = 32
-datapath =midas_data.__path_base_data__[1] ## need to use abs path
+datapath =midas_data.__path_new_data__[1] ## need to use abs path
 
 ## randomly create test and train data
 X1_train = np.random.rand(1,1296)
@@ -129,7 +129,7 @@ X7_test = np.random.rand(1,1296)
 y_test  = np.random.rand(1,1296)
 
 ## load global max min value 
-scalerparam = joblib.load(datapath+'scaler.joblib', mmap_mode='r') ## load joblib
+scalerparam = joblib.load(datapath+'scaler.joblib') ## load joblib
 # scalerparam = pickle.load(open(datapath+'scaler.pkl','rb'))
 ##
 trunks = np.array([1,2]).reshape(2,1)

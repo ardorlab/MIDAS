@@ -123,6 +123,14 @@ def minmaxReverse(Xscaled, globalmax, globalmin):
     temp = Xscaled * (globalmax-globalmin+1e-20) + globalmin
     return temp 
     
+def create_scaler(all_data):
+    train_min = all_data.min(axis=0)
+    train_max = all_data.max(axis=0)
+    range_extension = 0.5 * (train_max - train_min)
+    global_min = train_min - range_extension
+    global_max = train_max + range_extension
+    global_min = np.maximum(global_min, 0)
+    return global_min, global_max
 
 
 def trainmodelrpf():
@@ -132,7 +140,7 @@ def trainmodelrpf():
     seed = 199478
     tf.set_random_seed(seed) 
     batch_size = 32
-    datapath =midas_data.__path_base_data__[0]
+    datapath =midas_data.__path_new_data__[0]
     datapath_new =midas_data.__path_to_store_retrain_data__
     ## randomly create test and train data
     X1 = np.load(datapath_new+'branchXS_1.npy').astype(np.float32)
@@ -154,6 +162,7 @@ def trainmodelrpf():
     X6 = X6.reshape(X6.shape[0], -1)
     X7 = X7.reshape(X7.shape[0], -1)
     Y  = Y.reshape(Y.shape[0], -1)
+    print(X1.shape)
     ## set negative value to 0??
     # X1[X1<0]=0
     # X2[X2<0]=0
@@ -164,8 +173,40 @@ def trainmodelrpf():
     # X7[X7<0]=0
     
 
-    ## load global max min value 
-    scalerparam = pickle.load(open(datapath+'scaler.pkl','rb'))
+    # ## load global max min value 
+    ## create scaler only when you first calibrated it ???
+    # b1min, b1max = create_scaler(X1)
+    # b2min, b2max = create_scaler(X2)
+    # b3min, b3max = create_scaler(X3)
+    # b4min, b4max = create_scaler(X4)
+    # b5min, b5max = create_scaler(X5)
+    # b6min, b6max = create_scaler(X6)
+    # b7min, b7max = create_scaler(X7)
+    # omin, omax = create_scaler(Y)
+    # tmin, tmax = create_scaler(trunk.reshape(trunk.shape[0], -1))
+    # scalerparam ={"b1min":b1min,
+    #               "b1max":b1max,
+    #               "b2min":b2min,
+    #               "b2max":b2max,
+    #               "b3min":b3min,
+    #               "b3max":b3max,
+    #               "b4min":b4min,
+    #               "b4max":b4max,
+    #               "b5min":b5min,
+    #               "b5max":b5max,
+    #               "b6min":b6min,
+    #               "b6max":b6max,
+    #               "b7min":b7min,
+    #               "b7max":b7max,
+    #               "omin":omin,
+    #               "omax":omax, 
+    #               "tmin":tmin,
+    #               "tmax":tmax,
+    #               }
+
+    save_path = os.path.join(datapath, 'scaler.joblib')
+    # joblib.dump(scalerparam, save_path)
+    scalerparam = joblib.load(datapath+'scaler.joblib')
     ##
     X1s = minmaxscale(X1,scalerparam['b1max'], scalerparam['b1min'])
     X2s = minmaxscale(X2,scalerparam['b2max'], scalerparam['b2min'])

@@ -92,7 +92,7 @@ class Solution():
 
         Written by Nicholas Rollins. 10/11/2024
         """
-        if calc_type in ['single_cycle']:
+        if calc_type in ['single_cycle', 'multi_cycle']:
             return self.LP_chromosome(genome, LWR_core_parameters)
         elif calc_type == 'eq_cycle':
             return self.EQ_chromosome(genome, batches, LWR_core_parameters)
@@ -398,6 +398,7 @@ class Gene_Validity_check():
     
     Written by Jake Mikouchi. 09/04/2025
     """
+
     def contraceptive_check(input_obj, genes_list, genome, parameters, child, chromosome, indx):
         """
         Method for distributing to the correct contraceptive gene checking function
@@ -405,8 +406,10 @@ class Gene_Validity_check():
         
         Written by Jake Mikouchi. 09/04/2025
         """
-        if input_obj.calculation_type == 'single_cycle':
+        if input_obj.calculation_type in ['single_cycle']:
             valid_genes_list = Gene_Validity_check.calc_LWR_gene_options(genes_list, genome, parameters, child+chromosome[len(child):], indx)
+        elif input_obj.calculation_type in ['multi_cycle']:
+            valid_genes_list = Gene_Validity_check.calc_LWR_gene_optionsMP(genes_list, genome, parameters, child+chromosome[len(child):], indx)
         elif input_obj.calculation_type == 'eq_cycle':
             if None in chromosome:
                 child_zone = chromosome
@@ -447,7 +450,9 @@ class Gene_Validity_check():
                     gene_counts[cvalue] = 0
                 if ctype == 'max_quantity':
                     #only include option if less than the max quantity have been already used.
-                    if gene_counts[gene] < cvalue and (cvalue - gene_counts[gene]) > 1:
+                    # print(cvalue,gene,gene_counts[gene])
+                    if gene_counts[gene] < cvalue and (cvalue - gene_counts[gene]) >= 1:
+                    # if gene_counts[gene] < cvalue and (cvalue - gene_counts[gene]) > 1:
                         valid_genes_list.append(gene)
                 elif ctype == 'less_than_variable':
                     #only include option if fewer than the target option have been already used.
@@ -455,13 +460,62 @@ class Gene_Validity_check():
                         valid_genes_list.append(gene)
             else:
                 valid_genes_list.append(gene)
-        
         ## make sure that each gene option is valid for the gene location
         temp_gene_list = deepcopy(valid_genes_list)
         for gene in temp_gene_list:
+            print(gene, genome[gene]['map'], index)
             if not genome[gene]['map'][index] == 1:
                 valid_genes_list.remove(gene)
+        print(valid_genes_list)
+        return valid_genes_list
+    
+    def calc_LWR_gene_optionsMP(genes_list, genome, LWR_core_parameters, chromosome, index):
+        """
+        Constrain the available options for the chromosome based on
+        the existing inventory.
         
+        Written by Nicholas Rollins. 10/10/2024
+        Modified: Khang 03/26
+        """
+        ## fetch the duplication multiplicity of each location when expanded to the full core.
+        num_rows = LWR_core_parameters[0]
+        num_cols = LWR_core_parameters[1]
+        num_FA   = LWR_core_parameters[2]
+        symmetry = LWR_core_parameters[3]
+        multdict = LWR_Core_Shapes.get_symmetry_multiplicity(num_rows, num_cols, num_FA, symmetry)
+        gene_counts = LWR_Core_Shapes.count_in_LP(multdict,chromosome)
+
+        ## if chromosome represents a shuffling scheme, not a loading pattern, the LP needs to be extracted before this step.
+        valid_genes_list = []
+        for gene in genes_list:
+            if genome[gene]['constraint']:
+                ctype = genome[gene]['constraint']['type']
+                cvalue = genome[gene]['constraint']['value']
+                if gene not in gene_counts:
+                    gene_counts[gene] = 0
+                if cvalue not in gene_counts:
+                    gene_counts[cvalue] = 0
+                if ctype == 'max_quantity':
+                    #only include option if less than the max quantity have been already used.
+                    
+                    if gene_counts[gene] <= cvalue and (cvalue - gene_counts[gene]) >= 1:
+                    # if gene_counts[gene] < cvalue and (cvalue - gene_counts[gene]) > 1:
+                        valid_genes_list.append(gene)
+                    # elif cvalue == 1 and gene_counts[gene]<=4:
+                    #     if gene not in valid_genes_list:
+                    #         valid_genes_list.append(gene)
+                elif ctype == 'less_than_variable':
+                    #only include option if fewer than the target option have been already used.
+                    if gene_counts[gene] < gene_counts[cvalue] and (gene_counts[cvalue] - gene_counts[gene]) > 1:
+                        valid_genes_list.append(gene)
+            else:
+                valid_genes_list.append(gene)
+        ## make sure that each gene option is valid for the gene location
+        temp_gene_list = deepcopy(valid_genes_list)
+        for gene in temp_gene_list:
+            # print(gene, genome[gene]['map'], index)
+            if not genome[gene]['map'][index] == 1:
+                valid_genes_list.remove(gene)
         return valid_genes_list
 
     def calc_lat_gene_options(genes_list, genome, symmetry, chromosome, index):
@@ -481,7 +535,8 @@ class Gene_Validity_check():
                     gene_counts[cvalue] = 0
                 if ctype == 'max_quantity':
                     #only include option if less than the max quantity have been already used.
-                    if gene_counts[gene] < cvalue and (cvalue - gene_counts[gene]) > 1:
+                    # if gene_counts[gene] < cvalue and (cvalue - gene_counts[gene]) > 1:
+                    if gene_counts[gene] < cvalue and (cvalue - gene_counts[gene]) >= 1:
                         valid_genes_list.append(gene)
                 elif ctype == 'less_than_variable':
                     #only include option if fewer than the target option have been already used.
@@ -506,7 +561,7 @@ class Gene_Validity_check():
         Written by Jake Mikouchi. 09/08/2025
         """
 
-        if input_obj.calculation_type == 'single_cycle':
+        if input_obj.calculation_type in ['single_cycle','multi_cycle']:
             valid_chromosome = Gene_Validity_check.check_constraints(genes_list, genome, parameters, child)
         elif input_obj.calculation_type == 'eq_cycle':
             # input arguments are different based on if the solution is generated in the initial population or not
@@ -527,6 +582,7 @@ class Gene_Validity_check():
         
         return valid_chromosome
 
+
     def check_constraints(genes_list, genome, core_parameters, solution):
         """
         Check solution parameters against user-specified constraints on the input space.
@@ -543,7 +599,7 @@ class Gene_Validity_check():
         num_FA   = core_parameters[2]
         symmetry = core_parameters[3]
         calc_type = core_parameters[4]
-        if calc_type in ['single_cycle', 'eq_cycle']:
+        if calc_type in ['single_cycle', 'eq_cycle','multi_cycle']:
             multdict = LWR_Core_Shapes.get_symmetry_multiplicity(num_rows, num_cols, num_FA, symmetry)
         
         ## make sure that quantities of each gene type appearing in the solution are allowed.
@@ -558,14 +614,23 @@ class Gene_Validity_check():
                 if gene not in gene_counts:
                     gene_counts[gene] = 0
                 if ctype == 'max_quantity': #quantity of gene type must be less than the max allowed quantity.
-                    if gene_counts[gene] > cvalue:
-                        return False
+                    if calc_type not in ['multi_cycle']:
+                        if gene_counts[gene] >=cvalue:
+                            return False
+                    else:
+                        if is_integer(gene):
+                            if gene_counts[gene] >cvalue:
+                                return False
+                        else:
+                            c=genes_list.count(gene)
+                            if c >cvalue:
+                                return False
+                        ## only check the 
                 elif ctype == 'less_than_variable': #quantity of gene type must be less than the quantity of the target variable.
                     if cvalue not in gene_counts:
                         gene_counts[cvalue] = 0
-                    if gene_counts[gene] > gene_counts[cvalue]:
+                    if gene_counts[gene] > gene_counts[cvalue] :#and cvalue!=1: ## 1 for reload core
                         return False
-        
         ## make sure that each gene option is valid for the gene
         for i in range(len(solution)):
             if not genome[solution[i]]['map'][i] == 1: #gene value not allowed at this location in chromosome.
@@ -792,3 +857,12 @@ class Solution_Reporting():
             os.remove(midas_data.__odir__ + "/convergence_plot.png")
         plt.savefig(midas_data.__odir__ + "/convergence_plot.png")  # Save the plot
         plt.show()
+
+## utility function
+def is_integer(s):
+    '''check if the gene is integer'''
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False

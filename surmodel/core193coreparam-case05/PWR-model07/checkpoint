@@ -1,0 +1,2 @@
+model_checkpoint_path: "MIONet_PWR3D_07-200000.ckpt"
+all_model_checkpoint_paths: "MIONet_PWR3D_07-200000.ckpt"
