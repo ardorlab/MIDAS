@@ -58,6 +58,19 @@ An alternative way to configure the environment is to use the requirement files 
 
 Congratulations. The code is now installed in your local machine.
 
+# FOr uisng surroagte models in MIDAS, please follow below steps:
+Create conda env with Python 3.11 by : conda create -n myenv python=3.11.14
+Then install Deepxde python package: pip install deepxde==1.14.0
+Then Clone this repo: https://github.com/nhnkkhang/DeepOnet-Nuclear# and copy it to replace the Deepxde directory contents (inside conda/envs/myenv/lib/python/site-package/deepxde)
+Tensorflow 2.12.0
+Numpy 1.26.4
+Matplotlib 3.10.8
+Scikit-learn 1.7.1
+Scikit-optimize 0.10.2
+Change teh asolute path (required for deeponet model reload/load) in midas_data.py with your correct absolute path  
+
+
+
 
 # Running the Code 
 
