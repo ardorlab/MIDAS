@@ -43,44 +43,19 @@ def evaluate(solution, input,xsdict):
     
     ## Create and move to unique directory for PARCS execution
     cwd = Path(os.getcwd())
-    indv_dir = cwd.joinpath(input.results_dir_name / Path(solution.name))
+    #indv_dir = cwd.joinpath(input.results_dir_name / Path(solution.name))
+    indv_dir=cwd / input.results_dir_name / solution.name
+    print(cwd)
+    print(indv_dir)
+    print(input.results_dir_name)
+    print(solution.name)
     if not indv_dir.exists():
         logger.debug(f"Creating new results directory: {indv_dir}")
+        print(f"Creating new results directory: {indv_dir}")
         os.mkdir(indv_dir)
     logger.debug(f"Changing to new working directory: {indv_dir}")
     os.chdir(indv_dir)
 
-    ## Prepare depletion file template
-    # with open('boc_exp.dep',"w") as depfile:
-    #     depfile.write("\n BEGIN STEP\n\n EXP 3D MAP 1.0E+00\n\n")
-    #     columncount = 0
-    #     for i in range(1,input.num_assemblies+1):
-    #         ## write column headers
-    #         if columncount == 0:
-    #             depfile.write(" k lb ")
-    #         depfile.write(str(i).ljust(8))
-    #         columncount += 1
-    #         ## write rows for every 10 columns
-    #         if columncount == 10:
-    #             depfile.write('\n')
-    #             for j in range(input.number_axial-2,0,-1): #iterate in reverse; assume 1 node each top and bottom reflectors.
-    #                 depfile.write(' '+str(j).ljust(3))
-    #                 for k in range(columncount):
-    #                     depfile.write('{:.3f}'.format(input.boc_exposure).rjust(8))
-    #                 depfile.write('\n')
-    #             depfile.write('\n')
-    #             columncount = 0
-    #     ## write rows for leftover columns
-    #     if columncount!= 0:
-    #         depfile.write('\n')
-    #         for j in range(input.number_axial-2,0,-1): #iterate in reverse; assume 1 node each top and bottom reflectors.
-    #             depfile.write(' '+str(j).ljust(3))
-    #             for k in range(columncount):
-    #                 depfile.write('{:.3f}'.format(input.boc_exposure).rjust(8))
-    #             depfile.write('\n')
-    #         depfile.write('\n')
-    #     depfile.write(' END STEP\n')
-    
     filename = solution.name + '.inp'
     # create input file based on if an input template is given
     if input.calculation_type not in ['multi_cycle']:
@@ -113,14 +88,13 @@ def evaluate(solution, input,xsdict):
         Fd_all, Fq_all, maxboron, cycle_length = get_result_157(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, idx22, initbumap)
     elif input.num_assemblies==193:
         Fd_all, Fq_all, maxboron, cycle_length = get_result(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, idx22, initbumap)
-
-        
+    
     solution.parameters["cycle_length"]['value'] = cycle_length
     solution.parameters["pinpowerpeaking"]['value'] = Fq_all
     solution.parameters["fdeltah"]['value'] = Fd_all
     solution.parameters["max_boron"]['value'] = maxboron
-    
     logger.debug(f"Returning to original working directory: {cwd}")
+    print(f"Returning to original working directory: {cwd}")
     os.chdir(cwd)
     ## clean xsdict 
     # del xsdict 

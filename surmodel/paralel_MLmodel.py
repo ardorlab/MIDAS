@@ -416,19 +416,7 @@ def interpolatecycle(x, X, Y):
     """
     X=list(X)
     Y=list(Y)
-    # print(X)
-    # print(Y)
     idx = -1
-    ## test 
-    # idx = next((i for i in range(len(X)-1) if abs(X[i+1][0] - X[i][0]) < 10 and X[i][0]<500) , -1)
-    # idx=idx-1 ## take 3 step back 
-
-
-    # idx = -5
-    # for j in range(len(X)):
-    #     if X[j][0]<x:
-    #         idx = j-5 ## take one idx back
-    #         break 
     ## only take 2 last element for cycle length calculation 
     a = (X[idx-1][0]-X[idx][0])/(Y[idx-1][0]-Y[idx][0])
     b = X[idx-1][0] - a*Y[idx-1][0]
@@ -711,9 +699,9 @@ def get_result(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, 
                                                                 tuple(input_data+[trunk_core]), 
                                                                 scaler_core, minmaxReverse)
                     # print(bor_pred0)
-                    if bor_pred0[0] <10:
+                    if bor_pred0[0] <50:
                         complete_flag = True
-                    # print(f"BU={bu}, iter={iteration} → Converged (tol={max_delta:.2e})")
+                    print(f"BU={bu}, iter={iteration} → Converged (tol={max_delta:.2e})")
                     # Update for next burnup
                     initbumap = bumap
                     power_history.append(pow_new)
@@ -753,15 +741,13 @@ def get_result(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, 
     Fd_all = np.max(np.sum(pinpower_reconstruct.reshape(-1,16,153,153) * ax_factor,axis = 1))
     cycle_his_adj = cycle_his-cycle_his[0]
     ## trim the boron and cycle his
-    index = next(i for i, x in enumerate(boron_his) if x[0] < 100)
+    index = next((i for i, x in enumerate(boron_his) if x[0] < 100), -1)
     cycle_length = interpolatecycle(10,boron_his[:index],cycle_his_adj[:index])
     if cycle_length>1000:
        print('boron list',boron_his)
        print('cycle list',cycle_his)
        print(LPs)
        print("Solution from surrogate model failed.")
-       
-
     return Fd_all, Fq_all, np.max(boron_his), cycle_length
 
 def get_result_157(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, idx22, initbumap) :
