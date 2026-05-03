@@ -221,7 +221,7 @@ class Optimizer():
                 mp.set_start_method('spawn', force=True) ### NOTE: do not use this for debug mode!!!!!
                 from surmodel.paralel_MLmodel import init_worker, init_worker_updated
                 chunksize = max(1, self.population.size // (self.input.num_procs * 4))
-                xsdict = joblib.load(midas_data.__path_xs_pickle__,mmap_mode='r')
+                xsdict = joblib.load(midas_data.__path_xs_pickle__)#,mmap_mode='r')
                 ### set pool once 
                 pool = Pool(processes=self.input.num_procs, initializer=init_worker)
             else:
@@ -258,7 +258,7 @@ class Optimizer():
                            pool = Pool(processes=self.input.num_procs, initializer=init_worker_updated)
                         # ## for printing out fitness value at this step 
                         self.eval_func = surrogatemodel_BK.evaluate
-                        surrogate_sol = pool.starmap(self.eval_func, zip(temppop, repeat(self.input), repeat(xsdict)),)# chunksize=chunksize)
+                        surrogate_sol = pool.starmap(self.eval_func, zip(temppop, repeat(self.input), repeat(xsdict)), chunksize=chunksize)
                         for soln in surrogate_sol:
                             soln.fitness_value = self.fitness.calculate(soln.parameters)
                         for i in range(len(temppop)):
@@ -277,7 +277,7 @@ class Optimizer():
                                 csvwriter.writerow(soln_result_list)
                     self.eval_func = surrogatemodel_BK.evaluate ## reset
                 else:
-                    self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input), repeat(xsdict)),)# chunksize=chunksize)
+                    self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input), repeat(xsdict)), chunksize=chunksize)
         
                     # for i in range(self.population.size):
                     #     self.population.current[i] = self.eval_func(self.population.current[i], self.input) ## serial test
@@ -464,7 +464,7 @@ class Optimizer():
 
                         self.eval_func = surrogatemodel_BK.evaluate ## reset
                     else:
-                        self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input), repeat(xsdict)),)# chunksize=chunksize)
+                        self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input), repeat(xsdict)), chunksize=chunksize)
                 else:
                     self.population.current = pool.starmap(self.eval_func, zip(self.population.current, repeat(self.input)))
         

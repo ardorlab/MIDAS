@@ -398,10 +398,8 @@ class Gene_Validity_check():
         ## make sure that each gene option is valid for the gene location
         temp_gene_list = deepcopy(valid_genes_list)
         for gene in temp_gene_list:
-            print(gene, genome[gene]['map'], index)
             if not genome[gene]['map'][index] == 1:
                 valid_genes_list.remove(gene)
-        print(valid_genes_list)
         return valid_genes_list
     
     def calc_LWR_gene_optionsMP(genes_list, genome, LWR_core_parameters, chromosome, index):
