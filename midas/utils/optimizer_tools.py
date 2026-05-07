@@ -8,6 +8,7 @@ import csv
 import matplotlib.pyplot as plt
 import os
 from midas.utils.problem_preparation import LWR_Core_Shapes
+import midas_data
 """
 These are generic optimizer classes that are shared by all algorithms. #!TODO: can this be solved with the super().__init__ method?
 """
@@ -727,9 +728,9 @@ class Solution_Reporting():
         plt.title("Average Fitness per Generation")
         plt.grid()
         #Delete the plot if it already exists
-        if os.path.exists("average_fitness_plot.png"):
-            os.remove("average_fitness_plot.png")
-        plt.savefig("average_fitness_plot.png")
+        if os.path.exists(midas_data.__odir__ + "/average_fitness_plot.png"):
+            os.remove(midas_data.__odir__ + "/average_fitness_plot.png")
+        plt.savefig(midas_data.__odir__ + "/average_fitness_plot.png")
         plt.close()
 
         #Plot max fitness per generation
@@ -740,9 +741,9 @@ class Solution_Reporting():
         plt.title("Maximum Fitness per Generation")
         plt.grid()
         #Delete the plot if it already exists
-        if os.path.exists("max_fitness_plot.png"):
-            os.remove("max_fitness_plot.png")
-        plt.savefig("max_fitness_plot.png")
+        if os.path.exists(midas_data.__odir__ + "/max_fitness_plot.png"):
+            os.remove(midas_data.__odir__ + "/max_fitness_plot.png")
+        plt.savefig(midas_data.__odir__ + "/max_fitness_plot.png")
         plt.close()
 
         #Plot standard deviation of fitness per generation
@@ -753,9 +754,9 @@ class Solution_Reporting():
         plt.title("Standard Deviation of the Fitness per Generation")
         plt.grid()
         #Delete the plot if it already exists
-        if os.path.exists("std_fitness_plot.png"):
-            os.remove("std_fitness_plot.png")
-        plt.savefig("std_fitness_plot.png")
+        if os.path.exists(midas_data.__odir__ + "/std_fitness_plot.png"):
+            os.remove(midas_data.__odir__ + "/std_fitness_plot.png")
+        plt.savefig(midas_data.__odir__ + "/std_fitness_plot.png")
         plt.close()
 
     def plot_optimization_convergence(self):
@@ -775,7 +776,7 @@ class Solution_Reporting():
         plt.title("Optimization Convergence")
         plt.grid()
         #Delete the plot if it already exists
-        if os.path.exists("convergence_plot.png"):
-            os.remove("convergence_plot.png")
-        plt.savefig("convergence_plot.png")  # Save the plot
+        if os.path.exists(midas_data.__odir__ + "/convergence_plot.png"):
+            os.remove(midas_data.__odir__ + "/convergence_plot.png")
+        plt.savefig(midas_data.__odir__ + "/convergence_plot.png")  # Save the plot
         plt.show()

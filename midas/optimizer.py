@@ -22,6 +22,7 @@ from midas.codes import parcs342, parcs343
 from midas.codes import nuscale_lut
 from midas.codes import trace50p5
 from midas.codes import polaris624
+import midas_data
 from tests.regression.listsum import listsum
 
 ## Classes ##
@@ -184,9 +185,9 @@ class Optimizer():
         
     ## Delete old results file, if necessary, to avoid confusion
             # this step is useful since the new results file won't be written until after Generation 0 is completed.
-            if os.path.exists("optimizer_results.csv"):
+            if os.path.exists(midas_data.__odir__ + "/optimizer_results.csv"):
                 logger.debug("Removing existing 'optimizer_results.csv' results file...")
-                os.remove("optimizer_results.csv")
+                os.remove(midas_data.__odir__ + "/optimizer_results.csv")
             
     ## Initialize beginning population
             self.population.current = []
@@ -234,7 +235,7 @@ class Optimizer():
                 archive_header.append(str(param))
             archive_header.append("Chromosome")
             ## write output file
-            with open("optimizer_results.csv", 'w') as csvfile:
+            with open(midas_data.__odir__ + "/optimizer_results.csv", 'w') as csvfile:
                 csvwriter = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
                 csvwriter.writerow(archive_header)
             
@@ -250,7 +251,7 @@ class Optimizer():
                 for gene in soln.chromosome:
                     soln_result_list.append(str(gene))
                 ## write to output file
-                with open("optimizer_results.csv", 'a') as csvfile:
+                with open(midas_data.__odir__ + "/optimizer_results.csv", 'a') as csvfile:
                     csvwriter = csv.writer(csvfile, delimiter=',')
                     csvwriter.writerow(soln_result_list)
                 if i == best_soln_index:
@@ -291,10 +292,10 @@ class Optimizer():
             if not os.path.exists(results_dir):
                 logger.debug("Results directory is missing. Creating results directory...")
                 os.mkdir(results_dir)
-            if not os.path.exists(cwd.joinpath("optimizer_results.csv")):
+            if not os.path.exists(cwd.joinpath(midas_data.__odir__ + "/optimizer_results.csv")):
                 logger.debug("'optimizer_results.csv' results file is missing and will be recreated.")
                 ## write output file
-                with open("optimizer_results.csv", 'w') as csvfile:
+                with open(midas_data.__odir__ + "/optimizer_results.csv", 'w') as csvfile:
                     csvwriter = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
                     csvwriter.writerow(archive_header)
         
@@ -372,7 +373,7 @@ class Optimizer():
                 for gene in soln.chromosome:
                     soln_result_list.append(str(gene))
                 ## write to output file
-                with open("optimizer_results.csv", 'a') as csvfile:
+                with open(midas_data.__odir__ + "/optimizer_results.csv", 'a') as csvfile:
                     csvwriter = csv.writer(csvfile, delimiter=',')
                     csvwriter.writerow(soln_result_list)
                 if i == best_soln_index:
@@ -405,12 +406,12 @@ class Optimizer():
         ## Optimization concluded
         # Report best solution information in output file
         optimization_information = optools.Solution_Reporting()
-        best_solution_info = optimization_information.best_solution_information("optimizer_results.csv")
+        best_solution_info = optimization_information.best_solution_information(midas_data.__odir__ + "/optimizer_results.csv")
         logger.info("Best solution found in optimization: \n")
         for key in best_solution_info:
             logger.info(f'{key}: {best_solution_info[key]}')
             
-        with open("best_solution_chromosome.csv", 'w') as csvfile:
+        with open(midas_data.__odir__ + "/best_solution_chromosome.csv", 'w') as csvfile:
             csvwriter = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
             csvwriter.writerow(best_solution_info['Chromosome'])
         
@@ -423,7 +424,7 @@ class Optimizer():
             logger.info(f'{key}: {last_gen_data[key]}')
         
         #Create output statistics file
-        with open('optimization_statistics.csv','w') as file:
+        with open(midas_data.__odir__ + "/optimization_statistics.csv", 'w') as file:
             file.write('Generation, Average Fitness, Maximum Fitness, Standard Deviation of Fitness\n')
             for gen in statistics:
                 avg_fit = statistics[gen]['Average_Fitness']
