@@ -45,13 +45,9 @@ def evaluate(solution, input,xsdict):
     cwd = Path(os.getcwd())
     #indv_dir = cwd.joinpath(input.results_dir_name / Path(solution.name))
     indv_dir=cwd / input.results_dir_name / solution.name
-    print(cwd)
-    print(indv_dir)
-    print(input.results_dir_name)
-    print(solution.name)
     if not indv_dir.exists():
         logger.debug(f"Creating new results directory: {indv_dir}")
-        print(f"Creating new results directory: {indv_dir}")
+        # print(f"Creating new results directory: {indv_dir}")
         os.mkdir(indv_dir)
     logger.debug(f"Changing to new working directory: {indv_dir}")
     os.chdir(indv_dir)

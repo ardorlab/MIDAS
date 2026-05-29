@@ -3,7 +3,7 @@ import numpy as np
 import joblib
 
 def convert(pickle_file_path):
-    joblib_path = pickle_file_path.replace('.pkl', '.joblib')
+    joblib_path = pickle_file_path.replace('.pkl', 'temp.joblib')
     with open(pickle_file_path, 'rb') as f:
         data = pkl.load(f)
     if isinstance(data, (list, tuple, dict)):
