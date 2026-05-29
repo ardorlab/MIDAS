@@ -129,6 +129,10 @@ def validate_input(keyword, value):
     elif keyword == 'keep_retraindata':
         if value:
             value = str(value).lower()
+    elif keyword == 'if_calibrate':
+        if value:
+            value = str(value).lower()
+
 ## Optimization Block ##
     elif keyword == 'population_size':
         try:
@@ -1130,8 +1134,9 @@ class Input_Parser():
         self.convergence_plot = yaml_line_reader(info, 'convergence_plot', True)
         self.initial_population = yaml_line_reader(info, 'initial_population', None)
         ## for surrogate 
-        self.parcs_steps = yaml_line_reader(info, 'parcs_steps', None)
-        self.retrain_steps = yaml_line_reader(info, 'retrain_steps', None)
+        self.parcs_steps = yaml_line_reader(info, 'parcs_steps', [])
+        self.retrain_steps = yaml_line_reader(info, 'retrain_steps', [])
+        self.if_calibrate = yaml_line_reader(info, 'if_calibrate', 'False')
         self.keep_retraindata = yaml_line_reader(info, 'keep_retraindata', 'no')
         if self.input_template['apply'] and self.code_interface == 'parcs343':
             parcs343_template_check(self)

@@ -5,26 +5,11 @@ general:
   code_type: surrogate
   calc_type: single cycle
   results_directory_name: output_files
-  # set_seed: 1765640 #case01
-  # set_seed: 258489 # case02
-  # set_seed: 19940708 # case03
-  # set_seed: 2026154 # case04 
-  set_seed: 19845 # case05
-  # set_seed: 6715 # case06
-  # set_seed: 310327 # case07
-  # set_seed: 891 # case08
-  # set_seed: 1637 # case09
-  # set_seed: 397265 # case10
-  # set_seed: 11341 # case11
-  parcs_steps: 99
-  retrain_steps: 99,
-  # clear_results: keep_all
-  keep_retraindata: no
 
 ## Optimizer Block
 optimization:
-  population_size: 50 ## let run 300 for now
-  number_of_generations: 10 # test for 300 gen
+  population_size: 50 
+  number_of_generations: 100 
   solution_symmetry: octant #chromosome symmetry
   objectives:
     max_boron:
@@ -58,13 +43,6 @@ algorithm:
   crossover:
     method: uniform
     crossover_rate: 0.5
-# algorithm:
-
-#   selection:
-
-#     method: ktournament
-
-#     k: 8
 
 ## Fuel Assembly Parts
 assembly_options:
@@ -86,10 +64,6 @@ assembly_options:
       type: 250
       serial: xs_g250_gd_0_wt_0 #cross section name in library
       blanket: blanket_name
-    # FA251: 
-    #   type: 251
-    #   serial: xs_g250_gd_16_bp_0
-    #   blanket: blanket_name
     FA280: 
       type: 280
       serial: xs_g280_gd_0_wt_0

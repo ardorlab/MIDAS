@@ -133,7 +133,7 @@ def create_scaler(all_data):
     return global_min, global_max
 
 
-def trainmodelrpf():
+def trainmodelrpf(if_calibrate=False):
     tf.keras.backend.clear_session()
     tf.compat.v1.reset_default_graph()
     gc.collect()
@@ -162,51 +162,43 @@ def trainmodelrpf():
     X6 = X6.reshape(X6.shape[0], -1)
     X7 = X7.reshape(X7.shape[0], -1)
     Y  = Y.reshape(Y.shape[0], -1)
-    print(X1.shape)
-    ## set negative value to 0??
-    # X1[X1<0]=0
-    # X2[X2<0]=0
-    # X3[X3<0]=0
-    # X4[X4<0]=0
-    # X5[X5<0]=0
-    # X6[X6<0]=0
-    # X7[X7<0]=0
-    
 
     # ## load global max min value 
     ## create scaler only when you first calibrated it ???
-    # b1min, b1max = create_scaler(X1)
-    # b2min, b2max = create_scaler(X2)
-    # b3min, b3max = create_scaler(X3)
-    # b4min, b4max = create_scaler(X4)
-    # b5min, b5max = create_scaler(X5)
-    # b6min, b6max = create_scaler(X6)
-    # b7min, b7max = create_scaler(X7)
-    # omin, omax = create_scaler(Y)
-    # tmin, tmax = create_scaler(trunk.reshape(trunk.shape[0], -1))
-    # scalerparam ={"b1min":b1min,
-    #               "b1max":b1max,
-    #               "b2min":b2min,
-    #               "b2max":b2max,
-    #               "b3min":b3min,
-    #               "b3max":b3max,
-    #               "b4min":b4min,
-    #               "b4max":b4max,
-    #               "b5min":b5min,
-    #               "b5max":b5max,
-    #               "b6min":b6min,
-    #               "b6max":b6max,
-    #               "b7min":b7min,
-    #               "b7max":b7max,
-    #               "omin":omin,
-    #               "omax":omax, 
-    #               "tmin":tmin,
-    #               "tmax":tmax,
-    #               }
-
-    save_path = os.path.join(datapath, 'scaler.joblib')
-    # joblib.dump(scalerparam, save_path)
-    scalerparam = joblib.load(datapath+'scaler.joblib')
+    if if_calibrate:
+        b1min, b1max = create_scaler(X1)
+        b2min, b2max = create_scaler(X2)
+        b3min, b3max = create_scaler(X3)
+        b4min, b4max = create_scaler(X4)
+        b5min, b5max = create_scaler(X5)
+        b6min, b6max = create_scaler(X6)
+        b7min, b7max = create_scaler(X7)
+        omin, omax = create_scaler(Y)
+        tmin, tmax = create_scaler(trunk.reshape(trunk.shape[0], -1))
+        scalerparam ={"b1min":b1min,
+                      "b1max":b1max,
+                      "b2min":b2min,
+                      "b2max":b2max,
+                      "b3min":b3min,
+                      "b3max":b3max,
+                      "b4min":b4min,
+                      "b4max":b4max,
+                      "b5min":b5min,
+                      "b5max":b5max,
+                      "b6min":b6min,
+                      "b6max":b6max,
+                      "b7min":b7min,
+                      "b7max":b7max,
+                      "omin":omin,
+                      "omax":omax, 
+                      "tmin":tmin,
+                      "tmax":tmax,
+                      }
+    
+        save_path = os.path.join(datapath, 'scaler.joblib')
+        joblib.dump(scalerparam, save_path)
+    else:
+        scalerparam = joblib.load(datapath+'scaler.joblib')
     ##
     X1s = minmaxscale(X1,scalerparam['b1max'], scalerparam['b1min'])
     X2s = minmaxscale(X2,scalerparam['b2max'], scalerparam['b2min'])
@@ -215,10 +207,7 @@ def trainmodelrpf():
     X5s = minmaxscale(X5,scalerparam['b5max'], scalerparam['b5min'])
     X6s = minmaxscale(X6,scalerparam['b6max'], scalerparam['b6min'])
     X7s = minmaxscale(X7,scalerparam['b7max'], scalerparam['b7min'])
-    # for keys in scalerparam.keys():
-    #     print(scalerparam[keys], keys)
-    
-    # Ys  = minmaxscale(Y,scalerparam['omax'], scalerparam['omin'])
+    # Ys  = minmaxscale(Y,scalerparam['omax'], scalerparam['omin']) ## no need scaling for RPF
     ## splitting
     # Then split
     (X1_train, X1_test,
@@ -254,11 +243,6 @@ def trainmodelrpf():
                X6_test,
                X7_test, trunks)
     y_test = y_test.reshape(y_test.shape[0],-1) # no scaling
-    # y_test = y_tests
-    
-    # print(len(X_train[0]))
-    # print(len(X_test[0]))
-    # print(len(X_train[1]))
     
     from deepxde.nn.tensorflow_compat_v1.mionet import MIONetCartesianProd_custom7
     from deepxde.data.quadruple import QuadrupleCartesianProd
@@ -292,7 +276,6 @@ def trainmodelrpf():
     	# metrics=["accuracy"],
     )
     iter = midas_data.__training_epochs_model_1__
-    # model1.restore(__path_to_restore_model__[0])
 
     # # # # Compile and Train
     model1.train(epochs=iter, batch_size=batch_size,

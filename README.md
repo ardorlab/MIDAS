@@ -58,19 +58,270 @@ An alternative way to configure the environment is to use the requirement files 
 
 Congratulations. The code is now installed in your local machine.
 
-# FOr uisng surroagte models in MIDAS, please follow below steps:
-Create conda env with Python 3.11 by : conda create -n myenv python=3.11.14
-Then install Deepxde python package: pip install deepxde==1.14.0
-Then Clone this repo: https://github.com/nhnkkhang/DeepOnet-Nuclear# and copy it to replace the Deepxde directory contents (inside conda/envs/myenv/lib/python/site-package/deepxde)
-Tensorflow 2.12.0
-Numpy 1.26.4
-Matplotlib 3.10.8
-Scikit-learn 1.7.1
-Scikit-optimize 0.10.2
-Change teh asolute path (required for deeponet model reload/load) in midas_data.py with your correct absolute path  
+# For using surrogate models in MIDAS, please follow below steps:
 
+## 1. Create a Conda Environment
 
+Create a Conda environment with Python 3.11:
 
+```bash
+conda create -n myenv python=3.11.14
+conda activate myenv
+```
+
+## 2. Install DeepXDE
+
+Install the required version of DeepXDE:
+
+```bash
+pip install deepxde==1.14.0
+```
+
+## 3. Replace the DeepXDE Package Contents
+
+Clone the following repository:
+
+```bash
+git clone https://github.com/nhnkkhang/DeepOnet-Nuclear.git
+```
+
+Replace the contents of the installed `deepxde` package directory with the files from the cloned repository.
+
+Typical location of the `deepxde` package inside the Conda environment:
+
+```text
+<conda_path>/envs/myenv/lib/python/site-packages/deepxde
+```
+
+## 4. Install Required Package Versions
+
+Install the following package versions (install one by one to prevent conflict):
+
+```text
+TensorFlow        2.15.0
+NumPy             1.26.4
+Matplotlib        3.10.8
+scikit-learn      1.7.1
+scikit-optimize   0.10.2
+joblib            1.5.3
+```
+
+## 5. Update Absolute Paths
+
+In `midas_data.py`, update the absolute paths used for DeepONet model loading/reloading with the correct paths for your system.
+
+> This step is required for proper DeepONet model loading and reloading functionality.
+# Pre-trained Model Paths
+
+## 1. Base Models
+
+### RPF Model
+
+```bash
+MIDAS/surmodel/base_model/PWR-model07/PWR-model07/MIONet_PWR3D_07-200000.ckpt
+```
+
+### Core Parameter Model
+
+```bash
+MIDAS/surmodel/base_model/PWR-modelcoredata/MIONet_PWR3D_core-200000.ckpt
+```
+
+### CNN Pin-Power Model
+
+```bash
+MIDAS/surmodel/base_model/pinmodel/pin_power_unet_deep_noscale_updated.h5
+```
+
+### Scaler / Trunk Data
+
+* RPF model:
+
+```bash
+MIDAS/surmodel/base_model/traindataall/
+```
+
+* Core parameter model:
+
+```bash
+MIDAS/surmodel/base_model/traindataall_coredata/
+```
+
+---
+
+# 2. 193-Assembly Core Models with New Fresh Fuel Assemblies
+
+### RPF Model
+
+```bash
+MIDAS/surmodel/core193rpf-case05/MIONet_PWR3D_07-20000.ckpt
+```
+
+### Core Parameter Model
+
+```bash
+MIDAS/surmodel/core193coreparam-case05/MIONet_PWR3D_core-20000.ckpt
+```
+
+### CNN Pin-Power Model
+
+```bash
+MIDAS/surmodel/pinmodel/pin_power_unet_deep_noscale_mod01.h5
+```
+
+### Scaler / Trunk Data
+
+* RPF model:
+
+```bash
+MIDAS/surmodel/traindataall_core193/
+```
+
+* Core parameter model:
+
+```bash
+MIDAS/surmodel/traindataall_coredata_core193/
+```
+
+---
+
+# 3. 157-Assembly Core Models with New Fresh Fuel Assemblies
+
+### RPF Model
+
+```bash
+MIDAS/surmodel/core157rpf-case05/MIONet_PWR3D_07-20000.ckpt
+```
+
+### Core Parameter Model
+
+```bash
+MIDAS/surmodel/core157coreparam-case05/MIONet_PWR3D_core-20000.ckpt
+```
+
+### CNN Pin-Power Model
+
+```bash
+MIDAS/surmodel/pinmodel/pin_power_unet_deep_noscale_updated_157.h5
+```
+
+### Scaler / Trunk Data
+
+* RPF model:
+
+```bash
+MIDAS/surmodel/traindata-core157/
+```
+
+* Core parameter model:
+
+```bash
+MIDAS/surmodel/traindatacoredata-core157/
+```
+
+---
+
+# 4. 193-Assembly Reloaded Core Models
+
+### RPF Model
+
+```bash
+MIDAS/surmodel/core193rpfRL-case02/MIONet_PWR3D_07-20000.ckpt
+```
+
+### Core Parameter Model
+
+```bash
+MIDAS/surmodel/core193coreparamRL-case02/MIONet_PWR3D_core-20000.ckpt
+```
+
+### CNN Pin-Power Model
+
+```bash
+MIDAS/surmodel/pinmodel/pin_power_unet_deep_noscale_updated_193rl_v51.h5
+```
+
+### Scaler / Trunk Data
+
+* RPF model:
+
+```bash
+MIDAS/surmodel/traindataall_RL193/
+```
+
+* Core parameter model:
+
+```bash
+MIDAS/surmodel/traindataall_coredata_RL193/
+```
+
+---
+
+# Initial Calibration Procedure
+
+During the initial calibration phase, the following settings are required in the general blocks:
+
+```yaml
+clear_results: keep_all
+keep_retraindata: yes
+if_calibrate: True
+```
+
+This process calibrates:
+
+* The RPF DeepONet surrogate model
+* The core-parameter DeepONet surrogate model
+
+## Updating the CNN Pin-Power Model
+
+After updating DeepONet models, use the following scripts located in:
+
+```bash
+MIDAS/surmodel/pinretrainscript/
+```
+
+Scripts:
+
+* `extractpin_final.py`
+* `trainmodel_pin_final.py`
+
+> Modify the data paths inside the scripts if necessary.
+
+---
+
+# Sample Cases for Surrogate Model Usage
+
+## 1. Initial Calibration Test
+
+Requires a valid PARCS license for data generation.
+
+```bash
+MIDAS/samplecase193fresh-initial-calibrate
+```
+
+## 2. Standalone Surrogate Test — 193 Fresh-Core
+
+No PARCS license required.
+
+```bash
+MIDAS/samplecase193fresh
+```
+
+## 3. Standalone Surrogate Test — 157 Fresh-Core
+
+No PARCS license required.
+
+```bash
+MIDAS/samplecase157fresh
+```
+
+## 4. Adaptive Retraining Test — 193 Reloaded Core
+
+Requires a valid PARCS license.
+
+```bash
+MIDAS/samplecase193RL
+```
 
 # Running the Code 
 

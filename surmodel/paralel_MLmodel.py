@@ -803,7 +803,7 @@ def get_result_157(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx
                                                                     scaler_core, minmaxReverse)
                         if bor_pred0[0] <20:
                             complete_flag = True
-                        print(f"BU={bu}, iter={iteration} → Converged (tol={max_delta:.2e})")
+                        # print(f"BU={bu}, iter={iteration} → Converged (tol={max_delta:.2e})")
                         # Update for next burnup
                         initbumap = bumap
                         power_history.append(pow_new)
@@ -819,7 +819,7 @@ def get_result_157(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx
             if not converged:
                 print(f"BU={bu} → ❌ Unconverged after 100 iterations")
                 raise ValueError("Solution did not converge.")
-                stop
+                # stop
             if complete_flag:
                 break
     ## get the Fdmax and Fqmax here 

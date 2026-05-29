@@ -245,8 +245,8 @@ class Optimizer():
                     surrogatemodel_BK.extract_data(namedir,self.input, xsdict) ## extract data after PARCs done
                     # # temparcs = self.population.current
                     if self.generation.current in self.input.retrain_steps:
-                        trainmodelrpf()
-                        traincoremodel_update()
+                        trainmodelrpf(self.input.if_calibrate)
+                        traincoremodel_update(self.input.if_calibrate)
                         if self.input.keep_retraindata==False: ## delete retrain data after retrainning
                             rmtree(midas_data.__path_to_store_retrain_data__)
                         ## update pool 
@@ -431,8 +431,8 @@ class Optimizer():
                         # ## extract data after PARCS done 
                         surrogatemodel_BK.extract_data(namedir, self.input, xsdict)
                         if self.generation.current in self.input.retrain_steps:
-                            trainmodelrpf()
-                            traincoremodel_update()
+                            trainmodelrpf(self.input.if_calibrate)
+                            traincoremodel_update(self.input.if_calibrate)
                             if self.input.keep_retraindata==False: ## delete retrain data after retrainning
                                 rmtree(midas_data.__path_to_store_retrain_data__)
                             # update pool
