@@ -31,8 +31,8 @@ The below values may be edited by the User as needed.
 Written by Nicholas Rollins. 10/03/2024
 """
 
-__ofile__ = "midas.out"
-
+__odir__ = "midas_outputs"
+__ofile__ = __odir__ + "/midas.out"
 
 # Interface code executable paths
 __parcs342exe__ = "/cm1/codes/parcs_342/Executables/Linux/parcs-v342-linux2-intel-x64-release.x"
@@ -40,3 +40,4 @@ __parcs343exe__ = "/cm/shared/nuclearCodes/parcs-3.4.3/PARCS-v343_Exe/Executable
 __trace50p5exe__ = "/cm1/apps/ncsu/TRACE_PARCS/TRACE-V50P5-Exe/Executables/trace-V50p5-linux2-lahey-x64-release.exe"
 __polaris624exe__ = "/cm/shared/codes/scale/SCALE-6.2.4/bin/scalerte"
 __ipwr_lut__ = "/cm/shared/databases/SMR_IPWR_DATABASE/"
+# __ipwr_lut__ = "/data/oldcluster/cm_shared/databases/SMR_IPWR_DATABASE/" # RDFMG IPWR LUT location

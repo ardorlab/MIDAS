@@ -156,9 +156,13 @@ def main(args):
 #  Primary Execution Pathway  #
 # # # # # # # # # # # # # # # #
 if __name__ == "__main__":
-    #Clear output file
-    if os.path.exists(midas_data.__ofile__):
-        os.remove(midas_data.__ofile__)
+    #Clear MIDAS output files
+    if os.path.exists(midas_data.__odir__):
+        for filename in os.listdir(midas_data.__odir__):
+            file_path = os.path.join(midas_data.__odir__, filename)
+            os.remove(file_path)
+    else:
+        os.mkdir(midas_data.__odir__)
     
     #Initialize logging
     logger = logging.getLogger("MIDAS_logger")
