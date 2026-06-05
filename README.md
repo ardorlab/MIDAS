@@ -283,7 +283,8 @@ MIDAS/surmodel/pinretrainscript/
 Scripts:
 
 * `extractpin_final.py`
-* `trainmodel_pin_final.py`
+* `trainmodel_pin_final.py`  (If using TF 2.12)
+* `train_pinmodel-TF2-15.py` (If using TF 2.15)
 
 > Modify the data paths inside the scripts if necessary.
 

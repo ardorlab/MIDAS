@@ -193,29 +193,29 @@ def getLPs_cyc(ofile):
 
 # --- Main Script ---
 
-pathtoextract = "/home/khnguy22/Deeponet-midas/MIDAS/corereload197-surrogate-nofb_new/output_files"
+pathtoextract = "/home/khnguy22/Deeponet-midas/MIDAS/ne512-test/output_files_retrain/"
 output_folder = pathtoextract
 
-listFA = [250, 280, 461,462,501,502,526,566,586]
+listFA = [250, 251,252,201,321, 322, 280, 461,462,501,502,526,566,586]
 fabulist = [
     0, 0.1, 0.5, 1.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.5, 15.0, 17.5, 20.0,
     25.0, 30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 60.0, 65.0, 70.0, 75.0, 80.0
 ]
 fabulist = np.array(fabulist)
-xsdict = pickle.load(open('/home/khnguy22/Deeponet-midas/testparcs/updateXS.pkl', 'rb'))
+xsdict = pickle.load(open('/home/khnguy22/Deeponet-midas/MIDAS/surmodel/xsdata/updateXSMay26.pkl', 'rb'))
 
 # --- Geometry parameters for parser ---
-nfa_parcs = 56 # Number of non-reflector FAs
-# nfa_parcs = 47 # Number of non-reflector FAs for 157core 
+# nfa_parcs = 56 # Number of non-reflector FAs
+nfa_parcs = 47 # Number of non-reflector FAs for 157core 
 z_id_parcs = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
 nz_parcs = len(z_id_parcs)
-refl_id_parcs = [9, 18, 27, 36, 44, 45, 53, 60, 61, 66, 67, 68, 69, 70, 71, 72, 73]
-# refl_id_parcs = [9, 18, 26, 27, 35, 42, 43, 49, 50, 55, 56, 59, 60, 61, 62, 63, 64] # for 157 core
+# refl_id_parcs = [9, 18, 27, 36, 44, 45, 53, 60, 61, 66, 67, 68, 69, 70, 71, 72, 73]
+refl_id_parcs = [9, 18, 26, 27, 35, 42, 43, 49, 50, 55, 56, 59, 60, 61, 62, 63, 64] # for 157 core
 # (Assuming FULL_CORE=False based on original code)
 
 # --- REFACTOR: Initialize HDF5 file ---
 # This file will store the output datasets on disk
-output_h5_file = 'pin_data_193r_v51.h5'
+output_h5_file = 'pin_data_ne512.h5'
 hf = h5py.File(output_h5_file, 'w')
 
 # Create resizable datasets. We will append data in chunks.
@@ -243,8 +243,8 @@ for root, dirs, files in os.walk(pathtoextract):
     for file in files:
         if file.endswith('.inp'):
             inputfile = os.path.join(root, file)
-            # depfilename = file.replace('.inp', '.parcs_dep')
-            depfilename = file.replace('.inp', '.parcs_cyc-02') # for multi_cycle case
+            depfilename = file.replace('.inp', '.parcs_dep')
+            # depfilename = file.replace('.inp', '.parcs_cyc-02') # for multi_cycle case
             pinfilename = file.replace('.inp','.parcs_pin')
             dplfilename = file.replace('.inp','.parcs_dpl')
             outfilename = file.replace('.inp','.parcs_out')
@@ -260,8 +260,8 @@ for root, dirs, files in os.walk(pathtoextract):
                 outputdep_path, nfa_parcs, z_id_parcs, refl_id_parcs
             )
             nbu = len(bu3d)
-            # test = getLP(output_path)  
-            test = getLPs_cyc(outputdep_path)  # for multi_cycle
+            test = getLP(output_path)  
+            # test = getLPs_cyc(outputdep_path)  # for multi_cycle
             nofluxpin = np.zeros((nfa_parcs, nbu, 17, 17, nz_parcs))
             for bu_step in range(nbu):
                 idx = 0  # Fuel assembly index (0 to 55)
@@ -343,4 +343,4 @@ for root, dirs, files in os.walk(pathtoextract):
             
 # --- Finalize ---
 hf.close()  # Close the HDF5 file
-print("✅ All perturbations processed and saved to pin_data.h5.")
+print(f"✅ All perturbations processed and saved to {output_h5_file}.")
