@@ -515,7 +515,7 @@ def without_template(solution, input, cwd, filename):
         else:
             ofile.write("      PIN_POWER  F\n")
         ofile.write("      PRINT_OPT  T T T T T F T T T T  T  T  T  T  F  T  T\n")
-        # ofile.write("      PLOT_OPTS 0 0 0 0 0 2\n")
+        ofile.write("      PLOT_OPTS 0 0 0 0 0 2\n")
         ofile.write("\n")
         ofile.write("!******************************************************************************\n\n")
         
