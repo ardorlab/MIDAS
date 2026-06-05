@@ -38,8 +38,7 @@ if not tf.__version__.startswith("1."):
     print("Warning: This script is intended for TensorFlow 1.x.")
 
 # --- 1. Configuration ---
-# --- 1. Configuration ---
-H5_FILE = 'pin_data_193r_v51.h5'
+H5_FILE = 'pin_data_ne512.h5'
 INPUT_DATASET = 'calpin'
 OUTPUT_DATASET = 'parcpin'
 
@@ -65,9 +64,9 @@ print(f"Original y shape: {y_data.shape}")
 
 
 
-SAVED_MODEL_NAME = 'pin_power_unet_deep_noscale_updated_193rl_v51.h5' 
+SAVED_MODEL_NAME = 'pin_power_unet_deep_noscale_updated_ne512.h5' 
 OLD_MODEL_NAME = '/home/khnguy22/Deeponet-midas/MIDAS/surmodel/pinmodel/pin_power_unet_deep_noscale.h5' 
-PLOT_RESULTS_FILE = 'model_predictions_unet_deep_diff_v50.png' 
+PLOT_RESULTS_FILE = 'model_predictions_unet_deep_diff_ne512.png' 
 
 IMG_DIM = 153 # 153x153
 INPUT_SHAPE = (IMG_DIM, IMG_DIM, 1)

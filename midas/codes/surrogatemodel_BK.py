@@ -90,7 +90,7 @@ def evaluate(solution, input,xsdict):
     solution.parameters["fdeltah"]['value'] = Fd_all
     solution.parameters["max_boron"]['value'] = maxboron
     logger.debug(f"Returning to original working directory: {cwd}")
-    print(f"Returning to original working directory: {cwd}")
+    # print(f"Returning to original working directory: {cwd}")
     os.chdir(cwd)
     ## clean xsdict 
     # del xsdict 
@@ -390,7 +390,7 @@ def multi_cycle_input_generation(solution, input, cwd, filename):
         else:
             ofile.write("      PIN_POWER  F\n")
         ofile.write("      PRINT_OPT  T T T T T F T T T T  T  T  T  T  F  T  T\n")
-        # ofile.write("      PLOT_OPTS 0 0 0 0 0 2\n")
+        ofile.write("      PLOT_OPTS 0 0 0 0 0 2\n")
         ofile.write("\n")
         ofile.write("!******************************************************************************\n\n")
         
@@ -695,7 +695,7 @@ def without_template(solution, input, cwd, filename):
         else:
             ofile.write("      PIN_POWER  F\n")
         ofile.write("      PRINT_OPT  T T T T T F T T T T  T  T  T  T  F  T  T")
-        # ofile.write("      PLOT_OPTS 0 0 0 0 0 2\n")
+        ofile.write("      PLOT_OPTS 0 0 0 0 0 2\n")
         ofile.write("\n")
         ofile.write("!******************************************************************************\n\n")
         

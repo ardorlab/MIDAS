@@ -8,23 +8,23 @@ general:
 
 ## Optimizer Block
 optimization:
-  population_size: 200
-  number_of_generations: 100
+  population_size: 50
+  number_of_generations: 50
   solution_symmetry: quarter # octant #chromosome symmetry
   objectives:
     max_boron:
       goal: less_than_target
-      target: 1750
+      target: 1300
       #target: 1235
       weight: 14.0
     PinPowerPeaking:
       goal: less_than_target
       weight: 5000.0 
-      target: 2.5
+      target: 2.1
       #target: 1.995
     FDeltaH:
       goal: less_than_target
-      target: 1.65
+      target: 1.48
       #target: 1.406
       weight: 5000.0     
     cycle_length:
@@ -122,14 +122,14 @@ decision_variables:
       #   value: 100
     FA461:
       map: *ID001
-      # constraint:
-      #   type: max_quantity
-      #   value: 100
+      constraint:
+        type: max_quantity
+        value: 100
     FA462:
       map: *ID001
-      # constraint:
-      #   type: max_quantity
-      #   value: 100
+      constraint:
+        type: max_quantity
+        value: 100
 
 
 ## Calculation Settings
