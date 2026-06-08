@@ -109,18 +109,16 @@ def calc_cycle_length(efpd,boron,keff):
 
 if __name__ == "__main__":
     # 1. Load shared data once in main process
-    xsdict = pickle.load(open('/home/khnguy22/Deeponet-midas/MIDAS/surmodel/xsdata/updateXS.pkl','rb'))
-    listFA = [461,462,501,502,526,566,586,250,280,320,400,567,587]
+    xsdict = pickle.load(open('/home/khnguy22/Deeponet-midas/MIDAS/surmodel/xsdata/updateXSMay26.pkl','rb'))
+    listFA = [251,252,321,322,201,461,462,501,502,526,566,586,250,280,320,400,567,587]
     # combo_generator = itertools.product(listFA, repeat=5)
     corebulist = [0.1, 0.4, 0.5,1.0,1.0]
     initbumap = np.zeros((1,81,16))
     for i in range(30):
         corebulist.append(1*1.0)
-    corebulist.append(0.84)
+    # corebulist.append(0.84)
     # Start timing
     start_time = TT.time()
-    ## run all the loop 
-    pathtotest = '/home/khnguy22/Deeponet-midas/MIDAS/realcase17x17-20-surrogate/output_files'
 
     Fqmax = []
     Fdmax = []
@@ -130,62 +128,25 @@ if __name__ == "__main__":
     cycle_length_true = []
     count = 0
     bustep = 0
-    # 2. Define list of Loading Patterns (LPs)
-    LPs = ['250  462  462  462  462  566  586  586  10                \n', 
-           '462  566  462  280  462  586  586  586  10                \n', 
-           '462  566  461  462  566  586  586  10  10             \n', 
-           '462  250  462  586  586  586  586  10  00             \n', 
-           '462  462  461  566  586  566  10  10  00         \n',
-           '566  586  586  586  586  10  10  00  00       \n',
-           '586  586  586  586  10  10  00  00  00         \n',
-           '586  586  10  10  10  00  00  00  00         \n',
-           '10  10  10  00  00  00  00  00  00           \n']
+    ## your  testing LPs
+    LPs = ['252  252  201  201  201  251  252  322  10               \n', 
+           '252  201  201  251  251  252  251  201  10               \n', 
+           '201  201  251  321  322  322  322  10  10            \n', 
+           '201  321  251  322  201  251  201  10  00            \n', 
+           '201  252  252  322  252  321  10  10  00       \n',
+           '251  201  321  321  251  10  10  00  00    \n',
+           '252  321  321  321  10  10  00  00  00     \n',
+           '322  252  10  10  10  00  00  00  00   \n',
+           '10  10  10  00  00  00  00  00  00   \n']
 
     LPs_o = " ".join(LPs).strip().split()
-    # # print(LPs_o)
-    # # list_of_LPs = [ LPs_o] 
-    # LPs_o = test
     fd,fq,cbc,cycle=get_result(LPs_o,bustep=bustep, count=count, 
                cycle_length_pred=cycle_length_pred, 
                boronmax_pred = boronmax_pred,
                Fqmax=Fqmax, Fdmax= Fdmax, corebulist = corebulist, listFA=listFA, index=-1, initbumap=initbumap)
-    print(cycle,cbc,fq,fd)
+    print(f"Cycle length (EFPD): {cycle:.3f}")
+    print(f"Peak boron concentration (ppm): {cbc:.3f}")
+    print(f"Peak Fq: {fq:.3f}")
+    print(f"Peak Fd: {fd:.3f}")
     
-    print("Parallel processing complete:", TT.time() -start_time)
-# np.save('preddata.npy',np.array(preddata))
-# np.save('truedata.npy',np.array(truedata))
-# print(f'average time cost {1/500*(TT.time()-start_time):.3f}')
-
-
-
-# from test import get_result
-# # # import Pool 
-
-# LPs = ['526  526  526  566  501  526  526  501  10 \n', 
-#        '526  526  462  502  526  566  501  501  10 \n', 
-#        '462  526  566  501  526  502  526  501  10 \n', 
-#        '566  462  526  526  501  526  462  501  10 \n', 
-#        '526  501  566  526  501  526  566  10   10 \n',
-#        '462  566  526  502  462  526  501  10   00 \n',
-#        '526  462  501  462  526  526  10   10   00 \n',
-#        '526  526  501  501  10   10   10   00   00 \n',
-#        '10   10   10   10   10   00   00   00   00 \n']
-
-# LPs_o = " ".join(LPs).strip().split()
-# print(LPs)
-# LPs = ["526","526","526" ,"566","501","526","526", "10", "10",
-# "526","526","462" ,"502","526","566","501", "10", "10",
-# "462","526","566" ,"501","526","502","526", "10", "10",
-# "566","462","526" ,"526","501","526","462", "10", "10",
-# "526","501","566" ,"526","501","526","566", "10", "10",
-# "462","566","526" ,"502","462","526","501", "10", "00",
-# "526","462","501" ,"462","526","526", "10", "10", "00",
-# "526","462","462" ,"502", "10", "10", "10", "00", "00",
-#  "10", "10", "10" , "10", "10", "00", "00", "00", "00",]
-
-# for i in range(81):
-#     print(LPs[i], LPs_o[i])
-
-
-# stop
-# print(get_result(LPs))
+    print("Calculation complete (s):", TT.time() -start_time)

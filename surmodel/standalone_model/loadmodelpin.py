@@ -125,13 +125,8 @@ INPUT_SHAPE = (IMG_DIM, IMG_DIM, 1)
 BATCH_SIZE = 16
 EPOCHS = 50 
 VALIDATION_SPLIT = 0.2
-# ## models and scaler 
-# SAVED_MODEL_NAME = 'pin_power_unet_deep_noscale.h5' 
-# X_SCALER_FILE = 'x_scaler.gz'
-# Y_SCALER_FILE = 'y_scaler.gz'
-# PLOT_RESULTS_FILE ='testpred.png'
-# pathmodel ='/home/khnguy22/Deeponet-midas/MIDAS/surmodel/pinretrainscript/pin_power_unet_deep_noscale_updated_193rl_v51.h5'
-pathmodel ='/home/khnguy22/Deeponet-midas/MIDAS/surmodel/pinmodel/pin_power_unet_deep_noscale_updated_157.h5'
+
+pathmodel ='/home/khnguy22/Deeponet-midas/MIDAS/surmodel/pinmodel/pin_power_unet_deep_noscale_updated_ne512.h5'
 
 
 composite_loss_fn = create_composite_loss(alpha=0.1)

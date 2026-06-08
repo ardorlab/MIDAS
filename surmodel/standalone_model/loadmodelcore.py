@@ -108,8 +108,7 @@ class PWRCustomCartesianProd(Data):
 
 st = TT.time()
 batch_size = 32
-datapath ='/home/khnguy22/Deeponet-midas/MIDAS/surmodel/traindataall_coredata/'
-datapath ='/home/khnguy22/Deeponet-midas/MIDAS/surmodel/traindatacoredata-core157/'
+datapath = '/home/khnguy22/Deeponet-midas/MIDAS/surmodel/traindataall_coredata_NE512/'
 
 ## randomly create test and train data
 X1_train = np.random.rand(1,1296)
@@ -177,8 +176,5 @@ model.compile(
 	metrics=["mae"],
 	# metrics=["accuracy"],
 )
-# model.restore(r'./PWR-model03/MIONet_PWR3D_03-200000.ckpt') 
-# model.restore(r'/home/khnguy22/Deeponet-midas/MIDAS/surmodel/core193coreparam-case05/MIONet_PWR3D_core-20000.ckpt') 
-# model.restore(r'/home/khnguy22/Deeponet-midas/MIDAS/surmodel/PWR-modelcoredata/MIONet_PWR3D_core-20000.ckpt') 
-model.restore(r'/home/khnguy22/Deeponet-midas/MIDAS/surmodel/core157coreparam-case05/MIONet_PWR3D_core-20000.ckpt') 
+model.restore(r'/home/khnguy22/Deeponet-midas/MIDAS/surmodel/NE512-coreparam-model/MIONet_PWR3D_core-50000.ckpt') 
 print('Load model core time: ', TT.time()-st)
