@@ -24,32 +24,21 @@ from loadmodelcore import trunks as trunk_core
 from loadmodelcore import scalerparam as scaler_core
 from loadmodelcore import model as modelcore
 from loadmodelpin import best_model as pinmodel
-# from loadpinmodel_new import best_model as pinmodel
+
 
 import tensorflow as tf
 import os
 
-# 1. Get the number of physical cores (not logical threads/hyperthreading)
-# If you know you have 32 cores, hardcode this to 32.
 num_cores = os.cpu_count()  
-# Often better to use physical cores only, so try os.cpu_count() // 2 if using Hyperthreading
 
-# 2. Set environment variables (do this BEFORE any other TF code)
 os.environ["OMP_NUM_THREADS"] = str(num_cores)
 os.environ["TF_NUM_INTRAOP_THREADS"] = str(num_cores)
 os.environ["TF_NUM_INTEROP_THREADS"] = "1" # Usually 1 or 2 is best for sequential inference
 
-# 3. Configure TensorFlow
 tf.config.threading.set_intra_op_parallelism_threads(num_cores)
 tf.config.threading.set_inter_op_parallelism_threads(1)
 
 
-## function to get EXPOSURE each step 
-# testdatapath ='./rawdata12k_coreparam/'
-# tempborcyc = np.load(testdatapath+'output.npy').astype(np.float32)
-# bor_truth = tempborcyc[:,0]
-# cyc_truth = tempborcyc[:,1]
-## for comparing
 def get_burnup(ofile,FULL_CORE=False):
     '''
     3D burnup from PARCS .dep output files
@@ -403,7 +392,6 @@ def getdata(bumap, xsdict, trunks, scalerparam, coremap,fabulist):
 def getXSlist(xsdict, fatype, xstype, axialnode):
     return [xsdict[fatype][key][xstype][axialnode] for key in xsdict[fatype]]
 
-## test vectorization for interpolation
 
 def getdata_optimized(bumap, xsdict, trunks, scalerparam, coremap, fabulist):
     '''
@@ -754,7 +742,6 @@ def getfqFd_vectorized(pimodel,bumap, powmap, coremap, fabulist, xsdict, faaxial
     return fdelcheck, fqcheck
 
 
-# 
 def interpolatecycle(x, X, Y):
     """
     Parameters:
@@ -768,17 +755,6 @@ def interpolatecycle(x, X, Y):
     X=list(X)
     Y=list(Y)
     idx = -1
-    ## test 
-    # idx = next((i for i in range(len(X)-1) if abs(X[i+1][0] - X[i][0]) < 10 and X[i][0]<500) , -1)
-    # idx=idx-4 ## take 3 step back 
-
-
-    # idx = -5
-    # for j in range(len(X)):
-    #     if X[j][0]<x:
-    #         idx = j-5 ## take one idx back
-    #         break 
-    ## only take 2 last element for cycle length calculation 
     a = (X[idx-1][0]-X[idx][0])/(Y[idx-1][0]-Y[idx][0])
     b = X[idx-1][0] - a*Y[idx-1][0]
     if Y[0][0]>0:
@@ -975,14 +951,13 @@ def getdata_fully_vectorized(bumap, xsdict, coremap, fabulist, scalerparam):
 
 
 ## core map
-xsdict = pickle.load(open('/home/khnguy22/Deeponet-midas/MIDAS/surmodel/xsdata/updateXS.pkl','rb'))
+xsdict = pickle.load(open('/home/khnguy22/Deeponet-midas/MIDAS/surmodel/xsdata/updateXSMay26.pkl','rb'))
 ## type --> BU value --> xs type --> axial node --> value
 
 fabulist = [0, 0.1, 0.5, 1.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.5, 15.0, 
             17.5, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 60.0,\
             65.0, 70.0, 75.0, 80.0]
 fabulist = np.array(fabulist)
-# y1 = np.interp(x1, x, y)
 faaxial = np.array([15.24, 10.16, 5.08,
                   30.48, 30.48, 30.48, 30.48, 30.48,
                   30.48, 30.48, 30.48, 30.48, 30.48,
@@ -1052,7 +1027,7 @@ def normalize(output,idx2, idx1,total_height, faaxial,count):
     outnew = np.array(outnew).reshape(output.shape)
     return outnew
 
-listFA = [461,462,501,502,526,566,586,250,280,320,400,567,587]
+listFA = [251,252,321,322,201,461,462,501,502,526,566,586,250,280,320,400,567,587]
 # combo_generator = itertools.product(listFA, repeat=5)
 corebulist = [0.1, 0.4, 0.5,1.0,1.0]
 for i in range(28):
@@ -1080,41 +1055,18 @@ def get_result(LPs, bustep=bustep, count=count,
     Fd_all = 0
     pinpower =[]
     t0 = TT.time()
-    print('before predccccc')
-    # inputdataold = getdata_optimized(initbumap, xsdict, trunks, scalerparam, test,fabulist)
     inputdata = getdata_fully_vectorized(initbumap, xsdict, test, fabulist, scalerparam)
-    # tdata = TT.time()
-    # print('initial data', tdata-st)
-    print('after get data')
-    # pow_0 = depletion_power(model, tuple(inputdata+[trunks]), scalerparam,idx11, idx22)
     pow_0 = depletion_power_157(model, tuple(inputdata+[trunks]), scalerparam,idx11, idx22)
-    print('predictin')
-    # Fd, Fq = getfqFd(initbumap, pow_0, test, fabulist, xsdict, faaxial, total_height) # first step
-    # Fd, Fq = getfqFd_vectorized(initbumap, pow_0, test, fabulist, xsdict, faaxial, total_height) # first step
     pinpowerbu = getfqFd_pinrecontruct(initbumap, pow_0, test, fabulist, xsdict, faaxial, total_height) # first step
     pinpower.append(pinpowerbu)
     
-    # tt = TT.time()
-    # Fd, Fq = getfqFd(initbumap, pow_0, test, fabulist, xsdict, faaxial, total_height) # first step
-    # print('Fqfd old time', TT.time()-tt)
-    # stop
-    # Fd_all =max(Fd_all,Fd)
-    # Fq_all =max(Fq_all,Fq)
     bor_pred0, cyc_pred0 = depletion_boroncycle(modelcore, tuple(inputdata+[trunk_core]), scaler_core)
-    # print('initial prediction', TT.time()-tdata)
-    # bor_true0, cyc_true0 =bor_truth[bustep], cyc_truth [bustep]
     bustep+=1
-    # t0 = TT.time()
-    # print(f'Initial step take {(t0-st):.5f}')
-    # pow_0 = model.predict(inputdata)
-    # Initialize
     power_history = [pow_0]
     boron_his = [bor_pred0]
     cycle_his = [cyc_pred0]
     bu_his =[initbumap]
     complete_flag = False
-    # boron_his_true = [bor_true0]
-    # cycle_his_true = [cyc_true0]
     for bu in corebulist:
             converged = False
             # tobu = TT.time()
@@ -1126,49 +1078,27 @@ def get_result(LPs, bustep=bustep, count=count,
                     delE = bu * (0.5 * pow_0 + 0.5 * pow_prev)
                     bumap = initbumap + delE.reshape((1, 81, 16))
                 tdata1 = TT.time()
-                # input_data_old = getdata_optimized(bumap, xsdict, trunks, scalerparam, test, fabulist)
                 input_data = getdata_fully_vectorized(bumap, xsdict, test, fabulist, scalerparam)
-                # tdata2 = TT.time()
-                # print('dada cal', tdata2-tdata1)
-                # pow_new = depletion_power(model, tuple(input_data+[trunks]), scalerparam,idx11, idx22)
                 pow_new = depletion_power_157(model, tuple(input_data+[trunks]), scalerparam,idx11, idx22)
-                # print('model cal', TT.time() -tdata2)
                 # Check convergence
                 if iteration > 0:
                     max_delta = np.max(np.abs(pow_new - pow_prev))
                     if max_delta < 1e-4:
-                        # print('Time get new core pow and bumap ', TT.time()-tobu)
-                        # tfq = TT.time()
-                        # Fd, Fq = getfqFd(bumap, pow_new, test, fabulist, xsdict, faaxial, total_height)
-                        # Fd, Fq = getfqFd_vectorized(bumap, pow_new, test, fabulist, xsdict, faaxial, total_height)
                         pinpowerbu= getfqFd_pinrecontruct(bumap, pow_new, test, fabulist, xsdict, faaxial, total_height)
                         pinpower.append(pinpowerbu)
-                        # print('time to get Fq fd', TT.time()-tfq)
-                        # tbor = TT.time()
                         bor_pred0, cyc_pred0 = depletion_boroncycle(modelcore, 
                                                                     tuple(input_data+[trunk_core]), 
                                                                     scaler_core)
-                        # print('Time to get boron ', TT.time() - tbor)
-                        # print('Time to get all params ', TT.time() - tobu)
-                        # bor_true0, cyc_true0 =bor_truth[bustep], cyc_truth [bustep]
-                        # Fd_all =max(Fd_all,Fd)
-                        # Fq_all =max(Fq_all,Fq)
-                        # print(Fq, Fd)
-                        # print(f"BU={bu}, iter={iteration} → Converged (tol={max_delta:.2e})")
-                        # print(f"step takes {TT.time() - tobu:.5f}")
                         # Update for next burnup
                         initbumap = bumap
                         bu_his.append(initbumap)
                         power_history.append(pow_new)
                         boron_his.append(bor_pred0)
                         cycle_his.append(cyc_pred0)
-                        # boron_his_true.append(bor_true0)
-                        # cycle_his_true.append(cyc_true0)
                         pow_0 = pow_new
                         converged = True
                         bustep+=1
-                        # if bor_pred0[0] < 20:
-                        if bor_pred0[0] < 10:
+                        if bor_pred0[0] < 50:
                             complete_flag=True
                         break
         
@@ -1179,85 +1109,15 @@ def get_result(LPs, bustep=bustep, count=count,
                 raise ValueError("Solution did not converge.")
             if complete_flag:
                 break
-    print('Deeponet time', TT.time() -t0)
     ## get the Fdmax and Fqmax here 
     pinpower = np.array(pinpower).reshape(-1,153,153,1)
     pinpower_reconstruct = pinmodel.predict(pinpower, verbose=0) # verbose=0 suppresses Keras logs for speed
-    print('pred pin time', TT.time()-t0)
-    # 6. Apply Mask and Calculate Statistics
-    # Create mask from the first node (assuming geometry is axially constant)
-    # Using np.not_equal is slightly faster/cleaner than != 0
+
     keep_mask = np.not_equal(pinpower[0], 0) 
-    
-    # Broadcast multiply: (16,153,153,1) * (153,153,1)
     pinpower_reconstruct *= keep_mask
-    # ## test plot
-    # print("Generating and saving prediction plots...")
-    # IMG_DIM =153
-    # # Reshape for plotting
-    # y_pred_corrected_img = pinpower_reconstruct.reshape(-1, IMG_DIM, IMG_DIM)
-    # X_test_img = pinpower.reshape(-1, IMG_DIM, IMG_DIM)
-    
-    
-    # # Plot 3 random examples with 4 columns
-    # num_examples = 3
-    # indices = np.random.choice(range(len(pinpower)), num_examples, replace=False)
-    
-    # fig, axes = plt.subplots(num_examples, 4, figsize=(20, 5 * num_examples))
-    # fig.suptitle("DEEP U-Net Prediction (No Scaling) vs. Ground Truth", fontsize=16)
-    
-    # for i, idx in enumerate(indices):
-    #     input_img = X_test_img[idx]
-    #     true_img = y_pred_corrected_img[idx]
-    #     pred_img = y_pred_corrected_img[idx]
-        
-    #     # Calculate Difference (Prediction - Truth)
-    #     diff_img = pred_img - true_img
-    
-    #     # Determine consistent min/max for the main plots
-    #     vmin = min(true_img.min(), pred_img.min())
-    #     vmax = max(true_img.max(), pred_img.max())
-        
-    #     print(f'Sample {idx} - Max True: {true_img.max():.4f}, Max Pred: {pred_img.max():.4f}, Max old {input_img.max():.4f}')
-    
-    #     # 1. Plot Input
-    #     ax = axes[i, 0]
-    #     im0 = ax.imshow(input_img, cmap='viridis', origin='lower')
-    #     ax.set_title(f"Input (Sample {idx})")
-    #     fig.colorbar(im0, ax=ax, label='Pin Power')
-    
-    #     # 2. Plot Ground Truth
-    #     ax = axes[i, 1]
-    #     im1 = ax.imshow(true_img, cmap='viridis', origin='lower')#, vmin=vmin, vmax=vmax)
-    #     ax.set_title(f"True")
-    #     fig.colorbar(im1, ax=ax, label='Pin Power')
-    
-    #     # 3. Plot Predicted
-    #     ax = axes[i, 2]
-    #     im2 = ax.imshow(pred_img, cmap='viridis', origin='lower')#, vmin=vmin, vmax=vmax)
-    #     ax.set_title(f"Predicted (Corrected)")
-    #     fig.colorbar(im2, ax=ax, label='Pin Power')
-        
-    #     # 4. Plot Difference (Pred - True)
-    #     ax = axes[i, 3]
-    #     # Center the colormap at 0 to show + (red) and - (blue) errors
-    #     diff_limit = max(abs(diff_img.min()), abs(diff_img.max()))
-    #     im3 = ax.imshow(diff_img, cmap='bwr', origin='lower', vmin=-diff_limit, vmax=diff_limit)
-    #     ax.set_title(f"Difference (Pred - True)")
-    #     fig.colorbar(im3, ax=ax, label='Error')
-    
-    # plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-    # plt.savefig('checkpre.png')
-    # stop
     # Calculate Max Fq
     Fq_all = np.max(pinpower_reconstruct)
-    print(pinpower_reconstruct.shape)
-    print(Fq_all)
-    tetetetetet = pinpower_reconstruct.reshape(37,16,153,153,1)
-    print(np.max(tetetetetet, axis=(1, 2, 3, 4)))   # shape: (M,))
-    print(np.unravel_index(np.argmax(tetetetetet), tetetetetet.shape))
-    stop
-    # Calculate Max Fdel (Fdelta-H equivalent?)
+    # Calculate Fdelta-H 
     # Pre-calculate axial shape factor
     ax_factor = (np.array(faaxial) / total_height).reshape(1, 16, 1, 1)
     
@@ -1266,34 +1126,20 @@ def get_result(LPs, bustep=bustep, count=count,
     Fdmax.append(Fd_all)  
     Fqmax.append(Fq_all) 
     boronmax_pred.append(np.max(boron_his))
-    for kk in range(len(boron_his)):
-        print(cycle_his[kk], boron_his[kk])
-    
-    
-    # boronmax_true.append(np.max(boron_his_true))
     cycle_length_pred.append(interpolatecycle(10,boron_his,cycle_his))
     # cycle_length_true.append(interpolatecycle(10,boron_his_true,cycle_his_true))
     count+=1
     t2 = TT.time()
     # np.save('tempBUhist.npy',np.array(bu_his))
-    print(f'one cycle take {(t2-t0):.5f}')
+    print(f'one cycle take (s) {(t2-t0):.5f}')
     cycle_his_adj = cycle_his-cycle_his[0]
-    index = next(i for i, x in enumerate(boron_his) if x[0] < 50)
-    print(Fd_all, Fq_all, np.max(boron_his), interpolatecycle(10,boron_his[:index],cycle_his_adj[:index]))
-    #stop
-    return Fd_all, Fq_all, np.max(boron_his), interpolatecycle(10,boron_his[:index],cycle_his_adj[:index])
-
-# LPs = ['566  526  526  502  461  462  586  461  10 \n', 
-#        '526  566  461  526  586  502  526  526  10 \n', 
-#        '526  461  526  586  566  502  461  566  10 \n', 
-#        '502  526  586  502  526  586  566  461  10 \n', 
-#        '461  586  566  526  586  502  566  10   10 \n',
-#        '462  502  502  586  502  586  586  10   00 \n',
-#        '586  526  461  566  566  586  10   10   00 \n',
-#        '461  526  566  461  10   10   10   00   00 \n',
-#        '10   10   10   10   10   00   00   00   00 \n']
-
-# LPs = " ".join(LPs).strip().split()
-# for kk in range(1):
-#     print(get_result(LPs))
-# print((TT.time()-st)/100)
+    cycle_length = interpolatecycle(10,boron_his,cycle_his_adj)
+    ## saving cummulative burn up distribution
+    bu_his = np.array(bu_his)
+    power_history = np.array(power_history).reshape(bu_his.shape)
+    bu_his_cummulative = np.cumsum(bu_his)
+    print('Saving 3D burn up distribution shape: ', bu_his.shape, ' to 3D-burnup-distribution.npy')
+    np.save('3D-burnup-distribution.npy', bu_his_cummulative)
+    print('Saving 3D power distribution shape: ', power_history.shape, 'to power_history.npy')
+    np.save('power_history.npy', power_history)
+    return Fd_all, Fq_all, np.max(boron_his), cycle_length

@@ -126,8 +126,7 @@ def minmaxReverse(Xscaled, globalmax, globalmin):
 
 st = TT.time()
 batch_size = 32
-datapath = '/home/khnguy22/Deeponet-midas/MIDAS/surmodel/traindataall/'
-datapath = '/home/khnguy22/Deeponet-midas/MIDAS/surmodel/standalone_model/traindata-core157/'
+datapath = '/home/khnguy22/Deeponet-midas/MIDAS/surmodel/traindataall_NE512/'
 
 
 
@@ -198,8 +197,6 @@ model.compile(loss='MSE',
 	metrics=["customMSE"],
 	# metrics=["accuracy"],
 )
-# model.restore(r'/home/khnguy22/Deeponet-midas/MIDAS/surmodel/PWR-model07/MIONet_PWR3D_07-20000.ckpt') 
-model.restore(r'/home/khnguy22/Deeponet-midas/MIDAS/surmodel/core157rpf-case05/MIONet_PWR3D_07-20000.ckpt') 
-# model.restore(r'/home/khnguy22/Deeponet-midas/MIDAS/surmodel/core193rpf-case05/MIONet_PWR3D_07-20000.ckpt') 
+model.restore(r'/home/khnguy22/Deeponet-midas/MIDAS/surmodel/NE512-RPF-model/MIONet_PWR3D_07-50000.ckpt') 
 #model.restore() 
-print('Load model 07 time: ', TT.time()-st)
+print('Load model RPF time: ', TT.time()-st)
