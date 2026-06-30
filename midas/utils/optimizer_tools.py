@@ -477,8 +477,6 @@ class Gene_Validity_check():
             valid_genes_list = Gene_Validity_check.calc_LWR_gene_options(genes_list, genome, parameters, child_zone, indx)            
         elif input_obj.calculation_type == 'lattice_physics':
             valid_genes_list = Gene_Validity_check.calc_lat_gene_options(genes_list, genome, parameters, child+chromosome[len(child):], indx)
-        elif input_obj.calculation_type == 'lattice_physics':
-            valid_genes_list = Gene_Validity_check.calc_lat_gene_options(genes_list, genome, parameters, child+chromosome[len(child):], indx)
         elif input_obj.calculation_type == 'continuous_variable':
             valid_genes_list = Gene_Validity_check.calc_continuous_options(genes_list, genome, input_obj, child+chromosome[len(child):], indx)
         else: 
