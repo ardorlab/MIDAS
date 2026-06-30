@@ -102,7 +102,6 @@ class Genetic_Algorithm():
             else:
                 raise ValueError("Requested mutation type not recognized.")
             child_chromosome_list.append(child)
-    
     ## add elites into population
         child_chromosome_list.extend(Elites)
 
@@ -303,8 +302,7 @@ class GA_reproduction():
                     antihang += 1
                     if antihang > 1000:
                         raise ValueError("Random Element Crossover has failed to select a novel location after 1,000 attempts.")
-
-            
+      
                 if batches:
                     # only consider valid gene options
                     child1_gene_opts = optools.Gene_Validity_check.contraceptive_check(input_obj, genes_list, batches, core_parameters, 
@@ -326,10 +324,13 @@ class GA_reproduction():
                                                                                     child_one, chromosome_one, c1_gene_position)
                     child2_gene_opts = optools.Gene_Validity_check.contraceptive_check(input_obj, genes_list, genome, core_parameters, 
                                                                                     child_two, chromosome_two, c2_gene_position)
-
+                    
                     # swaps genes
                     if child_two[c2_gene_position] in child1_gene_opts and \
                        child_one[c1_gene_position] in child2_gene_opts:
+                        child_one[c1_gene_position] = deepcopy(child_two[c2_gene_position])
+                        child_two[c2_gene_position] = deepcopy(child_one[c1_gene_position])
+                    elif child1_gene_opts == [0,1] and child2_gene_opts == [0,1]:
                         child_one[c1_gene_position] = deepcopy(child_two[c2_gene_position])
                         child_two[c2_gene_position] = deepcopy(child_one[c1_gene_position])
                     else:
@@ -370,7 +371,6 @@ class GA_reproduction():
         genes_list = list(genome.keys())
         if batches:
             genes_list = list(batches.keys())
-        
         # selects position to be swapped
         crossover_position = random.choice(range(len(chromosome_one)))
         
@@ -530,9 +530,14 @@ class GA_reproduction():
                     old_gene = new_soln[loc_to_mutate]
                     gene_options = optools.Gene_Validity_check.contraceptive_check(input_obj, all_genes_list, all_gene_options,
                                                                                     core_parameters, old_soln, [], loc_to_mutate)
-                    new_gene = random.choice(gene_options)
+                    if gene_options == [0,1]:
+                        new_gene = random.uniform(0,1)
+                    else:
+                        new_gene = random.choice(gene_options)
                     if new_gene != old_gene:
-                        if all_gene_options[new_gene]['map'][loc_to_mutate] == 1:
+                        if input_obj.calculation_type in ["single_cycle","eq_cycle", "lattice_physics"] and all_gene_options[new_gene]['map'][loc_to_mutate] == 1:
+                            new_soln[loc_to_mutate] = new_gene
+                        else:
                             new_soln[loc_to_mutate] = new_gene
             chromosome_is_valid = optools.Gene_Validity_check.abortive_check(input_obj, all_genes_list,all_gene_options,\
                                                                             core_parameters,new_soln)
@@ -554,7 +559,7 @@ class GA_reproduction():
 
         else:
             child_chromosome = new_soln
-
+        
         return child_chromosome
 
     def linear_update(initial_rate, final_rate, current_generation, initial_generation, num_generations): #!TODO: this method doesn't account for restarts, which is likely to result in unintended extrapolation (current_generation > num_generations)

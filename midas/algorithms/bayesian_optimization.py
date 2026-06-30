@@ -30,8 +30,12 @@ class Bayesian_Optimization:
         self.random_state = np.random.RandomState(random_state) #Initialize random state used throughout problem
 
         # Precompute the total number of binary features
-        self.binary_dims = [self.calculate_binary_length(len(dim_cats)) for dim_cats in self.dimensions]
-        self.total_features = sum(self.binary_dims)  # Total number of binary features
+        if input.calculation_type != 'continuous_variable':
+            self.binary_dims = [self.calculate_binary_length(len(dim_cats)) for dim_cats in self.dimensions]
+            self.total_features = sum(self.binary_dims)  # Total number of binary features
+        else: 
+            self.binary_dims = [1 for dim_cats in self.dimensions]
+            self.total_features = sum(self.binary_dims) 
 
         # Scalers for input (X) and fitness values (y)
         self.scaler_x = StandardScaler()
@@ -65,26 +69,33 @@ class Bayesian_Optimization:
         Each element in dimension_space is a list of possible categories for that dimension.
 
         Written by Cole Howard. 10/29/2024
+        Updated by Jake Mikouchi 06/30/2026
         """
         dimension_space = []
         map_shape = None
         location_options = {}
 
-        for assembly, data in self.input.genome.items():
-            assembly_map = data['map']
-            if map_shape is None:
-                map_shape = len(assembly_map)
-            for idx, loc in enumerate(assembly_map):
-                if loc == 1:
-                    if idx not in location_options:
-                        location_options[idx] = []
-                    location_options[idx].append(assembly)
+        if self.input.calculation_type != "continuous_variable":
+            for assembly, data in self.input.genome.items():
+                assembly_map = data['map']
+                if map_shape is None:
+                    map_shape = len(assembly_map)
+                for idx, loc in enumerate(assembly_map):
+                    if loc == 1:
+                        if idx not in location_options:
+                            location_options[idx] = []
+                        location_options[idx].append(assembly)
 
-        for idx in range(map_shape):
-            if idx in location_options:
-                dimension_space.append(location_options[idx])
-            else:
-                dimension_space.append([None])
+            for idx in range(map_shape):
+                if idx in location_options:
+                    dimension_space.append(location_options[idx])
+                else:
+                    dimension_space.append([None])
+
+        # account for continuous variables
+        elif self.input.calculation_type == "continuous_variable":
+            for gene in range(self.input.c_length):
+                dimension_space.append({"continuous": (0.0, 1.0)})
 
         return dimension_space
 
@@ -106,6 +117,11 @@ class Bayesian_Optimization:
         binary_vector = []
         for i, cat in enumerate(categorical_individual):
             dim_cats = self.dimensions[i]
+            # accounts for continous variables
+            if isinstance(dim_cats, dict):  
+                binary_vector.append(float(cat))
+                continue
+
             if cat not in dim_cats:
                 idx = 0  # Default to the first category if invalid
             else:
@@ -125,6 +141,14 @@ class Bayesian_Optimization:
         categorical_sol = []
         start = 0
         for i in range(len(self.dimensions)):
+            # accounts for continuous variables
+            dim_cats = self.dimensions[i]
+            if isinstance(dim_cats, dict):  
+                low, high = dim_cats["continuous"]
+                val = float(np.clip(binary_vector[start], low, high))
+                categorical_sol.append(val)
+                start += 1
+                continue
             num_bits = self.binary_dims[i]
             end = start + num_bits
             binary_block = binary_vector[start:end]
@@ -274,7 +298,15 @@ class Bayesian_Optimization:
         """
         binary_vector = []
         start = 0
-        for num_bits in self.binary_dims:
+        for i, num_bits in enumerate(self.binary_dims):
+            # accounts for continous variables
+            dim_cats = self.dimensions[i]
+            if isinstance(dim_cats, dict):  
+                low, high = dim_cats["continuous"]
+                val = np.clip(x[start], low, high)
+                binary_vector.append(val)
+                start += 1
+                continue
             end = start + num_bits
             binary_block = x[start:end]  # Slice the real vector
             binary_block = (binary_block >= 0.5).astype(float)  # Threshold at 0.5
@@ -304,14 +336,20 @@ class Bayesian_Optimization:
             elif self.input.acquisition_function == 'LCB':
                 return self.lower_confidence_bound(binary_vec.reshape(1, -1), kappa)
         #Scaled problem bounds
-        bounds = [(0, 1)] * self.total_features
+        bounds = []
+        for dim_cats in self.dimensions:
+            if isinstance(dim_cats, dict):  # NEW: continuous dim
+                bounds.append(dim_cats["continuous"])
+            else:
+                n_bits = self.calculate_binary_length(len(dim_cats))
+                bounds.extend([(0, 1)] * n_bits)
 
         best_x = None
         #Initialize the best acq func value as positive inf so that lower values will replace it until the lowest value
         best_fun = float('inf')
         #Minimize the acquisition function with random restarts
         for _ in range(n_restarts):
-            x0 = self.random_state.uniform(low=0.0, high=1.0, size=(self.total_features,))
+            x0 = np.array([self.random_state.uniform(low=b[0], high=b[1]) for b in bounds])
             res = minimize(acquisition_function, x0, method="L-BFGS-B", bounds=bounds, options={"maxiter": 1000000})
 
             if res.fun < best_fun:

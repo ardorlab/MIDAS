@@ -193,7 +193,8 @@ def validate_input(keyword, value):
                                    'doppler_temperature_coefficient',
                                    'function_output',
                                    'list_sum']:
-                    raise ValueError(f"Requested objective/constraint '{key}' not supported.")
+                    if 'output_index' not in [_.lower() for _ in value[key].keys()]:
+                        raise ValueError(f"Requested objective/constraint '{key}' not supported, or output_index not provided")
                 if new_key == 'aplhgr':
                     logger.warning("APLHGR requires 3d plotting of pin reconstruction.")
                 new_item = {}
@@ -228,6 +229,8 @@ def validate_input(keyword, value):
                         elif new_subkey == 'critical_power':
                             new_subitem = float(subitem)
                         elif new_subkey == 'linear_power':
+                            new_subitem = float(subitem)
+                        elif new_subkey == 'output_index':
                             new_subitem = float(subitem)
                         elif new_subkey == 'equation':
                             if new_key != 'function_output':
@@ -684,8 +687,9 @@ def validate_input(keyword, value):
             #!TODO: make sure each material has comp and density (temp is optional)
             return new_dict
 
-## Genome Block ##
-    elif keyword in ['parameters']:
+
+## Gene options ##
+    elif keyword == 'gene_options':
         logger.warning(f"Handeling continuous variables in MIDAS is still in development and continuous variable optimization may not work as indented. ")
         new_dict = {}
         if isinstance(value, dict):
@@ -693,6 +697,7 @@ def validate_input(keyword, value):
                 new_key = str(key)
                 new_dict[new_key] = {}
                 #check decision variable options
+                
                 if isinstance(value[key], dict):
                     for subkey, subitem in item.items():
                         new_subkey = str(subkey).lower()
@@ -732,6 +737,43 @@ def validate_input(keyword, value):
                     elif "discrete_range" in item.keys(): 
                         if (item["increment"] / (item["discrete_range"][1] - item["discrete_range"][0]))*100 >= 10:
                             logger.warning(f"Continuous variable increment for '{new_key}' is large relative to the range. Is this intentional?")
+        return new_dict
+
+
+## Genome Block ##
+    elif keyword in ['parameters']:
+        logger.warning(f"Handeling continuous variables in MIDAS is still in development and continuous variable optimization may not work as indented. ")
+        new_dict = {}
+        if isinstance(value, dict):
+            for key, item in value.items():
+                new_key = str(key)
+                new_dict[new_key] = {}
+                #check decision variable options
+                if isinstance(value[key], dict):
+                    for subkey, subitem in item.items():
+                        new_subkey = str(subkey).lower()
+                        new_dict[new_key][new_subkey] = subitem
+
+        temp_maps = []
+        for key, value in new_dict.items():
+            if 'map' in value.keys():
+                temp_maps.append(value['map'])
+            else: 
+                raise ValueError(f"Each parameter must have a corresponding 'map'")
+        master_map = [0 for i in range(len(new_dict[list(new_dict.keys())[0]]['map']))]
+        master_length = len(new_dict[list(new_dict.keys())[0]]['map'])
+        for temp_map in temp_maps:
+            if len(temp_map) != master_length:
+                raise ValueError(f"maps dimensions must be consistent across all parameters")
+            for idx in range(len(temp_map)):
+                if temp_map[idx] > 1:
+                    raise ValueError(f"Map contains invalid value {temp_map[idx]}; only 0 and 1 are allowed")
+                elif temp_map[idx] in [0,1]:
+                    if temp_map[idx] == 1:
+                        if master_map[idx] == 1:
+                            raise ValueError(f"Multiple variables assigned to position {idx} in maps; only 1 variable can be assegned to a position")
+                        else: 
+                            master_map[idx] = 1
         return new_dict
     
     elif keyword in ['lattice_parameters', 'assembly_parameters', 'batches']:
@@ -1033,6 +1075,11 @@ def validate_input(keyword, value):
     elif keyword=='depletion_steps':
         value = [float(x) for x in re.split(r'[, ]',str(value).strip('[]')) if x]
     
+    ## OPTIMIZATION DATA ##
+    elif keyword == 'chromosome_length':
+        value = int(value)
+
+
     return value
 
 def parcs343_template_check(self):
@@ -1193,7 +1240,7 @@ class Input_Parser():
         
     ## Fuel Assembly Block ##   
         self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)
-        if not self.fa_options and self.code_interface not in ['ipwr_database', 'ipwr_database_legacy','polaris624','serpent','custom_function','styblinski_tang']:
+        if not self.fa_options and self.code_interface not in ['ipwr_database', 'ipwr_database_legacy','polaris624','serpent','custom_function','styblinski_tang','listsum']:
             raise ValueError("Assembly options must be nested with reflectors, fuels, and/or blankets with their parameters.")
         if self.calculation_type in ['single_cycle','eq_cycle']:
             for param in ['cost_fuelcycle','av_fuelenrichment']:
@@ -1213,6 +1260,8 @@ class Input_Parser():
         if not self.pin_options and self.calculation_type in ['lattice_physics']:
             raise ValueError("Fuel pin options must be nested with rod_geometries, compositions, and/or controls_rods.")
         
+
+        self.gene_options = yaml_line_reader(self.file_settings, 'gene_options', None)
         
     ## Genome Block ##
         try:
@@ -1227,10 +1276,6 @@ class Input_Parser():
         elif self.calculation_type in ['continuous_variable']:
             logger.warning("'parameters' decision variable is reserved for continous variables")
             self.genome = yaml_line_reader(info, 'parameters', None)
-            #Create a list of possible values a gene can take for discrete ranges
-            self.genome = problem_preparation.Prepare_Problem_Values.prepare_discrete_range(self.genome)
-            #Normalize all ranges for continuous variables
-            self.genome = problem_preparation.Prepare_Problem_Values.normalize_continuous_variables(self.genome)
 
         self.batches = yaml_line_reader(info, 'batches', None)
         #check that decision variable options are valid.
@@ -1270,6 +1315,8 @@ class Input_Parser():
                     pass
             except KeyError:
                 pass
+        else:
+            info = self.file_settings['optimization_data']
         
         # PARCS input block
         self.core_type = yaml_line_reader(info, 'core_type', "PWR")
@@ -1351,4 +1398,9 @@ class Input_Parser():
             for assembly in self.fa_options['fuel']:
                 if int(self.fa_options['fuel'][assembly]['type']) not in [1, 2, 3, 4, 5, 6, 7]:
                     raise ValueError(f'Assembly {assembly} parameter "type" is incorrect. For ipwr database, types 1-6 exist. (type 7 exists for legacy versions)')
+        
+
+        # generic code/optimizaiton input block
+        self.c_length =  yaml_line_reader(info, 'chromosome_length', 0) # 0 substitute for None
+        
         return

@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 from shutil import rmtree
 from copy import deepcopy
-from multiprocessing import Pool
+from multiprocessing.dummy import Pool
 from itertools import repeat
 import csv
 import ast
@@ -23,7 +23,7 @@ from midas.codes import ipwr_lut
 from midas.codes import trace50p5
 from midas.codes import polaris624
 import midas_data
-from tests.regression.listsum import listsum
+from midas.codes.listsum_regression.regression.listsum import listsum
 
 ## Classes ##
 class Optimizer():
@@ -58,7 +58,7 @@ class Optimizer():
         elif self.input.code_interface == "parcs343":
             self.eval_func = parcs343.evaluate
         elif self.input.code_interface in ["ipwr_database", "ipwr_database_legacy"]:
-            self.eval_func = nuscale_lut.evaluate
+            self.eval_func = ipwr_lut.evaluate
         elif self.input.code_interface == "trace50p5":
             self.eval_func = trace50p5.evaluate
         elif self.input.code_interface == "polaris624":
@@ -306,7 +306,6 @@ class Optimizer():
         ## Create new generation
             logger.info("Creating population of %s individuals for generation %s...", self.input.population_size, self.generation.current)
             new_chromosome_list = self.algorithm.reproduction(self.population.current, self.generation)
-
             if self.input.methodology == 'simulated_annealing' and self.input.num_procs > 1: # if parallel simulated annealing skip evaluation
                 self.population.current = []
                 for i in range(len(new_chromosome_list)):

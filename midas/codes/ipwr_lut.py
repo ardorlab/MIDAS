@@ -1,5 +1,5 @@
 import h5py
-import pyarrow.parquet as pq
+# import pyarrow.parquet as pq
 import os
 import logging
 from midas_data import __ipwr_lut__
@@ -18,14 +18,13 @@ def evaluate(solution, input):
     """
     if input.code_interface == 'ipwr_database_legacy':
         #Each objective is stored as one index in a single array within the hdf5 file, so I am getting each specific value
-        objectives, BU, cost = read_hdf5(solution.chromosome, input)
+        objectives, BU= read_hdf5(solution.chromosome, input)
         #Create separate dictionary with parameters
         new_dict = {}
         new_dict["cycle_length"] = objectives[0]
         new_dict["fdeltah"] = objectives[1]
         new_dict["pinpowerpeaking"] = objectives[2]
         new_dict["max_boron"] = objectives[3]
-        new_dict["cycle_cost"] = cost
 
         # Adding in burnup parameters
         new_dict["assembly_burnup"] = BU
@@ -65,11 +64,9 @@ def read_hdf5(soln, input): #TODO!: Comment code better
 
         assembly = hdf5_file[assembly_name]
         objectives = assembly["Objectives"][:] #Store all objectives for that LP
-        #cost = assembly["cost"] #Store cost of LP #TODO!: Add cost back in once new dataase is generated
         BU = assembly["BU"][:] #Store burnup for each assembly in the LP
-        cost = assembly["Cost"][()]
         hdf5_file.close()
-        return objectives, BU, cost
+        return objectives, BU
     
 def read_parquet(soln, input): #TODO!: Comment code better
     """
