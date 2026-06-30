@@ -98,6 +98,8 @@ class Solution():
             return self.EQ_chromosome(genome, batches, LWR_core_parameters)
         elif calc_type == 'lattice_physics':
             return self.lat_chromosome(genome,LWR_core_parameters)
+        elif calc_type == 'continuous_variable':
+            return self.continuous_chromosome(genome)
         else:
             raise ValueError("Calculation Type not recognized; potential solution not generated.")
     
@@ -385,8 +387,68 @@ class Solution():
 
         return chromosome
 
+    def continuous_chromosome(self,genome):
+        """
+        Generates an initial solution for continuous variable optimizations.
+        
+        Written by Jake Mikouchi. 06/29/2026
+        """
+        
+        genes_list = list(genome.keys())
+        if self.input.c_length:
+            chromosome_length = self.input.c_length
+        else: 
+            chromosome_length = len(genome[genes_list[0]]['map'])
+
+        
+        chromosome_is_valid = False
+        attempts = 0
+        while not chromosome_is_valid:
+            attempts += 1
+            if attempts > 10000:
+                raise ValueError("Random solution generation has failed after 10,000 attempts. Consider checking the variables maps and constraints.")
+
+            chromosome = [None for i in range(chromosome_length)]
+
+            for i in range(chromosome_length):
+                gene_options = Gene_Validity_check.contraceptive_check(self.input, genes_list, genome, None,
+                                                                                    [], chromosome, i)
+                invalid = True
+                while invalid:
+                    try:
+                        if gene_options == [0,1]:
+                            gene = random.uniform(0, 1)
+                        else: 
+                            gene = random.choice(gene_options)
+                    except IndexError:
+                        raise IndexError("Random solution generation failed after 1000 attempts. Check the variables maps and constraints.")
+                    
+                    chromosome[i] = gene
+                    invalid = False
+                          
+            if Gene_Validity_check.abortive_check(self.input,genes_list,genome,None,chromosome):
+                chromosome_is_valid = True
+       
         return chromosome
 
+    def chromosome_realization(input_obj, chromosome):
+        """
+        This is primarily used for continuous and descrete solution types.
+        This converts a chromosome into its realized features by taking its normalized genes and mapping them to the solution ranges. 
+        
+        Written by Jake Mikouchi. 06/29/2026
+        """
+        realized_chromosome = []
+        for indx in range(len(chromosome)):
+            for key in input_obj.genome.keys():
+                if input_obj.genome[key]['map'][indx] == 1: 
+                    if 'continuous_range' in input_obj.gene_options[key].keys():
+                        lower_bound = input_obj.gene_options[key]['continuous_range'][0]
+                        upper_bound = input_obj.gene_options[key]['continuous_range'][1]
+
+                        realized_chromosome.append(lower_bound + (upper_bound-lower_bound)*chromosome[indx])
+
+        return realized_chromosome
 
 class Gene_Validity_check():  
     """
@@ -415,6 +477,8 @@ class Gene_Validity_check():
             valid_genes_list = Gene_Validity_check.calc_LWR_gene_options(genes_list, genome, parameters, child_zone, indx)            
         elif input_obj.calculation_type == 'lattice_physics':
             valid_genes_list = Gene_Validity_check.calc_lat_gene_options(genes_list, genome, parameters, child+chromosome[len(child):], indx)
+        elif input_obj.calculation_type == 'continuous_variable':
+            valid_genes_list = Gene_Validity_check.calc_continuous_options(genes_list, genome, input_obj, child+chromosome[len(child):], indx)
         else: 
             logger.warning('Unconstrained optimization')  
         
@@ -497,6 +561,28 @@ class Gene_Validity_check():
                 valid_genes_list.remove(gene)
         
         return valid_genes_list
+    
+    def calc_continuous_options(genes_list, genome, input_obj, chromosome, index):
+        """
+        Determine valid list of genes for continous optimization problems. 
+        A list of [0,1] means that the gene is fully continous and can be any number inbetween 0 and 1
+        
+        Written by Jake Mikouchi. 06/29/2026
+        """
+
+        for gene in genes_list:
+            map = genome[gene]['map']   
+            if map[index] == 1:
+                break
+
+        valid_genes_list = []
+
+        if 'continuous_range' in input_obj.gene_options[gene]:
+            valid_genes_list = [0,1]
+        elif 'discrete_range' in input_obj.gene_options[gene]:
+            pass #TODO future work
+        
+        return valid_genes_list
 
     def abortive_check(input_obj, genes_list, genome, parameters, child):
         """
@@ -522,6 +608,8 @@ class Gene_Validity_check():
 
         elif input_obj.calculation_type == 'lattice_physics':
             valid_chromosome = Gene_Validity_check.check_constraints(genes_list, genome, parameters, child)  
+        elif input_obj.calculation_type == 'continuous_variable':
+            valid_chromosome = Gene_Validity_check.check_continuous_constraints(genes_list, genome, input_obj, child)  
         else: 
             logger.warning('Unconstrained optimization')  
         
@@ -573,6 +661,32 @@ class Gene_Validity_check():
             
         return True #if you haven't exited with "False" by this point, all constraints were passed.
 
+
+    def check_continuous_constraints(genes_list, genome, input_obj, solution):
+        """
+        Check solution parameters against user-specified constraints on the input space.
+        Returns True if the solution is valid and False if a constraint is violated.
+        This is specified for checking validity of chromosomes with continous variables.
+        
+        Written by Jake Mikouchi. 06/29/2026
+        """
+        if not genome: #! this implies that there are no constraints, but also no valid choices?
+            return True
+
+        ## make sure that each gene option is valid for the gene
+        for index in range(len(solution)):
+            ## find corresponding gene 
+            for gene in genes_list:
+                map = genome[gene]['map']   
+                if map[index] == 1:
+                    break
+            if 'continuous_range' in input_obj.gene_options[gene]:
+                if not (solution[index] >= 0.0 and solution[index] <= 1.0):
+                    return False
+            elif 'discrete_range' in input_obj.gene_options[gene]:
+                pass #TODO future work
+            
+        return True #if you haven't exited with "False" by this point, all constraints were passed.
   
 class Fitness(object):
     """

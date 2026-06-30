@@ -40,4 +40,3 @@ __parcs343exe__ = "/cm/shared/nuclearCodes/parcs-3.4.3/PARCS-v343_Exe/Executable
 __trace50p5exe__ = "/cm1/apps/ncsu/TRACE_PARCS/TRACE-V50P5-Exe/Executables/trace-V50p5-linux2-lahey-x64-release.exe"
 __polaris624exe__ = "/cm/shared/codes/scale/SCALE-6.2.4/bin/scalerte"
 __ipwr_lut__ = "/cm/shared/databases/SMR_IPWR_DATABASE/"
-# __ipwr_lut__ = "/data/oldcluster/cm_shared/databases/SMR_IPWR_DATABASE/" # RDFMG IPWR LUT location

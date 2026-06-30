@@ -149,11 +149,16 @@ class SA_reproduction():
                     gene_options = optools.Gene_Validity_check.contraceptive_check(input_obj, all_genes_list, all_gene_options,
                                                                                     core_parameters, old_soln, [], loc_to_mutate)
                     try:
-                        new_gene = random.choice(gene_options)
+                        if gene_options == [0,1]:
+                            new_gene = random.uniform(0,1)
+                        else:
+                            new_gene = random.choice(gene_options)
                     except:
                         break
                     if new_gene != old_gene:
-                        if all_gene_options[new_gene]['map'][loc_to_mutate] == 1:
+                        if input_obj.calculation_type in ["single_cycle","eq_cycle", "lattice_physics"] and all_gene_options[new_gene]['map'][loc_to_mutate] == 1:
+                            new_soln[loc_to_mutate] = new_gene
+                        else:
                             new_soln[loc_to_mutate] = new_gene
             chromosome_is_valid = optools.Gene_Validity_check.abortive_check(input_obj,all_genes_list,all_gene_options,\
                                                                             core_parameters,new_soln)

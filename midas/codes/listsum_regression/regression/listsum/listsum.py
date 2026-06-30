@@ -20,6 +20,7 @@ for different M number of random trials of a problem size of N=10:
 import numpy as np
 import logging
 import os
+from midas.utils import optimizer_tools as optools
 
 ## Initialize logging for the present file
 logger = logging.getLogger("MIDAS_logger")
@@ -29,22 +30,32 @@ def evaluate(solution, input):
     This function will compute the sum of the list elements write them into a dictionary in the solution.parameters object
 
     Written by Gregory Delipei. 09/10/2025
+    Updated by Jake Mikouchi. 06/29/2026
     """
-    
+
+    realized_chromosome = optools.Solution.chromosome_realization(input, solution.chromosome)
+
     #Create results directory if it doesn't exist
     results_path = os.path.join(input.results_dir_name, solution.name)
     os.makedirs(results_path, exist_ok=True)
     
     #Create separate dictionary with parameters
     new_dict = {}
-    new_dict["list_sum"] = list_summation(np.array(solution.chromosome, dtype=int))
+    new_dict["list_sum"] = {'value':list_summation(np.array(realized_chromosome)), 'output_index':1}
    
     #Only give the optimizer the parameters which were included in the input file
     for key in new_dict:
         if key in input.objectives:
-            solution.parameters[key]["value"] = new_dict[key]
-        else:
-            logger.info(f'Parameter {key} is not used')
+            solution.parameters[key]["value"] = new_dict[key]['value']
+
+    # populate parameters based on output index 
+    for key in new_dict:
+        output_index = new_dict[key]['output_index']
+        for parameter_key in input.objectives:
+            if 'output_index' in input.objectives[parameter_key].keys():
+                if output_index == input.objectives[parameter_key]['output_index']:
+                    solution.parameters[parameter_key]["value"] = new_dict[key]['value']
+
     return solution
 
 def list_summation(list_solution):
