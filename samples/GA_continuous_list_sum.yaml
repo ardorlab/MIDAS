@@ -1,6 +1,5 @@
 ## General Settings Block
 general:
-  # debug_mode: True
   optimizer: genetic_algorithm
   code_type: listsum
   calc_type: numeric variable
@@ -11,7 +10,7 @@ optimization:
   population_size: 20
   number_of_generations: 40
   objectives:
-    constraint1:
+    list_sum1:
       output_index: 1
       goal: maximize
       weight: 1.0

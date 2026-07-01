@@ -60,17 +60,20 @@ def validate_input(keyword, value):
     elif keyword == 'optimizer':
         value = str(value).lower().replace(' ','_')
         if value not in ["genetic_algorithm","bayesian_optimization","simulated_annealing"]:
-            raise ValueError("Requested methodology '" + value + "' invalid.")
+            # raise ValueError("Requested methodology '" + value + "' invalid.")
+            logger.warning(f"Requested optimizer '{value}' is not a natively supported algorithm. MIDAS will attempt to proceed but may error out.")
     
     elif keyword == 'code_type':
         value = str(value).lower().replace(' ','_')
         if value not in ["parcs342", "parcs343", "ipwr_database", "ipwr_database_legacy", "trace50p5", "polaris624","serpent","custom_function","styblinski_tang","listsum"]:
-            raise ValueError("Code types currently supported: PARCS342, PARCS343, ipwr_database, TRACE50p5.")
+            # raise ValueError("Code types currently supported: PARCS342, PARCS343, ipwr_database, TRACE50p5.")
+            logger.warning(f"Requested code type '{value}' is not natively supported. MIDAS will attempt to proceed but may error out.")
     
     elif keyword == 'calc_type':
         value = str(value).lower().replace(' ','_')
         if value not in ["single_cycle","eq_cycle", "lattice_physics", "numeric_variable"]:
-            raise ValueError("Data type not supported.")
+            # raise ValueError("Data type not supported.")
+            logger.warning(f"Requested calculation type '{value}' is not natively supported. MIDAS will attempt to proceed but may error out.")
     
     elif keyword == 'input_template':
         if isinstance(value, dict):
@@ -1274,7 +1277,6 @@ class Input_Parser():
         elif self.calculation_type in ['lattice_physics']:
             self.genome = yaml_line_reader(info, 'lattice_parameters', None)
         elif self.calculation_type in ['numeric_variable']:
-            logger.warning("'parameters' decision variable is reserved for numeric optimizations")
             self.genome = yaml_line_reader(info, 'parameters', None)
 
         self.batches = yaml_line_reader(info, 'batches', None)
