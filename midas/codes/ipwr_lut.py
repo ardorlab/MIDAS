@@ -1,5 +1,5 @@
 import h5py
-# import pyarrow.parquet as pq
+import pyarrow.parquet as pq
 import os
 import logging
 from midas_data import __ipwr_lut__
