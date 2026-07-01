@@ -3,7 +3,7 @@ general:
   # debug_mode: True
   optimizer: genetic_algorithm
   code_type: listsum
-  calc_type: continuous variable
+  calc_type: numeric variable
   results_directory_name: output_files
 
 ## Optimizer Block

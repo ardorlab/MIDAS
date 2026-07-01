@@ -69,7 +69,7 @@ def validate_input(keyword, value):
     
     elif keyword == 'calc_type':
         value = str(value).lower().replace(' ','_')
-        if value not in ["single_cycle","eq_cycle", "lattice_physics", "continuous_variable"]:
+        if value not in ["single_cycle","eq_cycle", "lattice_physics", "numeric_variable"]:
             raise ValueError("Data type not supported.")
     
     elif keyword == 'input_template':
@@ -690,7 +690,6 @@ def validate_input(keyword, value):
 
 ## Gene options ##
     elif keyword == 'gene_options':
-        logger.warning(f"Handeling continuous variables in MIDAS is still in development and continuous variable optimization may not work as indented. ")
         new_dict = {}
         if isinstance(value, dict):
             for key, item in value.items():
@@ -720,29 +719,30 @@ def validate_input(keyword, value):
                                     for index in range(0, len(subitem)):
                                         subitem[index] = float(subitem[index])
                                         if subitem[index] < 0: 
-                                            raise ValueError("Continuous variable 'increment' entries must be greater than 0")
+                                            raise ValueError("Numeric variable 'increment' entries must be greater than 0")
                                     new_dict[new_key][new_subkey] = subitem
                                 else:
                                     new_dict[new_key][new_subkey] = float(subitem)
                                     if new_dict[new_key][new_subkey] < 0: 
-                                        raise ValueError("Continuous variable 'increment' must be greater than 0")
+                                        raise ValueError("Numeric variable 'increment' must be greater than 0")
                             except TypeError:
                                 raise ValueError(f"Subkey {new_subkey} has entry of type {type(subitem)} but only accepts a list of integers/floats or a single integer/float")
                         if new_subkey == "index":
                             new_dict[new_key][new_subkey] = int(subitem)
+                    if "continuous_range" in item.keys() and "increment" in item.keys():
+                        raise ValueError(f"'increment' should not be provided for a 'continuous_range' variable.")
                     if "discrete_range" not in item.keys() and "continuous_range" not in item.keys():
                         raise ValueError(f"{item} variable must include either a 'discrete_range' or 'continuous_range' entry.")
                     if "discrete_range" in item.keys() and "increment" not in item.keys():
-                        raise ValueError(f"Increment for {item} variable with 'discrete_range' is not provided.")
-                    elif "discrete_range" in item.keys(): 
+                        raise ValueError(f"Increment for 'discrete_range' variable is not provided.")
+                    elif "discrete_range" in item.keys() and isinstance(item["increment"], float): 
                         if (item["increment"] / (item["discrete_range"][1] - item["discrete_range"][0]))*100 >= 10:
-                            logger.warning(f"Continuous variable increment for '{new_key}' is large relative to the range. Is this intentional?")
+                            logger.warning(f"Numeric variable increment for '{new_key}' is large relative to the range. Is this intentional?")
         return new_dict
 
 
 ## Genome Block ##
     elif keyword in ['parameters']:
-        logger.warning(f"Handeling continuous variables in MIDAS is still in development and continuous variable optimization may not work as indented. ")
         new_dict = {}
         if isinstance(value, dict):
             for key, item in value.items():
@@ -1273,8 +1273,8 @@ class Input_Parser():
             self.genome = yaml_line_reader(info, 'assembly_parameters', None)
         elif self.calculation_type in ['lattice_physics']:
             self.genome = yaml_line_reader(info, 'lattice_parameters', None)
-        elif self.calculation_type in ['continuous_variable']:
-            logger.warning("'parameters' decision variable is reserved for continous variables")
+        elif self.calculation_type in ['numeric_variable']:
+            logger.warning("'parameters' decision variable is reserved for numeric optimizations")
             self.genome = yaml_line_reader(info, 'parameters', None)
 
         self.batches = yaml_line_reader(info, 'batches', None)
@@ -1402,5 +1402,5 @@ class Input_Parser():
 
         # generic code/optimizaiton input block
         self.c_length =  yaml_line_reader(info, 'chromosome_length', 0) # 0 substitute for None
-        
+
         return

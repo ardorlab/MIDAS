@@ -393,42 +393,6 @@ class Prepare_Problem_Values():
         
         return input_obj
     
-    def prepare_discrete_range(input_obj):
-        """
-        Turns discrete range into a list of possible values based on the user specified increment.
-
-        Written by Cole Howard. 09/18/2025
-        """
-
-
-        for key, value in input_obj.items():
-            if 'discrete_range' in value.items():
-                if type(input_obj[key]["increment"]) != list:
-                    new_vals = [input_obj[key]["discrete_range"][0]]
-                    while new_vals[-1] + input_obj[key]["increment"] < input_obj[key]["discrete_range"][1]:
-                        new_vals.append(new_vals[-1] + input_obj[key]["increment"])
-                    input_obj[key]["discrete_range"] = new_vals
-                else:
-                    counter = 0
-                    new_vals = [input_obj[key]["discrete_range"][0]]
-                    while new_vals[-1] + input_obj[key]["increment"][counter] < input_obj[key]["discrete_range"][1]:
-                        new_vals.append(new_vals[-1] + input_obj[key]["increment"][counter])
-                        counter += 1
-                    input_obj[key]["discrete_range"] = new_vals
-        
-        return input_obj
-    
-    def normalize_continuous_variables(input_obj):
-
-        for key, value in input_obj.items():
-            for subkey in ['discrete_range','continuous_range']:
-                if subkey in input_obj[key]:
-                    vals = input_obj[key][subkey]
-                    lower, upper = vals[0], vals[-1]
-                    denominator = upper - lower
-                    input_obj[key][f'normalized_{subkey}'] = [(float(x) - lower) / denominator for x in vals]
-        return input_obj
-
 
 
 class LWR_Core_Shapes():

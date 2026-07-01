@@ -559,7 +559,6 @@ class GA_reproduction():
 
         else:
             child_chromosome = new_soln
-        
         return child_chromosome
 
     def linear_update(initial_rate, final_rate, current_generation, initial_generation, num_generations): #!TODO: this method doesn't account for restarts, which is likely to result in unintended extrapolation (current_generation > num_generations)
