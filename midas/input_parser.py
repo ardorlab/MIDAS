@@ -65,7 +65,7 @@ def validate_input(keyword, value):
     
     elif keyword == 'code_type':
         value = str(value).lower().replace(' ','_')
-        if value not in ["parcs342", "parcs343", "ipwr_database", "ipwr_database_legacy", "trace50p5", "polaris624","serpent","custom_function","styblinski_tang","listsum"]:
+        if value not in ["parcs342", "parcs343", "ipwr_database", "ipwr_database_legacy", "trace50p5", "polaris624","serpent","custom_function","styblinski_tang","listsum","levy_function"]:
             # raise ValueError("Code types currently supported: PARCS342, PARCS343, ipwr_database, TRACE50p5.")
             logger.warning(f"Requested code type '{value}' is not natively supported. MIDAS will attempt to proceed but may error out.")
     
@@ -1243,8 +1243,8 @@ class Input_Parser():
         
     ## Fuel Assembly Block ##   
         self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)
-        if not self.fa_options and self.code_interface not in ['ipwr_database', 'ipwr_database_legacy','polaris624','serpent','custom_function','styblinski_tang','listsum']:
-            raise ValueError("Assembly options must be nested with reflectors, fuels, and/or blankets with their parameters.")
+        if not self.fa_options and self.code_interface in ['parcs343', 'parcs342']:
+            logger.warning("LP optimizations require that assembly options be nested with reflectors, fuels, and/or blankets with their parameters.")
         if self.calculation_type in ['single_cycle','eq_cycle']:
             for param in ['cost_fuelcycle','av_fuelenrichment']:
                 if param in self.objectives:
@@ -1295,7 +1295,7 @@ class Input_Parser():
         
     ## Calculation Block ## #!TODO: should each parameter set be nested under a code-specific object?
         info = None; THinfo = None; infomap = None # initialize info variables
-        if self.code_interface not in ['custom_function','styblinski_tang','listsum']:
+        if self.code_interface in ["parcs342", "parcs343", "ipwr_database", 'ipwr_database_legacy', "serpent", "trace50p5", "polaris624"]:
             try:
                 if self.code_interface in ["parcs342","parcs343"]:
                     info = self.file_settings['parcs_data']
@@ -1404,5 +1404,7 @@ class Input_Parser():
 
         # generic code/optimizaiton input block
         self.c_length =  yaml_line_reader(info, 'chromosome_length', 0) # 0 substitute for None
+        if not self.c_length:
+            self.c_length = len(self.genome[list(self.genome.keys())[0]]['map'])
 
         return

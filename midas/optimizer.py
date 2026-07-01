@@ -22,6 +22,8 @@ from midas.codes import parcs342, parcs343
 from midas.codes import ipwr_lut
 from midas.codes import trace50p5
 from midas.codes import polaris624
+from midas.codes import styblinski_tang
+from midas.codes import levy_func
 import midas_data
 from midas.codes.listsum_regression.regression.listsum import listsum
 
@@ -65,6 +67,10 @@ class Optimizer():
             self.eval_func = polaris624.evaluate
         elif self.input.code_interface == "listsum":
             self.eval_func = listsum.evaluate
+        elif self.input.code_interface == "styblinski_tang":
+            self.eval_func = styblinski_tang.evaluate
+        elif self.input.code_interface == "levy_function":
+            self.eval_func = levy_func.evaluate
         # getattr(globals()[self.input.code_interface],'evaluate') this command can be used to avoid a list of if else statements. The requirement is that the option matches the intended class.
         else:
             raise ValueError(f"Could not identify eval_func for code type '{self.input.code_interface}'. This is highly irregular.")

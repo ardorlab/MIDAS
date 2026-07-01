@@ -705,9 +705,6 @@ class Gene_Validity_check():
 
                 if solution[index] not in valid_genes_list:
                     return False
-
-        return valid_genes_list
-
             
         return True #if you haven't exited with "False" by this point, all constraints were passed.
   
