@@ -30,12 +30,16 @@ class Bayesian_Optimization:
         self.random_state = np.random.RandomState(random_state) #Initialize random state used throughout problem
 
         # Precompute the total number of binary features
-        if input.calculation_type != 'continuous_variable':
+        if input.calculation_type != 'numeric_variable':
             self.binary_dims = [self.calculate_binary_length(len(dim_cats)) for dim_cats in self.dimensions]
-            self.total_features = sum(self.binary_dims)  # Total number of binary features
-        else: 
-            self.binary_dims = [1 for dim_cats in self.dimensions]
-            self.total_features = sum(self.binary_dims) 
+            self.total_features = sum(self.binary_dims)
+        else:
+            self.binary_dims = [
+                1 if isinstance(dim_cats, dict)
+                else self.calculate_binary_length(len(dim_cats))
+                for dim_cats in self.dimensions
+            ]
+            self.total_features = sum(self.binary_dims)
 
         # Scalers for input (X) and fitness values (y)
         self.scaler_x = StandardScaler()
@@ -75,7 +79,7 @@ class Bayesian_Optimization:
         map_shape = None
         location_options = {}
 
-        if self.input.calculation_type != "continuous_variable":
+        if self.input.calculation_type != "numeric_variable":
             for assembly, data in self.input.genome.items():
                 assembly_map = data['map']
                 if map_shape is None:
@@ -93,10 +97,19 @@ class Bayesian_Optimization:
                     dimension_space.append([None])
 
         # account for continuous variables
-        elif self.input.calculation_type == "continuous_variable":
-            for gene in range(self.input.c_length):
-                dimension_space.append({"continuous": (0.0, 1.0)})
-
+        elif self.input.calculation_type == "numeric_variable":
+            if self.input.c_length:
+                chromosome_length = self.input.c_length
+            else:
+                chromosome_length = len(self.input.genome[list(self.input.genome.keys())[0]]['map'])
+            for gene in range(chromosome_length):
+                for gene_opts in self.input.genome.keys():
+                    if self.input.genome[gene_opts]['map'][gene] == 1 and 'continuous_range' in self.input.gene_options[gene_opts].keys():
+                        dimension_space.append({"continuous": (0.0, 1.0)})
+                    elif self.input.genome[gene_opts]['map'][gene] == 1 and 'discrete_range' in self.input.gene_options[gene_opts].keys():
+                        upper_bound = self.input.gene_options[gene_opts]['discrete_range'][1]
+                        lower_bound = self.input.gene_options[gene_opts]['discrete_range'][0]
+                        dimension_space.append([(i - lower_bound) / (upper_bound-lower_bound) for i in self.input.gene_options[gene_opts]['increment']])
         return dimension_space
 
     @staticmethod

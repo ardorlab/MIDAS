@@ -98,8 +98,8 @@ class Solution():
             return self.EQ_chromosome(genome, batches, LWR_core_parameters)
         elif calc_type == 'lattice_physics':
             return self.lat_chromosome(genome,LWR_core_parameters)
-        elif calc_type == 'continuous_variable':
-            return self.continuous_chromosome(genome)
+        elif calc_type == 'numeric_variable':
+            return self.numeric_chromosome(genome)
         else:
             raise ValueError("Calculation Type not recognized; potential solution not generated.")
     
@@ -387,9 +387,9 @@ class Solution():
 
         return chromosome
 
-    def continuous_chromosome(self,genome):
+    def numeric_chromosome(self,genome):
         """
-        Generates an initial solution for continuous variable optimizations.
+        Generates an initial solution for numeric variable optimizations.
         
         Written by Jake Mikouchi. 06/29/2026
         """
@@ -448,6 +448,12 @@ class Solution():
 
                         realized_chromosome.append(lower_bound + (upper_bound-lower_bound)*chromosome[indx])
 
+                    elif 'discrete_range' in input_obj.gene_options[key].keys():
+                        lower_bound = input_obj.gene_options[key]['discrete_range'][0]
+                        upper_bound = input_obj.gene_options[key]['discrete_range'][1]
+
+                        realized_chromosome.append(lower_bound + (upper_bound-lower_bound)*chromosome[indx])
+
         return realized_chromosome
 
 class Gene_Validity_check():  
@@ -477,8 +483,8 @@ class Gene_Validity_check():
             valid_genes_list = Gene_Validity_check.calc_LWR_gene_options(genes_list, genome, parameters, child_zone, indx)            
         elif input_obj.calculation_type == 'lattice_physics':
             valid_genes_list = Gene_Validity_check.calc_lat_gene_options(genes_list, genome, parameters, child+chromosome[len(child):], indx)
-        elif input_obj.calculation_type == 'continuous_variable':
-            valid_genes_list = Gene_Validity_check.calc_continuous_options(genes_list, genome, input_obj, child+chromosome[len(child):], indx)
+        elif input_obj.calculation_type == 'numeric_variable':
+            valid_genes_list = Gene_Validity_check.calc_numeric_options(genes_list, genome, input_obj, child+chromosome[len(child):], indx)
         else: 
             logger.warning('Unconstrained optimization')  
         
@@ -562,7 +568,7 @@ class Gene_Validity_check():
         
         return valid_genes_list
     
-    def calc_continuous_options(genes_list, genome, input_obj, chromosome, index):
+    def calc_numeric_options(genes_list, genome, input_obj, chromosome, index):
         """
         Determine valid list of genes for continous optimization problems. 
         A list of [0,1] means that the gene is fully continous and can be any number inbetween 0 and 1
@@ -580,8 +586,12 @@ class Gene_Validity_check():
         if 'continuous_range' in input_obj.gene_options[gene]:
             valid_genes_list = [0,1]
         elif 'discrete_range' in input_obj.gene_options[gene]:
-            pass #TODO future work
-        
+            if isinstance(input_obj.gene_options[gene]['increment'], float):
+                normalized_increment = input_obj.gene_options[gene]['increment'] / (input_obj.gene_options[gene]["discrete_range"][1] - input_obj.gene_options[gene]["discrete_range"][0] )
+                valid_genes_list = np.arange(0.0, 1.0+normalized_increment/2, normalized_increment).tolist()
+            elif isinstance(input_obj.gene_options[gene]['increment'], list):
+                for val in input_obj.gene_options[gene]['increment']:
+                    valid_genes_list.append((val - input_obj.gene_options[gene]["discrete_range"][0]) / (input_obj.gene_options[gene]["discrete_range"][1] - input_obj.gene_options[gene]["discrete_range"][0]))
         return valid_genes_list
 
     def abortive_check(input_obj, genes_list, genome, parameters, child):
@@ -608,8 +618,8 @@ class Gene_Validity_check():
 
         elif input_obj.calculation_type == 'lattice_physics':
             valid_chromosome = Gene_Validity_check.check_constraints(genes_list, genome, parameters, child)  
-        elif input_obj.calculation_type == 'continuous_variable':
-            valid_chromosome = Gene_Validity_check.check_continuous_constraints(genes_list, genome, input_obj, child)  
+        elif input_obj.calculation_type == 'numeric_variable':
+            valid_chromosome = Gene_Validity_check.check_numeric_constraints(genes_list, genome, input_obj, child)  
         else: 
             logger.warning('Unconstrained optimization')  
         
@@ -662,7 +672,7 @@ class Gene_Validity_check():
         return True #if you haven't exited with "False" by this point, all constraints were passed.
 
 
-    def check_continuous_constraints(genes_list, genome, input_obj, solution):
+    def check_numeric_constraints(genes_list, genome, input_obj, solution):
         """
         Check solution parameters against user-specified constraints on the input space.
         Returns True if the solution is valid and False if a constraint is violated.
@@ -672,6 +682,7 @@ class Gene_Validity_check():
         """
         if not genome: #! this implies that there are no constraints, but also no valid choices?
             return True
+        
 
         ## make sure that each gene option is valid for the gene
         for index in range(len(solution)):
@@ -684,7 +695,19 @@ class Gene_Validity_check():
                 if not (solution[index] >= 0.0 and solution[index] <= 1.0):
                     return False
             elif 'discrete_range' in input_obj.gene_options[gene]:
-                pass #TODO future work
+                valid_genes_list = []
+                if isinstance(input_obj.gene_options[gene]['increment'], float):
+                    normalized_increment = input_obj.gene_options[gene]['increment'] / (input_obj.gene_options[gene]["discrete_range"][1] - input_obj.gene_options[gene]["discrete_range"][0] )
+                    valid_genes_list = np.arange(0.0, 1.0+normalized_increment/2, normalized_increment).tolist()
+                elif isinstance(input_obj.gene_options[gene]['increment'], list):
+                    for val in input_obj.gene_options[gene]['increment']:
+                        valid_genes_list.append((val - input_obj.gene_options[gene]["discrete_range"][0]) / (input_obj.gene_options[gene]["discrete_range"][1] - input_obj.gene_options[gene]["discrete_range"][0]))  
+
+                if solution[index] not in valid_genes_list:
+                    return False
+
+        return valid_genes_list
+
             
         return True #if you haven't exited with "False" by this point, all constraints were passed.
   

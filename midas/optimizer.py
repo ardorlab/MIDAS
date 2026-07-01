@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 from shutil import rmtree
 from copy import deepcopy
-from multiprocessing import Pool
+from multiprocessing.dummy import Pool
 from itertools import repeat
 import csv
 import ast
@@ -248,8 +248,15 @@ class Optimizer():
                         soln_result_list.append('{0:.3f}'.format(100*soln.parameters[param]['value'])) #convert w.t. to wo%
                     else:
                         soln_result_list.append('{0:.3f}'.format(soln.parameters[param]['value']))
-                for gene in soln.chromosome:
-                    soln_result_list.append(str(gene))
+                # write calegorical genes
+                if self.input.calculation_type != 'numeric_variable':
+                    for gene in soln.chromosome:
+                        soln_result_list.append(str(gene))
+                # write numeric genes
+                else: 
+                    realized_chromosome = optools.Solution.chromosome_realization(self.input, soln.chromosome)
+                    for gene in realized_chromosome:
+                        soln_result_list.append(str(round(gene, 5)))
                 ## write to output file
                 with open(midas_data.__odir__ + "/optimizer_results.csv", 'a') as csvfile:
                     csvwriter = csv.writer(csvfile, delimiter=',')
@@ -369,8 +376,15 @@ class Optimizer():
                         soln_result_list.append('{0:.3f}'.format(100*soln.parameters[param]['value'])) #convert w.t. to wo%
                     else:
                         soln_result_list.append('{0:.3f}'.format(soln.parameters[param]['value']))
-                for gene in soln.chromosome:
-                    soln_result_list.append(str(gene))
+                # write calegorical genes
+                if self.input.calculation_type != 'numeric_variable':
+                    for gene in soln.chromosome:
+                        soln_result_list.append(str(gene))
+                # write numeric genes
+                else: 
+                    realized_chromosome = optools.Solution.chromosome_realization(self.input, soln.chromosome)
+                    for gene in realized_chromosome:
+                        soln_result_list.append(str(round(gene, 5)))
                 ## write to output file
                 with open(midas_data.__odir__ + "/optimizer_results.csv", 'a') as csvfile:
                     csvwriter = csv.writer(csvfile, delimiter=',')
