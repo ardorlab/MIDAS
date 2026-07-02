@@ -1,0 +1,40 @@
+## General Settings Block
+general:
+  optimizer: genetic_algorithm
+  code_type: styblinski_tang
+  calc_type: numeric variable
+  results_directory_name: output_files
+
+## Optimizer Block
+optimization:
+  population_size: 10
+  number_of_generations: 800
+  objectives:
+    func_val1:
+      output_index: 1
+      goal: minimize
+      weight: 1.0
+
+## Algorithm Settings
+algorithm:
+  selection:
+    fitness: weighted
+    method: tournament 
+  reproducer: standard
+  mutation_type: mutate_by_gene
+  mutation_rate: 0.25, 0.55
+
+## avialble genes
+gene_options:
+  var1: 
+    continuous_range: [-5, 5] # inclusive range of continous variables
+
+## Genome
+decision_variables:
+  parameters:
+    var1: 
+      map: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] # positions in chromosome that the gene populates
+
+## Calculation Settings
+optimization_data:
+  # chromosome_length: 10

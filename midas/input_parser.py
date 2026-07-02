@@ -59,9 +59,11 @@ def validate_input(keyword, value):
     
     elif keyword == 'optimizer':
         value = str(value).lower().replace(' ','_')
-        if value not in ["genetic_algorithm","bayesian_optimization","simulated_annealing"]:
+        if value not in ["genetic_algorithm","bayesian_optimization","simulated_annealing","gradient_descent"]:
             # raise ValueError("Requested methodology '" + value + "' invalid.")
             logger.warning(f"Requested optimizer '{value}' is not a natively supported algorithm. MIDAS will attempt to proceed but may error out.")
+            if value == "gradient_descent":
+                logger.warning(f"Gradient Descent algorithm only supports numeric optimizations")
     
     elif keyword == 'code_type':
         value = str(value).lower().replace(' ','_')
@@ -442,6 +444,20 @@ def validate_input(keyword, value):
             raise ValueError("bufer size must be an integer")
         elif isinstance(value, int) and value < 1:
             raise ValueError("buffer size must be greater than 1")
+        
+    elif keyword == 'epsilon':
+        value = float(value)
+        if not isinstance(value, float):
+            raise ValueError("epsilon must be a float")
+        elif isinstance(value, float) and value > 1:
+            raise ValueError("epsilon value must be less than 1")
+
+    elif keyword == 'learning_rate':
+        value = float(value)
+        if not isinstance(value, float):
+            raise ValueError("learning rate must be a float")
+        elif isinstance(value, float) and value > 1:
+            raise ValueError("learning rate value must be less than 1")
 
 
 ## Fuel Assembly Block ##
@@ -1239,6 +1255,8 @@ class Input_Parser():
         perturbation_default = {'method':'perturb_by_gene','num_perturbations':1}
         self.perturbation_type = yaml_line_reader(info, 'perturbation_type', perturbation_default)
         self.buffer_size = yaml_line_reader(info, 'buffer_size', 10)
+        self.epsilon = yaml_line_reader(info, 'epsilon', 0.05)
+        self.learning_rate = yaml_line_reader(info, 'learning_rate', 0.005)
 
         
     ## Fuel Assembly Block ##   
@@ -1406,5 +1424,8 @@ class Input_Parser():
         self.c_length =  yaml_line_reader(info, 'chromosome_length', 0) # 0 substitute for None
         if not self.c_length:
             self.c_length = len(self.genome[list(self.genome.keys())[0]]['map'])
+
+        if self.methodology == 'gradient_descent':
+            self.population_size = 2*self.c_length + 1
 
         return

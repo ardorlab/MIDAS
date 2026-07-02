@@ -473,6 +473,7 @@ class Gene_Validity_check():
         
         Written by Jake Mikouchi. 09/04/2025
         """
+
         if input_obj.calculation_type == 'single_cycle':
             valid_genes_list = Gene_Validity_check.calc_LWR_gene_options(genes_list, genome, parameters, child+chromosome[len(child):], indx)
         elif input_obj.calculation_type == 'eq_cycle':
