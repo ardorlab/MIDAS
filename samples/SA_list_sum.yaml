@@ -22,6 +22,7 @@ algorithm:
 gene_options:
   var1: 
     continuous_range: [0, 9] # inclusive range of continous variables
+    increment: 1
 
 ## Genome
 decision_variables:
