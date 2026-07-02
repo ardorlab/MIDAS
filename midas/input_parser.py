@@ -1203,6 +1203,8 @@ class Input_Parser():
         self.initial_population = yaml_line_reader(info, 'initial_population', None)
         if self.input_template['apply'] and self.code_interface == 'parcs343':
             parcs343_template_check(self)
+        if self.calculation_type not in ['numeric_variable'] and self.methodology == 'gradient_descent':
+            raise ValueError(f"Optimizer gradient descent can only be used with numeric optimizations and is incompatable with '{self.calculation_type}' optimizations.")
     ## Optimization Block ##
         try:
             info = self.file_settings['optimization']
