@@ -100,18 +100,34 @@ class GD_reproduction():
 
             gene_options = optools.Gene_Validity_check.contraceptive_check(self.input, all_genes_list, all_gene_options,
                                                                                     core_parameters, chromosome, [], i)
+            # continous variable 
             if gene_options == [0,1]:
                 perturbed_plus[i] = perturbed_plus[i] + epsilon
                 perturbed_minus[i] = perturbed_minus[i] - epsilon
-                # extra check to ensure no sultion goes outside of bounds
+                # extra check to ensure no solution goes outside of bounds
                 if perturbed_plus[i] > 1.0:
                     perturbed_plus[i] = 1.0 
                 elif perturbed_minus[i] < 0.0:
                     perturbed_minus[i] = 0.0 
                 pertrubs.append(perturbed_plus)
                 pertrubs.append(perturbed_minus)
+            # discrete variable
             else: 
-                pass #TODO add dsicrete numerics
+                original_value = perturbed_plus[i]
+                lower_vals = gene_options[0:gene_options.index(original_value)]
+                higher_vals = gene_options[gene_options.index(original_value)+1:]
+                if not lower_vals:
+                    perturbed_minus[i] = original_value
+                else:
+                    perturbed_minus[i] = lower_vals[-1]
+                if not higher_vals:
+                    perturbed_plus[i] = original_value
+                else:
+                    perturbed_plus[i] = higher_vals[0]
+                pertrubs.append(perturbed_plus)
+                pertrubs.append(perturbed_minus)
+
+
         return pertrubs
 
     def gradient_update(self, pop_list):
@@ -120,6 +136,10 @@ class GD_reproduction():
 
         Written by Jake Mikouchi 07/01/26
         """
+        all_gene_options = self.input.genome
+        all_genes_list = list(self.input.genome.keys())
+        core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies, self.input.symmetry, self.input.calculation_type]
+
         epsilon = self.epsilon
         lr = self.learning_rate
 
@@ -142,10 +162,10 @@ class GD_reproduction():
                     elif soln.chromosome[idx] < active[idx]:
                         perturbed_minus = soln
                 
-                if not perturbed_plus:
-                    perturbed_plus = active_soln
-                elif not perturbed_minus:
-                    perturbed_minus = active_soln
+            if not perturbed_plus:
+                perturbed_plus = active_soln
+            elif not perturbed_minus:
+                perturbed_minus = active_soln
 
             # calculate gradient for each gene
             grad[idx] = (perturbed_plus.fitness_value - perturbed_minus.fitness_value) / (2 * epsilon)
@@ -153,7 +173,34 @@ class GD_reproduction():
         # calculate new active solution using gradient
         new_active = list(np.zeros_like(active))
         for i in range(len(active)):
-            new_active[i] = active[i] + lr * grad[i]
+            gene_options = optools.Gene_Validity_check.contraceptive_check(self.input, all_genes_list, all_gene_options,
+                                                                                    core_parameters, new_active, [], i)
+            # continous variable
+            if gene_options == [0,1]:
+                new_active[i] = active[i] + lr * grad[i]
+            # discrete variable
+            else:
+                original_value = active[i]
+                lower_vals = gene_options[0:gene_options.index(original_value)]
+                higher_vals = gene_options[gene_options.index(original_value)+1:]
+                perturbation = lr * grad[i]
+                temp_val = active[i] + perturbation
+                if perturbation >= 0.0:
+                    if not higher_vals:
+                        new_active[i] = original_value
+                    else:
+                        if np.abs(higher_vals[0] - temp_val) < np.abs(temp_val - active[i]):
+                            new_active[i] = higher_vals[0]
+                        else:
+                            new_active[i] = original_value
+                elif perturbation < 0.0:
+                    if not lower_vals:
+                        new_active[i] = original_value
+                    else:
+                        if np.abs(temp_val - lower_vals[-1]) < np.abs(active[i] - temp_val):
+                            new_active[i] = lower_vals[-1]
+                        else:
+                            new_active[i] = original_value                
         
         for i in range(len(active)):
             if new_active[i] > 1.0:
