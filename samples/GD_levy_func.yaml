@@ -1,0 +1,37 @@
+## General Settings Block
+general:
+  optimizer: gradient_descent
+  code_type: levy_function
+  calc_type: numeric variable
+  results_directory_name: output_files
+
+## Optimizer Block
+optimization:
+  population_size: 10 # overwritten for GD optimizations
+  number_of_generations: 100
+  objectives:
+    func_val1:
+      output_index: 1
+      goal: minimize
+      weight: 1.0
+
+## Algorithm Settings
+algorithm:
+  epsilon: 0.01
+  learning_rate: 0.001
+
+
+## avialble genes
+gene_options:
+  var1: 
+    continuous_range: [-10, 10] # inclusive range of continous variables
+
+## Genome
+decision_variables:
+  parameters:
+    var1: 
+      map: [1, 1, 1, 1, 1] # positions in chromosome that the gene populates
+
+## Calculation Settings
+optimization_data:
+  chromosome_length: 5 # not necessary but if included should match length of maps

@@ -1,0 +1,164 @@
+import logging
+from copy import deepcopy
+import random
+import numpy as np
+from midas.utils import optimizer_tools as optools
+
+
+class Gradient_Descent():
+    """
+    Class for performing optimization using the gradient descent module.
+    Gradient Descent is a determinisitic optimization algorithm always converging to the same solution given the same inputs.
+    Note that within MIDAS each iterations is refered to as a generation. This is not necessarily the correct nomenclature 
+    for GD but it is named in this way for consistencey.
+
+    Written by Jake Mikouchi. 07/01/2026
+    """
+
+    def __init__(self, input):
+        self.input = input   
+        self.learning_rate = input.learning_rate
+        self.epsilon = input.epsilon
+        self.active_sol = []
+          
+    def reproduction(self, pop_list, current_generation):
+        """
+        Computes the graient through numerical differentiation by perturbing each gene. 
+        The computed gradient is then used to choose then next solution in the optimization process.
+        
+        Written by Jake Mikouchi. 07/01/2026
+        """
+        logger = logging.getLogger("MIDAS_logger")
+
+        # select or update active solution
+        if current_generation.current == 1: 
+            self.active_sol = GD_reproduction.initial_selection(self, pop_list)    
+        else:
+            self.active_sol = GD_reproduction.gradient_update(self, pop_list)
+        
+        # create perturbations for fitness calculations
+        chromosome_list = [self.active_sol]
+        chromosome_list.extend(GD_reproduction.numerical_perturbations(self, self.active_sol))
+
+        return chromosome_list
+    
+class GD_reproduction():
+    """
+    Functions for performing reproduction of chromosomes using GD
+     
+    Written by Jake Mikouchi. 07/01/26
+    """
+
+    def initial_selection(self, pop_list):
+        """
+        Parses through the initial population to select starting point for GD optimization.
+        To avoid bias in the starting point, a roulette style selection is utilized.
+
+        Written by Jake Mikouchi. 07/01/26
+        """
+
+        # if initial solution is provided then use that otherwise select with roulette
+        if self.input.initial_population:
+            winner = pop_list[0].chromosome
+        else:
+            probability_sum = 0
+            selection_probability = {}
+            selection_probability['low_bound'] = []
+            selection_probability['up_bound']  = []
+            
+            shift_fitness_scale = min([soln.fitness_value for soln in pop_list]) #shift fitness values to start at zero (this corrects for negative fitness values)
+            for solution in pop_list:
+                selection_probability['low_bound'].append(probability_sum)
+                probability_sum += (solution.fitness_value - shift_fitness_scale)
+                selection_probability['up_bound'].append(probability_sum)
+
+            value = random.random()
+            value = value*probability_sum
+            for j, solution in enumerate(pop_list):
+                if selection_probability['low_bound'][j] <= value <= selection_probability['up_bound'][j]:
+                    winner = solution.chromosome
+
+        return winner
+
+
+    def numerical_perturbations(self, chromosome):
+        """
+        generates 2 solutions by perturbing active solution.
+        This is required so that the gradient can later be calculated.
+
+        Written by Jake Mikouchi. 07/01/26
+        """
+        epsilon = self.epsilon
+        core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies, self.input.symmetry, self.input.calculation_type]
+        all_gene_options = self.input.genome
+        all_genes_list = list(self.input.genome.keys())
+
+        pertrubs = []
+        for i in range(len(chromosome)):
+            perturbed_plus = deepcopy(chromosome)
+            perturbed_minus = deepcopy(chromosome)
+
+            gene_options = optools.Gene_Validity_check.contraceptive_check(self.input, all_genes_list, all_gene_options,
+                                                                                    core_parameters, chromosome, [], i)
+            if gene_options == [0,1]:
+                perturbed_plus[i] = perturbed_plus[i] + epsilon
+                perturbed_minus[i] = perturbed_minus[i] - epsilon
+                # extra check to ensure no sultion goes outside of bounds
+                if perturbed_plus[i] > 1.0:
+                    perturbed_plus[i] = 1.0 
+                elif perturbed_minus[i] < 0.0:
+                    perturbed_minus[i] = 0.0 
+                pertrubs.append(perturbed_plus)
+                pertrubs.append(perturbed_minus)
+            else: 
+                pass #TODO add dsicrete numerics
+        return pertrubs
+
+    def gradient_update(self, pop_list):
+        """
+        Uses fitness values from previously generated solutions to update the active soluition and explore the design space.
+
+        Written by Jake Mikouchi 07/01/26
+        """
+        epsilon = self.epsilon
+        lr = self.learning_rate
+
+        active = []        
+        # identify active solutions as list may have been reorganized by optimizer
+        for soln in pop_list:
+            if soln.chromosome == self.active_sol:
+                active = soln.chromosome
+                active_soln = soln
+
+        grad = list(np.zeros_like(active))
+
+        for idx in range(len(active)):
+            perturbed_plus = None
+            perturbed_minus = None
+            for soln in pop_list:
+                if soln.chromosome != self.active_sol:
+                    if soln.chromosome[idx] > active[idx]:
+                        perturbed_plus = soln
+                    elif soln.chromosome[idx] < active[idx]:
+                        perturbed_minus = soln
+                
+                if not perturbed_plus:
+                    perturbed_plus = active_soln
+                elif not perturbed_minus:
+                    perturbed_minus = active_soln
+
+            # calculate gradient for each gene
+            grad[idx] = (perturbed_plus.fitness_value - perturbed_minus.fitness_value) / (2 * epsilon)
+
+        # calculate new active solution using gradient
+        new_active = list(np.zeros_like(active))
+        for i in range(len(active)):
+            new_active[i] = active[i] + lr * grad[i]
+        
+        for i in range(len(active)):
+            if new_active[i] > 1.0:
+                new_active[i] = 1.0 
+            elif new_active[i] < 0.0:
+                new_active[i] = 0.0   
+
+        return new_active

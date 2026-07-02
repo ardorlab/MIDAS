@@ -18,6 +18,7 @@ from midas.algorithms import genetic_algorithm as GA
 from midas.algorithms import bayesian_optimization as BO
 from midas.algorithms import simulated_annealing as SA
 from midas.algorithms import parallel_simulated_annealing as PSA
+from midas.algorithms import gradient_descent as GD
 from midas.codes import parcs342, parcs343
 from midas.codes import ipwr_lut
 from midas.codes import trace50p5
@@ -83,7 +84,8 @@ class Optimizer():
             self.algorithm = SA.Simulated_Annealing(self.input)
         elif methodology == 'simulated_annealing' and self.input.num_procs > 1:
             self.algorithm = PSA.Parallel_Simulated_Annealing(self.input, self.eval_func)
-        #!TODO: Add the other algorithms back in.
+        elif methodology == 'gradient_descent':
+            self.algorithm = GD.Gradient_Descent(self.input)
         return
     
     def calculate_number_gene_combinations(self, genome):
