@@ -7,7 +7,7 @@ general:
 
 ## Optimizer Block
 optimization:
-  population_size: 10 # overwritten for GD optimizations
+  population_size: 7 # overwritten for GD optimizations but not for SGD
   number_of_generations: 100
   objectives:
     func_val1:
@@ -19,7 +19,7 @@ optimization:
 algorithm:
   epsilon: 0.01
   learning_rate: 0.001
-
+  stochastic: True # determines GD or SGD optimization
 
 ## avialble genes
 gene_options:

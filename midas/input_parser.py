@@ -459,6 +459,8 @@ def validate_input(keyword, value):
         elif isinstance(value, float) and value > 1:
             raise ValueError("learning rate value must be less than 1")
 
+    elif keyword == 'stochastic':
+        value = bool(value)
 
 ## Fuel Assembly Block ##
     elif keyword == 'assembly_options':
@@ -1259,7 +1261,10 @@ class Input_Parser():
         self.buffer_size = yaml_line_reader(info, 'buffer_size', 10)
         self.epsilon = yaml_line_reader(info, 'epsilon', 0.05)
         self.learning_rate = yaml_line_reader(info, 'learning_rate', 0.005)
-
+        self.sgd = yaml_line_reader(info, 'stochastic', False)
+        if self.sgd:
+            if self.population_size == 1 or self.population_size % 2 == 0:
+                raise ValueError(f"Population size must be an odd number greater than 1 when using stochastic gradient descent.")
         
     ## Fuel Assembly Block ##   
         self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)
@@ -1292,13 +1297,15 @@ class Input_Parser():
         except KeyError:
             info = None
         
-        if self.calculation_type in ['single_cycle','eq_cycle','listsum']:
+        if self.calculation_type in ['single_cycle','eq_cycle']:
             self.genome = yaml_line_reader(info, 'assembly_parameters', None)
         elif self.calculation_type in ['lattice_physics']:
             self.genome = yaml_line_reader(info, 'lattice_parameters', None)
         elif self.calculation_type in ['numeric_variable']:
             self.genome = yaml_line_reader(info, 'parameters', None)
-
+            if self.methodology == "gradient_descent" and self.sgd:
+                if self.population_size >= len(self.genome[list(self.genome.keys())[0]]['map'])*2+1: 
+                    raise ValueError(f"Population size must must be less than chromosome_length*2+1 for stochastic gradient descent")
         self.batches = yaml_line_reader(info, 'batches', None)
         #check that decision variable options are valid.
         if not self.genome:
@@ -1312,7 +1319,7 @@ class Input_Parser():
             elif self.pin_options:
                 if key not in self.pin_options['rod_geometries']:
                     raise ValueError(f"Decision variable option '{key}' not found in the list of rod types under 'rod_options'.")
-        
+
     ## Calculation Block ## #!TODO: should each parameter set be nested under a code-specific object?
         info = None; THinfo = None; infomap = None # initialize info variables
         if self.code_interface in ["parcs342", "parcs343", "ipwr_database", 'ipwr_database_legacy', "serpent", "trace50p5", "polaris624"]:

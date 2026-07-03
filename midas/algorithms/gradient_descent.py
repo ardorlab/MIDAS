@@ -85,8 +85,10 @@ class GD_reproduction():
         """
         generates 2 solutions by perturbing active solution.
         This is required so that the gradient can later be calculated.
+        This is the only place where exection pathways for GD and SGD differ.
 
         Written by Jake Mikouchi. 07/01/26
+        Updated by Jake Mikouchi 07/03/26
         """
         epsilon = self.epsilon
         core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies, self.input.symmetry, self.input.calculation_type]
@@ -94,39 +96,80 @@ class GD_reproduction():
         all_genes_list = list(self.input.genome.keys())
 
         pertrubs = []
-        for i in range(len(chromosome)):
-            perturbed_plus = deepcopy(chromosome)
-            perturbed_minus = deepcopy(chromosome)
 
-            gene_options = optools.Gene_Validity_check.contraceptive_check(self.input, all_genes_list, all_gene_options,
-                                                                                    core_parameters, chromosome, [], i)
-            # continous variable 
-            if gene_options == [0,1]:
-                perturbed_plus[i] = perturbed_plus[i] + epsilon
-                perturbed_minus[i] = perturbed_minus[i] - epsilon
-                # extra check to ensure no solution goes outside of bounds
-                if perturbed_plus[i] > 1.0:
-                    perturbed_plus[i] = 1.0 
-                elif perturbed_minus[i] < 0.0:
-                    perturbed_minus[i] = 0.0 
-                pertrubs.append(perturbed_plus)
-                pertrubs.append(perturbed_minus)
-            # discrete variable
-            else: 
-                original_value = perturbed_plus[i]
-                lower_vals = gene_options[0:gene_options.index(original_value)]
-                higher_vals = gene_options[gene_options.index(original_value)+1:]
-                if not lower_vals:
-                    perturbed_minus[i] = original_value
-                else:
-                    perturbed_minus[i] = lower_vals[-1]
-                if not higher_vals:
-                    perturbed_plus[i] = original_value
-                else:
-                    perturbed_plus[i] = higher_vals[0]
-                pertrubs.append(perturbed_plus)
-                pertrubs.append(perturbed_minus)
+        # standard gradient descent
+        if not self.input.sgd:
+            for i in range(len(chromosome)):
+                perturbed_plus = deepcopy(chromosome)
+                perturbed_minus = deepcopy(chromosome)
 
+                gene_options = optools.Gene_Validity_check.contraceptive_check(self.input, all_genes_list, all_gene_options,
+                                                                                        core_parameters, chromosome, [], i)
+                # continous variable 
+                if gene_options == [0,1]:
+                    perturbed_plus[i] = perturbed_plus[i] + epsilon
+                    perturbed_minus[i] = perturbed_minus[i] - epsilon
+                    # extra check to ensure no solution goes outside of bounds
+                    if perturbed_plus[i] > 1.0:
+                        perturbed_plus[i] = 1.0 
+                    elif perturbed_minus[i] < 0.0:
+                        perturbed_minus[i] = 0.0 
+                    pertrubs.append(perturbed_plus)
+                    pertrubs.append(perturbed_minus)
+                # discrete variable
+                else: 
+                    original_value = perturbed_plus[i]
+                    lower_vals = gene_options[0:gene_options.index(original_value)]
+                    higher_vals = gene_options[gene_options.index(original_value)+1:]
+                    if not lower_vals:
+                        perturbed_minus[i] = original_value
+                    else:
+                        perturbed_minus[i] = lower_vals[-1]
+                    if not higher_vals:
+                        perturbed_plus[i] = original_value
+                    else:
+                        perturbed_plus[i] = higher_vals[0]
+                    pertrubs.append(perturbed_plus)
+                    pertrubs.append(perturbed_minus)
+        # stochastic gradient descent 
+        else:
+            gene_locations = [i for i in range(self.input.c_length)]
+            random.shuffle(gene_locations)
+            while len(pertrubs) < self.input.population_size-1:
+                idx = random.choice(gene_locations)
+                perturbed_plus = deepcopy(chromosome)
+                perturbed_minus = deepcopy(chromosome)
+
+                gene_options = optools.Gene_Validity_check.contraceptive_check(self.input, all_genes_list, all_gene_options,
+                                                                                        core_parameters, chromosome, [], idx)
+                # continous variable 
+                if gene_options == [0,1]:
+                    perturbed_plus[idx] = perturbed_plus[idx] + epsilon
+                    perturbed_minus[idx] = perturbed_minus[idx] - epsilon
+                    # extra check to ensure no solution goes outside of bounds
+                    if perturbed_plus[idx] > 1.0:
+                        perturbed_plus[idx] = 1.0 
+                    elif perturbed_minus[idx] < 0.0:
+                        perturbed_minus[idx] = 0.0 
+                    pertrubs.append(perturbed_plus)
+                    pertrubs.append(perturbed_minus)
+                # discrete variable
+                else: 
+                    original_value = perturbed_plus[idx]
+                    lower_vals = gene_options[0:gene_options.index(original_value)]
+                    higher_vals = gene_options[gene_options.index(original_value)+1:]
+                    if not lower_vals:
+                        perturbed_minus[idx] = original_value
+                    else:
+                        perturbed_minus[idx] = lower_vals[-1]
+                    if not higher_vals:
+                        perturbed_plus[idx] = original_value
+                    else:
+                        perturbed_plus[idx] = higher_vals[0]
+                    pertrubs.append(perturbed_plus)
+                    pertrubs.append(perturbed_minus)
+                
+                gene_locations.pop(gene_locations.index(idx))
 
         return pertrubs
 
