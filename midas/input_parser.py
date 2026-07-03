@@ -59,7 +59,7 @@ def validate_input(keyword, value):
     
     elif keyword == 'optimizer':
         value = str(value).lower().replace(' ','_')
-        if value not in ["genetic_algorithm","bayesian_optimization","simulated_annealing","gradient_descent"]:
+        if value not in ["genetic_algorithm","bayesian_optimization","simulated_annealing","gradient_descent","tabu_search"]:
             # raise ValueError("Requested methodology '" + value + "' invalid.")
             logger.warning(f"Requested optimizer '{value}' is not a natively supported algorithm. MIDAS will attempt to proceed but may error out.")
             if value == "gradient_descent":
@@ -461,6 +461,65 @@ def validate_input(keyword, value):
 
     elif keyword == 'stochastic':
         value = bool(value)
+
+    elif keyword == 'construct_neighbors':
+        if isinstance(value, dict):
+            new_dict = {}
+            for key, item in value.items():
+                new_key = str(key).lower()
+                if new_key =='method':
+                    new_item = str(item).lower()
+                    if new_item not in ['flip']:
+                        raise ValueError(f"Requested neighborhood construction method '{item}' not supported.")         
+                elif new_key == 'num_flips':
+                    new_item = int(item)
+                    if new_item < 0:
+                        raise ValueError("'num_flips' parameter must be 1 or higher.")             
+                new_dict[new_key] = new_item
+
+            #check parameters logic
+            if new_dict['method'] == 'flip' and 'num_flips' not in new_dict.keys():
+                new_dict['k'] = 1
+                logger.warning("'num_flips' parameter is missing from input while 'flip' neighborhood construction method is used, 'num_flips' has been set to default value of 1.")                
+            return new_dict
+        else:
+            raise ValueError("'construct_neighbors' must be nested with its parameters.")
+
+    elif keyword == 'num_tabu':
+        value = int(value)
+        if not isinstance(value, int):
+            raise ValueError("'num_tabu' must be an integer")
+        elif value < 1:
+            raise ValueError("'num_tabu' must be greater than 1")
+
+    elif keyword == 'aspiration':
+        if isinstance(value, dict):
+            new_dict = {}
+            for key, item in value.items():
+                new_key = str(key).lower()
+                if new_key =='method':
+                    new_item = str(item).lower()
+                    if new_item not in ['improved_best', 'relative_increase']:
+                        raise ValueError(f"Requested aspiration method '{item}' not supported.")         
+                elif new_key == 'increase':
+                    new_item = float(item)
+                    if new_item <= 0:
+                        raise ValueError("'increase' parameter must be greater than 0.")             
+                new_dict[new_key] = new_item
+
+            #check parameters logic
+            if new_dict['method'] == 'relative_increase' and 'increase' not in new_dict.keys():
+                new_dict['k'] = 1
+                logger.warning("'increase' parameter is missing from input while 'relative_increase' aspiration method is used, 'increase' has been set to default value of 25.0.")                
+            return new_dict
+        else:
+            raise ValueError("'aspiration' must be nested with its parameters.")
+    elif keyword == 'tabu_bands':
+        value = float(value)
+        if not isinstance(value, float):
+            raise ValueError("'tabu_bands' must be an float between 0.0 and 1.0")
+        elif value > 1 or value < 0:
+            raise ValueError("'tabu_bands' must be an float between 0.0 and 1.0")
 
 ## Fuel Assembly Block ##
     elif keyword == 'assembly_options':
@@ -1265,6 +1324,12 @@ class Input_Parser():
         if self.sgd:
             if self.population_size == 1 or self.population_size % 2 == 0:
                 raise ValueError(f"Population size must be an odd number greater than 1 when using stochastic gradient descent.")
+        nc_default = {'method':'flip','num_flips':1}
+        self.neighborhood_construct = yaml_line_reader(info, 'construct_neighbors', nc_default)
+        self.num_tabu = yaml_line_reader(info, 'num_tabu', 10)
+        aspiration_default = {'method':'best_improved'}
+        self.aspiration = yaml_line_reader(info, 'aspiration', aspiration_default)
+        self.tabu_bands = yaml_line_reader(info, 'tabu_bands', 0.1)
         
     ## Fuel Assembly Block ##   
         self.fa_options = yaml_line_reader(self.file_settings, 'assembly_options', None)

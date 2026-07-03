@@ -1,12 +1,13 @@
 ## Optimizer Block
 general:
-  optimizer: simulated_annealing
+  optimizer: tabu_search
   code_type: listsum
   calc_type: numeric variable
   results_directory_name: output_files
 
 optimization:
-  number_of_generations: 1000
+  population_size: 10
+  number_of_generations: 100
   objectives:
     list_sum1:
       output_index: 1
@@ -15,14 +16,20 @@ optimization:
 
 ## Algorithm Settings
 algorithm:
-  cooling_schedule: linear_update
-  temperature: 10.
+  construct_neighbors: 
+    method: flip
+    num_flips: 1
+  num_tabu: 10
+  tabu_bands: 0.075 # for continous variable optimization
+  aspiration: 
+    method: improved_best
+
 
 ## avialble genes
 gene_options:
   var1: 
     discrete_range: [0, 9] # inclusive range of continous variables
-    increment: 1
+    # increment: 1
 
 ## Genome
 decision_variables:

@@ -19,6 +19,7 @@ from midas.algorithms import bayesian_optimization as BO
 from midas.algorithms import simulated_annealing as SA
 from midas.algorithms import parallel_simulated_annealing as PSA
 from midas.algorithms import gradient_descent as GD
+from midas.algorithms import tabu_search as TS
 from midas.codes import parcs342, parcs343
 from midas.codes import ipwr_lut
 from midas.codes import trace50p5
@@ -86,6 +87,8 @@ class Optimizer():
             self.algorithm = PSA.Parallel_Simulated_Annealing(self.input, self.eval_func)
         elif methodology == 'gradient_descent':
             self.algorithm = GD.Gradient_Descent(self.input)
+        elif methodology == 'tabu_search':
+            self.algorithm = TS.Tabu_Search(self.input)
         return
     
     def calculate_number_gene_combinations(self, genome):

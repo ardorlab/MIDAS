@@ -43,9 +43,9 @@ def get_results(parameters, chromosome, input_obj, job_failed=False):
     # populate dictionary based on if the calcualtion was successful
     # there is likely no scenario where the calculation will not be successful for this code but still good practice
     if not job_failed:
-        results_dict["stybtang"] = {'value':Stybtang(realized_chromosome, input_obj), 'output_index':1}
+        results_dict["levy_func"] = {'value':levy_func(realized_chromosome, input_obj), 'output_index':1}
     else:
-        results_dict["stybtang"] = {'value':1000000, 'output_index':1}
+        results_dict["levy_func"] = {'value':1000000, 'output_index':1}
 
     # populate parameters based on output index 
     for key in results_dict:
@@ -58,7 +58,7 @@ def get_results(parameters, chromosome, input_obj, job_failed=False):
     return parameters
 
 
-def Stybtang(realized_chromosome, input_obj):
+def levy_func(realized_chromosome, input_obj):
     """
     Directly calculates value of Levy function for dimension d
     where d is determined by the chromosome length
@@ -76,7 +76,7 @@ def Stybtang(realized_chromosome, input_obj):
     sol_val += np.sin(np.pi * omega[0])**2
     sol_val += (omega[-1] - 1)**2 * (1 + np.sin(2 * np.pi * omega[-1])**2)
 
-    for w in omega[1:-1]:
+    for w in omega[:-1]:
         sol_val += (w-1)**2 * (1 + 10 * np.sin(np.pi * w + 1)**2)
 
     return sol_val    
