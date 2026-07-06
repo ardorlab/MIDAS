@@ -100,6 +100,8 @@ class Solution():
             return self.lat_chromosome(genome,LWR_core_parameters)
         elif calc_type == 'numeric_variable':
             return self.numeric_chromosome(genome)
+        elif calc_type == 'categorical':
+            return self.categorical_chromosome(genome)
         else:
             raise ValueError("Calculation Type not recognized; potential solution not generated.")
     
@@ -246,6 +248,94 @@ class Solution():
                 chromosome_is_valid = True
         
         return chromosome
+    
+    def numeric_chromosome(self,genome):
+        """
+        Generates an initial solution for numeric variable optimizations.
+        
+        Written by Jake Mikouchi. 06/29/2026
+        """
+        
+        genes_list = list(genome.keys())
+        if self.input.c_length:
+            chromosome_length = self.input.c_length
+        else: 
+            chromosome_length = len(genome[genes_list[0]]['map'])
+
+        
+        chromosome_is_valid = False
+        attempts = 0
+        while not chromosome_is_valid:
+            attempts += 1
+            if attempts > 10000:
+                raise ValueError("Random solution generation has failed after 10,000 attempts. Consider checking the variables maps and constraints.")
+
+            chromosome = [None for i in range(chromosome_length)]
+
+            for i in range(chromosome_length):
+                gene_options = Gene_Validity_check.contraceptive_check(self.input, genes_list, genome, None,
+                                                                                    [], chromosome, i)
+                invalid = True
+                while invalid:
+                    try:
+                        if gene_options == [0,1]:
+                            gene = random.uniform(0, 1)
+                        else: 
+                            gene = random.choice(gene_options)
+                    except IndexError:
+                        raise IndexError("Random solution generation failed after 1000 attempts. Check the variables maps and constraints.")
+                    
+                    chromosome[i] = gene
+                    invalid = False
+                          
+            if Gene_Validity_check.abortive_check(self.input,genes_list,genome,None,chromosome):
+                chromosome_is_valid = True
+       
+        return chromosome
+
+    def categorical_chromosome(self,genome):
+        """
+        Generates an initial solution for categorical optimizations.
+        
+        Written by Jake Mikouchi. 07/06/2026
+        """
+
+        genes_list = list(genome.keys())
+        if self.input.c_length:
+            chromosome_length = self.input.c_length
+        else: 
+            chromosome_length = len(genome[genes_list[0]]['map'])
+
+        chromosome_is_valid = False
+        attempts = 0
+        while not chromosome_is_valid:
+            attempts += 1
+            if attempts > 10000:
+                raise ValueError("Random solution generation has failed after 10,000 attempts. Consider checking the variables maps and constraints.")
+
+            chromosome = [None for i in range(chromosome_length)]
+
+            for i in range(chromosome_length):
+                gene_options = Gene_Validity_check.contraceptive_check(self.input, genes_list, genome, None,
+                                                                                    [], chromosome, i)
+                invalid = True
+                while invalid:
+                    try:
+                        if gene_options == [0,1]:
+                            gene = random.uniform(0, 1)
+                        else: 
+                            gene = random.choice(gene_options)
+                    except IndexError:
+                        raise IndexError("Random solution generation failed after 1000 attempts. Check the variables maps and constraints.")
+                    
+                    chromosome[i] = gene
+                    invalid = False
+                          
+            if Gene_Validity_check.abortive_check(self.input,genes_list,genome,None,chromosome):
+                chromosome_is_valid = True
+       
+        return chromosome
+    
 
     def SS_decoder(chromosome):
         """
@@ -387,50 +477,6 @@ class Solution():
 
         return chromosome
 
-    def numeric_chromosome(self,genome):
-        """
-        Generates an initial solution for numeric variable optimizations.
-        
-        Written by Jake Mikouchi. 06/29/2026
-        """
-        
-        genes_list = list(genome.keys())
-        if self.input.c_length:
-            chromosome_length = self.input.c_length
-        else: 
-            chromosome_length = len(genome[genes_list[0]]['map'])
-
-        
-        chromosome_is_valid = False
-        attempts = 0
-        while not chromosome_is_valid:
-            attempts += 1
-            if attempts > 10000:
-                raise ValueError("Random solution generation has failed after 10,000 attempts. Consider checking the variables maps and constraints.")
-
-            chromosome = [None for i in range(chromosome_length)]
-
-            for i in range(chromosome_length):
-                gene_options = Gene_Validity_check.contraceptive_check(self.input, genes_list, genome, None,
-                                                                                    [], chromosome, i)
-                invalid = True
-                while invalid:
-                    try:
-                        if gene_options == [0,1]:
-                            gene = random.uniform(0, 1)
-                        else: 
-                            gene = random.choice(gene_options)
-                    except IndexError:
-                        raise IndexError("Random solution generation failed after 1000 attempts. Check the variables maps and constraints.")
-                    
-                    chromosome[i] = gene
-                    invalid = False
-                          
-            if Gene_Validity_check.abortive_check(self.input,genes_list,genome,None,chromosome):
-                chromosome_is_valid = True
-       
-        return chromosome
-
     def chromosome_realization(input_obj, chromosome):
         """
         This is primarily used for continuous and descrete solution types.
@@ -486,6 +532,8 @@ class Gene_Validity_check():
             valid_genes_list = Gene_Validity_check.calc_lat_gene_options(genes_list, genome, parameters, child+chromosome[len(child):], indx)
         elif input_obj.calculation_type == 'numeric_variable':
             valid_genes_list = Gene_Validity_check.calc_numeric_options(genes_list, genome, input_obj, child+chromosome[len(child):], indx)
+        elif input_obj.calculation_type == 'categorical':
+            valid_genes_list = Gene_Validity_check.calc_categorical_options(genes_list, genome, input_obj, child+chromosome[len(child):], indx)
         else: 
             logger.warning('Unconstrained optimization')  
         
@@ -595,6 +643,49 @@ class Gene_Validity_check():
                     valid_genes_list.append((val - input_obj.gene_options[gene]["discrete_range"][0]) / (input_obj.gene_options[gene]["discrete_range"][1] - input_obj.gene_options[gene]["discrete_range"][0]))
         return valid_genes_list
 
+    def calc_categorical_options(genes_list, genome, input_obj, chromosome, index):
+        """
+        Determines valid list of genes for categorical optimization problems based on number of gene
+        occurances and gene index in chromosome. 
+
+        Written by Jake Mikouchi. 07/06/2026
+        """
+
+        gene_counts = {}
+        for key in genome.keys():
+            gene_counts[key] = chromosome.count(key)
+
+        valid_genes_list = []
+        for gene in genes_list:
+            if 'constraint' in genome[gene].keys():
+                if genome[gene]['constraint']:
+                    ctype = genome[gene]['constraint']['type']
+                    cvalue = genome[gene]['constraint']['value']
+                    if gene not in gene_counts:
+                        gene_counts[gene] = 0
+                    if cvalue not in gene_counts:
+                        gene_counts[cvalue] = 0
+                    if ctype == 'max_quantity':
+                        #only include option if less than the max quantity have been already used.
+                        if gene_counts[gene] < cvalue and (cvalue - gene_counts[gene]) > 1:
+                            valid_genes_list.append(gene)
+                    elif ctype == 'less_than_variable':
+                        #only include option if fewer than the target option have been already used.
+                        if gene_counts[gene] < gene_counts[cvalue] and (gene_counts[cvalue] - gene_counts[gene]) > 1:
+                            valid_genes_list.append(gene)
+                else:
+                    valid_genes_list.append(gene)
+            else:
+                valid_genes_list.append(gene)
+
+        ## make sure that each gene option is valid for the gene location
+        temp_gene_list = deepcopy(valid_genes_list)
+        for gene in temp_gene_list:
+            if not genome[gene]['map'][index] == 1:
+                valid_genes_list.remove(gene)
+
+        return valid_genes_list
+
     def abortive_check(input_obj, genes_list, genome, parameters, child):
         """
         Method for distributing to the correct abortive gene checking function
@@ -621,6 +712,8 @@ class Gene_Validity_check():
             valid_chromosome = Gene_Validity_check.check_constraints(genes_list, genome, parameters, child)  
         elif input_obj.calculation_type == 'numeric_variable':
             valid_chromosome = Gene_Validity_check.check_numeric_constraints(genes_list, genome, input_obj, child)  
+        elif input_obj.calculation_type == 'categorical':
+            valid_chromosome = Gene_Validity_check.check_categorical_constraints(genes_list, genome, input_obj, child)  
         else: 
             logger.warning('Unconstrained optimization')  
         
@@ -672,7 +765,6 @@ class Gene_Validity_check():
             
         return True #if you haven't exited with "False" by this point, all constraints were passed.
 
-
     def check_numeric_constraints(genes_list, genome, input_obj, solution):
         """
         Check solution parameters against user-specified constraints on the input space.
@@ -684,7 +776,6 @@ class Gene_Validity_check():
         if not genome: #! this implies that there are no constraints, but also no valid choices?
             return True
         
-
         ## make sure that each gene option is valid for the gene
         for index in range(len(solution)):
             ## find corresponding gene 
@@ -709,6 +800,44 @@ class Gene_Validity_check():
             
         return True #if you haven't exited with "False" by this point, all constraints were passed.
   
+    def check_categorical_constraints(genes_list, genome, core_parameters, solution):
+        """
+        Check solution parameters against user-specified constraints on the input space.
+        Returns True if the solution is valid and False if a constraint is violated.
+        This is specified for checking validity of chromosomes with generic categorical variables.
+        
+        Written by Jake Mikouchi. 07/06/2026
+        """
+
+        ## make sure that quantities of each gene type appearing in the solution are allowed.
+        gene_counts = {}
+        for key in genome.keys():
+            gene_counts[key] = solution.count(key)
+            
+        for gene in genes_list:
+            if 'constraint' in genome[gene].keys():
+                if genome[gene]['constraint']:
+                    ctype = genome[gene]['constraint']['type']
+                    cvalue = genome[gene]['constraint']['value']
+                    if gene not in gene_counts:
+                        gene_counts[gene] = 0
+                    if ctype == 'max_quantity': #quantity of gene type must be less than the max allowed quantity.
+                        if gene_counts[gene] > cvalue:
+                            return False
+                    elif ctype == 'less_than_variable': #quantity of gene type must be less than the quantity of the target variable.
+                        if cvalue not in gene_counts:
+                            gene_counts[cvalue] = 0
+                        if gene_counts[gene] > gene_counts[cvalue]:
+                            return False
+            
+        ## make sure that each gene option is valid for the gene
+        for i in range(len(solution)):
+            if not genome[solution[i]]['map'][i] == 1: #gene value not allowed at this location in chromosome.
+                return False
+            
+        return True #if you haven't exited with "False" by this point, all constraints were passed.
+
+
 class Fitness(object):
     """
     The generic fitness function. Requires user specified weights for every 

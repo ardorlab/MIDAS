@@ -15,7 +15,7 @@ Created by Nicholas Rollins. 09/11/2024
 logger = logging.getLogger("MIDAS_logger")
 
 ## Classes ##
-def yaml_line_reader(data,keyword,default):
+def yaml_line_reader(data,keyword,default, incomp_input_obj=None):
     """
     Parse the data of a given keyword from the '.yaml' input file data.
     If the keyword is not found, revert to a provided default value. Then,
@@ -23,16 +23,20 @@ def yaml_line_reader(data,keyword,default):
     is a supported option for that keyword.
     
     Written by Nicholas Rollins. 10/03/2024
+    Updated by Jake Mikouchi. 07/06/2026
     """
     try:
         parsed_val = data[keyword]
     except:
         parsed_val = default
-    parsed_val = validate_input(keyword, parsed_val)
+    if incomp_input_obj:
+        parsed_val = validate_input(keyword, parsed_val, incomp_input_obj)
+    else: 
+        parsed_val = validate_input(keyword, parsed_val)
 
     return parsed_val
 
-def validate_input(keyword, value):
+def validate_input(keyword, value, incomp_input_obj=None):
     """
     Verify parsed input data. Input is sanitized to ensure proper entries and 
     formatting before being provided to the Optimizer.
@@ -67,13 +71,14 @@ def validate_input(keyword, value):
     
     elif keyword == 'code_type':
         value = str(value).lower().replace(' ','_')
-        if value not in ["parcs342", "parcs343", "ipwr_database", "ipwr_database_legacy", "trace50p5", "polaris624","serpent","custom_function","styblinski_tang","listsum","levy_function"]:
+        if value not in ["parcs342", "parcs343", "ipwr_database", "ipwr_database_legacy", "trace50p5", "polaris624","serpent","custom_function",
+                         "styblinski_tang","listsum","levy_function","traveling_salesman"]:
             # raise ValueError("Code types currently supported: PARCS342, PARCS343, ipwr_database, TRACE50p5.")
             logger.warning(f"Requested code type '{value}' is not natively supported. MIDAS will attempt to proceed but may error out.")
     
     elif keyword == 'calc_type':
         value = str(value).lower().replace(' ','_')
-        if value not in ["single_cycle","eq_cycle", "lattice_physics", "numeric_variable"]:
+        if value not in ["single_cycle","eq_cycle", "lattice_physics", "numeric_variable", "categorical"]:
             # raise ValueError("Data type not supported.")
             logger.warning(f"Requested calculation type '{value}' is not natively supported. MIDAS will attempt to proceed but may error out.")
     
@@ -775,49 +780,72 @@ def validate_input(keyword, value):
             for key, item in value.items():
                 new_key = str(key)
                 new_dict[new_key] = {}
-                #check decision variable options
-                
-                if isinstance(value[key], dict):
-                    for subkey, subitem in item.items():
-                        new_subkey = str(subkey).lower()
-                        if new_subkey in ['continuous_range','discrete_range']:
-                            if not isinstance(subitem, list):
-                                raise ValueError(f"Entry '{new_subkey}' under decision variable '{new_key}' must be a list of two numbers.")
-                            for rangebound in subitem: 
-                                if (not isinstance(rangebound, float) and not isinstance(rangebound, int)) or isinstance(rangebound, bool): 
-                                    raise ValueError(f"Entry '{new_subkey}' values under decision variable '{new_key}' must be two numeric values in ascending order.")
-                            if len(subitem) != 2: 
-                                raise ValueError(f"Entry '{new_subkey}' list under decision variable '{new_key}' must contain two numeric values in ascending order.")
-                            if subitem[0] > subitem[1]: 
-                                raise ValueError(f"Entry '{new_subkey}' list under decision variable '{new_key}' must contain two numeric values in ascending order.")
-                            new_dict[new_key][new_subkey] = subitem
-                        if new_subkey == "increment":
-                            try:
-                                if isinstance(subitem, list):
-                                    if len(subitem) == 0:
-                                        raise ValueError(f"The {new_subkey} entry is a list of length 0. It must either be a list with one or more entries for a non-uniform range, or a single number for a uniform range")
-                                    for index in range(0, len(subitem)):
-                                        subitem[index] = float(subitem[index])
-                                        if subitem[index] < 0: 
-                                            raise ValueError("Numeric variable 'increment' entries must be greater than 0")
-                                    new_dict[new_key][new_subkey] = subitem
-                                else:
-                                    new_dict[new_key][new_subkey] = float(subitem)
-                                    if new_dict[new_key][new_subkey] < 0: 
-                                        raise ValueError("Numeric variable 'increment' must be greater than 0")
-                            except TypeError:
-                                raise ValueError(f"Subkey {new_subkey} has entry of type {type(subitem)} but only accepts a list of integers/floats or a single integer/float")
-                        if new_subkey == "index":
-                            new_dict[new_key][new_subkey] = int(subitem)
-                    if "continuous_range" in item.keys() and "increment" in item.keys():
-                        raise ValueError(f"'increment' should not be provided for a 'continuous_range' variable.")
-                    if "discrete_range" not in item.keys() and "continuous_range" not in item.keys():
-                        raise ValueError(f"{item} variable must include either a 'discrete_range' or 'continuous_range' entry.")
-                    if "discrete_range" in item.keys() and "increment" not in item.keys():
-                        raise ValueError(f"Increment for 'discrete_range' variable is not provided.")
-                    elif "discrete_range" in item.keys() and isinstance(item["increment"], float): 
-                        if (item["increment"] / (item["discrete_range"][1] - item["discrete_range"][0]))*100 >= 10:
-                            logger.warning(f"Numeric variable increment for '{new_key}' is large relative to the range. Is this intentional?")
+
+                ## pathway for populating gene_options whenb conducting numeric variable optimizations 
+                if incomp_input_obj.calculation_type in ['numeric_variable']:
+                    #check decision variable options
+                    if isinstance(value[key], dict):
+                        for subkey, subitem in item.items():
+                            new_subkey = str(subkey).lower()
+                            if new_subkey in ['continuous_range','discrete_range']:
+                                if not isinstance(subitem, list):
+                                    raise ValueError(f"Entry '{new_subkey}' under decision variable '{new_key}' must be a list of two numbers.")
+                                for rangebound in subitem: 
+                                    if (not isinstance(rangebound, float) and not isinstance(rangebound, int)) or isinstance(rangebound, bool): 
+                                        raise ValueError(f"Entry '{new_subkey}' values under decision variable '{new_key}' must be two numeric values in ascending order.")
+                                if len(subitem) != 2: 
+                                    raise ValueError(f"Entry '{new_subkey}' list under decision variable '{new_key}' must contain two numeric values in ascending order.")
+                                if subitem[0] > subitem[1]: 
+                                    raise ValueError(f"Entry '{new_subkey}' list under decision variable '{new_key}' must contain two numeric values in ascending order.")
+                                new_dict[new_key][new_subkey] = subitem
+                            elif new_subkey == "increment":
+                                try:
+                                    if isinstance(subitem, list):
+                                        if len(subitem) == 0:
+                                            raise ValueError(f"The {new_subkey} entry is a list of length 0. It must either be a list with one or more entries for a non-uniform range, or a single number for a uniform range")
+                                        for index in range(0, len(subitem)):
+                                            subitem[index] = float(subitem[index])
+                                            if subitem[index] < 0: 
+                                                raise ValueError("Numeric variable 'increment' entries must be greater than 0")
+                                        new_dict[new_key][new_subkey] = subitem
+                                    else:
+                                        new_dict[new_key][new_subkey] = float(subitem)
+                                        if new_dict[new_key][new_subkey] < 0: 
+                                            raise ValueError("Numeric variable 'increment' must be greater than 0")
+                                except TypeError:
+                                    raise ValueError(f"Subkey {new_subkey} has entry of type {type(subitem)} but only accepts a list of integers/floats or a single integer/float")
+                            else:
+                                logger.warning(f"Requested gene feature '{new_subkey}' is not a natively supported. MIDAS will attempt to proceed but may error out.")
+                                new_dict[new_key][new_subkey] = subitem
+                        if "continuous_range" in item.keys() and "increment" in item.keys():
+                            raise ValueError(f"'increment' should not be provided for a 'continuous_range' variable.")
+                        if "discrete_range" not in item.keys() and "continuous_range" not in item.keys():
+                            raise ValueError(f"{item} variable must include either a 'discrete_range' or 'continuous_range' entry.")
+                        if "discrete_range" in item.keys() and "increment" not in item.keys():
+                            raise ValueError(f"Increment for 'discrete_range' variable is not provided.")
+                        elif "discrete_range" in item.keys() and isinstance(item["increment"], float): 
+                            if (item["increment"] / (item["discrete_range"][1] - item["discrete_range"][0]))*100 >= 10:
+                                logger.warning(f"Numeric variable increment for '{new_key}' is large relative to the range. Is this intentional?")
+
+
+                ## pathway for populating gene_options whenb conducting categorical optimizations 
+                elif incomp_input_obj.calculation_type in ['categorical']:
+                    #check decision variable options
+                    if isinstance(value[key], dict):
+                        for subkey, subitem in item.items():
+                            new_subkey = str(subkey).lower()
+                            if new_subkey == 'coordinate':
+                                if not isinstance(subitem, list):
+                                    raise ValueError(f"Entry '{new_subkey}' under decision variable '{new_key}' must be a list of two numbers.")
+                                else: 
+                                    subitem = tuple(subitem)
+                                if len(subitem) != 2: 
+                                    raise ValueError(f"Entry '{new_subkey}' list under decision variable '{new_key}' must contain two numeric values.")
+                                new_dict[new_key][new_subkey] = subitem
+                            else:
+                                logger.warning(f"Requested gene feature '{new_subkey}' is not a natively supported. MIDAS will attempt to proceed but may error out.")
+                                new_dict[new_key][new_subkey] = subitem
+
         return new_dict
 
 
@@ -832,7 +860,28 @@ def validate_input(keyword, value):
                 if isinstance(value[key], dict):
                     for subkey, subitem in item.items():
                         new_subkey = str(subkey).lower()
-                        new_dict[new_key][new_subkey] = subitem
+                        if new_subkey == 'map':
+                            new_dict[new_key][new_subkey] = subitem
+                        elif new_subkey == 'constraint':
+                            new_subitem = {}
+                            if isinstance(subitem, dict):
+                                #check types and values
+                                for subsubkey, subsubitem in subitem.items():
+                                    new_subsubkey =str(subsubkey).lower()
+                                    if new_subsubkey == 'type':
+                                        new_subsubitem = str(subsubitem).lower().replace(' ','_')
+                                        if new_subsubitem not in ['max_quantity','less_than_variable']:
+                                            raise ValueError(f"Requested decision variable constraint type '{subsubitem}' not supported.")
+                                    elif new_subsubkey == 'value':
+                                        try:
+                                            new_subsubitem = int(subsubitem)
+                                        except ValueError:
+                                            new_subsubitem = str(subsubitem)
+                                    new_subitem[new_subsubkey] = new_subsubitem
+                            else:
+                                if not subitem: #allow constraint option to be "None".
+                                    new_subitem = None
+                            new_dict[new_key][new_subkey] = new_subitem
 
         temp_maps = []
         for key, value in new_dict.items():
@@ -840,20 +889,41 @@ def validate_input(keyword, value):
                 temp_maps.append(value['map'])
             else: 
                 raise ValueError(f"Each parameter must have a corresponding 'map'")
-        master_map = [0 for i in range(len(new_dict[list(new_dict.keys())[0]]['map']))]
-        master_length = len(new_dict[list(new_dict.keys())[0]]['map'])
-        for temp_map in temp_maps:
-            if len(temp_map) != master_length:
-                raise ValueError(f"maps dimensions must be consistent across all parameters")
-            for idx in range(len(temp_map)):
-                if temp_map[idx] > 1:
-                    raise ValueError(f"Map contains invalid value {temp_map[idx]}; only 0 and 1 are allowed")
-                elif temp_map[idx] in [0,1]:
-                    if temp_map[idx] == 1:
-                        if master_map[idx] == 1:
-                            raise ValueError(f"Multiple variables assigned to position {idx} in maps; only 1 variable can be assegned to a position")
-                        else: 
+        
+        ## conduct check for numeric variable parameters ##
+        if incomp_input_obj.calculation_type in ['numeric_variable']:
+            master_map = [0 for i in range(len(new_dict[list(new_dict.keys())[0]]['map']))]
+            master_length = len(new_dict[list(new_dict.keys())[0]]['map'])
+            for temp_map in temp_maps:
+                if len(temp_map) != master_length:
+                    raise ValueError(f"maps dimensions must be consistent across all parameters")
+                for idx in range(len(temp_map)):
+                    if temp_map[idx] > 1 or temp_map[idx] < 0:
+                        raise ValueError(f"Map contains invalid value {temp_map[idx]}; only 0 and 1 are allowed")
+                    elif temp_map[idx] in [0,1]:
+                        if temp_map[idx] == 1:
+                            if master_map[idx] == 1:
+                                raise ValueError(f"Multiple variables assigned to position {idx} in maps; only 1 variable can be assegned to a position")
+                            else: 
+                                master_map[idx] = 1
+
+        ## conduct check for categorical optimization ##
+        elif incomp_input_obj.calculation_type in ['categorical']:
+            master_map = [0 for i in range(len(new_dict[list(new_dict.keys())[0]]['map']))]
+            master_length = len(new_dict[list(new_dict.keys())[0]]['map'])
+            for temp_map in temp_maps:
+                if len(temp_map) != master_length:
+                    raise ValueError(f"maps dimensions must be consistent across all parameters")
+                for idx in range(len(temp_map)):
+                    if temp_map[idx] > 1 or temp_map[idx] < 0:
+                        raise ValueError(f"Map contains invalid value {temp_map[idx]}; only 0 and 1 are allowed")
+                    elif temp_map[idx] in [0,1]:
+                        if temp_map[idx] == 1:
                             master_map[idx] = 1
+            for idx in range(len(master_map)):
+                if master_map[idx] == 0:
+                    raise ValueError(f"map location '{idx}' has no available genes.")
+
         return new_dict
     
     elif keyword in ['lattice_parameters', 'assembly_parameters', 'batches']:
@@ -1327,7 +1397,7 @@ class Input_Parser():
         nc_default = {'method':'flip','num_flips':1}
         self.neighborhood_construct = yaml_line_reader(info, 'construct_neighbors', nc_default)
         self.num_tabu = yaml_line_reader(info, 'num_tabu', 10)
-        aspiration_default = {'method':'best_improved'}
+        aspiration_default = {'method':'improved_best'}
         self.aspiration = yaml_line_reader(info, 'aspiration', aspiration_default)
         self.tabu_bands = yaml_line_reader(info, 'tabu_bands', 0.1)
         
@@ -1353,8 +1423,8 @@ class Input_Parser():
         if not self.pin_options and self.calculation_type in ['lattice_physics']:
             raise ValueError("Fuel pin options must be nested with rod_geometries, compositions, and/or controls_rods.")
         
-
-        self.gene_options = yaml_line_reader(self.file_settings, 'gene_options', None)
+    ## All generic variable Block ## (numerical and categorical)
+        self.gene_options = yaml_line_reader(self.file_settings, 'gene_options', None, self)
         
     ## Genome Block ##
         try:
@@ -1366,8 +1436,8 @@ class Input_Parser():
             self.genome = yaml_line_reader(info, 'assembly_parameters', None)
         elif self.calculation_type in ['lattice_physics']:
             self.genome = yaml_line_reader(info, 'lattice_parameters', None)
-        elif self.calculation_type in ['numeric_variable']:
-            self.genome = yaml_line_reader(info, 'parameters', None)
+        elif self.calculation_type in ['numeric_variable', 'categorical']:
+            self.genome = yaml_line_reader(info, 'parameters', None, self)
             if self.methodology == "gradient_descent" and self.sgd:
                 if self.population_size >= len(self.genome[list(self.genome.keys())[0]]['map'])*2+1: 
                     raise ValueError(f"Population size must must be less than chromosome_length*2+1 for stochastic gradient descent")

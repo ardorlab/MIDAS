@@ -1,0 +1,74 @@
+## Optimizer Block
+general:
+  optimizer: tabu_search
+  code_type: traveling_salesman
+  calc_type: categorical
+  results_directory_name: output_files
+
+optimization:
+  population_size: 10
+  number_of_generations: 1000
+  objectives:
+    distance:
+      output_index: 1
+      goal: minimize
+      weight: 5.0
+    missed_destinations:
+      output_index: 2
+      goal: minimize
+      weight: 35.0       
+
+## Algorithm Settings
+algorithm:
+  construct_neighbors: 
+    method: flip
+    num_flips: 1
+  num_tabu: 10
+  tabu_bands: 0.075 # for continous variable optimization
+  aspiration: 
+    method: improved_best
+
+
+## avialble genes
+gene_options:
+  New_York: 
+    coordinate: [0,9]
+  Shanghai: 
+    coordinate: [2,3]
+  Paris: 
+    coordinate: [11,7]
+  Tokyo: 
+    coordinate: [6,2]
+  Istanbul: 
+    coordinate: [0,6]
+  Madrid: 
+    coordinate: [11,13]
+  Seoul: 
+    coordinate: [4,9]
+  London: 
+    coordinate: [7,4]
+
+## Genome
+decision_variables:
+  parameters:
+    New_York: 
+      map: &ID001 
+        [1, 1, 1, 1, 1, 1, 1, 1] 
+    Shanghai: 
+      map: *ID001 
+    Paris: 
+      map: *ID001 
+    Tokyo: 
+      map: *ID001 
+    Istanbul: 
+      map: *ID001 
+    Madrid: 
+      map: *ID001 
+    Seoul: 
+      map: *ID001 
+    London: 
+      map: *ID001 
+
+## Calculation Settings
+optimization_data:
+  chromosome_length: 8
