@@ -1,0 +1,731 @@
+## General Settings Block
+general:
+  # debug_mode: True
+  methodology: genetic_algorithm
+  code_type: surrogate
+  calc_type: multi cycle
+  results_directory_name: output_files
+  parcs_steps: 10,20,30,40,50,60,70,80,90,99
+
+  retrain_steps: 10,20,30,40,50,60,70,80,90,
+  # clear_results: keep_all
+  keep_retraindata: no
+
+## Optimizer Block
+optimization:
+  population_size: 200
+  number_of_generations: 100
+  solution_symmetry: quarter # octant #chromosome symmetry
+  objectives:
+    max_boron:
+      goal: less_than_target
+      target: 1750
+      #target: 1235
+      weight: 14.0
+    PinPowerPeaking:
+      goal: less_than_target
+      weight: 5000.0 
+      target: 2.5
+      #target: 1.995
+    FDeltaH:
+      goal: less_than_target
+      target: 1.65
+      #target: 1.406
+      weight: 5000.0     
+    cycle_length:
+      goal: maximize
+      weight: 1.00
+
+## Algorithm Settings
+algorithm:
+  selection:
+    fitness: weighted
+    method: tournament #tournament or roulette
+  reproducer: standard
+  # mutation_type: mutate_by_gene
+  mutation_type: mutate_by_scramble
+  mutation_rate: 0.1 ## no mutation as no possible for mutation gene
+  elites: 25
+  crossover:
+    method: two_point
+# algorithm:
+
+#   selection:
+
+#     method: ktournament
+
+#     k: 8
+
+## Fuel Assembly Parts
+assembly_options:
+  reflectors:
+    rad_ref:
+      refl_type: radial #all, radial, top, or bottom
+      serial: xs_grad
+    top_ref:
+      refl_type: top #all, radial, top, or bottom
+      serial: xs_gtop
+    bot_ref:
+      refl_type: bottom #all, radial, top, or bottom
+      serial: xs_gbot
+  blankets:
+    blanket_name:
+      serial: xs_g200_gd_0_wt_0
+  fuel: 
+    -250: 
+      type: 250
+      serial: xs_g250_gd_0_wt_0 #cross section name in library
+      blanket: blanket_name
+    # FA251: 
+    #   type: 251
+    #   serial: xs_g250_gd_16_bp_0
+    #   blanket: blanket_name
+    -280: 
+      type: 280
+      serial: xs_g280_gd_0_wt_0
+      blanket: blanket_name
+    -320: 
+      type: 320
+      serial: xs_g320_gd_0_bp_0
+      blanket: blanket_name
+    -400: 
+      type: 400
+      serial: xs_g400_gd_0_wt_0
+      blanket: blanket_name
+    -567: 
+      type: 567
+      serial: xs_g565_gd_32_wt_8
+      blanket: blanket_name
+    -587: 
+      type: 587
+      serial: xs_g585_gd_24_wt_8
+      blanket: blanket_name
+
+    ## reload FA
+    H-08: # let not use H08, central FA for now as it has no multipicity FA 
+      type: 1
+      serial: no
+      name: H08
+    I-08:
+      # type: I-08
+      type: 9
+      serial: no
+      name: I08
+    I-09:
+      # type: I-09
+      type: 10
+      serial: no
+      name: I09
+    I-10:
+      # type: I-10
+      type: 11
+      serial: no
+      name: I10
+    # I-11:
+    #   # type: I-11
+    #   type: 12
+    #   serial: no
+    #   name: I11
+    # I-12:
+    #   # type: I-12
+    #   type: 13
+    #   serial: no
+    #   name: I12
+    # I-13:
+    #   # type: I-13
+    #   type: 14
+    #   serial: no
+    #   name: I13
+    I-14:
+      # type: I-14
+      type: 15
+      serial: no
+      name: I14
+    I-15:
+      # type: I-15
+      type: 16
+      serial: no
+      name: I15
+    # J-08:
+    #   # type: J-08
+    #   type: 17
+    #   serial: no
+    #   name: J08
+    J-09:
+      # type: J-09
+      type: 18
+      serial: no
+      name: J09
+    J-10:
+      # type: J-10
+      type: 19
+      serial: no
+      name: J10
+    J-11:
+      # type: J-11
+      type: 20
+      serial: no
+      name: J11
+    J-12:
+      # type: J-12
+      type: 21
+      serial: no
+      name: J12
+    # J-13:
+    #   # type: J-13
+    #   type: 22
+    #   serial: no
+    #   name: J13
+    J-14:
+      # type: J-14
+      type: 23
+      serial: no
+      name: J14
+    J-15:
+      # type: J-15
+      type: 24
+      serial: no
+      name: J15
+    # K-08:
+    #   # type: K-08
+    #   type: 25
+    #   serial: no
+    #   name: K08
+    # K-09:
+    #   # type: K-09
+    #   type: 26
+    #   serial: no
+    #   name: K09
+    K-10:
+      # type: K-10
+      type: 27
+      serial: no
+      name: K10
+    K-11:
+      # type: K-11
+      type: 28
+      serial: no
+      name: K11
+    # K-12:
+    #   # type: K-12
+    #   type: 29
+    #   serial: no
+    #   name: K12
+    # K-13:
+    #   # type: K-13
+    #   type: 30
+    #   serial: no
+    #   name: K13
+    K-14:
+      # type: K-14
+      type: 31
+      serial: no
+      name: K14
+    K-15:
+      # type: K-15
+      type: 32
+      serial: no
+      name: K15
+    L-08:
+      # type: L-08
+      type: 33
+      serial: no
+      name: L08
+    # L-09:
+    #   # type: L-09
+    #   type: 34
+    #   serial: no
+    #   name: L09
+    L-10:
+      # type: L-10
+      type: 35
+      serial: no
+      name: L10
+    # L-11:
+    #   # type: L-11
+    #   type: 36
+    #   serial: no
+    #   name: L11
+    # L-12:
+    #   # type: L-12
+    #   type: 37
+    #   serial: no
+    #   name: L12
+    L-13:
+      # type: L-13
+      type: 38
+      serial: no
+      name: L13
+    L-14:
+      # type: L-14
+      type: 39
+      serial: no
+      name: L14
+    # M-08:
+    #   # type: M-08
+    #   type: 40
+    #   serial: no
+    #   name: M08
+    # M-09:
+    #   # type: M-09
+    #   type: 41
+    #   serial: no
+    #   name: M09
+    # M-10:
+    #   # type: M-10
+    #   type: 42
+    #   serial: no
+    #   name: M10
+    # M-11:
+    #   # type: M-11
+    #   type: 43
+    #   serial: no
+    #   name: M11
+    M-12:
+      # type: M-12
+      type: 44
+      serial: no
+      name: M12
+    M-13:
+      # type: M-13
+      type: 45
+      serial: no
+      name: M13
+    M-14:
+      # type: M-14
+      type: 46
+      serial: no
+      name: M14
+    N-08:
+      # type: N-08
+      type: 47
+      serial: no
+      name: N08
+    N-09:
+      # type: N-09
+      type: 48
+      serial: no
+      name: N09
+    N-10:
+      # type: N-10
+      type: 49
+      serial: no
+      name: N10
+    N-11:
+      # type: N-11
+      type: 50
+      serial: no
+      name: N11
+    N-12:
+      # type: N-12
+      type: 51
+      serial: no
+      name: N12
+    N-13:
+      # type: N-13
+      type: 52
+      serial: no
+      name: N13
+    O-08:
+      # type: O-08
+      type: 53
+      serial: no
+      name: O08
+    O-09:
+      # type: O-09
+      type: 54
+      serial: no
+      name: O09
+    O-10:
+      # type: O-10
+      type: 55
+      serial: no
+      name: O10
+    O-11:
+      # type: O-11
+      type: 56
+      serial: no
+      name: O11
+
+
+
+## Genome
+decision_variables:
+  # parameters used to fill each chromosome.
+  assembly_parameters:
+    -250:
+      map: &ID001
+        [0,
+         1, 1, 1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1,                        
+         1, 1, 1, 1]
+      constraint:
+        type: max_quantity
+        value: 48
+    # -280:
+    #   map: *ID001 #this is natively interpreted by yaml, which is super nice.
+    #   constraint:
+    #     type: max_quantity
+    #     value: 4
+    -567:
+      map: *ID001
+      constraint:
+        type: max_quantity
+        value: 8
+    -587:
+      map: *ID001
+      constraint:
+        type: max_quantity
+        value: 8
+    # -400:
+    #   map: *ID001
+    #   constraint:
+    #     type: max_quantity
+    #     value: 4
+    # -320:
+    #   map: *ID001
+    #   constraint:
+    #     type: max_quantity
+    #     value: 4
+    H-08:
+      map: &ID009
+        [1,
+         0, 0, 0, 0, 0, 0, 0, 0,
+         0, 0, 0, 0, 0, 0, 0, 0,
+         0, 0, 0, 0, 0, 0, 0, 0,
+         0, 0, 0, 0, 0, 0, 0,
+         0, 0, 0, 0, 0, 0, 0,
+         0, 0, 0, 0, 0, 0,                       
+         0, 0, 0, 0]
+      constraint:
+        type: max_quantity
+        value: 1
+    # H-09:
+    #   map: *ID001
+    #   constraint:
+    #     type: max_quantity
+    #     value: 1
+    # H-10:
+    #   map: *ID001
+    #   constraint:
+    #     type: max_quantity
+    #     value: 1
+    # H-11:
+    #   map: *ID001
+    #   constraint:
+    #     type: max_quantity
+    #     value: 1
+    # H-12:
+    #   map: *ID001
+    #   constraint:
+    #     type: max_quantity
+    #     value: 1
+    # H-13:
+    #   map: *ID001
+    #   constraint:
+    #     type: max_quantity
+    #     value: 1
+    # H-14:
+    #   map: *ID001
+    #   constraint:
+    #     type: max_quantity
+    #     value: 1
+    # H-15:
+    #   map: *ID001
+    #   constraint:
+    #     type: max_quantity
+    #     value: 1
+    I-08:
+      map: &ID002
+        [0,
+         1, 1, 1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1, 1,                        
+         1, 1, 1, 1]
+      constraint:
+        type: max_quantity
+        value: 1
+    I-09:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    I-10:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    # I-11:
+    #   map: *ID001
+    #   constraint:
+    #     type: max_quantity
+    #     value: 1
+    # I-12:
+    #   map: *ID001
+    #   constraint:
+    #     type: max_quantity
+    #     value: 1
+    # I-13:
+    #   map: *ID001
+    #   constraint:
+    #     type: max_quantity
+    #     value: 1
+    I-14:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    I-15:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    # J-08:
+    #   map: *ID001
+    #   constraint:
+    #     type: max_quantity
+    #     value: 1
+    J-09:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    J-10:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    J-11:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    J-12:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    # J-13:
+    #   map: *ID001
+    #   constraint:
+    #     type: max_quantity
+    #     value: 1
+    J-14:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    J-15:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    # K-08:
+    #   map: *ID001
+    #   constraint:
+    #     type: max_quantity
+    #     value: 1
+    # K-09:
+    #   map: *ID001
+    #   constraint:
+    #     type: max_quantity
+    #     value: 1
+    K-10:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    K-11:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    # K-12:
+    #   map: *ID001
+    #   constraint:
+    #     type: max_quantity
+    #     value: 1
+    # K-13:
+    #   map: *ID001
+    #   constraint:
+    #     type: max_quantity
+    #     value: 1
+    K-14:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    K-15:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    L-08:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    # L-09:
+    #   map: *ID001
+    #   constraint:
+    #     type: max_quantity
+    #     value: 1
+    L-10:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    # L-11:
+    #   map: *ID001
+    #   constraint:
+    #     type: max_quantity
+    #     value: 1
+    # L-12:
+    #   map: *ID001
+    #   constraint:
+    #     type: max_quantity
+    #     value: 1
+    L-13:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    L-14:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    # M-08:
+    #   map: *ID001
+    #   constraint:
+    #     type: max_quantity
+    #     value: 1
+    # M-09:
+    #   map: *ID001
+    #   constraint:
+    #     type: max_quantity
+    #     value: 1
+    # M-10:
+    #   map: *ID001
+    #   constraint:
+    #     type: max_quantity
+    #     value: 1
+    # M-11:
+    #   map: *ID001
+    #   constraint:
+    #     type: max_quantity
+    #     value: 1
+    M-12:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    M-13:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    M-14:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    N-08:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    N-09:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    N-10:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    N-11:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    N-12:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    N-13:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    O-08:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    O-09:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    O-10:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+    O-11:
+      map: *ID002
+      constraint:
+        type: max_quantity
+        value: 1
+
+
+## Calculation Settings
+parcs_data:
+  core_type: PWR
+  map:
+    num_rows: 17
+    num_cols: 17
+    number_assemblies: 193
+    core_symmetry: quarter #printing symmetry
+    assembly_pitch: 21.5
+  xs_library_path: ./xslib/ #this MUST be a relative path.
+  exec_walltime: 999999
+#  xs_extension: .PMAXS
+  power: 3400.0 #MW_th
+  flow: 18231.89
+  inlet_temperature: 565.0 #K
+  coolant_density: 1.000 
+  fuel_temperature: 1000.0 #K
+  assembly_pins: 264 
+  assembly_guide_tubes: 25
+  pin_dimensions: 4.1 4.75 0.58 6.13
+  th_fdbk:
+    apply: True 
+    loc:
+  pin_power_recon: True
+  num_axial_nodes: 18
+  axial_nodes: 30.48,15.24,10.16,5.08,10*30.48,5.08,10.16,15.24,30.48
+  depletion_steps: -0.1 -0.4 -0.5 -1.0 -1.0 28*-1.0 
+  boc_core_exposure: 0.0
+  depleted_map: 250  567  567  567  280  587  567  400  10  
+                567  567  250  567  567  567  587  587  10  
+                567  250  567  567  250  567  587  400  10  
+                567  567  567  250  567  587  587  587  10  
+                280  567  250  567  567  587  587  10   10  
+                587  567  567  587  587  587  400  10   00  
+                567  587  587  587  587  400  10   10   00  
+                400  587  400  587  10   10   10   00   00  
+                10   10   10   10   10   00   00   00   00  
+  depletion_file: BOC_exposure.dep
+  depletion_restart_point: 36
+
