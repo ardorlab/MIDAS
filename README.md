@@ -85,165 +85,48 @@ use the optimization program. However, there are several things that will always
 detail the general outline of the yaml files to give you a brief exposure.
 
 Yaml files may be written in any order. Like Python, indentation is used to seperate different layers in the file. 
-Here, the markers in the example input file are explained:
+Here, the general block structure is explained:
 
-    optimization: 
-    "The top marker in the input file. Designates that the cards underneath are related to the optimization settings."
+	GENERAL Block
+		The general block is used to define the optimization type and the algorithm to be used. Some general details 
+		about the execution are also defined here like if statistical plots should be automatically generated when 
+		the optimization is complete or the name of the file containing the user defined initial population.
 
-        methodology: genetic_algorithm
-        "The methodology marker designates which type of optimization is being performed, in this case genetic algorithm."
+	OPTIMIZATION Block
+		The optimization block is used to define optimization parameters which are universal to all algorithms. The
+		number of generations and population size are defined in this block as well as termination criteria. The 
+		fitness function and it's objectives are also defined in this block.
 
-        population_size: 8
-        "Indicates population size used in the genetic algorithm."
+	ALGORITHM Block
+		This block is used to provide MIDAS with the hyperparameter values used with the respective algorithm during 
+		optimizations. Each available algorithm has a unique set of hyperparameters that can be defined here. 
+		For example, Genetic Algorithm's mutation rate and Simulated Annealing's intial temperature can be defined 
+		in this block.
 
-        number_of_generations: 5
-        "Indicates number of generations over which optimization will run." 
+	OPTIONS Block 
+		The options block is used to define each of the genes which are avaialble to the optimizers during the 
+		optimization. For example, during loading pattern optimizations each unique assembly type is defined in this 
+		block. Different problem types have different names given to the options block as its structure may be different
+		depending on the needs of the optimization. For Loading Pattern optimizations the options block is called 
+		'assembly options', lattice physics problems change the name to 'rod options' and all generic numerical and 
+		combinatorial problem types change the name to 'gene options'.
 
-        mutation:
-        "Marker indicating sub markers are related to how mutation is performed."
-            
-            method: [mutate_by_common,mutate_fixed]
-            "Specifies how mutation is performed. In this case two mutation methods have been selected."
+	DECISION VARIABLES Block
+		This block is used to further inform MIDAS on design constraints relating to the individual genes. Users use this 
+		block to define where genes exist on the chromosome or impose limits on how many times a single gene can appear 
+		within the chromosome. This block enables users to improse problem specific requirments to the design such as 
+		a minimum number of batch 2 assemblies in an equilibrium core optimization or constraining a certain assembly type 
+		by only allowing it to exist in specific locations in the core.
 
-            initial_rate: 0.25
-            "The starting percentage of population that undergo mutation."
-
-            final_rate: 0.75
-            "The final percentage of population that undergo mutation."
-
-        fixed_problem: True
-        "Indicates that the genome is held fixed in some way."
-
-        number_fixed_groups: 4
-        "Indicates that there are four genome groups used to fix the optimization problem."
-
-        fixed_genes_per_group: [17,14,16,17]
-        "How many genes must fit into each group in the solution. Note that the order of these groups is the order
-        that the gene groups appear when the genes are specified."
-
-        selection:
-        "Indicates that the sub markers will be related to how selection is performed using the genetic algorithm." 
-		
-            fitness: ranked
-            "Marker for selecting which fitness/scoring function to use to compare solutions. In this case the fitness is derived from how the solutions are ranked from best to worst."
-
-            method: tournament
-            "Indicates solutions are going to be compared using a tournament method." 
-
-        data_type: loading_pattern
-        "data_type designates the type of problem that is to be optimized. IN this case the fuel loading pattern of a nuclear reactor."
-
-        objectives:
-        "Markers under this marker indicate what objectives will be taken into account in the fitness functions."
-
-            assembly_power:
-            "Example of an optimization objective. In this case assembly radial peaking factors."
-                goal: minimize
-                "Says that radial peaking factors should be minimized in objective function."
-            
-	genome:
-	"Markers under this marker are used to describe the actual problem that is to be solved."
-
-	    chromosomes:
-	    "Markers under this marker describe the genes used in the optimization."
-
-	        Assembly_One: 
-		    "The first gene in the example problem. Genes are directly under the chromosome marker, and may use any name."
-
-		        gene_group: 2.0
-		        "We specified earlier that our optimization problem is fixed. The gene_group is used to identify common genes that
-		        are held fixed, i.e., labels that this falls into the first group that is only allowed to have 17 assemblies of 
-		        this label. gene_groups can have any name, but the order in which they appear corresponds to the numbering in the 
-		        fixed_genes_per_group marker."
-
-		        type: 2
-		        "For NCSU core simulator problems, the type marker corresponds to an assembly designator used in the simulator." 
-
-		        name: 2.0_w/o
-		        "The Name card is used for solution plotting and for designating NCSU lattice simulator types. If you are working on the NE
-		        412/512 project, you don't need to worry about these cards and they can have any name you would like." 
-
-		        map: &ID001
-				  [1, 1, 1, 1, 1, 1, 1, 1, 0,
-				   1, 1, 1, 1, 1, 1, 1, 1, 0,
-				   1, 1, 1, 1, 1, 1, 1, 0, 0,     
-				   1, 1, 1, 1, 1, 1, 1, 0,      
-				   1, 1, 1, 1, 1, 1, 0, 0,            
-				   1, 1, 1, 1, 1, 0, 0,                   
-				   1, 1, 1, 1, 0, 0,                          
-				   1, 1, 0, 0, 0,
-				   0, 0, 0]
-		       "The map marker specifies where genes may be expressed in the optimization, e.g. locations in the reactor core 
-		       where assemblies may be placed. Binary markers are used to indicate whether a gene may or may not be expressed in
-		       the location. A 1 indicates the gene may be expressed there, a 0 indicates it may not be expressed there."
-
-		    Assembly_Two:
-		        gene_group: 2.5
-		        type: 3
-		        serial: B300
-		        name: 2.5_w/o_no_bp
-		        map: *ID001
-		    Assembly_Three:
-		        gene_group: 3.2
-		        type: 5
-		        serial: C300
-		        name: 3.2_w/o_no_bp
-		        map: *ID001
-		    Reflector:
-		        type: 1
-		        gene_group: reflector
-		        serial: none
-		        name: reflector
-		        map: 
-			     [0, 0, 0, 0, 0, 0, 0, 0, 1,
-			      0, 0, 0, 0, 0, 0, 0, 0, 1,
-			      0, 0, 0, 0, 0, 0, 0, 1, 1,     
-			      0, 0, 0, 0, 0, 0, 0, 1,      
-			      0, 0, 0, 0, 0, 0, 1, 1,            
-			      0, 0, 0, 0, 0, 1, 1,                   
-			      0, 0, 0, 0, 1, 1,                          
-			      0, 0, 1, 1, 1,
-			      1, 1, 1]
-
-	    assembly_data:
-	    "This marker is used to attach additional information required to run the problem in the simulator." 
-
-		    type: pwr
-		    "The reactor type."
-
-		    core_width: 15
-		    "The size of the reactor core. If there are 152 assemblies the core width is 15."
-
-		    load_point: 0.000
-		    "The point that you want the restart file to load from. "
-
-		    depletion: 20
-		    "The max depletion step allowed in the calculations. Note that just because you designate a maximum 
-		    depletion doesn't mean you reach that depletion time step. "
-
-		    batch_number: 0
-		    "The cycle of the core. For initial loadings of the reactor core you can specify either 0 or 1."
-
-		    pressure: 2250.
-		    "The operating pressure of the reactor core."
-
-		    boron: 900.
-		    "A guess of the initial critical boron calculation. Need a guess. Doesn't matter what."
-
-		    power: 100.
-		    "The percent of rated power that the reactor is operating at."
-
-		    flow: 100.
-		    "The percent of rated flow that the reactor is operating at. "
-
-		    inlet_temperature: 550.
-		    "The inlet temperature of the coolant."
-
-		    restart_file: s3.pwr.uo2.c02.depl.res
-		    "The restart file being used in the simulate analysis."
-
-		    cs_library: pwr.sim_one.lib
-		    "The cms_link cross section library being used in the ncsu simulator."
+	DATA Block
+		The data block is used to provide MIDAS with all problem specific information required to conduct the optimization
+		but not necessarily relating to the optimization itself. For optimizations where PARCS is executed to retrieve 
+		chromosome performances, this block will contain all the information needed to construct the parcs input files.
+		Different problem types have different names given to the data block as the required information is different for 
+		each problem type and code interface. For Loading Pattern optimizations the options block is called 'parcs data', 
+		lattice physics problems change the name to 'polaris data' and all generic numerical and combinatorial problem types 
+		change the name to 'optimization data'.
+	
 
 # Repository Structure
 
