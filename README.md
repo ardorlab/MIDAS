@@ -58,23 +58,27 @@ Congratulations. The code is now installed in your local machine.
 
 Enter your local MIDAS directory and navigate to one of the sample problems. Type:
 
-    python midasmain.py --input midas_input.yaml --cpus 4 
+    midasmain.py --input midas_input.yaml --cpus 4 
 
-Running the code is as sample as that. mofMain is the main function of the python code. There are two 
-commands here. The first is __--input__. This command is used to designate the input yaml file that you want to run.
-In the example it is just the input yaml file corresponding to the selected sample case. The second command
-__--cpus__ is used to designate how many processors you want to apply to the optimization problem. In the example four are specified.
-For clean executions, it is recomended that you execute the code in a designated directory.
+midasmain is the main function of the python code and all secondary functions are disrtibuted from within this script. 
+There are two commands here. The first is __--input__. This command is used to designate the input yaml file that you
+want to run. In the example it is just the input yaml file corresponding to the selected sample case. The second command 
+__--cpus__ is used to designate how many processors you want to apply to the optimization problem. In the example four 
+are specified. For clean executions, it is recomended that you execute the code in a designated directory.
+
+Depending on where MIDAS is installed, you will likely need to update the executable paths within MIDAS so that
+the modules requiring theses executables can function. This can easily be done by updating the paths at the bottom of 
+midas_data.py
 
 # YAML Input File Format
 
-So now that you have run the code, let's look at what settings we used. The settings for the optimization are input 
-through a yaml file. YAML is a high level markup file. YAML stands for Yeah, Aint Markup Language. It's a very simple,
-easy to read and write file that can be directly loaded into python as a dictionary data tool, making it extremely easy
-to use and perfect for our purposes here.
+All settings and options needed to execute an optimization can be accessed through the yaml input file. YAML is a high 
+level markup file which is short for 'Yeah, Aint Markup Language'. It's a simple, easy to read and write file that can be 
+directly loaded into python as a dictionary data tool, making it perfect for interfacing with MIDAS.
 
-Open up the example.yaml file and take a look at it. Obviously use the file editor of your preference. If you don't 
-know any file editors or are looking for one, we highly recommed VSCode. 
+A number of sample input files are available in the samples directory to demonstrate how to execute optimizations for 
+different types of problems and with different algorithms. Additionally, an extensive user manual is available in the Wiki
+of this repository which goes over every input option availble through the yaml file.
 
 There is generally a wide range of flexibility in the YAML files from input to input, which can make it complicated to
 use the optimization program. However, there are several things that will always be consistent. This section will 
