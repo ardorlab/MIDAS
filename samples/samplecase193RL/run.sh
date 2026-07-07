@@ -12,6 +12,6 @@
 #SBATCH --nodelist=node043,node044,node045,node046
 #conda activate midas-surrogate
 
-conda run -n midas-surrogate python ../midasmain.py --input runcase.yaml --cpus 50 > temp.log
+conda run -n midas-surrogate python ../../midasmain.py --input runcase.yaml --cpus 50 > temp.log
 ##conda run -n midas-surrogate python ../midasmain.py --input testoldcase.yaml --cpus 25 > temp.log
  
