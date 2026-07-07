@@ -31,23 +31,17 @@ required dependencies entering the following commands:
 
     bash miniconda_install.sh
 
-    pip install pyyaml 
-
-    conda install numpy
-
-    conda install matplotlib 
-
-	conda install pillow
-	
-	conda install h5py
-
-	conda install scipy 
-
-	conda install scikit-learn
-
+	conda install matplotlib  
+	conda install pyyaml  
+	conda install scipy  
+	conda install scikit-learn  
+	conda install h5py  
+	conda install pyarrow  
+	conda install pandas  
 
     git clone https://github.com/ardorlab/MIDAS.git
 
+<!-- 
 If you want to use the newly added reinforcement learning algorithms, the python version in the environment should be 3.9 and some additional dependencies will need to be installed:
 
     pip3 install torch torchvision torchaudio
@@ -55,6 +49,7 @@ If you want to use the newly added reinforcement learning algorithms, the python
     pip install stable-baselines3[extra] 
 
 An alternative way to configure the environment is to use the requirement files provided in the repository for pip and conda tools. This files are the "requirements_pip.txt" and "requirements_conda.txt".
+-->
 
 Congratulations. The code is now installed in your local machine.
 
@@ -63,12 +58,13 @@ Congratulations. The code is now installed in your local machine.
 
 Enter your local MIDAS directory and navigate to one of the sample problems. Type:
 
-    python mofMain.py --input sample_problem_input.yaml --cpus 4 
+    python midasmain.py --input midas_input.yaml --cpus 4 
 
 Running the code is as sample as that. mofMain is the main function of the python code. There are two 
 commands here. The first is __--input__. This command is used to designate the input yaml file that you want to run.
 In the example it is just the input yaml file corresponding to the selected sample case. The second command
 __--cpus__ is used to designate how many processors you want to apply to the optimization problem. In the example four are specified.
+For clean executions, it is recomended that you execute the code in a designated directory.
 
 # YAML Input File Format
 
