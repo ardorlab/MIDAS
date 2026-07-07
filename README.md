@@ -11,7 +11,7 @@ Welcome to the Modularly Integrated Design Assistance Suite (MIDAS) repository. 
 create a simple, robust tool for solving optimization problems. It has been applied primarily to nuclear engineering design problems, but it has been built to handle all kinds of problems.
 
 
-MIDAS is designed to provide users with a variety of optimization methodologies to solve opimization problems with a focus on nuclear engineering design problems. Containing multiple optimization methodologies in a single package allows for the reuse of code in multiple ways leading to a shorter, simpler, and more versatile optimization package.
+MIDAS is designed to provide users with a variety of optimization methodologies to solve opimization problems with a focus on nuclear engineering design. Containing multiple optimization methodologies in a single package allows for the reuse of code in multiple ways leading to a shorter, simpler, and more versatile optimization package.
 
 
 Current optimization methodologies supported in MIDAS are:
