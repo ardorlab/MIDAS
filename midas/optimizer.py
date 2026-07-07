@@ -58,7 +58,7 @@ class Optimizer():
         elif self.input.code_interface == "parcs343":
             self.eval_func = parcs343.evaluate
         elif self.input.code_interface in ["ipwr_database", "ipwr_database_legacy"]:
-            self.eval_func = nuscale_lut.evaluate
+            self.eval_func = ipwr_lut.evaluate
         elif self.input.code_interface == "trace50p5":
             self.eval_func = trace50p5.evaluate
         elif self.input.code_interface == "polaris624":
