@@ -72,8 +72,8 @@ midas_data.py
 
 # YAML Input File Format
 
-All settings and options needed to execute an optimization can be accessed through the yaml input file. YAML is a high 
-level markup file which is short for 'Yeah, Aint Markup Language'. It's a simple, easy to read and write file that can be 
+All settings and options needed to execute an optimization can be accessed through the yaml input file. YAML is short for 
+'Yeah, Aint Markup Language' and is a high level markup file format. It's a simple, easy to read and write file that can be 
 directly loaded into python as a dictionary data tool, making it perfect for interfacing with MIDAS.
 
 A number of sample input files are available in the samples directory to demonstrate how to execute optimizations for 
