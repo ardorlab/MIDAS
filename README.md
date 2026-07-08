@@ -139,37 +139,44 @@ The repository is structured in the following way:
   * PSA_lattice_physics.yaml - Paralllel Simulated Annealing applied to PWR lattice physics optimization
   * SA_eq_cycle.yaml - Simulated ANnealing applied to equilibrium cycle PWR loading pattern optimization
 
-* documentation: Directory including all additional documentation.
+* MIDAS: Directory containg human facing modules that users interact with while executing the code. This is the root directory of the MIDAS.
+  
+	* midasmain.py: Python file that is the main body of MIDAS. In this file, administrative tasks are performed such as reading in the input file, writing general information about the optimization to the output file, and initializing the optimization.
+  	* midas_data.py: File used mainly for storing file paths to external code executables.
 
-* ncsu_lattice.py: Python file that handles NCSU lattice calculations evaluation and data extraction.
+* midas: Directory containing core MIDAS modules which are required to execute an optimization regardless of optimization settings.
+  
+	* input_parser.py: Module for parsing the yaml input file and returning constructive error messages if the input file is incorrect.
+	* optimizer.py: Main execution pathway for MIDAS. Contains the main 'loop' that all algorithms rely on. Distrubutes tasks and required variables to the optimization algorithms and distributes the generated populations to optimizer_tools.py to compute fitness values. All standard output file information is written here.
 
-* crudworks.py: Python file used if CRUD machine learning predictions are required (TensorFlow should be installed).
+* midas/utils: Directory containing additional modules and functions to assist MIDAS in interfacing with aptimization algorithms and code interfaces.
 
-* fitness.py: Python file for selecting and computing the objective function of the optimization. 
+	* LWR_fuelcyclecost.py: Module used to calculate fuel costs for LWR loading patterns if this is selected as a objective in the optimization.  
+	* decorators.py: File containing additional decorators to increase the readability of midas output files.
+	* optimizer_tools.py: Module containing general tools required to perform optimizations including: initial solution generators, solution validation checkers, statistics plot generators, and the fitness function. 
+	* problem_preparation.py: Module containing problem specific functions for problems requiring special attention. This includes expanding high-symmetry chromosome representations of loading patterns into lower levels of symmetry (octant core chromosome -> full core map), and counting the number of gene instances in high-symmetry chromosomes representations.  
+	* termination_criteria.py: Module for storing termination criteria methods.
 
-* geneticAlgorithm.py: Python file that stores all classes and functions for performing Genetic Algorithm optimization.
+* midas/codes: Directory containing code interface modules.
 
-* metrics.py: Python file including tools for tracking solutions and storing the generated optimization data.
+	* parcs343.py:  Module that handles PARCSv3.4.3 calculations evaluation and data extraction.
+	* parcs342.py:  Module that handles PARCSv3.4.2 calculations evaluation and data extraction. This module is not actively updated.
+	* ipwr_lut.py:  Module that handles reading the IPWR look up table and extracting data.
+	* polaris624.py: Module that handles Polarisv6.2.4 calculations evaluation and data extraction.
+	* trace50p5.py: Module that handles TRACE calculations evaluation and data extraction.
 
-* mofMain.py: Python file that is the main body of MIDAS. In this file the interface between the input file and the optimization is performed by selecting the specified options and initializing all the necessary components.
+* midas/algorithms: Directory containing optimization algorithm modules.
 
-* ncsu_core.py: Python file that handles NCSU core simulator calculations evaluation and data extraction.
+	* genetic_algorithm.py: Python file that stores all classes and functions for performing Genetic Algorithm optimization.
+	* simulated_annealing.py: Python file that stores all classes and functions for performing Simulated Annealing optimization.
+   	* parallel_simulated_annealing.py: Python file that stores all classes and functions for performing Parallel Simulated Annealing optimization. Some fidentical functions are shared with simulated_annealing.py.
+	* bayesian_optimization.py: Python file that stores all classes and functions for performing bayesian Optimization.
 
-* parcs.py: Python file that handles PARCS calculations evaluation and data extraction.
+* midas_tools: Directory containing external tools to assist users in performing optimizations.
 
-* parcs_332.py: Python file that handles PARCS_332 calculations evaluation and data extraction.
+	* solution_to_chromosome_tool: Directory containing solution to chromosome tool and sample input files for the tool. The tool enables users to convert solutions into their chromosome representations so that the chromosome can be used as an initaila starting point for optimizations. For example, the tool can convert loading pattern maps as they exist in PARCS input files into their chromosome representations.
 
-* randomSolutions.py: Python file that stores all classes and functions for performing optimization with random solutions.
 
-* lcoe.py: computation of levelized cost of electricity.
-
-* simulateAnnealing.py: Python file that stores all classes and functions for performing Simulate Annealing optimization.
-
-* reinforcement_learning.py: Python file that stores all classes and functions for performing Reinforcement Learning optimization.
-
-* solution_types.py: Python file for storing the solutions of the optimization together with some usefull functions.
-
-* submission_script.sh: Bash file example for running MIDAS through SLURM on the RDFMG cluster.
 
 # Resources
 MIDAS is an updated version of the MOF (Modular Optimization Framework) for which you can find more information about the framework structure, theory and applications in https://doi.org/10.48550/arXiv.2204.00141.
