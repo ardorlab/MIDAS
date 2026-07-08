@@ -169,7 +169,7 @@ The repository is structured in the following way:
 
 	* genetic_algorithm.py: Python file that stores all classes and functions for performing Genetic Algorithm optimization.
 	* simulated_annealing.py: Python file that stores all classes and functions for performing Simulated Annealing optimization.
-   	* parallel_simulated_annealing.py: Python file that stores all classes and functions for performing Parallel Simulated Annealing optimization. Some fidentical functions are shared with simulated_annealing.py.
+   	* parallel_simulated_annealing.py: Python file that stores all classes and functions for performing Parallel Simulated Annealing optimization. Some identical functions are shared with simulated_annealing.py.
 	* bayesian_optimization.py: Python file that stores all classes and functions for performing bayesian Optimization.
 
 * midas_tools: Directory containing external tools to assist users in performing optimizations.
