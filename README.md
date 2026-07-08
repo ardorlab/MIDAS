@@ -174,7 +174,7 @@ The repository is structured in the following way:
 
 * midas_tools: Directory containing external tools to assist users in performing optimizations.
 
-	* solution_to_chromosome_tool: Directory containing solution to chromosome tool and sample input files for the tool. The tool enables users to convert solutions into their chromosome representations so that the chromosome can be used as an initaila starting point for optimizations. For example, the tool can convert loading pattern maps as they exist in PARCS input files into their chromosome representations.
+	* solution_to_chromosome_tool: Directory containing solution to chromosome tool and sample input files for the tool. The tool enables users to convert solutions into their chromosome representations so that the chromosome can be used as an initial starting point for optimizations. For example, the tool can convert loading pattern maps as they exist in PARCS input files into their chromosome representations.
 
 
 
