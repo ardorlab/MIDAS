@@ -8,7 +8,7 @@
 
 Welcome to the Modularly Integrated Design Assistance Suite (MIDAS) repository. MIDAS utilizes inheritance, object-oriented, and functional programming to deliver a simple yet robust tool for solving optimization problems. While it has been applied primarily to nuclear engineering design problems, MIDAS has been built to support a wide range of optimization problems across many domains.
 
-MIDAS is designed to provide users with a variety of optimization methodologies, along with a comprehensive set of hyperparameter inputs, giving users the flexibility to construct the optimization that best suits their problem. The input file format was designed to be intuitive and easily readable, enabling optimizations that are simpler to configure, quick to employ, and adaptable to a wide range of use cases.
+MIDAS is designed to provide users with a variety of optimization methodologies, along with a comprehensive set of hyperparameter inputs, giving users the flexibility to construct the optimization that best suits their problem. The input file format was designed to be intuitive and easily readable, enabling optimizations that are simple to configure, quick to employ, and adaptable to a wide range of use cases.
 
 Current optimization methodologies supported in MIDAS are:
 
@@ -172,9 +172,3 @@ The repository is structured in the following way:
 
 	* solution_to_chromosome_tool: Directory containing solution to chromosome tool and sample input files for the tool. The tool enables users to convert solutions into their chromosome representations so that the chromosome can be used as an initial starting point for optimizations. For example, the tool can convert loading pattern maps as they exist in PARCS input files into their chromosome representations.
 
-
-
-# Resources
-MIDAS is an updated version of the MOF (Modular Optimization Framework) for which you can find more information about the framework structure, theory and applications in https://doi.org/10.48550/arXiv.2204.00141.
-
-MIDAS previous version MOF has been used to control the Crud deposition in nuclear reactors (https://www.mdpi.com/2673-4117/3/4/36).
