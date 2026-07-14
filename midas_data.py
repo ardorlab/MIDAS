@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Current MIDAS version
-__version__ = 2.0.0"
+__version__ = "2.0.0"
 
 
 # MIDAS ASCII art
