@@ -30,8 +30,9 @@ def get_results(parameters, chromosome, input_obj, job_failed=False):
     function used to retrieve all potential output parameters that may be used in an optimization
 
     Parameters: 
-        1 - Levy Function value
-
+        1 - salesman_distance: total distance traveled
+        2 - missed_desitnation: counts number of locations not visited
+        
     Written by Jake Mikouchi. 07/01/2026
     """
 
