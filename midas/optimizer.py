@@ -21,6 +21,7 @@ from midas.algorithms import parallel_simulated_annealing as PSA
 from midas.algorithms import gradient_descent as GD
 from midas.algorithms import tabu_search as TS
 from midas.codes import parcs342, parcs343
+from midas.codes import parcs343_axial
 from midas.codes import ipwr_lut
 from midas.codes import trace50p5
 from midas.codes import polaris624
@@ -68,6 +69,8 @@ class Optimizer():
             self.eval_func = trace50p5.evaluate
         elif self.input.code_interface == "polaris624":
             self.eval_func = polaris624.evaluate
+        elif self.input.code_interface == "parcs343_axial":
+            self.eval_func = parcs343_axial.evaluate
         elif self.input.code_interface == "listsum":
             self.eval_func = listsum.evaluate
         elif self.input.code_interface == "styblinski_tang":
