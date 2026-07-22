@@ -772,7 +772,6 @@ def validate_input(keyword, value, incomp_input_obj=None):
             #!TODO: make sure each material has comp and density (temp is optional)
             return new_dict
 
-
 ## Gene options ##
     elif keyword == 'gene_options':
         new_dict = {}
@@ -847,6 +846,70 @@ def validate_input(keyword, value, incomp_input_obj=None):
                                 new_dict[new_key][new_subkey] = subitem
 
         return new_dict
+
+## Axial Assembly Block ##
+    elif keyword == 'axial_assembly_options':
+        if isinstance(value, dict):
+            new_dict = {}
+            for key, item in value.items():
+                new_key = str(key).lower()
+                #check cross-sections
+                if new_key == 'zone_xs':
+                    new_item = {}
+                    if isinstance(item, dict):
+                        #check assembly type
+                        for subkey, subitem in item.items():
+                            new_subkey = str(subkey).lower()
+                            new_subitem = {}
+                            if isinstance(subitem, dict):
+                                #check types and cross sections
+                                for subsubkey, subsubitem in subitem.items():
+                                    new_subsubkey =str(subsubkey).lower().replace(' ','_')
+                                    if new_subsubkey == 'serial':
+                                        new_subsubitem = str(subsubitem)
+                                    elif new_subsubkey == 'designation':
+                                        new_subsubitem = str(subsubitem)
+                                    elif new_subsubkey == 'region':
+                                        new_subsubitem = str(subsubitem).lower()
+                                    new_subitem[new_subsubkey] = new_subsubitem
+                            new_item[new_subkey] = new_subitem
+                        new_dict[new_key] = new_item
+                    else:
+                        raise ValueError("zone_xs option must be nested with its parameters.")
+                    
+                if new_key == 'constant_xs': 
+                    new_item = {}
+                    if isinstance(item, dict):
+                        #check assembly type
+                        for subkey, subitem in item.items():
+                            new_subkey = str(subkey).lower()
+                            new_subitem = {}
+                            if isinstance(subitem, dict):
+                                #check types and cross sections
+                                for subsubkey, subsubitem in subitem.items():
+                                    new_subsubkey =str(subsubkey).lower().replace(' ','_')
+                                    if new_subsubkey == 'designation':
+                                        new_subsubitem = str(subsubitem)
+                                    new_subitem[new_subsubkey] = new_subsubitem
+                            new_item[new_subkey] = new_subitem
+                        new_dict[new_key] = new_item
+                    else:
+                        raise ValueError("zone_xs option must be nested with its parameters.")                           
+            #check parameters logic
+            if 'zone_xs' not in new_dict:
+                raise ValueError("axial assembly options must contain zone cross sections.")
+            list_unique_fuel_types = []
+            for key, value in new_dict['zone_xs'].items():
+                if "serial" not in value or "designation" not in value or "region" not in value:
+                    raise ValueError(f"'serial', 'designation', or 'region' parameter missing from '{key}'.")
+                if key not in list_unique_fuel_types:
+                    list_unique_fuel_types.append(key)
+                else:
+                    raise ValueError("All zone types must have a unique name.")
+            return new_dict
+        else:
+            if value:
+                raise ValueError("Axial assembly options must be nested with zone_xs with its parameters.")
 
 
 ## Genome Block ##
@@ -994,18 +1057,76 @@ def validate_input(keyword, value, incomp_input_obj=None):
                 return None
             else:
                 raise ValueError(f"Decision variable '{keyword}' must be nested with parameter options and their parameters.")
-    
+
+    elif keyword in ['axial_assembly_parameters']:
+        new_dict = {}
+        if isinstance(value, dict):
+            for key, item in value.items():
+                new_key = str(key).lower()
+                new_dict[new_key] = {}
+                #check decision variable options
+                if isinstance(value[key], dict):
+                    for subkey, subitem in item.items():
+                        new_subkey = str(subkey).lower()
+                        if new_subkey == 'map':
+                            new_dict[new_key][new_subkey] = subitem
+                        if new_subkey == 'zone':
+                            if isinstance(subitem, int) :
+                                new_dict[new_key][new_subkey] = subitem
+                            else: 
+                                raise ValueError(f"Integers must be used to designate axial zones.")                        
+
+                else:
+                    raise ValueError(f"Decision variables '{key}' must be nested with its parameters.")
+
+            ## validate inputs
+            zone_checker = []
+            for key in new_dict.keys():
+                if 'map' in new_dict[key].keys():
+                    map_checker = sorted([x for x in new_dict[key]['map'] if x != 0])
+                    temp_val = 1
+                    for val in map_checker:
+                        if val == temp_val:
+                            pass
+                        elif val == temp_val + 1:
+                            temp_val += 1
+                        else:
+                            raise ValueError(f"location {temp_val + 1} was skipped in '{key}' map.")
+                else: 
+                    raise ValueError(f"'map' parameter is missing in '{key}' parameters.")
+                              
+                if 'zone' not  in new_dict[key].keys():
+                    raise ValueError(f"'zone' is missing from '{key}' parameters.")
+                else: 
+                    zone_checker.append(new_dict[key]['zone'])
+            
+            zone_checker = sorted(zone_checker)
+            if zone_checker[0] != 1: 
+                raise ValueError(f"Axial zone with designation '1' must exist.")
+            temp_val = 1
+            for val in zone_checker:
+                if val == temp_val:
+                    pass
+                elif val == temp_val + 1:
+                    temp_val += 1
+                else:
+                    raise ValueError(f"Axial zone {temp_val + 1} was skipped in 'zones' definition.")
+           
+            return new_dict
+        else:
+            if not value:
+                return None
+            else:
+                raise ValueError(f"Decision variable '{keyword}' must be nested with parameter options and their parameters.")
+
+
 ## Calculation Block ##
     ## PARCS DATA ##
     elif keyword == 'core_type':
         value = str(value).upper()
         if value not in ["PWR", "BWR"]:
             raise ValueError(f"Requested core type '{value}' not supported. \n          Supported values include: PWR, BWR")
-        if value == "bwr":
-            logger.warning("functionality for BWR optimization is still under development")
-            #TODO BWR parcs input generator
-            #TODO core flow optimization
-            #TODO control blade sequence optimization
+
     elif keyword == 'exec_walltime':
         value = int(value)
         if value <= 0:
@@ -1132,6 +1253,40 @@ def validate_input(keyword, value, incomp_input_obj=None):
             
     elif keyword == 'equilibrium_cycles':
         value = int(value)
+
+    elif keyword == 'zone_discretization':
+        if isinstance(value, dict):
+            necessary_xs = list(incomp_input_obj.genome.keys()) + list(incomp_input_obj.zone_options['constant_xs'].keys())
+            new_dict = {}
+            for key, item in value.items():
+                new_key = key.lower().replace(' ','_')
+                if isinstance(item, dict):
+                    new_item = {}
+                    for subkey, subitem in item.items():
+                        new_subkey = subkey.lower().replace(' ','_')
+                        if new_subkey == "num_nodes":
+                            new_item[new_subkey] = int(subitem)
+                        elif new_subkey == "order":
+                            new_item[new_subkey] = int(subitem)
+                    new_dict[new_key] = new_item
+
+                    if "num_nodes" not in new_item.keys():
+                        raise ValueError(f"'num_nodes' parameter missing from '{new_key}' in zone_discretization")
+                    if "order" not in new_item.keys():
+                        raise ValueError(f"'order' parameter missing from '{new_key}' in zone_discretization")
+                else: 
+                    raise ValueError("Each zone in 'zone_discretization' mmust be nested with its parameters.")
+            
+
+            for key in new_dict.keys():
+                if key not in necessary_xs:
+                    raise ValueError(f"Axial zone '{key}' is not defined in decision_variables or constant_xs.")
+            
+            for key in necessary_xs:
+                if key not in new_dict.keys():
+                    raise ValueError(f"Axial zone '{key}' is defined in decision variables or constant_xs but does not exist in zone_discretization.")
+
+            return new_dict
 
     ## TRACE DATA ##
     elif keyword == 'initialize_code':
@@ -1423,6 +1578,9 @@ class Input_Parser():
         if not self.pin_options and self.calculation_type in ['lattice_physics']:
             raise ValueError("Fuel pin options must be nested with rod_geometries, compositions, and/or controls_rods.")
         
+    ## Axial Assembly Block 
+        self.zone_options = yaml_line_reader(self.file_settings, 'axial_assembly_options', None)
+        
     ## All generic variable Block ## (numerical and categorical)
         self.gene_options = yaml_line_reader(self.file_settings, 'gene_options', None, self)
         
@@ -1436,6 +1594,8 @@ class Input_Parser():
             self.genome = yaml_line_reader(info, 'assembly_parameters', None)
         elif self.calculation_type in ['lattice_physics']:
             self.genome = yaml_line_reader(info, 'lattice_parameters', None)
+        elif self.calculation_type in ['axial_zones']:
+            self.genome = yaml_line_reader(info, 'axial_assembly_parameters', None)        
         elif self.calculation_type in ['numeric_variable', 'categorical']:
             self.genome = yaml_line_reader(info, 'parameters', None, self)
             if self.methodology == "gradient_descent" and self.sgd:
@@ -1511,6 +1671,7 @@ class Input_Parser():
         self.equilibrium_cycles = yaml_line_reader(info, "equilibrium_cycles", 10)
         if (not self.pin_power_recon and 'pinpowerpeaking' in self.objectives.keys()) or (not self.pin_power_recon and 'fdeltah' in self.objectives.keys()):
             logger.warning('Pin power reconstruction is turned off but pin peaking factors are requested in objectives.')
+        self.zone_discretize = yaml_line_reader(info, "zone_discretization", None, self)
             
         self.active_cycles = yaml_line_reader(info, "active_cycles", 500)
         self.inactive_cycles = yaml_line_reader(info, "inactive_cycles", 50)

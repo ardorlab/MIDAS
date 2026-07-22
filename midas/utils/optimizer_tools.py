@@ -98,6 +98,8 @@ class Solution():
             return self.EQ_chromosome(genome, batches, LWR_core_parameters)
         elif calc_type == 'lattice_physics':
             return self.lat_chromosome(genome,LWR_core_parameters)
+        elif calc_type == 'axial_zones':
+            return self.axial_chromosome(genome,LWR_core_parameters)
         elif calc_type == 'numeric_variable':
             return self.numeric_chromosome(genome)
         elif calc_type == 'categorical':
@@ -249,6 +251,42 @@ class Solution():
         
         return chromosome
     
+    def axial_chromosome(self,genome,core_parameters):
+        
+        """
+        Generates an initial solution for the assembly axial zone optimizations
+        
+        Written by Jake Mikouchi. 07/17/2026
+        """
+        symmetry = core_parameters[3]
+        
+        genes_list = list(genome.keys())
+        chromosome_length = []
+        chromosome_length = 0
+        for key in genome.keys(): 
+            true_map_len = len([x for x in genome[key]['map'] if x != 0])
+            if chromosome_length < true_map_len:
+                chromosome_length = true_map_len
+        
+        chromosome_length = [0 for x in genome.keys()]*true_map_len
+        
+        chromosome_is_valid = False
+        attempts = 0
+        while not chromosome_is_valid:
+            attempts += 1
+            if attempts > 10000:
+                raise ValueError("Random solution generation has failed after 10,000 attempts. Consider checking the variables maps and constraints.")
+
+            chromosome = [None]*len(chromosome_length)
+            for i in range(len(chromosome)):
+                gene_options = Gene_Validity_check.contraceptive_check(self.input, genes_list, genome, symmetry,
+                                                                                        [], chromosome, i)
+                chromosome[i] = random.choice(gene_options)
+            if Gene_Validity_check.abortive_check(self.input,genes_list,genome,core_parameters,chromosome):
+                chromosome_is_valid = True
+        
+        return chromosome
+
     def numeric_chromosome(self,genome):
         """
         Generates an initial solution for numeric variable optimizations.
@@ -530,6 +568,8 @@ class Gene_Validity_check():
             valid_genes_list = Gene_Validity_check.calc_LWR_gene_options(genes_list, genome, parameters, child_zone, indx)            
         elif input_obj.calculation_type == 'lattice_physics':
             valid_genes_list = Gene_Validity_check.calc_lat_gene_options(genes_list, genome, parameters, child+chromosome[len(child):], indx)
+        elif input_obj.calculation_type == 'axial_zones':
+            valid_genes_list = Gene_Validity_check.calc_axial_gene_options(genes_list, genome, input_obj.zone_options, indx)        
         elif input_obj.calculation_type == 'numeric_variable':
             valid_genes_list = Gene_Validity_check.calc_numeric_options(genes_list, genome, input_obj, child+chromosome[len(child):], indx)
         elif input_obj.calculation_type == 'categorical':
@@ -617,6 +657,27 @@ class Gene_Validity_check():
         
         return valid_genes_list
     
+    def calc_axial_gene_options(genes_list, genome, zone_options, index):
+        """
+        determines gene options for index in axial assembly chromoseom.
+        Valid genes depend on index of chromosome.
+
+        Created By Jake Mikouchi. 07/20/26
+        """
+        num_genes = len(genes_list)
+        gene_trial = range(num_genes)
+        for trial in gene_trial:
+            if index % num_genes == trial:
+                for gene in genome.keys():
+                    if genome[gene]['zone'] == trial+1:
+                        break
+                valid_genes_list = []
+                for option in zone_options['zone_xs']:
+                    if zone_options['zone_xs'][option]['region'] == gene:
+                        valid_genes_list.append(option)
+
+        return valid_genes_list
+
     def calc_numeric_options(genes_list, genome, input_obj, chromosome, index):
         """
         Determine valid list of genes for continous optimization problems. 
@@ -710,6 +771,8 @@ class Gene_Validity_check():
 
         elif input_obj.calculation_type == 'lattice_physics':
             valid_chromosome = Gene_Validity_check.check_constraints(genes_list, genome, parameters, child)  
+        elif input_obj.calculation_type == 'axial_zones':
+            valid_chromosome = Gene_Validity_check.check_constraints_axial(genes_list, genome, input_obj.zone_options, parameters, child)  
         elif input_obj.calculation_type == 'numeric_variable':
             valid_chromosome = Gene_Validity_check.check_numeric_constraints(genes_list, genome, input_obj, child)  
         elif input_obj.calculation_type == 'categorical':
@@ -765,6 +828,45 @@ class Gene_Validity_check():
             
         return True #if you haven't exited with "False" by this point, all constraints were passed.
 
+
+    def check_constraints_axial(genes_list, genome, zone_options, core_parameters, solution):
+        """
+        Check solution parameters and ensures that assembly lattices only appear in valid zones.
+        Returns True if the solution is valid and False if a constraint is violated.
+        
+        Written by Jake Mikouchi. 07/20/2026
+        """
+        if not genome: #! this implies that there are no constraints, but also no valid choices?
+            return True
+                
+        ## make sure that each gene option is valid for the gene
+        region_availability = {}
+        num_genes = len(genes_list)
+        gene_trial = range(num_genes)
+        for index in range(num_genes):
+            for trial in gene_trial:
+                if index % num_genes == trial:
+                    for gene in genome.keys():
+                        if genome[gene]['zone'] == trial+1:
+                            break
+                    valid_genes_list = []
+                    for option in zone_options['zone_xs']:
+                        if zone_options['zone_xs'][option]['region'] == gene:
+                            valid_genes_list.append(option)
+            region_availability[gene] = valid_genes_list
+
+        for index in range(len(solution)):
+            for trial in gene_trial:
+                if index % num_genes == trial:
+                    for gene in genome.keys():
+                        if genome[gene]['zone'] == trial+1:
+                            break
+            if solution[index] not in region_availability[gene]:
+                return False
+            
+        return True #if you haven't exited with "False" by this point, all constraints were passed.
+
+
     def check_numeric_constraints(genes_list, genome, input_obj, solution):
         """
         Check solution parameters against user-specified constraints on the input space.
@@ -799,7 +901,7 @@ class Gene_Validity_check():
                     return False
             
         return True #if you haven't exited with "False" by this point, all constraints were passed.
-  
+
     def check_categorical_constraints(genes_list, genome, core_parameters, solution):
         """
         Check solution parameters against user-specified constraints on the input space.

@@ -1,0 +1,280 @@
+## Optimizer Block
+general:
+  optimizer: tabu_search
+  code_type: PARCS343_axial
+  calc_type: axial_zones
+  results_directory_name: output_files
+  input_template: 
+    apply: TRUE
+    loc: './template.inp' 
+  clear_results: all_but_best
+
+optimization:
+  population_size: 2
+  number_of_generations: 1000
+  objectives:
+    lhgr: 
+      output_index: 12
+      goal: less_than_target 
+      weight: 250
+      target: 13.4 
+      linear_power: 4.0359 
+    chfr:
+      output_index: 7
+      goal: greater_than_target
+      weight: 250.0
+      target: 1.9    
+
+## Algorithm Settings
+algorithm:
+  construct_neighbors: 
+    method: flip
+    num_flips: 1
+  num_tabu: 10
+  tabu_bands: 0.075 # for continous variable optimization
+  aspiration: 
+    method: improved_best
+
+
+## avialble genes
+axial_assembly_options:
+  zone_xs:
+    # Power Shaping Zone
+    PSZ_10_39: 
+      designation: 4 
+      region: PSZ
+    PSZ_10_78: 
+      designation: 5 
+      region: PSZ
+    PSZ_10_585: 
+      designation: 6 
+      region: PSZ
+    PSZ_10_975: 
+      designation: 7 
+      region: PSZ
+    PSZ_14_392: 
+      designation: 8 
+      region: PSZ
+    PSZ_14_589: 
+      designation: 9 
+      region: PSZ
+    PSZ_14_785: 
+      designation: 10 
+      region: PSZ
+    PSZ_14_982: 
+      designation: 11 
+      region: PSZ
+    PSZ_18_394: 
+      designation: 12 
+      region: PSZ
+    PSZ_18_591: 
+      designation: 13 
+      region: PSZ
+    PSZ_18_788: 
+      designation: 14 
+      region: PSZ
+    PSZ_18_986: 
+      designation: 15 
+      region: PSZ
+    # Dominant Zone
+    DOM_10_71: 
+      designation: 16 
+      region: DOM
+    DOM_10_355: 
+      designation: 17 
+      region: DOM
+    DOM_10_532: 
+      designation: 18 
+      region: DOM
+    DOM_10_887: 
+      designation: 19 
+      region: DOM
+    DOM_14_339: 
+      designation: 20 
+      region: DOM
+    DOM_14_508: 
+      designation: 21 
+      region: DOM
+    DOM_14_678: 
+      designation: 22 
+      region: DOM
+    DOM_14_848: 
+      designation: 23 
+      region: DOM
+    DOM_18_341: 
+      designation: 24 
+      region: DOM
+    DOM_18_512: 
+      designation: 25 
+      region: DOM
+    DOM_18_683: 
+      designation: 26 
+      region: DOM
+    DOM_18_854: 
+      designation: 27 
+      region: DOM
+    # Plenum Zone
+    PLE_11_345: 
+      designation: 28 
+      region: PLE
+    PLE_11_863: 
+      designation: 29 
+      region: PLE
+    PLE_13_353: 
+      designation: 30 
+      region: PLE
+    PLE_13_53: 
+      designation: 31 
+      region: PLE
+    PLE_13_707: 
+      designation: 32 
+      region: PLE
+    PLE_13_884: 
+      designation: 33 
+      region: PLE
+    PLE_15_52: 
+      designation: 34 
+      region: PLE
+    PLE_15_346: 
+      designation: 35 
+      region: PLE
+    PLE_15_693: 
+      designation: 36 
+      region: PLE
+    PLE_15_866: 
+      designation: 37 
+      region: PLE
+    PLE_18_52: 
+      designation: 38 
+      region: PLE
+    PLE_18_175: 
+      designation: 39 
+      region: PLE
+    PLE_18_693: 
+      designation: 40 
+      region: PLE
+    PLE_18_866: 
+      designation: 41 
+      region: PLE
+    # Vanished Zone
+    VAN_11_354: 
+      designation: 42 
+      region: VAN
+    VAN_11_886: 
+      designation: 43 
+      region: VAN
+    VAN_13_361: 
+      designation: 44 
+      region: VAN
+    VAN_13_542: 
+      designation: 45 
+      region: VAN
+    VAN_13_723:
+      designation: 46 
+      region: VAN
+    VAN_13_903: 
+      designation: 47 
+      region: VAN
+    VAN_15_52: 
+      designation: 48 
+      region: VAN
+    VAN_15_346: 
+      designation: 49 
+      region: VAN
+    VAN_15_693: 
+      designation: 50 
+      region: VAN
+    VAN_15_883: 
+      designation: 51 
+      region: VAN
+    VAN_18_52: 
+      designation: 52 
+      region: VAN
+    VAN_18_175: 
+      designation: 53 
+      region: VAN
+    VAN_18_693: 
+      designation: 54 
+      region: VAN
+    VAN_18_883: 
+      designation: 55 
+      region: VAN
+  constant_xs:
+    NAT:
+      designation: 56
+    N-V:
+      designation: 57
+    N-T: 
+      designation: 58
+    TOP_refl:
+      designation: 1
+    BOT_refl:
+      designation: 2
+
+
+## Genome
+decision_variables:
+  # parameters used to fill each chromosome.
+  axial_assembly_parameters:
+    PSZ: 
+      zone: 1
+      map: &ID001
+        [0,
+        1,  0, 
+        0,  2,  0,   
+        3,  0,  4,  0,    
+        0,  5,  0,  6,  0,  
+        7,  0,  8,  0,  9,  0, 
+        0, 10,  0, 11,  0, 12,  0,    
+        13, 0, 14,  0, 15,  0, 16,  0, 
+        0, 17,  0, 18,  0, 19,  0, 20, 21,     
+        22, 0, 23,  0, 24,  0, 25, 26, 27,  0,   
+        0, 28,  0, 29, 30, 31, 32, 33,  0,  0,  0,          
+        34,35, 36, 37,  0, 38,  0,  0,  0,  0,            
+        0,  0, 39,  0,  0,  0,  0,  0,  0,  0,            
+        0,  0,  0,  0,  0,  0,  0,  0,               
+        0,  0,  0,  0,  0,  0,  0]
+    DOM: 
+      zone: 2
+      map: *ID001
+    PLE: 
+      zone: 3
+      map: *ID001
+    VAN: 
+      zone: 4
+      map: *ID001
+
+## Calculation Settings
+optimization_data:
+  xs_library_path: ../XS 
+  th_fdbk:
+    apply: True 
+    loc: ./../../../XS_new_10_20_25/LaSalle_paths.inp
+  zone_discretization: 
+    BOT_refl: 
+      num_nodes: 1
+      order: 1
+    NAT: 
+      num_nodes: 1
+      order: 2
+    PSZ: 
+      num_nodes: 8
+      order: 3
+    DOM: 
+      num_nodes: 5
+      order: 4 
+    PLE: 
+      num_nodes: 2
+      order: 5
+    VAN:  
+      num_nodes: 6
+      order: 6
+    N-V: 
+      num_nodes: 1
+      order: 7
+    N-T: 
+      num_nodes: 1
+      order: 8
+    TOP_refl: 
+      num_nodes: 1
+      order: 9
