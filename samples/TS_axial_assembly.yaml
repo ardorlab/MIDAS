@@ -251,6 +251,18 @@ axial_assembly_options:
       serial: GE14_VAN_18_883.PMAXS
       designation: 55 
       region: VAN
+  constant_xs:
+    NAT:
+      designation: 56
+    N-V:
+      designation: 57
+    N-T: 
+      designation: 58
+    TOP_refl:
+      designation: 1
+    BOT_refl:
+      designation: 2
+
 
 ## Genome
 decision_variables:
@@ -290,3 +302,31 @@ optimization_data:
   th_fdbk:
     apply: True 
     loc: ./../../../XS_new_10_20_25/LaSalle_paths.inp
+  zone_discretization: 
+    BOT_refl: 
+      num_nodes: 1
+      order: 1
+    NAT: 
+      num_nodes: 1
+      order: 2
+    PSZ: 
+      num_nodes: 8
+      order: 3
+    DOM: 
+      num_nodes: 5
+      order: 4 
+    PLE: 
+      num_nodes: 2
+      order: 5
+    VAN:  
+      num_nodes: 6
+      order: 6
+    N-V: 
+      num_nodes: 1
+      order: 7
+    N-T: 
+      num_nodes: 1
+      order: 8
+    TOP_refl: 
+      num_nodes: 1
+      order: 9

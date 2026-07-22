@@ -859,7 +859,7 @@ def validate_input(keyword, value, incomp_input_obj=None):
                     if isinstance(item, dict):
                         #check assembly type
                         for subkey, subitem in item.items():
-                            new_subkey = str(subkey)
+                            new_subkey = str(subkey).lower()
                             new_subitem = {}
                             if isinstance(subitem, dict):
                                 #check types and cross sections
@@ -877,6 +877,24 @@ def validate_input(keyword, value, incomp_input_obj=None):
                     else:
                         raise ValueError("zone_xs option must be nested with its parameters.")
                     
+                if new_key == 'constant_xs': 
+                    new_item = {}
+                    if isinstance(item, dict):
+                        #check assembly type
+                        for subkey, subitem in item.items():
+                            new_subkey = str(subkey).lower()
+                            new_subitem = {}
+                            if isinstance(subitem, dict):
+                                #check types and cross sections
+                                for subsubkey, subsubitem in subitem.items():
+                                    new_subsubkey =str(subsubkey).lower().replace(' ','_')
+                                    if new_subsubkey == 'designation':
+                                        new_subsubitem = str(subsubitem)
+                                    new_subitem[new_subsubkey] = new_subsubitem
+                            new_item[new_subkey] = new_subitem
+                        new_dict[new_key] = new_item
+                    else:
+                        raise ValueError("zone_xs option must be nested with its parameters.")                           
             #check parameters logic
             if 'zone_xs' not in new_dict:
                 raise ValueError("axial assembly options must zone cross sections.")
@@ -1235,6 +1253,40 @@ def validate_input(keyword, value, incomp_input_obj=None):
             
     elif keyword == 'equilibrium_cycles':
         value = int(value)
+
+    elif keyword == 'zone_discretization':
+        if isinstance(value, dict):
+            necessary_xs = list(incomp_input_obj.genome.keys()) + list(incomp_input_obj.zone_options['constant_xs'].keys())
+            new_dict = {}
+            for key, item in value.items():
+                new_key = key.lower().replace(' ','_')
+                if isinstance(item, dict):
+                    new_item = {}
+                    for subkey, subitem in item.items():
+                        new_subkey = subkey.lower().replace(' ','_')
+                        if new_subkey == "num_nodes":
+                            new_item[new_subkey] = int(subitem)
+                        elif new_subkey == "order":
+                            new_item[new_subkey] = int(subitem)
+                    new_dict[new_key] = new_item
+
+                    if "num_nodes" not in new_item.keys():
+                        raise ValueError(f"'num_nodes' parameter missing from '{new_key}' in zone_discretization")
+                    if "order" not in new_item.keys():
+                        raise ValueError(f"'order' parameter missing from '{new_key}' in zone_discretization")
+                else: 
+                    raise ValueError("Each zone in 'zone_discretization' mmust be nested with its parameters.")
+            
+
+            for key in new_dict.keys():
+                if key not in necessary_xs:
+                    raise ValueError(f"Axial zone '{key}' is not defined in decision_variables or constant_xs.")
+            
+            for key in necessary_xs:
+                if key not in new_dict.keys():
+                    raise ValueError(f"Axial zone '{key}' is defined in decision variables or constant_xs but does not exist in zone_discretization.")
+
+            return new_dict
 
     ## TRACE DATA ##
     elif keyword == 'initialize_code':
@@ -1619,6 +1671,7 @@ class Input_Parser():
         self.equilibrium_cycles = yaml_line_reader(info, "equilibrium_cycles", 10)
         if (not self.pin_power_recon and 'pinpowerpeaking' in self.objectives.keys()) or (not self.pin_power_recon and 'fdeltah' in self.objectives.keys()):
             logger.warning('Pin power reconstruction is turned off but pin peaking factors are requested in objectives.')
+        self.zone_discretize = yaml_line_reader(info, "zone_discretization", None, self)
             
         self.active_cycles = yaml_line_reader(info, "active_cycles", 500)
         self.inactive_cycles = yaml_line_reader(info, "inactive_cycles", 50)

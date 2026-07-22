@@ -267,8 +267,8 @@ class Solution():
             true_map_len = len([x for x in genome[key]['map'] if x != 0])
             if chromosome_length < true_map_len:
                 chromosome_length = true_map_len
-
-        chromosome_length = [0 for x in genome.keys()]*39
+        
+        chromosome_length = [0 for x in genome.keys()]*true_map_len
         
         chromosome_is_valid = False
         attempts = 0
@@ -673,7 +673,7 @@ class Gene_Validity_check():
                 valid_genes_list = []
                 for option in zone_options['zone_xs']:
                     if zone_options['zone_xs'][option]['region'] == gene:
-                        valid_genes_list.append(zone_options['zone_xs'][option]['designation'])
+                        valid_genes_list.append(option)
 
         return valid_genes_list
 
@@ -851,7 +851,7 @@ class Gene_Validity_check():
                     valid_genes_list = []
                     for option in zone_options['zone_xs']:
                         if zone_options['zone_xs'][option]['region'] == gene:
-                            valid_genes_list.append(zone_options['zone_xs'][option]['designation'])
+                            valid_genes_list.append(option)
             region_availability[gene] = valid_genes_list
 
         for index in range(len(solution)):
