@@ -115,9 +115,11 @@ def evaluate(solution, input):
         return solution
 
 def with_template(solution, input, cwd, filename): 
+    """
+    Function to create parcs input file from template and populate input file with chromosome
 
-## Prepare values for file writing
-    ## Fill loading pattern with chromosome (core_dict from Prepare_Problem_Values.prepare_cycle)
+    Written by Jake Mikouchi. 07/20/26
+    """
 
 ## copy input file from template
     inp_template = str(cwd.joinpath(cwd / input.input_template['loc']))
@@ -171,11 +173,24 @@ def with_template(solution, input, cwd, filename):
 
 def get_results(parameters, filename, input, job_failed=False):
     """
-    Currently supports cycle length, F_q, F_dh, max boron, keff, critical power ratio,
-    linear heat generation rate, average planar linear heat generation rate.
-    
-    Updated by Nicholas Rollins. 09/27/2024
-    Updated by Jake Mikouchi. 03/25/2025
+    function used to retrieve all potential output parameters that may be used in an optimization
+
+    Parameters: 
+        1 - cycle length: 
+        2 - pxy: assembly level planar peaking
+        3 - pxyz: assembly level  volumetric peaking
+        4 - pin power peaking: Fq peaking factor
+        5 - f delta h: enthalpy rise peaking factor
+        6 - max_boron: 
+        7 - chfr: critical heat flux ratio
+        8 - keff_min: 
+        9 - keff_max: 
+        10 - keff_diff: difference between minimum and maximum keff
+        11 - cpr: critical power ratio
+        12 - lhgr: linear heat generation rate
+        13 - aplhgr: average planar lhgr
+
+    Updated by Jake Mikouchi. 07/22/2026
     """
     ## Prepare container for results
     results_dict = {}

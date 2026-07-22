@@ -659,7 +659,8 @@ class Gene_Validity_check():
     
     def calc_axial_gene_options(genes_list, genome, zone_options, index):
         """
-        determines gene options for index depending on the axial zone the index points to.
+        determines gene options for index in axial assembly chromoseom.
+        Valid genes depend on index of chromosome.
 
         Created By Jake Mikouchi. 07/20/26
         """

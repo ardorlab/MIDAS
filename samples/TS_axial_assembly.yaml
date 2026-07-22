@@ -41,214 +41,162 @@ axial_assembly_options:
   zone_xs:
     # Power Shaping Zone
     PSZ_10_39: 
-      serial: GE14_PSZ_10_39.PMAXS
       designation: 4 
       region: PSZ
     PSZ_10_78: 
-      serial: GE14_PSZ_10_78.PMAXS
       designation: 5 
       region: PSZ
     PSZ_10_585: 
-      serial: GE14_PSZ_10_585.PMAXS
       designation: 6 
       region: PSZ
     PSZ_10_975: 
-      serial: GE14_PSZ_10_975.PMAXS
       designation: 7 
       region: PSZ
     PSZ_14_392: 
-      serial: GE14_PSZ_14_392.PMAXS
       designation: 8 
       region: PSZ
     PSZ_14_589: 
-      serial: GE14_PSZ_14_589.PMAXS
       designation: 9 
       region: PSZ
     PSZ_14_785: 
-      serial: GE14_PSZ_14_785.PMAXS
       designation: 10 
       region: PSZ
     PSZ_14_982: 
-      serial: GE14_PSZ_14_982.PMAXS
       designation: 11 
       region: PSZ
     PSZ_18_394: 
-      serial: GE14_PSZ_18_394.PMAXS
       designation: 12 
       region: PSZ
     PSZ_18_591: 
-      serial: GE14_PSZ_18_591.PMAXS
       designation: 13 
       region: PSZ
     PSZ_18_788: 
-      serial: GE14_PSZ_18_788.PMAXS
       designation: 14 
       region: PSZ
     PSZ_18_986: 
-      serial: GE14_PSZ_18_986.PMAXS
       designation: 15 
       region: PSZ
     # Dominant Zone
     DOM_10_71: 
-      serial: GE14_DOM_10_71.PMAXS
       designation: 16 
       region: DOM
     DOM_10_355: 
-      serial: GE14_DOM_10_355.PMAXS
       designation: 17 
       region: DOM
     DOM_10_532: 
-      serial: GE14_DOM_10_532.PMAXS
       designation: 18 
       region: DOM
     DOM_10_887: 
-      serial: GE14_DOM_10_887.PMAXS
       designation: 19 
       region: DOM
     DOM_14_339: 
-      serial: GE14_DOM_14_339.PMAXS
       designation: 20 
       region: DOM
     DOM_14_508: 
-      serial: GE14_DOM_14_508.PMAXS
       designation: 21 
       region: DOM
     DOM_14_678: 
-      serial: GE14_DOM_14_678.PMAXS
       designation: 22 
       region: DOM
     DOM_14_848: 
-      serial: GE14_DOM_14_848.PMAXS
       designation: 23 
       region: DOM
     DOM_18_341: 
-      serial: GE14_DOM_18_341.PMAXS
       designation: 24 
       region: DOM
     DOM_18_512: 
-      serial: GE14_DOM_18_512.PMAXS
       designation: 25 
       region: DOM
     DOM_18_683: 
-      serial: GE14_DOM_18_683.PMAXS
       designation: 26 
       region: DOM
     DOM_18_854: 
-      serial: GE14_DOM_18_854.PMAXS
       designation: 27 
       region: DOM
     # Plenum Zone
     PLE_11_345: 
-      serial: GE14_PLE_11_345.PMAXS
       designation: 28 
       region: PLE
     PLE_11_863: 
-      serial: GE14_PLE_11_863.PMAXS
       designation: 29 
       region: PLE
     PLE_13_353: 
-      serial: GE14_PLE_13_353.PMAXS
       designation: 30 
       region: PLE
     PLE_13_53: 
-      serial: GE14_PLE_13_53.PMAXS
       designation: 31 
       region: PLE
     PLE_13_707: 
-      serial: GE14_PLE_13_707.PMAXS
       designation: 32 
       region: PLE
     PLE_13_884: 
-      serial: GE14_PLE_13_884.PMAXS
       designation: 33 
       region: PLE
     PLE_15_52: 
-      serial: GE14_PLE_15_52.PMAXS
       designation: 34 
       region: PLE
     PLE_15_346: 
-      serial: GE14_PLE_15_346.PMAXS
       designation: 35 
       region: PLE
     PLE_15_693: 
-      serial: GE14_PLE_15_693.PMAXS
       designation: 36 
       region: PLE
     PLE_15_866: 
-      serial: GE14_PLE_15_866.PMAXS
       designation: 37 
       region: PLE
     PLE_18_52: 
-      serial: GE14_PLE_18_52.PMAXS
       designation: 38 
       region: PLE
     PLE_18_175: 
-      serial: GE14_PLE_18_175.PMAXS
       designation: 39 
       region: PLE
     PLE_18_693: 
-      serial: GE14_PLE_18_693.PMAXS
       designation: 40 
       region: PLE
     PLE_18_866: 
-      serial: GE14_PLE_18_866.PMAXS
       designation: 41 
       region: PLE
     # Vanished Zone
     VAN_11_354: 
-      serial: GE14_VAN_11_354.PMAXS
       designation: 42 
       region: VAN
     VAN_11_886: 
-      serial: GE14_VAN_11_886.PMAXS
       designation: 43 
       region: VAN
     VAN_13_361: 
-      serial: GE14_VAN_13_361.PMAXS
       designation: 44 
       region: VAN
     VAN_13_542: 
-      serial: GE14_VAN_13_542.PMAXS
       designation: 45 
       region: VAN
-    VAN_13_723: 
-      serial: GE14_VAN_13_723.PMAXS
+    VAN_13_723:
       designation: 46 
       region: VAN
     VAN_13_903: 
-      serial: GE14_VAN_13_903.PMAXS
       designation: 47 
       region: VAN
     VAN_15_52: 
-      serial: GE14_VAN_15_52.PMAXS
       designation: 48 
       region: VAN
     VAN_15_346: 
-      serial: GE14_VAN_15_346.PMAXS
       designation: 49 
       region: VAN
     VAN_15_693: 
-      serial: GE14_VAN_15_693.PMAXS
       designation: 50 
       region: VAN
     VAN_15_883: 
-      serial: GE14_VAN_15_883.PMAXS
       designation: 51 
       region: VAN
     VAN_18_52: 
-      serial: GE14_VAN_18_52.PMAXS
       designation: 52 
       region: VAN
     VAN_18_175: 
-      serial: GE14_VAN_18_175.PMAXS
       designation: 53 
       region: VAN
     VAN_18_693: 
-      serial: GE14_VAN_18_693.PMAXS
       designation: 54 
       region: VAN
     VAN_18_883: 
-      serial: GE14_VAN_18_883.PMAXS
       designation: 55 
       region: VAN
   constant_xs:

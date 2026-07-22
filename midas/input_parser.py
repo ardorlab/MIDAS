@@ -897,7 +897,7 @@ def validate_input(keyword, value, incomp_input_obj=None):
                         raise ValueError("zone_xs option must be nested with its parameters.")                           
             #check parameters logic
             if 'zone_xs' not in new_dict:
-                raise ValueError("axial assembly options must zone cross sections.")
+                raise ValueError("axial assembly options must contain zone cross sections.")
             list_unique_fuel_types = []
             for key, value in new_dict['zone_xs'].items():
                 if "serial" not in value or "designation" not in value or "region" not in value:
