@@ -804,8 +804,6 @@ def validate_input(keyword, value, incomp_input_obj=None):
                                             raise ValueError(f"The {new_subkey} entry is a list of length 0. It must either be a list with one or more entries for a non-uniform range, or a single number for a uniform range")
                                         for index in range(0, len(subitem)):
                                             subitem[index] = float(subitem[index])
-                                            if subitem[index] < 0: 
-                                                raise ValueError("Numeric variable 'increment' entries must be greater than 0")
                                         new_dict[new_key][new_subkey] = subitem
                                     else:
                                         new_dict[new_key][new_subkey] = float(subitem)
@@ -1546,7 +1544,7 @@ class Input_Parser():
         self.epsilon = yaml_line_reader(info, 'epsilon', 0.05)
         self.learning_rate = yaml_line_reader(info, 'learning_rate', 0.005)
         self.sgd = yaml_line_reader(info, 'stochastic', False)
-        if self.sgd:
+        if self.sgd and self.methodology == 'gradient_descent':
             if self.population_size == 1 or self.population_size % 2 == 0:
                 raise ValueError(f"Population size must be an odd number greater than 1 when using stochastic gradient descent.")
         nc_default = {'method':'flip','num_flips':1}
