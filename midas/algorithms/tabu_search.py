@@ -179,7 +179,10 @@ class TS_perturbations():
     """
     def flip(input_obj, population_size, num_flips, active_soln):
         """
+        performs perturbations on the active chromosome by selecting a random position in the chromosome and flipping the corresponding gene.
+        The 'flipping' is performed by selecting a random valid gene.
 
+        Written by Jake Mikouchi. 08/05/2026
         """
 
       ## Initialize logging for the present file
@@ -261,19 +264,28 @@ class TS_aspirations():
         for idx in range(len(active_soln)):
             for tabu in self.tabu_list:
                 if idx == tabu['position']:
-
                     # determine if variable is continous range
                     for gene_type in self.input.genome.keys():
-                        if self.input.genome[gene_type]['map'][idx] == 1:
-                            if 'continuous_range' in self.input.gene_options[gene_type].keys():
-                                if challenge_chrome[idx] >= tabu['move'] - self.input.tabu_bands and challenge_chrome[idx] <= tabu['move'] + self.input.tabu_bands:
-                                    tabu_move = True
-                                    break
-                            else:
+                        if self.input.calculation_type == "numeric_variable":
+                            if self.input.genome[gene_type]['map'][idx] == 1:
+                                if 'continuous_range' in self.input.gene_options[gene_type].keys():
+                                    if challenge_chrome[idx] >= tabu['move'] - self.input.tabu_bands and challenge_chrome[idx] <= tabu['move'] + self.input.tabu_bands:
+                                        tabu_move = True
+                                        break
+                        else:
+                            # optimization types that have binary maps
+                            if not any(thing > 1 for thing in self.input.genome[gene_type]['map']):
+                                if self.input.genome[gene_type]['map'][idx] == 1:
+                                    if challenge_chrome[idx] == tabu['move']:
+                                        tabu_move = True
+                                        break
+
+                            # optimization types that do not have binary maps
+                            else: 
                                 if challenge_chrome[idx] == tabu['move']:
                                     tabu_move = True
                                     break
-
+                                
         return tabu_move
 
     def improved_best(best_fitness, challenger_soln):
