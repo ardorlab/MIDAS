@@ -1738,7 +1738,7 @@ class Input_Parser():
         self.batches = yaml_line_reader(info, 'batches', None)
         #check that decision variable options are valid.
         if not self.genome:
-            raise ValueError("'assembly_parameters', 'lattice_parameters', 'rod_bank_parameters', 'rod_bank_parameters' or 'parameters' must be specified in Decision Variables.")
+            raise ValueError("'assembly_parameters', 'lattice_parameters', 'rod_bank_parameters', or 'parameters' must be specified in Decision Variables.")
         if self.calculation_type == 'eq_cycle' and not self.batches:
             raise ValueError("'Batches' must be specified in Decision Variables for the 'EQ Cycle' type.")
         for key, value in self.genome.items():
