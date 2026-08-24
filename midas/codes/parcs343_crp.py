@@ -75,7 +75,10 @@ def evaluate(solution, input):
         filename = solution.name + '.inp'
         # create input file based on if an input template is given
         if input.input_template['apply']:
-            with_template(solution, input, cwd, filename)
+            if input.crp_partial['apply']:
+                with_template_partial_opt(solution, input, cwd, filename)
+            else:
+                with_template_full_opt(solution, input, cwd, filename)
         else: 
             raise ValueError("Axial Assembly optimization requires a template input file.")
 
@@ -114,11 +117,11 @@ def evaluate(solution, input):
 
         return solution
 
-def with_template(solution, input, cwd, filename): 
+def with_template_full_opt(solution, input, cwd, filename): 
     """
     Function to create parcs input file from template and populate input file with chromosome
 
-    Written by Jake Mikouchi. 07/20/26
+    Written by Jake Mikouchi. 08/12/26
     """
 
 ## copy input file from template
@@ -131,7 +134,7 @@ def with_template(solution, input, cwd, filename):
     with open(filename, "w") as ofile:
         realized_chromosome = prepare_chromosome(input, solution.chromosome)
         num_zones = len(input.genome.keys())
-        write_assemb_flag = False 
+        write_pattern_flag = False 
         for line in lines:
             ## change CaseID ##
             if "caseid" in line.lower():
@@ -147,29 +150,73 @@ def with_template(solution, input, cwd, filename):
                 else:
                     ofile.write("      TH_FDBK    F\n")
 
-            elif "assy_type    10" in line:
-                write_assemb_flag = True 
-                ofile.write(line) 
-                assmb_type = 100
-                temp_list = [{key:input.zone_discretize[key]['order']} for key in input.zone_discretize.keys()]
-                zone_list = [0 for x in temp_list]
-                for zone in temp_list:
-                    zone_list[zone[list(zone.keys())[0]] - 1] = list(zone.keys())[0]
-                for i in range(int(len(solution.chromosome)/num_zones)):
-                    line = f"    assy_type    {assmb_type}"
-                    index = 0 
-                    for zone in zone_list:
-                        if zone not in input.zone_options['constant_xs'].keys():
-                            line += f"  {input.zone_discretize[zone]['num_nodes']}*{realized_chromosome[(i*num_zones+index)]}"
-                            index += 1
-                        else: 
-                            line += f"  {input.zone_discretize[zone]['num_nodes']}*{input.zone_options['constant_xs'][zone]['designation']}"
-                    line += "  FUEL \n"
+            elif "bank_def" in line.lower():
+                write_pattern_flag = True 
+                sequence_step = 1
+                banks_step = 0
+                num_banks = len(input.control_bank_conf)
+                for patterns in range(len(input.bank_pattern)):
+                    line = f"    bank_def   {sequence_step}   "
+                    for rod in realized_chromosome[banks_step:banks_step+num_banks]:
+                        line += f"{rod}   "
+                    line += "\n"
                     ofile.write(line) 
-                    assmb_type += 10
+                    banks_step += num_banks
+                    sequence_step += 1
+
             else:
                 ofile.write(line)   
 
+def with_template_partial_opt(solution, input, cwd, filename): 
+    """
+    Function to create parcs input file from template and populate input file with chromosome
+    this function allows to a partial sequence to be optimized rather than a full sequence 
+    to reduce the strain on the optimizers.
+
+    Written by Jake Mikouchi. 08/20/26
+    """
+
+## copy input file from template
+    inp_template = str(cwd.joinpath(cwd / input.input_template['loc']))
+    shutil.copy(inp_template, filename)
+
+    with open(filename, "r") as file:
+        lines = file.readlines()  
+
+    with open(filename, "w") as ofile:
+        realized_chromosome = prepare_chromosome(input, solution.chromosome)
+        num_zones = len(input.genome.keys())
+        write_pattern_flag = False 
+        banks_step = 0
+        for line in lines:
+            ## change CaseID ##
+            if "caseid" in line.lower():
+                ofile.write('CASEID {}  \n'.format(solution.name))  
+            ## apply th coupling
+            elif 'int_th' in line.lower():
+                if input.th_fdbk['apply']:
+                    if input.th_fdbk['loc'] is None:
+                        ofile.write("      TH_FDBK    T\n")
+                        ofile.write("      INT_TH     T -1\n")
+                    else: 
+                        ofile.write(f"      INT_TH     T 1 '{input.th_fdbk['loc']}'\n")
+                else:
+                    ofile.write("      TH_FDBK    F\n")
+
+            elif "bank_def" in line.lower():
+                pattern_step = int(line.lower().split()[1])
+                if pattern_step >= input.crp_partial['steps'][0] and pattern_step <= input.crp_partial['steps'][1]:
+                    num_banks = len(input.control_bank_conf)
+                    line = f"    bank_def   {pattern_step}   "
+                    for rod in realized_chromosome[banks_step:banks_step+num_banks]:
+                        line += f"{rod}   "
+                    line += "\n"
+                    ofile.write(line) 
+                    banks_step += num_banks
+                else: 
+                    ofile.write(line)  
+            else:
+                ofile.write(line)   
 
 def get_results(parameters, filename, input, job_failed=False):
     """
@@ -189,6 +236,9 @@ def get_results(parameters, filename, input, job_failed=False):
         11 - cpr: critical power ratio
         12 - lhgr: linear heat generation rate
         13 - aplhgr: average planar lhgr
+        14 - axoff_boc: axial offset at begining of cycle
+        15 - axoff_eoc: axial offset at end of cycle
+        16 - axoff_moc: axial offset at middle of cycle
 
     Updated by Jake Mikouchi. 07/22/2026
     """
@@ -206,7 +256,7 @@ def get_results(parameters, filename, input, job_failed=False):
         res_str = res_str[0].split('\n')
         
         ## Parse raw values by timestep
-        efpd_list = []; boron_list = []; keff_list = []; pxy_list = []; pxyz_list = []; fq_list = []; fdh_list = []; chfr = []
+        efpd_list = []; boron_list = []; keff_list = []; pxy_list = []; pxyz_list = []; fq_list = []; fdh_list = []; chfr = []; axoff = []
         for i in range(2, len(res_str)-1):
             res_val=res_str[i].split()
             
@@ -218,8 +268,20 @@ def get_results(parameters, filename, input, job_failed=False):
             fdh_list.append(float(res_val[21]))
             fq_list.append(float(res_val[22]))
             chfr.append(float(res_val[23]))
+            axoff.append(float(res_val[4]))
         
         del filestr, res_str, res_val #unload file contents to clean up memory
+
+        if input.crp_partial['apply']: 
+            efpd_list = efpd_list[input.crp_partial['steps'][0]-1:input.crp_partial['steps'][1]]
+            boron_list = boron_list[input.crp_partial['steps'][0]-1:input.crp_partial['steps'][1]]
+            keff_list = keff_list[input.crp_partial['steps'][0]-1:input.crp_partial['steps'][1]]
+            pxyz_list = pxyz_list[input.crp_partial['steps'][0]-1:input.crp_partial['steps'][1]]
+            pxy_list = pxy_list[input.crp_partial['steps'][0]-1:input.crp_partial['steps'][1]]
+            fdh_list = fdh_list[input.crp_partial['steps'][0]-1:input.crp_partial['steps'][1]]
+            fq_list = fq_list[input.crp_partial['steps'][0]-1:input.crp_partial['steps'][1]]
+            chfr = chfr[input.crp_partial['steps'][0]-1:input.crp_partial['steps'][1]]
+            axoff = axoff[input.crp_partial['steps'][0]-1:input.crp_partial['steps'][1]]
 
         results_dict["cycle_length"] = {'value': calc_cycle_length(efpd_list,boron_list,keff_list,input.eoc_extrapolate), 'output_index':1}
         results_dict["pxy"] = {'value':max(pxy_list), 'output_index':2}
@@ -239,6 +301,9 @@ def get_results(parameters, filename, input, job_failed=False):
             results_dict["lhgr"] = {'value':calc_lhgr(fq_list, parameters), 'output_index':12}
         if 13 in [parameters[key]['output_index'] for key in parameters.keys()]: 
             results_dict["aplhgr"] = {'value':calc_aplhgr(filename, parameters), 'output_index':13}
+        results_dict["axoff_boc"] = {'value':axoff[0], 'output_index':14}
+        results_dict["axoff_eoc"] = {'value':axoff[-1], 'output_index':15}
+        results_dict["axoff_moc"] = {'value':axoff[int(len(axoff)/2)], 'output_index':16} #TODO parameterize this
 
 
         ## Correct Boron value if non-critical
@@ -269,6 +334,9 @@ def get_results(parameters, filename, input, job_failed=False):
         results_dict["cpr"] = {'value':0.0, 'output_index':11}
         results_dict["lhgr"] = {'value':100.0, 'output_index':12}
         results_dict["aplhgr"] = {'value':100.0, 'output_index':13}
+        results_dict["axoff_boc"] = {'value':100, 'output_index':14}
+        results_dict["axoff_eoc"] = {'value':-100, 'output_index':15}
+        results_dict["axoff_moc"] = {'value':100, 'output_index':16}
     
     # populate parameters based on output index 
     for key in results_dict:
@@ -282,14 +350,39 @@ def get_results(parameters, filename, input, job_failed=False):
 
 def prepare_chromosome(input_obj, chromosome):
     """
-    Translates chromosome from representing the names of the cross-sections to the numeric 
-    designation which parcs uses to map cross-sections to assemblies.
+    Translates chromosome from normalized values representataions to actual control rod heights.
     
-    Written by Jake Mikouchi. 07/21/2026
+    Written by Jake Mikouchi. 08/12/2026
     """
-    realized_chromosome = []
-    
-    for gene in chromosome:
-        realized_chromosome.append(input_obj.zone_options['zone_xs'][gene]['designation'])
+    realized_chromosome = optools.Solution.crp_chromosome_realization(input_obj, chromosome)
 
-    return realized_chromosome
+    genome = input_obj.genome
+    bank_patterns = input_obj.bank_pattern
+    control_rod_banks = input_obj.control_bank_conf
+    crb_bounds = input_obj.cr_bounds
+
+    prepared_chromosome = []
+    chromosome_index = 0 
+    for sequence in bank_patterns:
+        map = genome[sequence]['map'] 
+        for rod in map: 
+            if rod > 0: 
+                prepared_chromosome.append(realized_chromosome[chromosome_index])
+                chromosome_index += 1
+            elif rod == 0: 
+                prepared_chromosome.append(crb_bounds['fully_removed'])
+
+    arranged_chromosome = []
+    num_banks = len(control_rod_banks)
+    sequence_step = 0 
+    for sequence in bank_patterns:
+        step_pattern = prepared_chromosome[sequence_step:sequence_step+num_banks]
+        sequence_step += num_banks
+
+        intermitent = [None for i in range(num_banks)] 
+        for indx in control_rod_banks: 
+            intermitent[indx-1] = step_pattern[control_rod_banks.index(indx)]
+
+        arranged_chromosome.extend(intermitent)
+
+    return arranged_chromosome
