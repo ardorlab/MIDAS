@@ -62,7 +62,7 @@ class TS_reproduction():
 
         # if initial solution is provided then use that otherwise select with roulette
         if self.input.initial_population:
-            winner = pop_list[0].chromosome
+            winner = pop_list[0]
         else:
             probability_sum = 0
             selection_probability = {}
@@ -79,11 +79,13 @@ class TS_reproduction():
             value = value*probability_sum
             for j, solution in enumerate(pop_list):
                 if selection_probability['low_bound'][j] <= value <= selection_probability['up_bound'][j]:
-                    winner = solution.chromosome
+                    winner = solution
 
         # update best fitness 
-        self.best_fitness = solution.fitness_value
-        self.active_fitness = solution.fitness_value
+        self.best_fitness = winner.fitness_value
+        self.active_fitness = winner.fitness_value
+
+        winner = winner.chromosome
 
         return winner
     

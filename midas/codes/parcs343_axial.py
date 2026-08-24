@@ -220,7 +220,7 @@ def get_results(parameters, filename, input, job_failed=False):
             chfr.append(float(res_val[23]))
         
         del filestr, res_str, res_val #unload file contents to clean up memory
-        
+        import pdb; pdb.set_trace()
         results_dict["cycle_length"] = {'value': calc_cycle_length(efpd_list,boron_list,keff_list,input.eoc_extrapolate), 'output_index':1}
         results_dict["pxy"] = {'value':max(pxy_list), 'output_index':2}
         results_dict["pxyz"]= {'value':max(pxyz_list), 'output_index':3}
