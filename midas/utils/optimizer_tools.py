@@ -296,16 +296,12 @@ class Solution():
         
         Written by Jake Mikouchi. 07/17/2026
         """
-        symmetry = core_parameters[3]
         genes_list = list(genome.keys())
-
         bank_patterns = self.input.bank_pattern
-
         chromosome_length = 0
         for crp in bank_patterns:
             chromosome_length += len([1 for bank in genome[crp]['map'] if bank != 0])
 
-        
         chromosome_is_valid = False
         attempts = 0
         while not chromosome_is_valid:
@@ -579,7 +575,7 @@ class Solution():
 
     def crp_chromosome_realization(input_obj, chromosome):
         """
-        This is used for control rod pattern optimizations usinf either continuous and descrete solution types.
+        This is used for control rod pattern optimizations for either continuous and descrete solution types.
         This requires a unique function compared to normal numerical optimizations due to the differing 
         input formats.
         
@@ -599,16 +595,12 @@ class Solution():
                     if 'continuous_range' in rods[key].keys():
                         lower_bound = rods[key]['continuous_range'][0]
                         upper_bound = rods[key]['continuous_range'][1]
-
                         realized_chromosome.append(lower_bound + (upper_bound-lower_bound)*chromosome[indx])
 
                     elif 'discrete_range' in rods[key].keys():
                         lower_bound = rods[key]['discrete_range'][0]
                         upper_bound = rods[key]['discrete_range'][1]
-                        try:
-                            realized_chromosome.append(lower_bound + (upper_bound-lower_bound)*chromosome[indx])
-                        except: 
-                            import pdb; pdb.set_trace()
+                        realized_chromosome.append(lower_bound + (upper_bound-lower_bound)*chromosome[indx])
 
         return realized_chromosome
 

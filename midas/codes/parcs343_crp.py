@@ -24,12 +24,12 @@ logger = logging.getLogger("MIDAS_logger")
 ## Functions ##
 def evaluate(solution, input):
     """
-    Interface used to run axial assembly optimizations using PARCSv343 calculations.
+    Interface used to run control rod sequence optimizations using PARCSv343 calculations.
     
     evaluate function creates working directory and prepares depletion file.
-    For the time being, axial assembly optimizations must be run using a template file.
+    For the time being, control rod sequence optimizations must be run using a template file.
 
-    Written by Jake Mikouchi. 07/20/26
+    Written by Jake Mikouchi. 08/12/26
     """
     
 ## Create and move to unique directory for PARCS execution
@@ -76,13 +76,14 @@ def evaluate(solution, input):
         # create input file based on if an input template is given
         if input.input_template['apply']:
             if input.crp_partial['apply']:
+                # partial sequence optimization
                 with_template_partial_opt(solution, input, cwd, filename)
             else:
+                # full sequence optimization
                 with_template_full_opt(solution, input, cwd, filename)
         else: 
             raise ValueError("Axial Assembly optimization requires a template input file.")
 
-    ## Run PARCS INPUT DECK #!TODO: separate the input writing and execution into two different functions that are called in sequence.
         parcscmd = __parcs343exe__
         try:
             output = subprocess.check_output([parcscmd, filename], stderr=STDOUT, timeout=input.code_walltime) #wait until calculation finishes
@@ -351,6 +352,7 @@ def get_results(parameters, filename, input, job_failed=False):
 def prepare_chromosome(input_obj, chromosome):
     """
     Translates chromosome from normalized values representataions to actual control rod heights.
+    This function also orders genes in the correct sequence that is required by parcs.
     
     Written by Jake Mikouchi. 08/12/2026
     """
