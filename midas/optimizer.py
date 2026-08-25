@@ -181,6 +181,9 @@ class Optimizer():
 
                 if self.input.crp_options:
                     chromosome = [float(gene) for gene in chromosome]
+                    for gene in chromosome:
+                        if gene > 1.0:
+                            raise ValueError(f"Gene '{gene}' in initial solution {i+1} is outside of range. Numerical genes must be normalized from 0.0 to 1.0.")
     
         return chromosome
 
