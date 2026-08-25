@@ -296,6 +296,7 @@ class Solution():
         
         Written by Jake Mikouchi. 07/17/2026
         """
+        symmetry = core_parameters[3]
         genes_list = list(genome.keys())
         bank_patterns = self.input.bank_pattern
         chromosome_length = 0
