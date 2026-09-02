@@ -100,6 +100,8 @@ class Solution():
             return self.lat_chromosome(genome,LWR_core_parameters)
         elif calc_type == 'axial_zones':
             return self.axial_chromosome(genome,LWR_core_parameters)
+        elif calc_type == 'control_rod_pattern':
+            return self.crp_chromosome(genome,LWR_core_parameters)
         elif calc_type == 'numeric_variable':
             return self.numeric_chromosome(genome)
         elif calc_type == 'categorical':
@@ -278,6 +280,37 @@ class Solution():
                 raise ValueError("Random solution generation has failed after 10,000 attempts. Consider checking the variables maps and constraints.")
 
             chromosome = [None]*len(chromosome_length)
+            for i in range(len(chromosome)):
+                gene_options = Gene_Validity_check.contraceptive_check(self.input, genes_list, genome, symmetry,
+                                                                                        [], chromosome, i)
+                chromosome[i] = random.choice(gene_options)
+            if Gene_Validity_check.abortive_check(self.input,genes_list,genome,core_parameters,chromosome):
+                chromosome_is_valid = True
+        
+        return chromosome
+
+    def crp_chromosome(self,genome,core_parameters):
+        
+        """
+        Generates an initial solution for the control rod pattern optimizations
+        
+        Written by Jake Mikouchi. 07/17/2026
+        """
+        symmetry = core_parameters[3]
+        genes_list = list(genome.keys())
+        bank_patterns = self.input.bank_pattern
+        chromosome_length = 0
+        for crp in bank_patterns:
+            chromosome_length += len([1 for bank in genome[crp]['map'] if bank != 0])
+
+        chromosome_is_valid = False
+        attempts = 0
+        while not chromosome_is_valid:
+            attempts += 1
+            if attempts > 10000:
+                raise ValueError("Random solution generation has failed after 10,000 attempts. Consider checking the variables maps and constraints.")
+
+            chromosome = [None]*chromosome_length
             for i in range(len(chromosome)):
                 gene_options = Gene_Validity_check.contraceptive_check(self.input, genes_list, genome, symmetry,
                                                                                         [], chromosome, i)
@@ -518,7 +551,8 @@ class Solution():
     def chromosome_realization(input_obj, chromosome):
         """
         This is primarily used for continuous and descrete solution types.
-        This converts a chromosome into its realized features by taking its normalized genes and mapping them to the solution ranges. 
+        This converts a chromosome into its realized features by taking its 
+        normalized genes and mapping them to the solution ranges. 
         
         Written by Jake Mikouchi. 06/29/2026
         """
@@ -536,6 +570,37 @@ class Solution():
                         lower_bound = input_obj.gene_options[key]['discrete_range'][0]
                         upper_bound = input_obj.gene_options[key]['discrete_range'][1]
 
+                        realized_chromosome.append(lower_bound + (upper_bound-lower_bound)*chromosome[indx])
+
+        return realized_chromosome
+
+    def crp_chromosome_realization(input_obj, chromosome):
+        """
+        This is used for control rod pattern optimizations for either continuous and descrete solution types.
+        This requires a unique function compared to normal numerical optimizations due to the differing 
+        input formats.
+        
+        Written by Jake Mikouchi. 08/12/2026
+        """
+        bank_patterns = input_obj.bank_pattern
+        genome = input_obj.genome
+        rod_list = []
+        for crp in bank_patterns:
+            rod_list.extend( [rod for rod in genome[crp]['map'] if rod != 0])
+        rods = input_obj.crp_options
+
+        realized_chromosome = []
+        for indx in range(len(chromosome)):
+            for key in rods.keys():
+                if rods[key]['designation'] == rod_list[indx]: 
+                    if 'continuous_range' in rods[key].keys():
+                        lower_bound = rods[key]['continuous_range'][0]
+                        upper_bound = rods[key]['continuous_range'][1]
+                        realized_chromosome.append(lower_bound + (upper_bound-lower_bound)*chromosome[indx])
+
+                    elif 'discrete_range' in rods[key].keys():
+                        lower_bound = rods[key]['discrete_range'][0]
+                        upper_bound = rods[key]['discrete_range'][1]
                         realized_chromosome.append(lower_bound + (upper_bound-lower_bound)*chromosome[indx])
 
         return realized_chromosome
@@ -569,7 +634,9 @@ class Gene_Validity_check():
         elif input_obj.calculation_type == 'lattice_physics':
             valid_genes_list = Gene_Validity_check.calc_lat_gene_options(genes_list, genome, parameters, child+chromosome[len(child):], indx)
         elif input_obj.calculation_type == 'axial_zones':
-            valid_genes_list = Gene_Validity_check.calc_axial_gene_options(genes_list, genome, input_obj.zone_options, indx)        
+            valid_genes_list = Gene_Validity_check.calc_axial_gene_options(genes_list, genome, input_obj.zone_options, indx)     
+        elif input_obj.calculation_type == 'control_rod_pattern':
+            valid_genes_list = Gene_Validity_check.calc_crp_options(genes_list, genome, input_obj, child+chromosome[len(child):], indx)
         elif input_obj.calculation_type == 'numeric_variable':
             valid_genes_list = Gene_Validity_check.calc_numeric_options(genes_list, genome, input_obj, child+chromosome[len(child):], indx)
         elif input_obj.calculation_type == 'categorical':
@@ -678,6 +745,39 @@ class Gene_Validity_check():
 
         return valid_genes_list
 
+    def calc_crp_options(genes_list, genome, input_obj, chromosome, index):
+        """
+        determines gene options for index in control rod pattern chromosome.
+        Valid genes depend on index of chromosome.
+
+        Created By Jake Mikouchi. 08/10/26
+        """
+        valid_genes_list = []
+        bank_patterns = input_obj.bank_pattern
+
+        rod_list = []
+        for crp in bank_patterns:
+            rod_list.extend( [rod for rod in genome[crp]['map'] if rod != 0])
+
+        rods = input_obj.crp_options
+        for rod in rods.keys():
+            if input_obj.crp_options[rod]['designation'] == rod_list[index]:
+                gene = rod
+                break
+
+        valid_genes_list = []
+        if 'continuous_range' in rods[gene]:
+            valid_genes_list = [0,1]
+        elif 'discrete_range' in rods[gene]:
+            if isinstance(rods[gene]['increment'], float):
+                normalized_increment = rods[gene]['increment'] / (rods[gene]["discrete_range"][1] - rods[gene]["discrete_range"][0] )
+                valid_genes_list = np.arange(0.0, 1.0+normalized_increment/2, normalized_increment).tolist()
+            elif isinstance(rods[gene]['increment'], list):
+                for val in rods[gene]['increment']:
+                    valid_genes_list.append((val - rods[gene]["discrete_range"][0]) / (rods[gene]["discrete_range"][1] - rods[gene]["discrete_range"][0]))
+
+        return valid_genes_list
+
     def calc_numeric_options(genes_list, genome, input_obj, chromosome, index):
         """
         Determine valid list of genes for continous optimization problems. 
@@ -773,6 +873,8 @@ class Gene_Validity_check():
             valid_chromosome = Gene_Validity_check.check_constraints(genes_list, genome, parameters, child)  
         elif input_obj.calculation_type == 'axial_zones':
             valid_chromosome = Gene_Validity_check.check_constraints_axial(genes_list, genome, input_obj.zone_options, parameters, child)  
+        elif input_obj.calculation_type == 'control_rod_pattern':
+            valid_chromosome = Gene_Validity_check.check_crp_constraints(genes_list, genome, input_obj, child)  
         elif input_obj.calculation_type == 'numeric_variable':
             valid_chromosome = Gene_Validity_check.check_numeric_constraints(genes_list, genome, input_obj, child)  
         elif input_obj.calculation_type == 'categorical':
@@ -866,6 +968,49 @@ class Gene_Validity_check():
             
         return True #if you haven't exited with "False" by this point, all constraints were passed.
 
+    def check_crp_constraints(genes_list, genome, input_obj, solution):
+        """
+        Check solution parameters against user-specified constraints on the input space.
+        Returns True if the solution is valid and False if a constraint is violated.
+        This is specified for checking validity of control rod pattern chromosomes.
+        
+        Written by Jake Mikouchi. 08/11/2026
+        """
+        if not genome: #! this implies that there are no constraints, but also no valid choices?
+            return True
+
+        bank_patterns = input_obj.bank_pattern
+
+        rod_list = []
+        for crp in bank_patterns:
+            rod_list.extend( [rod for rod in genome[crp]['map'] if rod != 0])
+
+        rods = input_obj.crp_options
+        
+        ## make sure that each gene option is valid for the gene
+        for index in range(len(solution)):
+            ## find corresponding rod designation
+            for rod in rods.keys():
+                if input_obj.crp_options[rod]['designation'] == rod_list[index]:
+                    gene = rod
+                    break
+
+            if 'continuous_range' in rods[gene]:
+                if not (solution[index] >= 0.0 and solution[index] <= 1.0):
+                    return False
+            elif 'discrete_range' in rods[gene]:
+                valid_genes_list = []
+                if isinstance(rods[gene]['increment'], float):
+                    normalized_increment = rods[gene]['increment'] / (rods[gene]["discrete_range"][1] - rods[gene]["discrete_range"][0] )
+                    valid_genes_list = np.arange(0.0, 1.0+normalized_increment/2, normalized_increment).tolist()
+                elif isinstance(rods[gene]['increment'], list):
+                    for val in rods[gene]['increment']:
+                        valid_genes_list.append((val - rods[gene]["discrete_range"][0]) / (rods[gene]["discrete_range"][1] - rods[gene]["discrete_range"][0]))  
+
+                if solution[index] not in valid_genes_list:
+                    return False
+            
+        return True #if you haven't exited with "False" by this point, all constraints were passed.
 
     def check_numeric_constraints(genes_list, genome, input_obj, solution):
         """

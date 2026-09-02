@@ -21,7 +21,7 @@ from midas.algorithms import parallel_simulated_annealing as PSA
 from midas.algorithms import gradient_descent as GD
 from midas.algorithms import tabu_search as TS
 from midas.codes import parcs342, parcs343
-from midas.codes import parcs343_axial
+from midas.codes import parcs343_axial, parcs343_crp
 from midas.codes import ipwr_lut
 from midas.codes import trace50p5
 from midas.codes import polaris624
@@ -71,6 +71,8 @@ class Optimizer():
             self.eval_func = polaris624.evaluate
         elif self.input.code_interface == "parcs343_axial":
             self.eval_func = parcs343_axial.evaluate
+        elif self.input.code_interface == "parcs343_crp":
+            self.eval_func = parcs343_crp.evaluate
         elif self.input.code_interface == "listsum":
             self.eval_func = listsum.evaluate
         elif self.input.code_interface == "styblinski_tang":
@@ -176,6 +178,13 @@ class Optimizer():
                             raise ValueError(f"Batch name '{gene[0]}' in initial solution {i+1} is not defined in YAML file. Check provided solutions. ")
                         if isinstance(gene[1],str) and gene[1] not in assembly_types:
                             raise ValueError(f"Ammebly type '{gene[1]}' in initial solution {i+1} is not defined in YAML file. Check provided solutions. ")
+
+                if self.input.crp_options:
+                    chromosome = [float(gene) for gene in chromosome]
+                    for gene in chromosome:
+                        if gene > 1.0:
+                            raise ValueError(f"Gene '{gene}' in initial solution {i+1} is outside of range. Numerical genes must be normalized from 0.0 to 1.0.")
+    
         return chromosome
 
     def main(self, restart=False):

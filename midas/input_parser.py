@@ -909,6 +909,66 @@ def validate_input(keyword, value, incomp_input_obj=None):
             if value:
                 raise ValueError("Axial assembly options must be nested with zone_xs with its parameters.")
 
+## Control Rod options ##
+    elif keyword == 'control_rod_options':
+        new_dict = {}
+        if isinstance(value, dict):
+            for key, item in value.items():
+                new_key = str(key)
+                new_dict[new_key] = {}
+
+                #check decision variable options
+                if isinstance(value[key], dict):
+                    for subkey, subitem in item.items():
+                        new_subkey = str(subkey).lower()
+                        if new_subkey in ['continuous_range','discrete_range']:
+                            if not isinstance(subitem, list):
+                                raise ValueError(f"Entry '{new_subkey}' under decision variable '{new_key}' must be a list of two numbers.")
+                            for rangebound in subitem: 
+                                if (not isinstance(rangebound, float) and not isinstance(rangebound, int)) or isinstance(rangebound, bool): 
+                                    raise ValueError(f"Entry '{new_subkey}' values under decision variable '{new_key}' must be two numeric values in ascending order.")
+                            if len(subitem) != 2: 
+                                raise ValueError(f"Entry '{new_subkey}' list under decision variable '{new_key}' must contain two numeric values in ascending order.")
+                            if subitem[0] > subitem[1]: 
+                                raise ValueError(f"Entry '{new_subkey}' list under decision variable '{new_key}' must contain two numeric values in ascending order.")
+                            new_dict[new_key][new_subkey] = subitem
+                        elif new_subkey == "increment":
+                            try:
+                                if isinstance(subitem, list):
+                                    if len(subitem) == 0:
+                                        raise ValueError(f"The {new_subkey} entry is a list of length 0. It must either be a list with one or more entries for a non-uniform range, or a single number for a uniform range")
+                                    for index in range(0, len(subitem)):
+                                        subitem[index] = float(subitem[index])
+                                    new_dict[new_key][new_subkey] = subitem
+                                else:
+                                    new_dict[new_key][new_subkey] = float(subitem)
+                                    if new_dict[new_key][new_subkey] < 0: 
+                                        raise ValueError("Numeric variable 'increment' must be greater than 0")
+                            except TypeError:
+                                raise ValueError(f"Subkey {new_subkey} has entry of type {type(subitem)} but only accepts a list of integers/floats or a single integer/float")
+                        elif new_subkey == "designation":
+                            if isinstance(subitem, int):
+                                new_dict[new_key][new_subkey] = subitem
+                            else:
+                                raise ValueError("Control rod designation must be an integer")
+                        else:
+                            logger.warning(f"Requested gene feature '{new_subkey}' is not a natively supported. MIDAS will attempt to proceed but may error out.")
+                            new_dict[new_key][new_subkey] = subitem
+                    if "continuous_range" in item.keys() and "increment" in item.keys():
+                        raise ValueError(f"'increment' should not be provided for a 'continuous_range' variable.")
+                    if "discrete_range" not in item.keys() and "continuous_range" not in item.keys():
+                        raise ValueError(f"{item} variable must include either a 'discrete_range' or 'continuous_range' entry.")
+                    if "discrete_range" in item.keys() and "increment" not in item.keys():
+                        raise ValueError(f"Increment for 'discrete_range' variable is not provided.")
+                    elif "discrete_range" in item.keys() and isinstance(item["increment"], float): 
+                        if (item["increment"] / (item["discrete_range"][1] - item["discrete_range"][0]))*100 >= 10:
+                            logger.warning(f"Numeric variable increment for '{new_key}' is large relative to the range. Is this intentional?")
+        for key in new_dict.keys():
+            if "designation" not in new_dict[key]:
+                raise ValueError(f"Designation is missing from control rod {key}.")
+
+        return new_dict
+
 
 ## Genome Block ##
     elif keyword in ['parameters']:
@@ -1117,6 +1177,29 @@ def validate_input(keyword, value, incomp_input_obj=None):
             else:
                 raise ValueError(f"Decision variable '{keyword}' must be nested with parameter options and their parameters.")
 
+    elif keyword in ['rod_bank_parameters']:
+        new_dict = {}
+        if isinstance(value, dict):
+            for key, item in value.items():
+                new_key = str(key).lower()
+                new_dict[new_key] = {}
+                #check decision variable options
+                if isinstance(value[key], dict):
+                    for subkey, subitem in item.items():
+                        new_subkey = str(subkey).lower()
+                        if new_subkey == 'map':
+                            new_dict[new_key][new_subkey] = subitem
+                else:
+                    raise ValueError(f"Decision variables '{key}' must be nested with its parameters.")
+                
+            return new_dict
+        else:
+            if not value:
+                return None
+            else:
+                raise ValueError(f"Decision variable '{keyword}' must be nested with parameter options and their parameters.")
+
+
 
 ## Calculation Block ##
     ## PARCS DATA ##
@@ -1286,6 +1369,53 @@ def validate_input(keyword, value, incomp_input_obj=None):
 
             return new_dict
 
+    elif keyword == 'bank_pattern':
+        value = value.lower().replace(" ","").split(",")
+
+    elif keyword == 'control_bank_conf':
+        if not isinstance(value, list):
+            raise ValueError("The control rod bank configuration must be a list of control rod banks.")
+
+    elif keyword == 'control_rod_bounds':
+        if isinstance(value, dict):
+            new_dict = {}
+            for subkey in value.keys():
+                if str(subkey).lower().replace(' ','_') == 'fully_inserted':
+                    new_dict['fully_inserted'] = float(value[subkey])
+                elif str(subkey).lower().replace(' ','_') == 'fully_removed':
+                    new_dict['fully_removed'] = float(value[subkey])
+        else: 
+            raise ValueError("Control rod bounds must be a nested parameter with its values.")
+
+        if 'fully_inserted' not in new_dict.keys() or 'fully_removed' not in new_dict.keys():
+            raise ValueError("One or more bounds is missing from control rod bounds parameter.")
+
+        return new_dict
+
+    elif keyword == 'partial_sequence':
+        if isinstance(value, dict):
+            new_dict = {}
+            for key, item in value.items():
+                new_key = str(key).lower()
+                if new_key =='apply':
+                    new_item = item
+                    if not isinstance(new_item, bool):
+                        raise ValueError("'apply' flag for partial sequence optimization must be boolean")
+                if new_key == 'steps':
+                    if isinstance(item, list):
+                        new_item = list(item)
+                    else: 
+                        raise ValueError("'steps' in partial_sequnce must be a list")
+                new_dict[new_key] = new_item
+
+            if 'apply' in new_dict.keys() and new_dict['apply']:
+                if 'steps' not in new_dict.keys():
+                    raise ValueError("'apply' in partial_sequence is set to true but optimization steps are not specified") 
+            if 'steps' in new_dict.keys() and 'apply' not in new_dict.keys(): 
+                logger.warning("partial optimization steps are specified but 'apply' flag is not given. MIDAS will assume a full rod optimization")
+                new_dict['apply'] = False
+            return new_dict
+    
     ## TRACE DATA ##
     elif keyword == 'initialize_code':
         value = str(value).lower().replace(' ','_')
@@ -1578,6 +1708,10 @@ class Input_Parser():
         
     ## Axial Assembly Block 
         self.zone_options = yaml_line_reader(self.file_settings, 'axial_assembly_options', None)
+
+    ## Axial Assembly Block 
+        self.crp_options = yaml_line_reader(self.file_settings, 'control_rod_options', None)
+        
         
     ## All generic variable Block ## (numerical and categorical)
         self.gene_options = yaml_line_reader(self.file_settings, 'gene_options', None, self)
@@ -1593,7 +1727,9 @@ class Input_Parser():
         elif self.calculation_type in ['lattice_physics']:
             self.genome = yaml_line_reader(info, 'lattice_parameters', None)
         elif self.calculation_type in ['axial_zones']:
-            self.genome = yaml_line_reader(info, 'axial_assembly_parameters', None)        
+            self.genome = yaml_line_reader(info, 'axial_assembly_parameters', None) 
+        elif self.calculation_type in ['control_rod_pattern']:
+            self.genome = yaml_line_reader(info, 'rod_bank_parameters', None)        
         elif self.calculation_type in ['numeric_variable', 'categorical']:
             self.genome = yaml_line_reader(info, 'parameters', None, self)
             if self.methodology == "gradient_descent" and self.sgd:
@@ -1602,7 +1738,7 @@ class Input_Parser():
         self.batches = yaml_line_reader(info, 'batches', None)
         #check that decision variable options are valid.
         if not self.genome:
-            raise ValueError("'assembly_parameters', 'lattice_parameters', or 'parameters' must be specified in Decision Variables.")
+            raise ValueError("'assembly_parameters', 'lattice_parameters', 'rod_bank_parameters', or 'parameters' must be specified in Decision Variables.")
         if self.calculation_type == 'eq_cycle' and not self.batches:
             raise ValueError("'Batches' must be specified in Decision Variables for the 'EQ Cycle' type.")
         for key, value in self.genome.items():
@@ -1670,7 +1806,14 @@ class Input_Parser():
         if (not self.pin_power_recon and 'pinpowerpeaking' in self.objectives.keys()) or (not self.pin_power_recon and 'fdeltah' in self.objectives.keys()):
             logger.warning('Pin power reconstruction is turned off but pin peaking factors are requested in objectives.')
         self.zone_discretize = yaml_line_reader(info, "zone_discretization", None, self)
-            
+        self.bank_pattern = yaml_line_reader(info, "bank_pattern", None)
+        self.control_bank_conf = yaml_line_reader(info, "control_bank_conf", None)
+        crb_default = {'fully_inserted':50, 'fully_removed': 0}
+        self.cr_bounds = yaml_line_reader(info, "control_rod_bounds", crb_default)
+        partial_opt_default = {'apply':False, 'steps': []}
+        self.crp_partial = yaml_line_reader(info, "partial_sequence", partial_opt_default)
+
+        # SERPENT input block
         self.active_cycles = yaml_line_reader(info, "active_cycles", 500)
         self.inactive_cycles = yaml_line_reader(info, "inactive_cycles", 50)
         self.particles_per_history = yaml_line_reader(info, "particles_per_history", 5000)
