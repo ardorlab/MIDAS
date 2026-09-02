@@ -72,13 +72,13 @@ def validate_input(keyword, value, incomp_input_obj=None):
     elif keyword == 'code_type':
         value = str(value).lower().replace(' ','_')
         if value not in ["parcs342", "parcs343", "ipwr_database", "ipwr_database_legacy", "trace50p5", "polaris624","serpent","custom_function",
-                         "styblinski_tang","listsum","levy_function","traveling_salesman"]:
+                         "styblinski_tang","listsum","levy_function","traveling_salesman", "parcs_axial", "parcs_crp"]:
             # raise ValueError("Code types currently supported: PARCS342, PARCS343, ipwr_database, TRACE50p5.")
             logger.warning(f"Requested code type '{value}' is not natively supported. MIDAS will attempt to proceed but may error out.")
     
     elif keyword == 'calc_type':
         value = str(value).lower().replace(' ','_')
-        if value not in ["single_cycle","eq_cycle", "lattice_physics", "numeric_variable", "categorical"]:
+        if value not in ["single_cycle","eq_cycle", "lattice_physics", "numeric_variable", "categorical", "axial_zones", "control_rod_pattern"]:
             # raise ValueError("Data type not supported.")
             logger.warning(f"Requested calculation type '{value}' is not natively supported. MIDAS will attempt to proceed but may error out.")
     
@@ -92,7 +92,7 @@ def validate_input(keyword, value, incomp_input_obj=None):
                     if not isinstance(new_item, bool):
                         raise ValueError("'apply' flag for input template must be boolean")
                     if new_item:
-                        logger.warning("Input template functionality currently only supports single cycle calculations") #TODO add other calculation functionality
+                        logger.warning("See wiki for the list of code interfaces which support template functionalities.") 
                 if new_key == 'loc':
                     new_item = Path(str(item))
                 new_dict[new_key] = new_item
