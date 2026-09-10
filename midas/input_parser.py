@@ -1370,11 +1370,13 @@ def validate_input(keyword, value, incomp_input_obj=None):
             return new_dict
 
     elif keyword == 'bank_pattern':
-        value = value.lower().replace(" ","").split(",")
+        if value:
+            value = value.lower().replace(" ","").split(",")
 
     elif keyword == 'control_bank_conf':
-        if not isinstance(value, list):
-            raise ValueError("The control rod bank configuration must be a list of control rod banks.")
+        if value: 
+            if not isinstance(value, list):
+                raise ValueError("The control rod bank configuration must be a list of control rod banks.")
 
     elif keyword == 'control_rod_bounds':
         if isinstance(value, dict):
