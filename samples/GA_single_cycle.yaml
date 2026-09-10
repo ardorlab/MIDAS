@@ -45,8 +45,8 @@ assembly_options:
       serial: ne512_250REFL
   blankets:
     blanket_name:
-      serial: 3VAN_HG
-      enrichment: 1.50
+      serial: ne512_200
+      enrichment: 2.00
       hm_loading: 1000
   fuel: 
     FA420IFBA064: 
@@ -105,7 +105,7 @@ parcs_data:
     number_assemblies: 157
     core_symmetry: quarter #printing symmetry
     assembly_pitch: 21.5
-  xs_library_path: ../XS #!../../../../MIDAS/samples/xs_lib/ #this MUST be a relative path.
+  xs_library_path: ../xslib #!../../../../MIDAS/samples/xs_lib/ #this MUST be a relative path.
   xs_extension: .PMAXS
   power: 3800.0 #MW_th
   flow: 18231.89
