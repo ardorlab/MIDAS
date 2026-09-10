@@ -88,8 +88,8 @@ decision_variables:
     batch_1:
       map: *ID001
       constraint:
-        type: max_quantity
-        value: 200
+        type: less_than_variable
+        value: batch_0
     batch_2:
       map: *ID001
       constraint:
