@@ -1007,7 +1007,12 @@ class Gene_Validity_check():
                     for val in rods[gene]['increment']:
                         valid_genes_list.append((val - rods[gene]["discrete_range"][0]) / (rods[gene]["discrete_range"][1] - rods[gene]["discrete_range"][0]))  
 
-                if solution[index] not in valid_genes_list:
+                # this block of code is to avoid precision errors when the user provides initial solutions
+                num_decimals = len(str(solution[index]).split('.')[1])
+                for i in range(len(valid_genes_list)):
+                    valid_genes_list[i] = round(valid_genes_list[i], num_decimals)
+
+                if round(solution[index],num_decimals) not in valid_genes_list:
                     return False
             
         return True #if you haven't exited with "False" by this point, all constraints were passed.
@@ -1042,7 +1047,12 @@ class Gene_Validity_check():
                     for val in input_obj.gene_options[gene]['increment']:
                         valid_genes_list.append((val - input_obj.gene_options[gene]["discrete_range"][0]) / (input_obj.gene_options[gene]["discrete_range"][1] - input_obj.gene_options[gene]["discrete_range"][0]))  
 
-                if solution[index] not in valid_genes_list:
+                # this block of code is to avoid precision errors when the user provides initial solutions
+                num_decimals = len(str(solution[index]).split('.')[1])
+                for i in range(len(valid_genes_list)):
+                    valid_genes_list[i] = round(valid_genes_list[i], num_decimals)
+
+                if round(solution[index],num_decimals) not in valid_genes_list:
                     return False
             
         return True #if you haven't exited with "False" by this point, all constraints were passed.
