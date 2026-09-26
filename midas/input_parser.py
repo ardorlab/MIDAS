@@ -467,28 +467,6 @@ def validate_input(keyword, value, incomp_input_obj=None):
         if value not in ["mutate"]:
             raise ValueError(f"Requested neighborhood construction method '{item}' not supported.")
 
-        # if isinstance(value, dict):
-        #     new_dict = {}
-        #     for key, item in value.items():
-        #         new_key = str(key).lower()
-        #         if new_key =='method':
-        #             new_item = str(item).lower()
-        #             if new_item not in ['flip']:
-        #                 raise ValueError(f"Requested neighborhood construction method '{item}' not supported.")         
-        #         elif new_key == 'num_flips':
-        #             new_item = int(item)
-        #             if new_item < 0:
-        #                 raise ValueError("'num_flips' parameter must be 1 or higher.")             
-        #         new_dict[new_key] = new_item
-
-        #     #check parameters logic
-        #     if new_dict['method'] == 'flip' and 'num_flips' not in new_dict.keys():
-        #         new_dict['k'] = 1
-        #         logger.warning("'num_flips' parameter is missing from input while 'flip' neighborhood construction method is used, 'num_flips' has been set to default value of 1.")                
-        #     return new_dict
-        # else:
-        #     raise ValueError("'construct_neighbors' must be nested with its parameters.")
-
     elif keyword == 'num_tabu':
         value = int(value)
         if not isinstance(value, int):
