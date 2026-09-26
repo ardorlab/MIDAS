@@ -32,9 +32,9 @@ algorithm:
   temperature: 100
   cooling_schedule: exponential_decrease
   update_factor: 0.98
-  perturbation_type:
-    method: perturb_by_gene
-    num_perturbations: 2
+  mutation_type: 
+    method: mutate_by_gene
+    num_mutations: 2
 
 ## Fuel Assembly Parts
 assembly_options:

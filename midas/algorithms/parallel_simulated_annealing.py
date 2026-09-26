@@ -9,6 +9,7 @@ from midas.utils import LWR_fuelcyclecost
 from midas.utils import LWR_averageenrichment
 from midas.algorithms.simulated_annealing import Cooling_Schedule as SA_Cooling_Schedules
 from midas.algorithms.simulated_annealing import SA_reproduction 
+from midas.utils.mutator import Mutator
 
 from itertools import repeat
 from multiprocessing import Pool
@@ -31,11 +32,7 @@ class Parallel_Simulated_Annealing():
     *********** NOTE ************
     PSA borrows a large amount of functions from SA.
     Currently these functions are:
-    perturb_by_genes in SA_reproduction
     all cooling schedules in SA_Cooling_Schedules class
-
-    If a future developer wishes to add a new perturbation type please do so in SA_reproduction in 
-    simulatted_annealing.py and ensure that reproduction is updated accordingly.
 
     If a future devloper wishes to add a new cooling schedule that can be utlized by both PSA and SA
     please do so in SA_Cooling_Schedules in simulatted_annealing.py and update Temperature_update_methods accordingly.
@@ -199,6 +196,7 @@ class Parallel_Simulated_Annealing():
         because different arguments are provided and different outputs are given.
         
         Created by Jake Mikouchi. 09/26/2025
+        Updatde by Jake Mikouchi. 09/26/26
         """
         ## Container for holding new list of child chromosomes
         holder = PSA_reproduction.selection(self, proc, pop_list)
@@ -207,11 +205,8 @@ class Parallel_Simulated_Annealing():
         individual_pairs = deepcopy(primary_individual)
         ## preserve core parameters 
         core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies, self.input.symmetry]
-         ## Perform perturbation
-        if self.input.perturbation_type['method'] == "perturb_by_gene":
-            individual_pairs.append(SA_reproduction.perturb_by_gene(self.input, primary_individual[0]))
-        else:
-            raise ValueError("Requested perturbation type not recognized.")
+        ## Perform perturbation
+        individual_pairs.append(Mutator.mutator_methods(self.input, primary_individual[0]))
         # update temperature
 
         self.local_temperatures[proc] = self.Temperature_update_methods(self.local_temperatures[proc], self.input.secondary_cooling_schedule, current_step, Global=False)

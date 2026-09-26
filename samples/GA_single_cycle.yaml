@@ -34,7 +34,9 @@ algorithm:
     fitness: weighted
     method: tournament #tournament or roulette
   reproducer: standard
-  mutation_type: mutate_by_gene
+  mutation_type: 
+    method: mutate_by_swap
+    num_mutations: 1
   mutation_rate: 0.25, 0.55
 
 ## Fuel Assembly Parts
