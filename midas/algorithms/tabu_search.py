@@ -3,7 +3,7 @@ from copy import deepcopy
 import random
 import numpy as np
 from midas.utils import optimizer_tools as optools
-
+from midas.utils.mutator import Mutator
 
 class Tabu_Search():
     """
@@ -145,8 +145,8 @@ class TS_reproduction():
         """
 
         method = self.input.neighborhood_construct
-        if method["method"] == 'flip':
-            pop_list = TS_perturbations.flip(self.input, self.input.population_size, method['num_flips'], active_soln) 
+        if method == 'mutate':
+            pop_list = Construct_Neighbors.mutate(self.input, self.input.population_size, active_soln) 
         
         return pop_list
     
@@ -172,78 +172,27 @@ class TS_reproduction():
         return allow_tabu
 
 
-class TS_perturbations():
+class Construct_Neighbors():
     """
-    Functions for performing perturbations of chromosomes to construct neighborhoods 
-    during TS optimization.
+    Functions for constructing neighborhoods during TS optimization.
 
     Written by Jake Mikouchi. 07/03/2026
+    Updated by Jake Mikouchi 09/26/26
     """
-    def flip(input_obj, population_size, num_flips, active_soln):
+    def mutate(input_obj, population_size, active_soln):
         """
-        performs perturbations on the active chromosome by selecting a random position in the chromosome and flipping the corresponding gene.
-        The 'flipping' is performed by selecting a random valid gene.
+        Generates a population of solutions by creating neighbors through mutations
 
         Written by Jake Mikouchi. 08/05/2026
+        Updated by Jake Mikouchi. 09/26/26
         """
-
-      ## Initialize logging for the present file
-        logger = logging.getLogger("MIDAS_logger")
-        core_parameters = [input_obj.nrow, input_obj.ncol, input_obj.num_assemblies, input_obj.symmetry, input_obj.calculation_type]
-        all_gene_options = input_obj.genome
-        all_genes_list = list(input_obj.genome.keys())
 
         population = [] # neighbors
         for i in range(population_size):
             neighbor = deepcopy(active_soln) # neighbor is a chromosome
-            gene_locations = [j for j in range(len(neighbor))]
-            random.shuffle(gene_locations)
-            chromosome_is_valid = False
-            attempts = 0
-            while not chromosome_is_valid:
-                while neighbor == active_soln:
-                    for j in range(num_flips):
-                        loc_to_mutate = random.choice(gene_locations)
-                        old_gene = neighbor[loc_to_mutate]
-                        gene_options = optools.Gene_Validity_check.contraceptive_check(input_obj, all_genes_list, all_gene_options,
-                                                                                core_parameters, active_soln, [], loc_to_mutate)
-                        try:
-                            if gene_options == [0,1]:
-                                new_gene = random.uniform(0,1)
-                            else:
-                                new_gene = random.choice(gene_options)
-                        except:
-                            break
-                        if new_gene != old_gene:
-                            if input_obj.calculation_type in ["single_cycle","eq_cycle", "lattice_physics"] and all_gene_options[new_gene]['map'][loc_to_mutate] == 1:
-                                neighbor[loc_to_mutate] = new_gene
-                            else:
-                                neighbor[loc_to_mutate] = new_gene
-
-                        gene_locations.pop(gene_locations.index(loc_to_mutate))
-
-                chromosome_is_valid = optools.Gene_Validity_check.abortive_check(input_obj,all_genes_list,all_gene_options,\
-                                                                                core_parameters,neighbor)
-                if not chromosome_is_valid:
-                    attempts += 1
-                    if attempts > 100000:
-                        logger.error("Chromosome perturbation has failed after 100,000 attempts; the Individual will be restored. Consider relaxing the constraints on the input space.")
-                        population.append(neighbor)
-                        break
-
-            if input_obj.calculation_type in ["eq_cycle"]:
-                #recreate child_chromosome
-                child_chromosome = []
-                for i in range(len(neighbor)):
-                    if neighbor[i] == active_soln[i][0]:
-                        child_chromosome.append(active_soln[i])
-                    else:
-                        child_chromosome.append((neighbor[i],None))
-                child_chromosome = optools.Solution.EQ_reload_fuel(input_obj.genome,core_parameters,child_chromosome)
-
-            else: 
-                population.append(neighbor)
-
+            neighbor = Mutator.mutator_methods(input_obj, neighbor)
+            population.append(neighbor)
+        
         return population
     
 

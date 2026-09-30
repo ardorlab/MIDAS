@@ -316,11 +316,24 @@ def validate_input(keyword, value, incomp_input_obj=None):
         value = str(value).lower().replace(' ','_')
         if value not in ["standard"]:
             raise ValueError("Reproducer type not supported.")
-    
+
     elif keyword == 'mutation_type':
-        value = str(value).lower().replace(' ','_')
-        if value not in ["mutate_by_gene"]:
-            raise ValueError("Mutation type not supported.")
+        if isinstance(value, dict):
+            new_dict = {}
+            for key, item in value.items():
+                new_key = str(key).lower()
+                if new_key == 'method':
+                    new_item = str(item).lower().replace(' ','_')
+                    if new_item not in ["mutate_by_gene", "mutate_by_swap"]:
+                        raise ValueError(f"Requested mutation method '{item}' not supported.")
+                elif new_key =='num_mutations':
+                    new_item = int(item)
+                    if item < 1:
+                        raise ValueError("num_mutations must be 1 or greater")
+                new_dict[new_key] = new_item
+            if 'num_mutations' not in new_dict.keys():
+                new_dict['num_mutations'] = 1
+            return new_dict
     
     elif keyword == 'mutation_rate':
         new_value = str(value).replace(' ','').split(',')
@@ -424,24 +437,6 @@ def validate_input(keyword, value, incomp_input_obj=None):
         value = float(value)
         if value < 1.0 or value > 2.0:
             raise ValueError("scaling factor for LAM cooling schedule must be 2.0 > sf > 1.0")
-        
-    elif keyword == 'perturbation_type':
-        if isinstance(value, dict):
-            new_dict = {}
-            for key, item in value.items():
-                new_key = str(key).lower()
-                if new_key == 'method':
-                    new_item = str(item).lower().replace(' ','_')
-                    if new_item not in ["perturb_by_gene"]:
-                        raise ValueError(f"Requested perturbation method '{item}' not supported.")
-                elif new_key =='num_perturbations':
-                    new_item = int(item)
-                    if item < 1:
-                        raise ValueError("num_perturbations must be 1 or greater")
-                new_dict[new_key] = new_item
-            if 'num_perturbations' not in new_dict.keys():
-                new_dict['num_perturbations'] = 1
-            return new_dict
  
     elif keyword == 'buffer_size':
         value = int(value)
@@ -468,27 +463,9 @@ def validate_input(keyword, value, incomp_input_obj=None):
         value = bool(value)
 
     elif keyword == 'construct_neighbors':
-        if isinstance(value, dict):
-            new_dict = {}
-            for key, item in value.items():
-                new_key = str(key).lower()
-                if new_key =='method':
-                    new_item = str(item).lower()
-                    if new_item not in ['flip']:
-                        raise ValueError(f"Requested neighborhood construction method '{item}' not supported.")         
-                elif new_key == 'num_flips':
-                    new_item = int(item)
-                    if new_item < 0:
-                        raise ValueError("'num_flips' parameter must be 1 or higher.")             
-                new_dict[new_key] = new_item
-
-            #check parameters logic
-            if new_dict['method'] == 'flip' and 'num_flips' not in new_dict.keys():
-                new_dict['k'] = 1
-                logger.warning("'num_flips' parameter is missing from input while 'flip' neighborhood construction method is used, 'num_flips' has been set to default value of 1.")                
-            return new_dict
-        else:
-            raise ValueError("'construct_neighbors' must be nested with its parameters.")
+        value = str(value).lower().replace(' ','_')
+        if value not in ["mutate"]:
+            raise ValueError(f"Requested neighborhood construction method '{item}' not supported.")
 
     elif keyword == 'num_tabu':
         value = int(value)
@@ -1645,7 +1622,8 @@ class Input_Parser():
         selection_default = {'fitness':'weighted','method':'tournament'}
         self.selection = yaml_line_reader(info, 'selection', selection_default)
         self.reproducer = yaml_line_reader(info, 'reproducer', 'standard')
-        self.mutation_type = yaml_line_reader(info, 'mutation_type', 'mutate_by_gene')
+        mutation_default = {'method':'mutate_by_gene','num_mutations':1}
+        self.mutation_type = yaml_line_reader(info, 'mutation_type', mutation_default)
         self.mutation_rate = yaml_line_reader(info, 'mutation_rate', 0.5)
         crossover_default = {'method':'one_point','crossover_rate': 0.5, 'num_swaps': 1}
         self.crossover = yaml_line_reader(info, 'crossover', crossover_default)
@@ -1670,8 +1648,6 @@ class Input_Parser():
         self.update_factor = yaml_line_reader(info, 'update_factor', 0.95)
         self.quality_factor = yaml_line_reader(info, 'quality_factor', 1.1)
         self.scaling_factor = yaml_line_reader(info, 'scaling_factor', 1.5)
-        perturbation_default = {'method':'perturb_by_gene','num_perturbations':1}
-        self.perturbation_type = yaml_line_reader(info, 'perturbation_type', perturbation_default)
         self.buffer_size = yaml_line_reader(info, 'buffer_size', 10)
         self.epsilon = yaml_line_reader(info, 'epsilon', 0.05)
         self.learning_rate = yaml_line_reader(info, 'learning_rate', 0.005)
@@ -1679,8 +1655,7 @@ class Input_Parser():
         if self.sgd and self.methodology == 'gradient_descent':
             if self.population_size == 1 or self.population_size % 2 == 0:
                 raise ValueError(f"Population size must be an odd number greater than 1 when using stochastic gradient descent.")
-        nc_default = {'method':'flip','num_flips':1}
-        self.neighborhood_construct = yaml_line_reader(info, 'construct_neighbors', nc_default)
+        self.neighborhood_construct = yaml_line_reader(info, 'construct_neighbors', 'mutate')
         self.num_tabu = yaml_line_reader(info, 'num_tabu', 10)
         aspiration_default = {'method':'improved_best'}
         self.aspiration = yaml_line_reader(info, 'aspiration', aspiration_default)

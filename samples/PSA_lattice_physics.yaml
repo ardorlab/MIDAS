@@ -32,9 +32,9 @@ algorithm:
   coooling_schedule: lam
   secondary_cooling_schedule: exponential_decrease
   update_factor: 0.95
-  perturbation_type:
-    method: perturb_by_gene
-    num_perturbations: 1
+  mutation_type: 
+    method: mutate_by_gene
+    num_mutations: 1
   buffer_size: 12
 
 
