@@ -1,6 +1,6 @@
 ## Optimizer Block
 general:
-  optimizer: bayesian_optimization
+  optimizer: genetic_algorithm
   code_type: ipwr_database
   results_directory_name: output_files
 
