@@ -244,12 +244,12 @@ def trainmodelrpf(if_calibrate=False):
                X7_test, trunks)
     y_test = y_test.reshape(y_test.shape[0],-1) # no scaling
     
-    from deepxde.nn.tensorflow_compat_v1.mionet import MIONetCartesianProd_custom7
+    from deepxde.nn.tensorflow_compat_v1.mionet import MIONetCartesianProd
     from deepxde.data.quadruple import QuadrupleCartesianProd
     
     data = PWRCustomCartesianProd(X_train, y_train, X_test, y_test)
     m = 1296
-    net = dde.maps.mionet.MIONetCartesianProd_custom7(
+    net = dde.maps.mionet.MIONetCartesianProd(
     	[m,800, 600,400,150], [m,800, 600,400,150],
     	[m,800, 600,400,150], [m,800, 600,400,150],
     	[m,800, 600,400,150], [m,800, 600,400,150],
