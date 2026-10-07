@@ -18,7 +18,7 @@ tf.config.optimizer.set_jit(False)
 import os
 import gc
 import deepxde as dde
-from deepxde.nn.tensorflow_compat_v1.mionet import MIONetCartesianProd
+from deepxde.nn.tensorflow_compat_v1.mionet import MIONetCartesianProd_custom7
 from deepxde.data.quadruple import QuadrupleCartesianProd
 
 dde.config.set_default_float("float32")
@@ -202,7 +202,7 @@ X_test =  (X1_test,
 y_test = y_test
 data = PWRCustomCartesianProd(X_train, y_train, X_test, y_test)
 m = 1296
-net = dde.maps.mionet.MIONetCartesianProd(
+net = dde.maps.mionet.MIONetCartesianProd_custom7(
 	[m,800, 600,400,200], [m,800, 600,400,200],
 	[m,800, 600,400,200], [m,800, 600,400,200],
 	[m,800, 600,400,200], [m,800, 600,400,200],
