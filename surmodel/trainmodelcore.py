@@ -26,7 +26,7 @@ tf.config.optimizer.set_jit(False)
 import os
 import gc
 import deepxde as dde
-from deepxde.nn.tensorflow_compat_v1.mionet import MIONetCartesianProd_custom7
+from deepxde.nn.tensorflow_compat_v1.mionet import MIONetCartesianProd
 from deepxde.data.quadruple import QuadrupleCartesianProd
 import midas_data 
 
@@ -241,7 +241,7 @@ def traincoremodel_update(if_calibrate=False):
 
     data = PWRCustomCartesianProd(X_train, y_train, X_test, y_test)
     m = 1296
-    net = dde.maps.mionet.MIONetCartesianProd_custom7(
+    net = dde.maps.mionet.MIONetCartesianProd(
     	[m,800, 600,400,200], [m,800, 600,400,200],
     	[m,800, 600,400,200], [m,800, 600,400,200],
     	[m,800, 600,400,200], [m,800, 600,400,200],
