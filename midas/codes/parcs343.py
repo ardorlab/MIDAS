@@ -642,6 +642,7 @@ def without_template(solution, input, cwd, filename):
             ofile.write("      PIN_DIM      {}\n".format(input.pin_dimensions))
             ofile.write("      FLOW_COND    {}  {}\n".format(np.round(input.inlet_temp-273.15,2),\
                                                             np.round(input.flow/input.num_assemblies,4)))
+            ofile.write("      STATE_CORE   {}  1301.86  1.5789E7\n".format(np.round(input.flow)))
             ofile.write("      HGAP     11356.0\n") #!TODO:check this value, should it be parameterized?
             ofile.write("      N_RING   6\n")
             ofile.write(f"      THMESH_X       {dim_size[0]}*1\n")

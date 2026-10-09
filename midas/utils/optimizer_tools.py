@@ -385,7 +385,6 @@ class Solution():
 
         return chromosome
 
-        return chromosome
 
 
 class Gene_Validity_check():  

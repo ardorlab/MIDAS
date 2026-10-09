@@ -447,7 +447,6 @@ class PSA_Cooling_Schedules(object):
         
         if deviation == 0: 
             deviation = 0.01
-
         temperature = deviation * self.input.scaling_factor 
 
         return temperature

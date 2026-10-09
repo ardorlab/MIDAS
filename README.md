@@ -16,8 +16,9 @@ Current optimization methodologies supported in MIDAS are:
 * Simulated Annealing
 * Parallel Simulated Annealing
 * Bayesian Optimization  
-
+* Reinforcement Learning
   
+
 # Code Installation
 
 It is highly advised to install Miniconda or Anaconda. This will allow you to create a controlled Python environment where you can

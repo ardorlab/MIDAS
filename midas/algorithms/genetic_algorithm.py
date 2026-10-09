@@ -812,7 +812,6 @@ class GA_selection():
                 winners.append(i.chromosome)
             if len(winners) >= desired_pop_size:
                 break
-        
         return winners
     
     def sus(pop_list, desired_pop_size):
