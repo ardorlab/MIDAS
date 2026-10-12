@@ -228,7 +228,6 @@ class Optimizer():
                 pool = Pool(processes=self.input.num_procs, initializer=init_worker)
             else:
                 pool = Pool(processes=self.input.num_procs) #initialize parallel execution
-            pool = Pool(processes=self.input.num_procs) #initialize parallel execution
 
             if self.input.methodology == 'simulated_annealing'and self.input.num_procs == 1:
                 logger.info(f"Initial Temperature: {self.input.initial_temperature}")
