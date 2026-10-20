@@ -11,12 +11,7 @@ from subprocess import STDOUT
 from midas.utils import optimizer_tools as optools
 from midas_data import __parcs343exe__
 
-from midas.codes.parcs343 import calc_cycle_length
-from midas.codes.parcs343 import calc_cpr
-from midas.codes.parcs343 import calc_lhgr
-from midas.codes.parcs343 import calc_aplhgr
-from midas.codes.parcs343 import eq_cycle_convergence
-from midas.codes.parcs343 import next_binary_search
+from midas.codes.parcs343 import get_results
 
 ## Initialize logging for the present file
 logger = logging.getLogger("MIDAS_logger")
@@ -90,7 +85,7 @@ def evaluate(solution, input):
         ## Get Results
             if 'Finished' in str(output): #job completed
                 logger.debug(f"Job {solution.name} completed successfully in PARCSv343.")
-                solution.parameters = get_results(solution.parameters, solution.name, input)
+                solution.parameters = get_results(solution.parameters, solution.name, solution.chromosome, input)
             
             else: #job failed
                 if input.calculation_type in ['eq_cycle']:
@@ -98,19 +93,19 @@ def evaluate(solution, input):
                         solution.parameters = eq_cycle_convergence(input, solution, filename, parcscmd, input.code_walltime) #iteratively try to find an intial guess that will converge
                     except Exception as e:
                         logger.error(f"Job {solution.name} has failed to converge with the following exception: {e}")
-                        solution.parameters = get_results(solution.parameters, solution.name, input, job_failed=True)
+                        solution.parameters = get_results(solution.parameters, solution.name, solution.chromosome, input, job_failed=True)
                         
                 else: #standard execution pathway
                     logger.warning(f"Job {solution.name} has failed!")
-                    solution.parameters = get_results(solution.parameters, solution.name, input, job_failed=True)
+                    solution.parameters = get_results(solution.parameters, solution.name, solution.chromosome, input, job_failed=True)
         
         except subprocess.TimeoutExpired: #job timed out
             os.system('rm -f {}.parcs_pin*'.format(solution.name))
             logger.error(f"Job {solution.name} has timed out!")
-            solution.parameters = get_results(solution.parameters, solution.name, input, job_failed=True)
+            solution.parameters = get_results(solution.parameters, solution.name, solution.chromosome, input, job_failed=True)
         except subprocess.CalledProcessError as e: #PARCS returned an abort signal
             logger.error(f"Job {solution.name} has failed with the following exception: {e}")
-            solution.parameters = get_results(solution.parameters, solution.name, input, job_failed=True)
+            solution.parameters = get_results(solution.parameters, solution.name, solution.chromosome, input, job_failed=True)
         
         logger.debug(f"Returning to original working directory: {cwd}")
         os.chdir(cwd)
@@ -133,7 +128,7 @@ def with_template_full_opt(solution, input, cwd, filename):
         lines = file.readlines()  
 
     with open(filename, "w") as ofile:
-        realized_chromosome = prepare_chromosome(input, solution.chromosome)
+        realized_chromosome = prepare_chromosome_crp(input, solution.chromosome)
         num_zones = len(input.genome.keys())
         write_pattern_flag = False 
         for line in lines:
@@ -185,7 +180,7 @@ def with_template_partial_opt(solution, input, cwd, filename):
         lines = file.readlines()  
 
     with open(filename, "w") as ofile:
-        realized_chromosome = prepare_chromosome(input, solution.chromosome)
+        realized_chromosome = prepare_chromosome_crp(input, solution.chromosome)
         num_zones = len(input.genome.keys())
         write_pattern_flag = False 
         banks_step = 0
@@ -219,137 +214,23 @@ def with_template_partial_opt(solution, input, cwd, filename):
             else:
                 ofile.write(line)   
 
-def get_results(parameters, filename, input, job_failed=False):
+def calc_weighted_notches(input, chromosome, parameters, output_index):
     """
-    function used to retrieve all potential output parameters that may be used in an optimization
-
-    Parameters: 
-        1 - cycle length: 
-        2 - pxy: assembly level planar peaking
-        3 - pxyz: assembly level  volumetric peaking
-        4 - pin power peaking: Fq peaking factor
-        5 - f delta h: enthalpy rise peaking factor
-        6 - max_boron: 
-        7 - chfr: critical heat flux ratio
-        8 - keff_min: 
-        9 - keff_max: 
-        10 - keff_diff: difference between minimum and maximum keff
-        11 - cpr: critical power ratio
-        12 - lhgr: linear heat generation rate
-        13 - aplhgr: average planar lhgr
-        14 - axoff_boc: axial offset at begining of cycle
-        15 - axoff_eoc: axial offset at end of cycle
-        16 - axoff_moc: axial offset at middle of cycle
-
-    Updated by Jake Mikouchi. 07/22/2026
+    Uses the concave power law to compute a scalar objctive which prioritizes
+    fewer rod insertions at deeper depths.
+    Written by. Jake Mikouchi 10/14/2026
     """
-    ## Prepare container for results
-    results_dict = {}
-        
-    if not job_failed:
-        ## Read file for parsing
-        with open(filename + ".parcs_dpl", "r") as ofile:
-            filestr = ofile.read()
-        
-        ## Split file by section
-        res_str = filestr.split('===============================================================================')
-        res_str = res_str[-1].split('_______________________________________________________________________________')
-        res_str = res_str[0].split('\n')
-        
-        ## Parse raw values by timestep
-        efpd_list = []; boron_list = []; keff_list = []; pxy_list = []; pxyz_list = []; fq_list = []; fdh_list = []; chfr = []; axoff = []
-        for i in range(2, len(res_str)-1):
-            res_val=res_str[i].split()
-            
-            efpd_list.append(float(res_val[9]))
-            boron_list.append(float(res_val[14]))
-            keff_list.append(float(res_val[2]))            
-            pxyz_list.append(float(res_val[7]))
-            pxy_list.append(float(res_val[6]))
-            fdh_list.append(float(res_val[21]))
-            fq_list.append(float(res_val[22]))
-            chfr.append(float(res_val[23]))
-            axoff.append(float(res_val[4]))
-        
-        del filestr, res_str, res_val #unload file contents to clean up memory
+    for parameter_key in input.objectives.keys():
+        if parameters[parameter_key]['output_index'] == output_index:
+            p = parameters[parameter_key]['factor']
+            break
+    realized_chromosome = prepare_chromosome_crp(input, solution.chromosome)
+    notches = [input.cr_bounds["fully_removed"]-cr for cr in realized_chromosome]
+    weighted_notches = 0 
+    for i in notches:
+        weighted_notches += i**p
 
-        if input.crp_partial['apply']: 
-            efpd_list = efpd_list[input.crp_partial['steps'][0]-1:input.crp_partial['steps'][1]]
-            boron_list = boron_list[input.crp_partial['steps'][0]-1:input.crp_partial['steps'][1]]
-            keff_list = keff_list[input.crp_partial['steps'][0]-1:input.crp_partial['steps'][1]]
-            pxyz_list = pxyz_list[input.crp_partial['steps'][0]-1:input.crp_partial['steps'][1]]
-            pxy_list = pxy_list[input.crp_partial['steps'][0]-1:input.crp_partial['steps'][1]]
-            fdh_list = fdh_list[input.crp_partial['steps'][0]-1:input.crp_partial['steps'][1]]
-            fq_list = fq_list[input.crp_partial['steps'][0]-1:input.crp_partial['steps'][1]]
-            chfr = chfr[input.crp_partial['steps'][0]-1:input.crp_partial['steps'][1]]
-            axoff = axoff[input.crp_partial['steps'][0]-1:input.crp_partial['steps'][1]]
-
-        results_dict["cycle_length"] = {'value': calc_cycle_length(efpd_list,boron_list,keff_list,input.eoc_extrapolate), 'output_index':1}
-        results_dict["pxy"] = {'value':max(pxy_list), 'output_index':2}
-        results_dict["pxyz"]= {'value':max(pxyz_list), 'output_index':3}
-        results_dict["pinpowerpeaking"] = {'value':max(fq_list), 'output_index':4}
-        results_dict["fdeltah"] = {'value':max(fdh_list), 'output_index':5}
-        results_dict["max_boron"] = {'value':max(boron_list), 'output_index':6}
-        results_dict["chfr"] = {'value':min(chfr), 'output_index':7}
-        
-        results_dict["keff_min"] = {'value':min(keff_list), 'output_index':8}
-        results_dict["keff_max"] = {'value':max(keff_list), 'output_index':9}
-        results_dict["keff_diff"] = {'value':max(keff_list) - min(keff_list), 'output_index':10}
-
-        if 11 in [parameters[key]['output_index'] for key in parameters.keys()]: 
-            results_dict["cpr"] = {'value':calc_cpr(filename, parameters), 'output_index':11}
-        if 12 in [parameters[key]['output_index'] for key in parameters.keys()]: 
-            results_dict["lhgr"] = {'value':calc_lhgr(fq_list, parameters), 'output_index':12}
-        if 13 in [parameters[key]['output_index'] for key in parameters.keys()]: 
-            results_dict["aplhgr"] = {'value':calc_aplhgr(filename, parameters), 'output_index':13}
-        results_dict["axoff_boc"] = {'value':axoff[0], 'output_index':14}
-        results_dict["axoff_eoc"] = {'value':axoff[-1], 'output_index':15}
-        results_dict["axoff_moc"] = {'value':axoff[int(len(axoff)/2)], 'output_index':16} #TODO parameterize this
-
-
-        ## Correct Boron value if non-critical
-        sorted_boron = sorted(boron_list,reverse=True)
-        if sorted_boron[0] == sorted_boron[1]: #multiple values exceed maximum value in XS library, which is not reported by PARCS.
-            new_max_boron = sorted_boron[0] #initialize variable
-            for i in range(len(boron_list)): #!TODO: I think this serves to line up boron_list with keff_list. Could be replaced by index()
-                if boron_list[i]== sorted_boron[0]:
-                    boron_worth = 10.0 #pcm/ppm; assumed value.
-                    excess_rho = (keff_list[i] - 1.0)*10**5 #pcm; excess reactivity
-                    excess_boron = excess_rho/boron_worth #ppm
-                    max_boron_corrected = sorted_boron[0] + excess_boron
-                    if max_boron_corrected > new_max_boron:
-                        new_max_boron = max_boron_corrected
-            results_dict["max_boron"] = {'value':new_max_boron, 'output_index':14}
-    
-    else: #job has failed; fill parameters with absurdly negative values.
-        results_dict["cycle_length"] = {'value':0.0, 'output_index':1}
-        results_dict["pxy"] = {'value':10.0, 'output_index':2}
-        results_dict["pxyz"] = {'value':10.0, 'output_index':3}
-        results_dict["pinpowerpeaking"] = {'value':10.0, 'output_index':4}
-        results_dict["fdeltah"] = {'value':10.0, 'output_index':5}
-        results_dict["max_boron"]= {'value':10000, 'output_index':6}
-        results_dict["chfr"] = {'value':0.0, 'output_index':7}
-        results_dict["keff_min"] = {'value':0.0, 'output_index':8}
-        results_dict["keff_max"] = {'value':10.0, 'output_index':9}
-        results_dict["keff_diff"] = {'value':10.0, 'output_index':10}
-        results_dict["cpr"] = {'value':0.0, 'output_index':11}
-        results_dict["lhgr"] = {'value':100.0, 'output_index':12}
-        results_dict["aplhgr"] = {'value':100.0, 'output_index':13}
-        results_dict["axoff_boc"] = {'value':100, 'output_index':14}
-        results_dict["axoff_eoc"] = {'value':-100, 'output_index':15}
-        results_dict["axoff_moc"] = {'value':100, 'output_index':16}
-    
-    # populate parameters based on output index 
-    for key in results_dict:
-        output_index = results_dict[key]['output_index']
-        for parameter_key in input.objectives:
-            if 'output_index' in input.objectives[parameter_key].keys():
-                if output_index == input.objectives[parameter_key]['output_index']:
-                    parameters[parameter_key]["value"] = results_dict[key]['value']
-
-    return parameters
-
-def prepare_chromosome(input_obj, chromosome):
+def prepare_chromosome_crp(input_obj, chromosome):
     """
     Translates chromosome from normalized values representataions to actual control rod heights.
     This function also orders genes in the correct sequence that is required by parcs.
