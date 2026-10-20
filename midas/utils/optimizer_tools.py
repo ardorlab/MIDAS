@@ -266,7 +266,12 @@ class Solution():
         chromosome_length = []
         chromosome_length = 0
         for key in genome.keys(): 
-            true_map_len = len([x for x in genome[key]['map'] if x != 0])
+            reduced_map = [x for x in genome[key]['map'] if x != 0]
+            unique_list = []
+            for x in reduced_map:
+                if x not in unique_list:
+                    unique_list.append(x)
+            true_map_len = len(unique_list)
             if chromosome_length < true_map_len:
                 chromosome_length = true_map_len
         
