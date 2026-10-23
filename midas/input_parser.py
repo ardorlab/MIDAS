@@ -747,6 +747,11 @@ def validate_input(keyword, value):
                         if (item["increment"] / (item["discrete_range"][1] - item["discrete_range"][0]))*100 >= 10:
                             logger.warning(f"Continuous variable increment for '{new_key}' is large relative to the range. Is this intentional?")
         return new_dict
+
+    elif keyword == 'loading_pattern':
+        value = str(value).lower().replace(' ','_')
+        if value not in ["in_out","out_in","checkerboard","low_leakage","none"]:
+            raise ValueError("Available loading patterns are: in_out, out_in, checkerboard, low_leakage, none")
     
     elif keyword in ['lattice_parameters', 'assembly_parameters', 'batches']:
         new_dict = {}
@@ -760,6 +765,11 @@ def validate_input(keyword, value):
                         new_subkey = str(subkey).lower()
                         if new_subkey == 'map':
                             new_dict[new_key][new_subkey] = subitem
+                        elif new_subkey == 'prev_cycles': # may want to rename this - for section of the core, e.g. m / m+1
+                            if subitem in range(1,4):
+                                new_dict[new_key][new_subkey] = subitem
+                            else:
+                                raise ValueError(f"Invalid value for 'prev_cycles': {subitem}. Must be 0 (fresh), 1, or 2.")
                         elif new_subkey == 'constraint':
                             new_subitem = {}
                             if isinstance(subitem, dict):
@@ -1250,6 +1260,8 @@ class Input_Parser():
         except KeyError:
             info = None
         
+        self.loading_pattern = yaml_line_reader(info,'loading_pattern','in_out')
+
         if self.calculation_type in ['single_cycle','eq_cycle','listsum','multi_cycle']:
             self.genome = yaml_line_reader(info, 'assembly_parameters', None)
         elif self.calculation_type in ['lattice_physics']:
