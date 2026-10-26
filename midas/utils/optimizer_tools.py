@@ -568,7 +568,7 @@ class Solution():
                     if 'continuous_range' in input_obj.gene_options[key].keys():
                         lower_bound = input_obj.gene_options[key]['continuous_range'][0]
                         upper_bound = input_obj.gene_options[key]['continuous_range'][1]
-
+                        
                         realized_chromosome.append(lower_bound + (upper_bound-lower_bound)*chromosome[indx])
 
                     elif 'discrete_range' in input_obj.gene_options[key].keys():
@@ -797,7 +797,6 @@ class Gene_Validity_check():
                 break
 
         valid_genes_list = []
-
         if 'continuous_range' in input_obj.gene_options[gene]:
             valid_genes_list = [0,1]
         elif 'discrete_range' in input_obj.gene_options[gene]:

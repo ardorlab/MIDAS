@@ -78,9 +78,12 @@ def validate_input(keyword, value, incomp_input_obj=None):
     
     elif keyword == 'calc_type':
         value = str(value).lower().replace(' ','_')
-        if value not in ["single_cycle","eq_cycle", "lattice_physics", "numeric_variable", "categorical", "axial_zones", "control_rod_pattern"]:
+        if value not in ["single_cycle","eq_cycle", "lattice_physics", "numeric_variable", "categorical", "axial_zones", "control_rod_pattern", "coolant_flow_rate"]:
             # raise ValueError("Data type not supported.")
             logger.warning(f"Requested calculation type '{value}' is not natively supported. MIDAS will attempt to proceed but may error out.")
+        #override user provided calc_type if the problem is essentially a numeric variable optimization
+        if value in ["coolant_flow_rate"]:
+            value = "numeric_variable"
     
     elif keyword == 'input_template':
         if isinstance(value, dict):
@@ -1674,7 +1677,6 @@ class Input_Parser():
 
     ## Axial Assembly Block 
         self.crp_options = yaml_line_reader(self.file_settings, 'control_rod_options', None)
-        
         
     ## All generic variable Block ## (numerical and categorical)
         self.gene_options = yaml_line_reader(self.file_settings, 'gene_options', None, self)
