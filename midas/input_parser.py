@@ -792,11 +792,13 @@ def validate_input(keyword, value):
                                     new_subitem = None
                             new_dict[new_key][new_subkey] = new_subitem
                 else:
-                    raise ValueError(f"Decision variables '{key}' must be nested with its parameters.")
+                    value[key] = dict() # initialize dictionary for converstion to default map
+                    logger.warning(f"{key} has not been given any parameters. It will be initialized with the default map of being valid anywhere in the core.")
+                    # raise ValueError(f"Decision variables '{key}' must be nested with its parameters.")
             #check decision variable logic
             for key, value in new_dict.items():
                 if 'map' not in value and 'section' not in value:
-                    raise ValueError(f"Decision variable '{key}' must include a 'map' parameter, or a section parameter for a loading pattern.")
+                    logger.warning(f"Decision variable '{key}' should include a 'map' parameter, or a section parameter for a loading pattern. Proceeding with default map of assembly being valid anywhere in the core.")
                 if 'map' in value and 'section' in value:
                     logger.warning(f"User-provided 'map' included with 'section' parameter. Overriding LP maps with user-provided map when applicable.") # only warn, as there is funcitonality to consider this
                 if 'constraint' in value:
@@ -1135,7 +1137,7 @@ class Input_Parser():
     Centralized class for parsing user-supplied input arguments from the 
     MIDAS '.yaml' input file
     
-    Written by Nicholas Rollins. 09/11/2024
+    Written by Nichol1as Rollins. 09/11/2024
     """
     def __init__(self, num_procs, inp_file):
         self.num_procs = int(num_procs)
@@ -1267,18 +1269,23 @@ class Input_Parser():
 
         if self.calculation_type in ['single_cycle','eq_cycle','listsum','multi_cycle']:
             self.genome = yaml_line_reader(info, 'assembly_parameters', None)
-
-            # run map modifications
+            
+            print("assembly params imported. Loading pattern is",self.loading_pattern)
+            # run map modifications for loading patterns
             if self.loading_pattern != 'none':
+                print("Loading pattern is:",self.loading_pattern)
                 for item in self.genome:
-                    if 'section' in item:
-                        item['map'] = LP_map(self.loading_pattern, item['section']) # copy default LP
+                    if 'map' in self.genome[item]:
+                        logger.warning(f"Although a loading pattern has been chosen, a map has been defined in the input for {item}. Overriding the loading pattern map with the map given in the input.")
+                    elif 'section' in self.genome[item]:
+                        self.genome[item]['map'] = LP_map(self.loading_pattern, self.genome[item]['section']) # copy LP from list, unless it is overridden
                     else: # throw error if no section provided
-                        raise ValueError("Each fuel assembly in the genome must have a desginated 'section' if a loading pattern is specified.")
+                        raise ValueError(f"Each fuel assembly in the genome must have a desginated 'section' or an override map if a loading pattern is specified. {item} has neither.")
             else:
+                print("No loading pattern, filling with defaults")
                 for item in self.genome:
-                    if 'map' not in item:
-                        item['map'] = [1,
+                    if 'map' not in self.genome[item]:
+                        self.genome[item]['map'] = [1,
                                     1, 1, 1, 1, 1, 1, 1, 1,
                                     1, 1, 1, 1, 1, 1, 1,
                                     1, 1, 1, 1, 1, 1, 1,
@@ -1286,7 +1293,25 @@ class Input_Parser():
                                     1, 1, 1, 1, 1,
                                     1, 1, 1, 1,
                                     1, 1] # use default map if no map provided
-
+            print("Here are the maps:")
+            for item in self.genome:
+                print(item,self.genome[item]['map'])
+            
+            # check to make sure all the slots have at least 1 assembly assigned
+            first_map = self.genome[next(iter(self.genome))]['map']
+            for i in range(0,len(first_map)): # iterate through each assembly slot
+                found = False
+                for item in self.genome: # step through each assembly map assigned until a 1 value is foundi
+                    # print(f"Does {item} have position {i} covered?")
+                    if self.genome[item]['map'][i]:
+                        found = True
+                        # print("Yes, proceeding to next position")
+                        break # if a 1 is found, position i is cleared. Proceed to next slot
+                    # print("No, maybe the next one has it...")
+                if not found:
+                    raise ValueError(f"Position {i} in the fuel assembly map does not have any possible options in the genome. Please ensure that this slot has at least one assigned fuel assembly.")
+            
+            
         elif self.calculation_type in ['lattice_physics']:
             self.genome = yaml_line_reader(info, 'lattice_parameters', None)
         elif self.calculation_type in ['continuous_variable']:
