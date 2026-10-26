@@ -266,7 +266,12 @@ class Solution():
         chromosome_length = []
         chromosome_length = 0
         for key in genome.keys(): 
-            true_map_len = len([x for x in genome[key]['map'] if x != 0])
+            reduced_map = [x for x in genome[key]['map'] if x != 0]
+            unique_list = []
+            for x in reduced_map:
+                if x not in unique_list:
+                    unique_list.append(x)
+            true_map_len = len(unique_list)
             if chromosome_length < true_map_len:
                 chromosome_length = true_map_len
         
@@ -563,7 +568,7 @@ class Solution():
                     if 'continuous_range' in input_obj.gene_options[key].keys():
                         lower_bound = input_obj.gene_options[key]['continuous_range'][0]
                         upper_bound = input_obj.gene_options[key]['continuous_range'][1]
-
+                        
                         realized_chromosome.append(lower_bound + (upper_bound-lower_bound)*chromosome[indx])
 
                     elif 'discrete_range' in input_obj.gene_options[key].keys():
@@ -792,7 +797,6 @@ class Gene_Validity_check():
                 break
 
         valid_genes_list = []
-
         if 'continuous_range' in input_obj.gene_options[gene]:
             valid_genes_list = [0,1]
         elif 'discrete_range' in input_obj.gene_options[gene]:

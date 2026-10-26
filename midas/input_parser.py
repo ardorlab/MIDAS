@@ -78,9 +78,12 @@ def validate_input(keyword, value, incomp_input_obj=None):
     
     elif keyword == 'calc_type':
         value = str(value).lower().replace(' ','_')
-        if value not in ["single_cycle","eq_cycle", "lattice_physics", "numeric_variable", "categorical", "axial_zones", "control_rod_pattern"]:
+        if value not in ["single_cycle","eq_cycle", "lattice_physics", "numeric_variable", "categorical", "axial_zones", "control_rod_pattern", "coolant_flow_rate"]:
             # raise ValueError("Data type not supported.")
             logger.warning(f"Requested calculation type '{value}' is not natively supported. MIDAS will attempt to proceed but may error out.")
+        #override user provided calc_type if the problem is essentially a numeric variable optimization
+        if value in ["coolant_flow_rate"]:
+            value = "numeric_variable"
     
     elif keyword == 'input_template':
         if isinstance(value, dict):
@@ -180,8 +183,6 @@ def validate_input(keyword, value, incomp_input_obj=None):
                 if new_key not in ['max_boron',
                                    'pinpowerpeaking',
                                    'fdeltah',
-                                   'pxyz',
-                                   'pxy',
                                    'cycle_length',
                                    'assembly_burnup',
                                    'cost_fuelcycle',
@@ -190,23 +191,9 @@ def validate_input(keyword, value, incomp_input_obj=None):
                                    'maxfueltemp',
                                    'maxgapq',
                                    'peak_reactivity',
-                                   'max_critical_exposure',
-                                   'keff_min',
-                                   'keff_max',
-                                   'keff_diff',
-                                   'cpr',
-                                   'chfr',
-                                   'lhgr',
-                                   'aplhgr',
-                                   'max_doserate',
-                                   'total_mass',
-                                   'doppler_temperature_coefficient',
-                                   'function_output',
-                                   'list_sum']:
+                                   'max_critical_exposure']: #TODO update remaining interfaces to use output_index over keywords
                     if 'output_index' not in [_.lower() for _ in value[key].keys()]:
                         raise ValueError(f"Requested objective/constraint '{key}' not supported, or output_index not provided")
-                if new_key == 'aplhgr':
-                    logger.warning("APLHGR requires 3d plotting of pin reconstruction.")
                 new_item = {}
                 if isinstance(item, dict):
                     #check goals, weights, and targets
@@ -224,6 +211,10 @@ def validate_input(keyword, value, incomp_input_obj=None):
                             new_subitem = float(subitem)
                         elif new_subkey == 'target':
                             new_subitem = float(subitem)
+                        elif new_subkey == 'output_index':
+                            new_subitem = float(subitem)
+                        elif new_subkey == 'factor':
+                            new_subitem = float(subitem)
                         elif new_subkey == 'settings':
                             new_subitem = {}
                             if isinstance(subitem, dict):
@@ -236,23 +227,9 @@ def validate_input(keyword, value, incomp_input_obj=None):
                                 new_subitem[new_subsubkey] = new_subsubitem
                             else:
                                 raise ValueError(f"Requested settings for objective '{key}' must be nested with its applicable parameters.")
-                        elif new_subkey == 'critical_power':
-                            new_subitem = float(subitem)
-                        elif new_subkey == 'linear_power':
-                            new_subitem = float(subitem)
-                        elif new_subkey == 'output_index':
-                            new_subitem = float(subitem)
-                        elif new_subkey == 'equation':
-                            if new_key != 'function_output':
-                                raise ValueError(f"'equation' option is only available under 'function_output' variable, but is under '{new_key}' instead")
-                            new_subitem = str(subitem)
-                        if new_key == 'cpr' and 'critical_power' not in item.keys():
-                            raise ValueError(f"Critical power ratio is requested in objectives but the critical power is not provided.")
-                        if new_key == 'lhgr' and 'linear_power' not in item.keys():
-                            raise ValueError(f"Linear heat generation rate requested in objectives but the linear power density is not provided.")
-                        if new_key == 'aplhgr' and 'linear_power' not in item.keys():
-                            raise ValueError(f"Average palnar linear heat generation rate requested in objectives but the linear power density is not provided.")
+
                         new_item[new_subkey] = new_subitem #save modified parameter
+
                     #check parameters logic
                     if 'goal' not in new_item:
                         raise ValueError(f"'Goal' parameter missing for {key}.")
@@ -271,6 +248,20 @@ def validate_input(keyword, value, incomp_input_obj=None):
                         else:
                             new_item['settings'] = {}
                             new_item['settings']['scope'] = 'full_core' #default value 
+                    
+                    # check parcs inputs 
+                    if incomp_input_obj.code_interface in ['parcs343','parcs343_crp','parcs343_axial']:
+                        if new_item['output_index'] == 18 and incomp_input_obj.calculation_type != "control_rod_pattern":
+                            raise ValueError(f"The weighted notches objective (output index {int(new_item['output_index'])}) can only be used for control rod optimizations.")
+                        if new_item['output_index'] == 18 and 'factor' not in new_item.keys(): 
+                            raise ValueError(f"Weighted notches parameter requires a factor for the concave power law calculation.")
+                        if new_item['output_index'] == 11 and 'factor' not in new_item.keys(): 
+                            raise ValueError(f"Critical power ratio is requested in objectives but the critical power is not provided.")
+                        if new_item['output_index'] in [12,21] and 'factor' not in new_item.keys(): 
+                            raise ValueError(f"Linear heat generation rate requested in objectives but the linear power density is not provided.")
+                        if new_item['output_index'] == 13 and 'factor' not in new_item.keys(): 
+                            raise ValueError(f"Average palnar linear heat generation rate requested in objectives but the linear power density is not provided.")
+
                 else:
                     raise ValueError("Requested objective/constraint must be nested with its applicable parameters.")
                 new_dict[new_key] = new_item #save modified objective/constraint
@@ -840,9 +831,7 @@ def validate_input(keyword, value, incomp_input_obj=None):
                                 #check types and cross sections
                                 for subsubkey, subsubitem in subitem.items():
                                     new_subsubkey =str(subsubkey).lower().replace(' ','_')
-                                    if new_subsubkey == 'serial':
-                                        new_subsubitem = str(subsubitem)
-                                    elif new_subsubkey == 'designation':
+                                    if new_subsubkey == 'designation':
                                         new_subsubitem = str(subsubitem)
                                     elif new_subsubkey == 'region':
                                         new_subsubitem = str(subsubitem).lower()
@@ -875,8 +864,8 @@ def validate_input(keyword, value, incomp_input_obj=None):
                 raise ValueError("axial assembly options must contain zone cross sections.")
             list_unique_fuel_types = []
             for key, value in new_dict['zone_xs'].items():
-                if "serial" not in value or "designation" not in value or "region" not in value:
-                    raise ValueError(f"'serial', 'designation', or 'region' parameter missing from '{key}'.")
+                if "designation" not in value or "region" not in value:
+                    raise ValueError(f"'designation', or 'region' parameter missing from '{key}'.")
                 if key not in list_unique_fuel_types:
                     list_unique_fuel_types.append(key)
                 else:
@@ -1609,7 +1598,7 @@ class Input_Parser():
             self.population_size = 1
         self.num_generations = yaml_line_reader(info, 'number_of_generations', 1)
         self.symmetry = yaml_line_reader(info, 'solution_symmetry', 'octant')
-        self.objectives = yaml_line_reader(info, 'objectives', None)
+        self.objectives = yaml_line_reader(info, 'objectives', None, self)
         termination_criteria_default = {'method':'None','termination_generations':0}
         self.termination_criteria = yaml_line_reader(info, 'termination_criteria', termination_criteria_default)
         
@@ -1688,7 +1677,6 @@ class Input_Parser():
 
     ## Axial Assembly Block 
         self.crp_options = yaml_line_reader(self.file_settings, 'control_rod_options', None)
-        
         
     ## All generic variable Block ## (numerical and categorical)
         self.gene_options = yaml_line_reader(self.file_settings, 'gene_options', None, self)
