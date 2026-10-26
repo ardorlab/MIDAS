@@ -4,6 +4,7 @@ import re
 import logging
 from pathlib import Path
 from midas.utils import problem_preparation
+from midas.utils.optimizer_tools import LP_map
 """
 Classes for parsing and cleansing input data from the user-specified '.yaml' MIDAS input file.
 
@@ -765,11 +766,11 @@ def validate_input(keyword, value):
                         new_subkey = str(subkey).lower()
                         if new_subkey == 'map':
                             new_dict[new_key][new_subkey] = subitem
-                        elif new_subkey == 'prev_cycles': # may want to rename this - for section of the core, e.g. m / m+1
+                        elif new_subkey == 'section': # for section of the core, e.g. m / m+1 / m+2
                             if subitem in range(1,4):
                                 new_dict[new_key][new_subkey] = subitem
                             else:
-                                raise ValueError(f"Invalid value for 'prev_cycles': {subitem}. Must be 0 (fresh), 1, or 2.")
+                                raise ValueError(f"Invalid value for 'section': {subitem}. Must be 1, 2, or 3.")
                         elif new_subkey == 'constraint':
                             new_subitem = {}
                             if isinstance(subitem, dict):
@@ -794,8 +795,10 @@ def validate_input(keyword, value):
                     raise ValueError(f"Decision variables '{key}' must be nested with its parameters.")
             #check decision variable logic
             for key, value in new_dict.items():
-                if 'map' not in value:
-                    raise ValueError(f"Decision variable '{key}' must include a 'map' parameter.")
+                if 'map' not in value and 'section' not in value:
+                    raise ValueError(f"Decision variable '{key}' must include a 'map' parameter, or a section parameter for a loading pattern.")
+                if 'map' in value and 'section' in value:
+                    logger.warning(f"User-provided 'map' included with 'section' parameter. Overriding LP maps with user-provided map when applicable.") # only warn, as there is funcitonality to consider this
                 if 'constraint' in value:
                     if 'type' not in value['constraint']:
                         raise ValueError(f"Decision variable '{key}' includes a constraint but no 'type' parameter.")
@@ -1260,10 +1263,30 @@ class Input_Parser():
         except KeyError:
             info = None
         
-        self.loading_pattern = yaml_line_reader(info,'loading_pattern','in_out')
+        self.loading_pattern = yaml_line_reader(info,'loading_pattern','none')
 
         if self.calculation_type in ['single_cycle','eq_cycle','listsum','multi_cycle']:
             self.genome = yaml_line_reader(info, 'assembly_parameters', None)
+
+            # run map modifications
+            if self.loading_pattern != 'none':
+                for item in self.genome:
+                    if 'section' in item:
+                        item['map'] = LP_map(self.loading_pattern, item['section']) # copy default LP
+                    else: # throw error if no section provided
+                        raise ValueError("Each fuel assembly in the genome must have a desginated 'section' if a loading pattern is specified.")
+            else:
+                for item in self.genome:
+                    if 'map' not in item:
+                        item['map'] = [1,
+                                    1, 1, 1, 1, 1, 1, 1, 1,
+                                    1, 1, 1, 1, 1, 1, 1,
+                                    1, 1, 1, 1, 1, 1, 1,
+                                    1, 1, 1, 1, 1, 1,
+                                    1, 1, 1, 1, 1,
+                                    1, 1, 1, 1,
+                                    1, 1] # use default map if no map provided
+
         elif self.calculation_type in ['lattice_physics']:
             self.genome = yaml_line_reader(info, 'lattice_parameters', None)
         elif self.calculation_type in ['continuous_variable']:

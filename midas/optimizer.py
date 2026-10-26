@@ -122,11 +122,7 @@ class Optimizer():
             soln.parameters[key]['value'] = None #placeholder to be filled by objective function.
         
         core_parameters = [self.input.nrow, self.input.ncol, self.input.num_assemblies,
-                            self.input.symmetry, self.input.calculation_type]
-
-        if self.input.calculation_type == "single_cycle": # only add LP if single-cycle
-            core_parameters.append(self.input.loading_pattern)
-        
+                            self.input.symmetry, self.input.calculation_type]        
         if chromosome:
             soln.chromosome = chromosome
         else: #generate random chromosome

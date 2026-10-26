@@ -124,19 +124,11 @@ class Solution():
                                 raise ValueError("Random solution generation failed after 1000 attempts. Check the variables maps and constraints.")
                             gene = random.choice(gene_options)
 
-                            if LWR_core_parameters[6] != "none":
-                                if self.LP_map[genome[gene]['prev_cycles']][i]: # find map for which section this should be in
-                                    chromosome.append(gene)
-                                    invalid = False
-                                else:
-                                    gene_options.remove(gene)
-
-                            else: # If no preset LP map is picked, go with the user input
-                                if genome[gene]['map'][i]: #check that the selected gene option is viable at this location.
-                                    chromosome.append(gene)
-                                    invalid = False
-                                else:
-                                    gene_options.remove(gene)
+                            if genome[gene]['map'][i]: #check that the selected gene option is viable at this location.
+                                chromosome.append(gene)
+                                invalid = False
+                            else:
+                                gene_options.remove(gene)
 
             if len(chromosome) >= max(chromosome_length):    
                 chromosome_is_valid = True
@@ -277,97 +269,6 @@ class Solution():
                 if antihang > 100:
                     raise ValueError("SS_decoder has discovered a circular dependency in a malformed shuffling scheme. This is highly irregular.")
         return decoded_LP
-
-    def LP_map(self,LWR_core_parameters):
-        """
-        Builds three corresponding loading pattern maps according to the user selection 
-
-        Currently only supports 193 assemblies
-        """
-        lp_maps = [] # temp maps
-        if LWR_core_parameters[6] in ["in_out", "out_in"]: # these are the same format
-            lp_maps = [
-                [1,
-                1, 1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1,
-                1, 1, 1, 1,
-                1, 1],
-                [1,
-                1, 1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1,
-                1, 1, 1, 1,
-                1, 1],
-                [1,
-                1, 1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1,
-                1, 1, 1, 1,
-                1, 1]
-            ]
-        elif LWR_core_parameters[6] == "checkerboard":
-            lp_maps = [
-                [1,
-                1, 1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1,
-                1, 1, 1, 1,
-                1, 1],
-                [1,
-                1, 1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1,
-                1, 1, 1, 1,
-                1, 1],
-                [1,
-                1, 1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1,
-                1, 1, 1, 1,
-                1, 1]
-            ]
-        elif LWR_core_parameters[6] == "low_leakage":
-            lp_maps = [
-                [1,
-                1, 1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1,
-                1, 1, 1, 1,
-                1, 1],
-                [1,
-                1, 1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1,
-                1, 1, 1, 1,
-                1, 1],
-                [1,
-                1, 1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1, 1,
-                1, 1, 1, 1, 1,
-                1, 1, 1, 1,
-                1, 1]
-            ]
-        
-        return lp_maps
 
     def EQ_reload_fuel(genome, LWR_core_parameters, chromosome):
         """
@@ -963,3 +864,123 @@ def is_integer(s):
         return True
     except ValueError:
         return False
+
+def LP_map(loading_pattern,section):
+    """
+    Returns corresponding loading pattern maps according to the user selection 
+
+    Currently only supports 193 assemblies
+
+    this could be a dictionary right now, but probably when different sizes are introduced this'd make it complicated enough to where this function is worth it
+    """
+    lp_maps = [] # all temporary maps entirely arbitrarily chosen
+    if loading_pattern == "in_out": # these are the same format
+        lp_maps = [
+            [1,
+            1, 1, 1, 0, 0, 0, 0, 0,
+            1, 1, 1, 0, 0, 0, 0,
+            1, 1, 1, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0],
+            [0,
+            0, 0, 0, 1, 1, 1, 0, 0,
+            0, 0, 0, 1, 1, 1, 0,
+            0, 0, 0, 1, 1, 0, 0,
+            1, 1, 1, 1, 0, 0,
+            1, 1, 1, 0, 0,
+            1, 0, 0, 0,
+            0, 0],
+            [0,
+            0, 0, 0, 0, 0, 0, 1, 1,
+            0, 0, 0, 0, 0, 0, 1,
+            0, 0, 0, 0, 0, 1, 1,
+            0, 0, 0, 0, 1, 1,
+            0, 0, 0, 1, 1,
+            0, 1, 1, 1,
+            1, 1]
+            ]
+    elif loading_pattern == "out_in":
+        lp_maps = [
+            [0,
+            0, 0, 0, 0, 0, 0, 1, 1,
+            0, 0, 0, 0, 0, 0, 1,
+            0, 0, 0, 0, 0, 1, 1,
+            0, 0, 0, 0, 1, 1,
+            0, 0, 0, 1, 1,
+            0, 1, 1, 1,
+            1, 1],
+            [0,
+            0, 0, 0, 1, 1, 1, 0, 0,
+            0, 0, 0, 1, 1, 1, 0,
+            0, 0, 0, 1, 1, 0, 0,
+            1, 1, 1, 1, 0, 0,
+            1, 1, 1, 0, 0,
+            1, 0, 0, 0,
+            0, 0],
+            [1,
+            1, 1, 1, 0, 0, 0, 0, 0,
+            1, 1, 1, 0, 0, 0, 0,
+            1, 1, 1, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0]
+            ]
+    elif loading_pattern == "checkerboard":
+        lp_maps = [
+            [0,
+            0, 0, 0, 0, 0, 0, 1, 1,
+            0, 0, 0, 0, 0, 0, 1,
+            0, 0, 0, 0, 0, 1, 1,
+            0, 0, 0, 0, 1, 1,
+            0, 0, 0, 1, 1,
+            0, 1, 1, 1,
+            1, 1],
+            [1,
+            1, 1, 1, 1, 1, 1, 0, 0,
+            1, 1, 1, 1, 1, 1, 0,
+            1, 1, 1, 1, 1, 0, 0,
+            1, 1, 1, 1, 0, 0,
+            1, 1, 1, 0, 0,
+            1, 0, 0, 0,
+            0, 0],
+            [1,
+            1, 1, 1, 1, 1, 1, 0, 0,
+            1, 1, 1, 1, 1, 1, 0,
+            1, 1, 1, 1, 1, 0, 0,
+            1, 1, 1, 1, 0, 0,
+            1, 1, 1, 0, 0,
+            1, 0, 0, 0,
+            0, 0]
+            ]
+    elif loading_pattern == "low_leakage":
+        lp_maps = [
+            [1,
+            1, 1, 1, 1, 1, 1, 0, 0,
+            1, 1, 1, 1, 1, 1, 0,
+            1, 1, 1, 1, 1, 0, 0,
+            1, 1, 1, 1, 0, 0,
+            1, 1, 1, 0, 0,
+            1, 0, 0, 0,
+            0, 0],
+            [1,
+            1, 1, 1, 0, 0, 0, 0, 0,
+            1, 1, 1, 0, 0, 0, 0,
+            1, 1, 1, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0],
+            [1,
+            1, 1, 1, 0, 0, 0, 1, 1,
+            1, 1, 1, 0, 0, 0, 1,
+            1, 1, 1, 0, 0, 1, 1,
+            0, 0, 0, 0, 1, 1,
+            0, 0, 0, 1, 1,
+            0, 1, 1, 1,
+            1, 1]
+            ]
+        
+    return lp_maps[section-1]
