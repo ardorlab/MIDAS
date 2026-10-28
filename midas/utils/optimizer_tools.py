@@ -111,25 +111,62 @@ class Solution():
         chromosome_is_valid = False
         attempts = 0
         while not chromosome_is_valid:
-            chromosome = []
-            for i in range(max(chromosome_length)):
+            chromosome = [None] * max(chromosome_length) # initialize chromosome with enough spaces
+
+            # pre-fill the chromosome with the assembleis that have meet_target constraints to prevent antihang
+            genes_with_specific_quantity = [] # list of all genes that have a meet_target constraint
+            unfilled_locs = list(range(max(chromosome_length))) # unfilled locations for this round
+            for gene in genome:
+                if genome[gene]['constraint'] is not None: # prevent referencing a non-existant type key. Constraint is None by default
+                    if genome[gene]['constraint']['type'] == 'meet_target':
+                        genes_with_specific_quantity.append([gene,genome[gene]['constraint']['value'],genome[gene]['map']]) # easier to process if taken as a list
+            
+            while sum(row[1] for row in genes_with_specific_quantity) > 0: # repeat until all required assemblies added
+                gene = random.choice(genes_with_specific_quantity) # don't add all of one assembly at once, otherwise this reduces the options avaialble to
+                
+                # list of all valid locations for this assembly: map minus locations that already have n assembly
+                possible_locs = unfilled_locs.copy() # copy
+            
+                for i in range(len(gene[2])): # step through each index of the map
+                    print("Possible Locations This Round:",possible_locs,"for gene",gene[0])
+                    if not gene[2][i] and i in possible_locs: # check if this is a valid map location - filled locations have already been removed in the previous loop
+                        possible_locs.remove(i)
+           
+                place_index = random.choice(possible_locs)
+                chromosome[place_index] = gene[0] # add the gene to a randomly selected valid location
+                gene[1] -= 1 # remove 1 count from the value
+                unfilled_locs.remove(place_index) # mark as filled
+                
+                print("Placing at position:",place_index)
+                # if enough of a gene has been placed, remove it from the options
+                if gene[1] <= 0:
+                    genes_with_specific_quantity.remove(gene)
+            print("Remaining locations to be filled:",unfilled_locs)
+            print("pre-filled chromosome:",chromosome)
+    
+            for i in unfilled_locs: # fill remaining locations
                     gene_options = Gene_Validity_check.contraceptive_check(self.input, genes_list, genome, LWR_core_parameters,
                                                                                             [], chromosome, i)
-                    if gene_options:
+                    print("Position to fill:",i,"with the following options:",gene_options)
+                    if gene_options is not None:
                         invalid = True
                         antihang = 0
                         while invalid:
                             antihang +=1
                             if antihang > 1000:
+                                print("antihang trigger")
                                 raise ValueError("Random solution generation failed after 1000 attempts. Check the variables maps and constraints.")
                             gene = random.choice(gene_options)
-
+                            print("Attempt to fill with",gene)
                             if genome[gene]['map'][i]: #check that the selected gene option is viable at this location.
-                                chromosome.append(gene)
+                                chromosome[i] = gene
                                 invalid = False
+                                print("Filled position",i,"with gene",gene)
                             else:
                                 gene_options.remove(gene)
-
+                    else:
+                        antihang += 1 # now that the choromosome is initialized with Nones, it can pass if there are no gene options. Ensure this doesn't occur
+            print("final chromosome:",chromosome)
             if len(chromosome) >= max(chromosome_length):    
                 chromosome_is_valid = True
             attempts += 1
