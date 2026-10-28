@@ -1,4 +1,6 @@
 ## Import Block ##
+from copy import deepcopy
+
 import yaml
 import re
 import logging
@@ -1280,11 +1282,11 @@ class Input_Parser():
                         self.genome[item]['map'] = LP_map(self.loading_pattern, self.genome[item]['section']) # copy LP from list, unless it is overridden
                     else: # throw error if no section provided
                         raise ValueError(f"Each fuel assembly in the genome must have a desginated 'section' or an override map if a loading pattern is specified. {item} has neither.")
-            else:
                 print("No loading pattern, filling with defaults")
+                print("Note: Since a custom map is being used, the system will not check if the constraints allow for enough assemblies to make a loading pattern possible.")
                 for item in self.genome:
                     if 'map' not in self.genome[item]:
-                        self.genome[item]['map'] = [1,
+                        self.genome[item]['map'] = [1, # default for 157. TODO: have defaults based on the given size of the reactor
                                     1, 1, 1, 1, 1, 1, 1, 1,
                                     1, 1, 1, 1, 1, 1, 1,
                                     1, 1, 1, 1, 1, 1, 1,
@@ -1292,9 +1294,9 @@ class Input_Parser():
                                     1, 1, 1, 1, 1,
                                     1, 1, 1, 1,
                                     1, 1] # use default map if no map provided
-            print("Here are the maps:")
+            print("Here are the maps:") # print out maps to verify that they are correct
             for item in self.genome:
-                print(item,self.genome[item]['map'])
+               print(item,self.genome[item]['map'])
             
             # check to make sure all the slots have at least 1 assembly assigned
             first_map = self.genome[next(iter(self.genome))]['map']
@@ -1309,8 +1311,65 @@ class Input_Parser():
                     # print("No, maybe the next one has it...")
                 if not found:
                     raise ValueError(f"Position {i} in the fuel assembly map does not have any possible options in the genome. Please ensure that this slot has at least one assigned fuel assembly.")
-            
-            
+
+            # check to make sure that if there are constraints, there are enough assemblies in each section to fill all the positions
+            # maybe this coujld be its own function for cleanness
+            # since map overrides are an option, it is not possible to count section-by-section. Instead, the map will be used
+            map_counter = [0] * len(self.genome)
+            gene_counter = {} # make a dictionary of the maximum values of each gene
+            print("Genome before:",self.genome)
+            print("Gene counter before:",gene_counter)
+ 
+            for gene in self.genome:
+                if self.genome[gene]['constraint'] != None:
+                    if self.genome[gene]['constraint']['type'] in ['max_quantity','meet_target']:
+                        gene_counter[gene] = deepcopy(self.genome[gene]['constraint']['value'])
+                    elif self.genome[gene]['constraint']['type'] == 'less_than_variable':
+                        gene_counter[gene] = deepcopy(self.genome[self.genome[gene]['constraint']['value']] - 1)
+
+            for i in range(len(map_counter)):                
+                for gene in self.genome: # first, check if there is an unconstrained assembly that can go here
+                    if self.genome[gene]['map'][i] == 1 and self.genome[gene]['constraint'] == None:
+                        map_counter[i] = 1
+                        break # move to the next position in the map
+                
+                # if there isn't any unconstrained assembly that can go here, move onto constrained assemblies
+                if map_counter[i] == 0:
+                    for gene in self.genome:
+                        if self.genome[gene]['map'][i] == 1 and self.genome[gene]['constraint'] != None:
+                            # if this gene can go here and has a constraint, but still has more assemblies to count
+                            if gene_counter[gene] > 0: # if there are still some of this assembly left to use
+                                map_counter[i] = 1
+                                gene_counter[gene] -= 1
+                                break # move onto the next position in the map  
+
+                if map_counter[i] == 0: # if there are no more assmeblies left, raise an error
+                    raise ValueError("The constraints of the genome prevent it from being able to fill all positions in the fuel assembly map. Please check the constraints in the input file and try again.")
+                
+            print("Genome after:",self.genome)
+            print("Gene counter after:",gene_counter)
+
+            # now, check if meet_target has constrained the space to require too many assemblies
+            for gene in self.genome:
+                if self.genome[gene]['constraint']['type'] == 'meet_target': # currently, meet_target is the only constraint that could require too many assemblies
+                    union_map = deepcopy(self.genome[gene]['map']) # initialize a map of all possible positions using the current gene's map
+                    other_genes_count = self.genome[gene]['constraint']['value'] # initiailize counter for verification
+                    
+                    for other_gene in self.genome:
+                        if other_gene != gene and self.genome[other_gene]['constraint'] == 'meet_target': # check if the other gene is also a meet_target constraint
+                            for i in range(len(self.genome[other_gene]['map'])):
+                                if union_map[i] == 1 and self.genome[other_gene]['map'][i] == 1: # if there is an overlap, start building a map of the union of the two regions
+                                    other_genes_count += self.genome[other_gene]['constraint']['value'] # add this to the list of overlaps
+                                    for i in range(len(self.genome[other_gene]['map'])):
+                                        if self.genome[other_gene]['map'][i] == 1:
+                                            union_map[i] = 1 # add the other_gene's map to the union
+                                break # overlap confirmed, no need to proceed with the rest of the map for this other_gene
+                        # the next other_gene to fit the conditions is also added into the union
+                    if sum(union_map) < other_genes_count: # if there are more assmeblies that have to be placed here than spaces to put them in,  put an error
+                        raise ValueError(f"The constraints of the genome require more assemblies of {gene} and other meet_target genes than are spaces to put them in. Please check the constraints in the input file and try again.")
+                        # Note: if the sum equals other_gene_count, this is because there are no unconstrained assemblies that can go in this space. If there are more spaces than constrained assemblies available, it is fine because we know that there will be enough from the first quantity check above        
+
+        
         elif self.calculation_type in ['lattice_physics']:
             self.genome = yaml_line_reader(info, 'lattice_parameters', None)
         elif self.calculation_type in ['continuous_variable']:
