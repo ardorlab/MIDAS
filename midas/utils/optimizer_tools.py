@@ -406,10 +406,8 @@ class Gene_Validity_check():
         
         Written by Jake Mikouchi. 09/04/2025
         """
-        if input_obj.calculation_type in ['single_cycle']:
+        if input_obj.calculation_type in ['single_cycle','multi_cycle']:
             valid_genes_list = Gene_Validity_check.calc_LWR_gene_options(genes_list, genome, parameters, child+chromosome[len(child):], indx)
-        elif input_obj.calculation_type in ['multi_cycle']:
-            valid_genes_list = Gene_Validity_check.calc_LWR_gene_optionsMP(genes_list, genome, parameters, child+chromosome[len(child):], indx)
         elif input_obj.calculation_type == 'eq_cycle':
             if None in chromosome:
                 child_zone = chromosome
@@ -448,8 +446,9 @@ class Gene_Validity_check():
                     gene_counts[gene] = 0
                 if cvalue not in gene_counts:
                     gene_counts[cvalue] = 0
-                if ctype == 'max_quantity':
+                if ctype in ['max_quantity','meet_target']:
                     #only include option if less than the max quantity have been already used.
+                    # also usable for meet_target, though additional specifications should be added
                     # print(cvalue,gene,gene_counts[gene])
                     if gene_counts[gene] < cvalue and (cvalue - gene_counts[gene]) >= 1:
                     # if gene_counts[gene] < cvalue and (cvalue - gene_counts[gene]) > 1:
@@ -493,7 +492,7 @@ class Gene_Validity_check():
                     gene_counts[gene] = 0
                 if cvalue not in gene_counts:
                     gene_counts[cvalue] = 0
-                if ctype == 'max_quantity':
+                if ctype in ['max_quantity','meet_target']:
                     #only include option if less than the max quantity have been already used.
                     
                     if gene_counts[gene] <= cvalue and (cvalue - gene_counts[gene]) >= 1:
@@ -531,7 +530,7 @@ class Gene_Validity_check():
                     gene_counts[gene] = 0
                 if cvalue not in gene_counts:
                     gene_counts[cvalue] = 0
-                if ctype == 'max_quantity':
+                if ctype in ['max_quantity','meet_target']:
                     #only include option if less than the max quantity have been already used.
                     # if gene_counts[gene] < cvalue and (cvalue - gene_counts[gene]) > 1:
                     if gene_counts[gene] < cvalue and (cvalue - gene_counts[gene]) >= 1:
@@ -628,6 +627,9 @@ class Gene_Validity_check():
                     if cvalue not in gene_counts:
                         gene_counts[cvalue] = 0
                     if gene_counts[gene] > gene_counts[cvalue] :#and cvalue!=1: ## 1 for reload core
+                        return False
+                elif ctype == 'meet_target': #quantity of gene type must be equal to the target quantity
+                    if gene_counts[gene] != cvalue:
                         return False
         ## make sure that each gene option is valid for the gene
         for i in range(len(solution)):

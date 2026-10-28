@@ -779,8 +779,8 @@ def validate_input(keyword, value):
                                     new_subsubkey =str(subsubkey).lower()
                                     if new_subsubkey == 'type':
                                         new_subsubitem = str(subsubitem).lower().replace(' ','_')
-                                        if new_subsubitem not in ['max_quantity','less_than_variable']:
-                                            raise ValueError(f"Requested decision variable constraint type '{subsubitem}' not supported.")
+                                        if new_subsubitem not in ['max_quantity','less_than_variable','meet_target']:
+                                            raise ValueError(f"Requested decision variable constraint type '{subsubitem}' not supported. Available options: max_quantity, less_than_variable, meet_target")
                                     elif new_subsubkey == 'value':
                                         try:
                                             new_subsubitem = int(subsubitem)
@@ -806,16 +806,15 @@ def validate_input(keyword, value):
                         raise ValueError(f"Decision variable '{key}' includes a constraint but no 'type' parameter.")
                     elif 'value' not in value['constraint']:
                         raise ValueError(f"Decision variable '{key}' includes a constraint but no 'value' parameter.")
-                    elif value['constraint']['type'] == 'max_quantity':
-                        if not isinstance(value['constraint']['value'], int):
-                            raise ValueError(f"Maximum quantity constraint for decision variable '{key}' must be an integer.")
-                    elif value['constraint']['type'] == 'less_than_variable':
-                        if not isinstance(value['constraint']['value'], str):
-                            raise ValueError(f"'Less Than' constraint for decision variable '{key}' must be a valid decision variable name.")
-                        elif value['constraint']['value'] not in new_dict.keys():
-                            raise ValueError(f"'Less Than' constraint for decision variable '{key}' must be a valid decision variable name.")
-                        elif value['constraint']['value'] == key:
-                            raise ValueError(f"'Less Than' constraint for decision variable '{key}' may not be '{key}'.")
+                    elif not isinstance(value['constraint']['value'],int):
+                        raise ValueError(f"Quantity constraint parameter for decision variable '{key}' must be an integer.")
+                    # elif value['constraint']['type'] == 'less_than_variable':
+                    #     if not isinstance(value['constraint']['value'], str):
+                    #         raise ValueError(f"'Less Than' constraint for decision variable '{key}' must be a valid decision variable name.")
+                    #     elif value['constraint']['value'] not in new_dict.keys():
+                    #         raise ValueError(f"'Less Than' constraint for decision variable '{key}' must be a valid decision variable name.")
+                    #     elif value['constraint']['value'] == key:
+                    #         raise ValueError(f"'Less Than' constraint for decision variable '{key}' may not be '{key}'.")
                 else:
                     new_dict[key]['constraint'] = None
                 if keyword == 'batches': #!TODO: add a check to make sure batch 0 exists, and batches are numbered in order.
