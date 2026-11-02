@@ -76,7 +76,7 @@ def evaluate(solution, input):
             elif input.input_template['apply']:
                 with_template(solution, input, cwd, filename)
         else:
-            multi_cycle_input_generation(solution, input, cwd, filename)
+            burnup_input_generation(solution, input, cwd, filename)
 
     ## Run PARCS INPUT DECK #!TODO: separate the input writing and execution into two different functions that are called in sequence.
         parcscmd = __parcs343exe__
@@ -117,7 +117,7 @@ def evaluate(solution, input):
 
 
 
-def multi_cycle_input_generation(solution, input, cwd, filename):
+def burnup_input_generation(solution, input, cwd, filename):
     '''
     Generate PARCS343 input for multi-cycle run 
     '''

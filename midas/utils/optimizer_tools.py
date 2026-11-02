@@ -92,8 +92,11 @@ class Solution():
 
         Written by Nicholas Rollins. 10/11/2024
         """
-        if calc_type in ['single_cycle', 'multi_cycle']:
+        if calc_type == 'single_cycle':
             return self.LP_chromosome(genome, LWR_core_parameters)
+        elif calc_type == 'multi_cycle':
+            #return self.MC_chromosome(genome, LWR_core_parameters)
+            print("Multi-cycle calculation type is not yet implemented.")
         elif calc_type == 'eq_cycle':
             return self.EQ_chromosome(genome, batches, LWR_core_parameters)
         elif calc_type == 'lattice_physics':
@@ -454,8 +457,11 @@ class Gene_Validity_check():
         
         Written by Jake Mikouchi. 09/04/2025
         """
-        if input_obj.calculation_type in ['single_cycle','multi_cycle']:
+        if input_obj.calculation_type == 'single_cycle':
             valid_genes_list = Gene_Validity_check.calc_LWR_gene_options(genes_list, genome, parameters, child+chromosome[len(child):], indx)
+        elif input_obj.calculation_type == 'multi_cycle':
+            # valid_genes_list = Gene_Validity_check.calc_multicycle_gene_options(genes_list, genome, parameters, child+chromosome[len(child):], indx)
+            print("Multi-cycle calculation type is not yet implemented.")
         elif input_obj.calculation_type == 'eq_cycle':
             if None in chromosome:
                 child_zone = chromosome
@@ -606,8 +612,12 @@ class Gene_Validity_check():
         Written by Jake Mikouchi. 09/08/2025
         """
 
-        if input_obj.calculation_type in ['single_cycle','multi_cycle']:
+        if input_obj.calculation_type == 'single_cycle':
             valid_chromosome = Gene_Validity_check.check_constraints(genes_list, genome, parameters, child)
+        elif input_obj.calculation_type == 'multi_cycle':
+            # valid_chromosome = Gene_Validity_check.check_constraints(genes_)
+            valid_chromosome = Gene_Validity_check.check_constraints(genes_list, genome, parameters, child)
+            print("Multi-cycle calculation type is not yet implemented.")
         elif input_obj.calculation_type == 'eq_cycle':
             # input arguments are different based on if the solution is generated in the initial population or not
             is_tuple = False 
@@ -915,7 +925,7 @@ def is_integer(s):
     except ValueError:
         return False
 
-def LP_map(loading_pattern,section):
+def LP_map(loading_pattern,region):
     """
     Returns corresponding loading pattern maps according to the user selection 
 
@@ -1033,4 +1043,4 @@ def LP_map(loading_pattern,section):
             1, 1]
             ]
         
-    return lp_maps[section-1]
+    return lp_maps[region-1]

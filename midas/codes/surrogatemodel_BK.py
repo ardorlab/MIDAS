@@ -60,7 +60,7 @@ def evaluate(solution, input,xsdict):
         elif input.input_template['apply']:
             with_template(solution, input, cwd, filename)
     else:
-        LPs, initburnup = multi_cycle_input_generation(solution, input, cwd, filename)
+        LPs, initburnup = burnup_input_generation(solution, input, cwd, filename)
 
     ### surrogate depletion here 
     LPs = "".join(LPs).strip().split()
@@ -250,7 +250,7 @@ def is_integer(s):
     except ValueError:
         return False
 
-def multi_cycle_input_generation(solution, input, cwd, filename):
+def burnup_input_generation(solution, input, cwd, filename):
     '''
     Generate PARCS343 input for multi-cycle run 
     '''
