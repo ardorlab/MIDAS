@@ -102,6 +102,8 @@ class Genetic_Algorithm():
                 child = GA_reproduction.mutate_by_gene(self.input, chromosome)
             elif self.input.mutation_type =="mutate_by_scramble":
                 child = GA_reproduction.mutate_by_scramble(self.input, chromosome)
+            elif self.input.mutation_type == "mutate_by_swap":
+                child = GA_reproduction.mutate_by_swap(self.input, chromosome)
             else:
                 raise ValueError("Requested mutation type not recognized.")
             child_chromosome_list.append(child)
@@ -630,6 +632,56 @@ class GA_reproduction():
 
         return child_chromosome
 
+    def mutate_by_swap(input_obj,chromosome):
+        """
+        Generates a new solution by swapping two different genes (so long as they are both valid in their new locations).
+        Most useful for highly-constrained situations, e.g. a loading pattern problem with a preset assembly inventory.
+        Partially written from mutate_by_gene.
+        
+        C. King 2026-11-2
+        """
+
+        logger = logging.getLogger("MIDAS_logger")
+        child_chromosome = deepcopy(chromosome)
+
+        num_mutations = 1 #!TODO: this was hardcoded to 1 in old MIDAS. Should probably be parameterized.
+        chromosome_is_valid = False
+
+        attempts = 0
+        while not chromosome_is_valid:
+            new_soln = deepcopy(child_chromosome) # reset solution in each attempt
+            swapped_spots = [] # record the swapped locations
+            for i in range(num_mutations): # Note: if you have multiple mutations, one mutation can undo the previous mutation.
+                spot1 = random.randint(0, len(new_soln)-1)
+                possible_swap_spots = [] # make a list of possible swap spots (both must be different genes and valid in their new locations)
+                # Does not account for multiplicity / quantity constraint issues, but this is covered by the ending abortive check
+
+                for i in range(len(new_soln)):
+                    if new_soln[i] != new_soln[spot1] and i not in swapped_spots: # contraceptive check cannot be used, as in a set quantity situation, there will be no valid options since the chromosome is already filled with the exact amount needed
+                        # don't double swap
+                        if input_obj.genome[new_soln[spot1]]['map'][i] and input_obj.genome[new_soln[i]]['map'][spot1]: # are both genes valid in their new locations?
+                            possible_swap_spots.append(i)
+
+                no_valid_swaps = False
+                if len(possible_swap_spots) == 0: # if swap spots are empty
+                    no_valid_swaps = True
+                    break # break out of loop and proceed to validator                
+                spot2 = random.choice(possible_swap_spots)
+
+                swapped_spots.append(spot1, spot2)
+                new_soln[spot1], new_soln[spot2] = deepcopy(new_soln[spot2]), deepcopy(new_soln[spot1])
+
+                
+            chromosome_is_valid = optools.Gene_Validity_check.abortive_check(input_obj, all_genes_list,all_gene_options,\
+                                                                            core_parameters,new_soln)
+            if not chromosome_is_valid or no_valid_swaps:
+                attempts += 1
+                if attempts > 100000:  # prevent infinite loop
+                    logger.error("Swap mutation has failed after 100,000 attempts; the Individual will be restored. Consider relaxing the constraints on the input space.")
+                    return chromosome
+
+        child_chromosome = new_soln # if mutations succeed, return the new solution
+        return child_chromosome
 
 
 

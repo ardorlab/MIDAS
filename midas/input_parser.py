@@ -324,7 +324,7 @@ def validate_input(keyword, value):
     
     elif keyword == 'mutation_type':
         value = str(value).lower().replace(' ','_')
-        if value not in ["mutate_by_gene", "mutate_by_scramble"]:
+        if value not in ["mutate_by_gene", "mutate_by_scramble","mutate_by_swap"]:
             raise ValueError("Mutation type not supported.")
     
     elif keyword == 'mutation_rate':
@@ -437,7 +437,7 @@ def validate_input(keyword, value):
                 new_key = str(key).lower()
                 if new_key == 'method':
                     new_item = str(item).lower().replace(' ','_')
-                    if new_item not in ["perturb_by_gene"]:
+                    if new_item not in ["perturb_by_gene","perturb_by_swap"]:
                         raise ValueError(f"Requested perturbation method '{item}' not supported.")
                 elif new_key =='num_perturbations':
                     new_item = int(item)
