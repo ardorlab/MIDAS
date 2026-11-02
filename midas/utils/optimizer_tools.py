@@ -106,53 +106,63 @@ class Solution():
         chromosome_length = []
         for gene in genes_list:
             chromosome_length.append(len(genome[gene]['map']))
+       
+        # load multiplicity
+        multidict = LWR_Core_Shapes.get_symmetry_multiplicity(LWR_core_parameters[0],LWR_core_parameters[1],LWR_core_parameters[2],LWR_core_parameters[3])
         
-
+ 
         chromosome_is_valid = False
         attempts = 0
         while not chromosome_is_valid:
             chromosome = [None] * max(chromosome_length) # initialize chromosome with enough spaces
 
-            # pre-fill the chromosome with the assembleis that have meet_target constraints to prevent antihang
+            # pre-fill the chromosome with the assemblies that have meet_target constraints to prevent antihang
             genes_with_specific_quantity = [] # list of all genes that have a meet_target constraint
             unfilled_locs = list(range(max(chromosome_length))) # unfilled locations for this round
             for gene in genome:
                 if genome[gene]['constraint'] is not None: # prevent referencing a non-existant type key. Constraint is None by default
                     if genome[gene]['constraint']['type'] == 'meet_target':
-                        genes_with_specific_quantity.append([gene,genome[gene]['constraint']['value'],genome[gene]['map']]) # easier to process if taken as a list
+                        genes_with_specific_quantity.append([gene,deepcopy(genome[gene]['constraint']['value']),deepcopy(genome[gene]['map'])]) # easier to process if taken as a list
             
+            specific_quantity_load = True # flag for when too much of an assembly is placed
             while sum(row[1] for row in genes_with_specific_quantity) > 0: # repeat until all required assemblies added
                 gene = random.choice(genes_with_specific_quantity) # don't add all of one assembly at once, otherwise this reduces the options avaialble to
                 
                 # list of all valid locations for this assembly: map minus locations that already have n assembly
                 possible_locs = unfilled_locs.copy() # copy
             
-                for i in range(len(gene[2])): # step through each index of the map
-                    print("Possible Locations This Round:",possible_locs,"for gene",gene[0])
+                for i in possible_locs.copy(): # step through each index of the unfilled map (not the initial map)
                     if not gene[2][i] and i in possible_locs: # check if this is a valid map location - filled locations have already been removed in the previous loop
                         possible_locs.remove(i)
+                print("Final possible locations:",possible_locs,"for gene",gene[0])
            
                 place_index = random.choice(possible_locs)
                 chromosome[place_index] = gene[0] # add the gene to a randomly selected valid location
-                gene[1] -= 1 # remove 1 count from the value
+                gene[1] -= multidict[place_index] # remove 1 count from the value
                 unfilled_locs.remove(place_index) # mark as filled
-                
+                print("Genes w/ specific quantity:",genes_with_specific_quantity)
                 print("Placing at position:",place_index)
                 # if enough of a gene has been placed, remove it from the options
-                if gene[1] <= 0:
+                if gene[1] == 0:
                     genes_with_specific_quantity.remove(gene)
-            print("Remaining locations to be filled:",unfilled_locs)
-            print("pre-filled chromosome:",chromosome)
-    
-            for i in unfilled_locs: # fill remaining locations
+                elif gene[1] < 0: # if too much of the assembly has been placed, the random selection has not picked the right random locations to account for the multiplicty. Try again
+                    print("Too much of assembly",gene[0],"placed. Retrying for to account for the multiplicity.")
+                    specific_quantity_load = False
+                    break
+
+            if specific_quantity_load:
+                print("Remaining locations to be filled:",unfilled_locs)
+                print("pre-filled chromosome with meet_target:",chromosome)
+                for i in unfilled_locs: # fill remaining locations
                     gene_options = Gene_Validity_check.contraceptive_check(self.input, genes_list, genome, LWR_core_parameters,
                                                                                             [], chromosome, i)
                     print("Position to fill:",i,"with the following options:",gene_options)
+                    print(genes_list)
                     if gene_options is not None:
                         invalid = True
                         antihang = 0
                         while invalid:
-                            antihang +=1
+                            antihang += 1
                             if antihang > 1000:
                                 print("antihang trigger")
                                 raise ValueError("Random solution generation failed after 1000 attempts. Check the variables maps and constraints.")
@@ -162,12 +172,13 @@ class Solution():
                                 chromosome[i] = gene
                                 invalid = False
                                 print("Filled position",i,"with gene",gene)
-                            else:
+                            else: # if this gene is not valid for this location, remove it from the options and retry
                                 gene_options.remove(gene)
                     else:
                         antihang += 1 # now that the choromosome is initialized with Nones, it can pass if there are no gene options. Ensure this doesn't occur
+            
             print("final chromosome:",chromosome)
-            if len(chromosome) >= max(chromosome_length):    
+            if len(chromosome) >= max(chromosome_length) and None not in chromosome:
                 chromosome_is_valid = True
             attempts += 1
             if attempts > 10000:
@@ -472,28 +483,24 @@ class Gene_Validity_check():
         symmetry = LWR_core_parameters[3]
         multdict = LWR_Core_Shapes.get_symmetry_multiplicity(num_rows, num_cols, num_FA, symmetry)
         gene_counts = LWR_Core_Shapes.count_in_LP(multdict,chromosome)
-
+        print("Gene Counts",gene_counts)
         ## if chromosome represents a shuffling scheme, not a loading pattern, the LP needs to be extracted before this step.
         valid_genes_list = []
         for gene in genes_list:
             if genome[gene]['constraint']:
                 ctype = genome[gene]['constraint']['type']
                 cvalue = genome[gene]['constraint']['value']
-                if gene not in gene_counts:
+                if gene not in gene_counts: # initialize count for genes not currently in chromosome
                     gene_counts[gene] = 0
-                if cvalue not in gene_counts:
-                    gene_counts[cvalue] = 0
                 if ctype in ['max_quantity','meet_target']:
-                    #only include option if less than the max quantity have been already used.
-                    # also usable for meet_target, though additional specifications should be added
-                    # print(cvalue,gene,gene_counts[gene])
-                    if gene_counts[gene] < cvalue and (cvalue - gene_counts[gene]) >= 1:
-                    # if gene_counts[gene] < cvalue and (cvalue - gene_counts[gene]) > 1:
+                    # only include option if less than the max quantity have been already used and there are still enough to fulfill multiplicity requirements
+                    print(gene,"gene_counts[gene]",gene_counts[gene],",cvalue",cvalue,",",gene_counts)
+                    if gene_counts[gene] < cvalue and (cvalue - gene_counts[gene]) >= multdict[index]:
                         valid_genes_list.append(gene)
                 elif ctype == 'less_than_variable':
-                    #only include option if fewer than the target option have been already used.
-                    if gene_counts[gene] < gene_counts[cvalue] and (gene_counts[cvalue] - gene_counts[gene]) > 1:
+                    if gene_counts[gene] < (cvalue - 1) and (cvalue - gene_counts[gene]) >= multdict[index]:
                         valid_genes_list.append(gene)
+                
             else:
                 valid_genes_list.append(gene)
         ## make sure that each gene option is valid for the gene location
@@ -501,6 +508,10 @@ class Gene_Validity_check():
         for gene in temp_gene_list:
             if not genome[gene]['map'][index] == 1:
                 valid_genes_list.remove(gene)
+
+        if len(valid_genes_list) == 0: # if there are no valid genes
+            raise ValueError(f"There are no genes available for location {index}. Check the constraints in the input file.")
+
         return valid_genes_list
     
     def calc_LWR_gene_optionsMP(genes_list, genome, LWR_core_parameters, chromosome, index):
