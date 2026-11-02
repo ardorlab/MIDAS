@@ -643,6 +643,9 @@ class GA_reproduction():
 
         logger = logging.getLogger("MIDAS_logger")
         child_chromosome = deepcopy(chromosome)
+        core_parameters = [input_obj.nrow, input_obj.ncol, input_obj.num_assemblies, input_obj.symmetry, input_obj.calculation_type]
+        all_gene_options = input_obj.genome
+        all_genes_list = list(input_obj.genome.keys())        
 
         num_mutations = 1 #!TODO: this was hardcoded to 1 in old MIDAS. Should probably be parameterized.
         chromosome_is_valid = False
@@ -668,7 +671,8 @@ class GA_reproduction():
                     break # break out of loop and proceed to validator                
                 spot2 = random.choice(possible_swap_spots)
 
-                swapped_spots.append(spot1, spot2)
+                swapped_spots.append(spot1)
+                swapped_spots.append(spot2)
                 new_soln[spot1], new_soln[spot2] = deepcopy(new_soln[spot2]), deepcopy(new_soln[spot1])
 
                 
