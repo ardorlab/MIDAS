@@ -756,6 +756,14 @@ def validate_input(keyword, value):
         value = str(value).lower().replace(' ','_')
         if value not in ["in_out","out_in","checkerboard","low_leakage","none"]:
             raise ValueError("Available loading patterns are: in_out, out_in, checkerboard, low_leakage, none")
+
+    elif keyword == 'num_cycles':
+        try:
+            value = int(value)
+            if value <= 0:
+                raise ValueError("Number of cycles must be greater than 0")
+        except TypeError:
+            raise ValueError(f"Invalid value for 'num_cycles': {value}. Must be an integer.")
     
     elif keyword in ['lattice_parameters', 'assembly_parameters', 'batches']:
         new_dict = {}
@@ -1268,6 +1276,7 @@ class Input_Parser():
             info = None
         
         self.loading_pattern = yaml_line_reader(info,'loading_pattern','none')
+        self.num_cycles = yaml_line_reader(info,'num_cycles',1)
 
         if self.calculation_type in ['single_cycle','eq_cycle','listsum','multi_cycle']:
             self.genome = yaml_line_reader(info, 'assembly_parameters', None)
