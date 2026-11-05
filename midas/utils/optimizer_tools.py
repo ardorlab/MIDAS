@@ -95,8 +95,7 @@ class Solution():
         if calc_type == 'single_cycle':
             return self.LP_chromosome(genome, LWR_core_parameters)
         elif calc_type == 'multi_cycle':
-            #return self.MC_chromosome(genome, LWR_core_parameters)
-            print("Multi-cycle calculation type is not yet implemented.")
+            return self.MC_chromosome(genome, LWR_core_parameters)
         elif calc_type == 'eq_cycle':
             return self.EQ_chromosome(genome, batches, LWR_core_parameters)
         elif calc_type == 'lattice_physics':
@@ -268,22 +267,25 @@ class Solution():
         region_amts = [] # build an array of the amounts of assemblies per region for validation purposes
         for region in range(1,4):
             region_amts.append(LWR_Core_Shapes.count_in_LP(multidict,LP_map(self.input.loading_pattern,region))[1]) # get count of '1s' in the whole map (Accounting for multiplicty)
-        print("Region amounts:",region_amts)
-
-        chromosome = [[],[],[]] * self.input.num_cycles # initialize for three regions for n cycles
+        # print("Region amounts:",region_amts)
 
         chromosome_is_valid = False
         attempts = 0
 
-        while not chromosome_is_valid:    
+        while not chromosome_is_valid:
+            chromosome = []
+            for i in range(self.input.num_cycles):
+                chromosome.append([[],[],[]]) # initialize for three regions for n cycles
+            
+            # print("Has the chromosome been reset? see here:",chromosome)
             # For Cycle 1 (fresh fuel in all regions - alternatively, the given LP)
             for region in range(1,4): 
                 counter = 0
+                assembly_list = list(genome.keys())
                 while counter < region_amts[region - 1]:
                     new_batch = {}
                     # Dictionary has: name, first_cycle, num (of assemblies)
                     # There are no restrictions on which assemblies can be added in which region! So simply select all the available assemblies in the genome
-                    assembly_list = deepcopy(genome.keys())
                     new_batch['name'] = random.choice(assembly_list)
                     new_batch['first_cycle'] = 0 # is cycle_num right? it will be zero for the first cycle. I think that's fine - will be zero for fresh load
                     new_batch['first_region'] = region # if fresh fuel is placed into all the regions at cycle 1, then there will need to be some other way of differentiating them
@@ -299,19 +301,19 @@ class Solution():
                     counter += new_batch['num']
                     chromosome[0][region - 1].append(new_batch)
 
-            print("Generated partial chromosome for cycle 1:", chromosome)
+            # print("Generated partial chromosome for cycle 1:", chromosome)
             
             # For Cycle 2 to n (fresh fuel only in region 1)
             for cycle_num in range(1,len(chromosome)):
                 # perform standard fresh load for first region from the available assemblies (at this viewpoint, there are no limitations on sections)
                 counter = 0
+                assembly_list = list(genome.keys())
                 while counter < region_amts[0]:
                     new_batch = {}
                     # Dictionary has: name, first_cycle, num (of assemblies)
                     # There are no restrictions on which assemblies can be added in which region! So simply select all the available assemblies in the genome
-                    assembly_list = deepcopy(genome.keys())
                     new_batch['name'] = random.choice(assembly_list)
-                    new_batch['first_cycle'] = 0 # is cycle_num right? it will be zero for the first cycle. I think that's fine - will be zero for fresh load
+                    new_batch['first_cycle'] = cycle_num # cycle_num is used here. Keep in mind that the first cycle is cycle 0! I think that's fine - will be zero for fresh load
 
                     if len(assembly_list) == 1: # if there is only one assembly left, then the next batch must be the remainder of the available space
                         new_batch['num'] = region_amts[0] - counter # remaining assemblies
@@ -322,7 +324,8 @@ class Solution():
                     
                     counter += new_batch['num']
                     chromosome[cycle_num][0].append(new_batch) # place fresh fuel in region m
-
+                
+                # print("Generated partial chromosome for cycle",cycle_num+1,":",chromosome)
                 # use the previously burnt assemblies for the other two regions
                 # both regions processed at the same tiem
                 
@@ -332,15 +335,18 @@ class Solution():
                     for region in range(1,4):
                         for batch in chromosome[cycle_num_2][region - 1]:
                             prev_batches.append(batch) # write out the whole history and process it in the next step
-                # Remove those that have been burnt three times
-                for batch in prev_batches:
-                    if prev_batches.count(batch) == 3: 
-                        while batch in prev_batches:
-                            prev_batches.remove(batch) # remove all instances of the batch
-                    elif prev_batches.count(batch) > 3:
-                        raise ValueError("A batch has been used more than three times. This should not be possible.")
-                # remove duplicates
-                prev_batches = list(set(prev_batches))
+                # print("All previous batches",prev_batches)    
+
+                # remove duplicates (cannot be done simply as dictionaries are involved)
+                temp_store = []
+                for b in prev_batches:
+                    if prev_batches.count(b) > 3: # validation check
+                        raise ValueError(f"The batch {b} has been used more than three times. This should not be possible.")
+                    if b not in temp_store:
+                        temp_store.append(b)
+                prev_batches = temp_store                
+
+                # print("Previous batches (after removing dupes):",prev_batches)
                 valid_region_combo = False
                 antihang = 0
                 # find combination for regions 2 and 3
@@ -348,7 +354,10 @@ class Solution():
                     # randomize the list
                     # check if the list, in that order, matches the sizes of the two regions
                     # any batches after that are simply not included
-                    prev_batches = random.shuffle(prev_batches)
+                    prev_batches = np.array(prev_batches) # shuffling will require numpy array as random.shuffle needs a sequence, which can't be done with dictionairies
+                    np.random.shuffle(prev_batches)
+                    prev_batches = prev_batches.tolist()
+                    # print("Shuffled batches:",prev_batches)                    
 
                     counter_region_2 = 0
                     counter_region_3 = 0
@@ -379,8 +388,10 @@ class Solution():
                 
                 chromosome[cycle_num][1] = temp_region_2 # add the finalizeds
                 chromosome[cycle_num][2] = temp_region_3
+                # print("Generated full chromosome for cycle",cycle_num+1,":",chromosome)
 
-            print("Generated full chromosome:", chromosome,"Running validity checks")
+            print("Generated full chromosome for all cycles in the multicycle calculation:", chromosome)
+            print("Running validity checks")
 
         # validity checks
 
@@ -389,17 +400,22 @@ class Solution():
             chromosome_is_valid = True # there have been multiple checks for validity. set this to true, and only set it to false if any check fails
             for cycle in chromosome:
                 cycle_counter = 0
-                for region_idx in range(0,2):
+                for region_idx in range(0,3):
                     region_counter = 0 
                     for batch in cycle[region_idx]:
                         region_counter += batch['num']
                         cycle_counter += batch['num']
                         all_the_batches.append(batch)
+                    # print("Region",region_idx+1,"has",region_counter,"assemblies")
                     if region_counter != region_amts[region_idx]: # check that all region-specific numbers add up
                         chromosome_is_valid = False
+                        
+                        print("Validity Check Failed: number of assemblies in each region does not add up! Retrying.")
                         break 
                 if cycle_counter != LWR_core_parameters[2]: # check that the number of assemblies in each cycle matches the number of FA assemblies
                     chromosome_is_valid = False
+                    # print("Number of FAs:",LWR_core_parameters[2],"Number in Chromosome:",cycle_counter)
+                    print("Validity Check Failed: number of assemblies in the whole core does not add up! Retrying.")
                     break
             
             attempts += 1 # antihang
