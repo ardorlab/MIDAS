@@ -70,7 +70,7 @@ def evaluate(solution, input):
     
         filename = solution.name + '.inp'
         # create input file based on if an input template is given
-        if input.calculation_type not in ['multi_cycle']:
+        if input.num_cycles > 1: # if this is a multicycle problem, use BU generaiton version
             if not input.input_template['apply']: 
                 without_template(solution, input, cwd, filename)
             elif input.input_template['apply']:

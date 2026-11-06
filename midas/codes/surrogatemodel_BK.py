@@ -54,7 +54,7 @@ def evaluate(solution, input,xsdict):
 
     filename = solution.name + '.inp'
     # create input file based on if an input template is given
-    if input.calculation_type not in ['multi_cycle']:
+    if input.num_cycles > 1:
         if not input.input_template['apply']: 
             LPs = without_template(solution, input, cwd, filename)
         elif input.input_template['apply']:
@@ -76,7 +76,7 @@ def evaluate(solution, input,xsdict):
     corebulist = [0.1, 0.4, 0.5, 1.0, 1.0] + [1.0]*28 # modify later to get from input parser
     idx11 = [0]
     idx22 = [1,2,3,4,5,6,7,9,18,27,36,45,54,63]
-    if input.calculation_type not in ['multi_cycle']:
+    if input.num_cycles > 1:
         initbumap = np.zeros((1,81,16))
     else:
         initbumap = initburnup
@@ -124,7 +124,7 @@ def extract_data(solution, input, xsdict):
     # 2. Process each individual directory
     for dir_name in solution:
         folder_path = cwd.joinpath(input.results_dir_name / Path(dir_name))
-        if input.calculation_type in ['multi_cycle']:
+        if input.num_cycles > 1:
             output_path = os.path.join(folder_path, f"{dir_name}.parcs_cyc-02")## only run n+1 cycle for now
         else:
             output_path = os.path.join(folder_path, f"{dir_name}.parcs_dep")
@@ -147,7 +147,7 @@ def extract_data(solution, input, xsdict):
             continue
         coreparam = get_boron_cycle(output_path)     # List of (boron, cycle) for model 2 
         core_data = get_core_data(dplfile_path) ## array of [cyclelength, CBC,Fq,Fd] for retrain purpose
-        if input.calculation_type in ['multi_cycle']:
+        if input.num_cycles > 1:
             LPs=getLPs_cyc(output_path)
         else:
             LPs = getLP(input_path)              
