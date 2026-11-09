@@ -472,6 +472,41 @@ class Solution():
         
         return chromosome
 
+    def single_cycle_from_multicycle(self,cycle_num,chromosome):
+        """
+        Creates an initial loading pattern for a given cycle from a multicycle chromosome.
+        """
+
+        # Extract the current cycle in question
+        current_cycle = deepcopy(chromosome[cycle_num])
+
+        # genome is a dictionary of assemblies for the current cycle
+        # prepare it using the batches in the current cycle
+        cycle_genome = {}
+        print("Assembly options before:",self.input.fa_options['fuel'])
+
+        for section_idx in range(0,3): # step through each section in the given cycle
+            for batch in current_cycle[section_idx]:
+                # prepare a dictionary entry for that
+                if batch['first_cycle'] == cycle_num: # fresh fuel load
+                    batch_dict = {'name':batch['name'],'section':(section_idx+1),'constraint':{type: 'meet_target', 'value': batch['num']}}
+                else: # burnt fuel load
+                    print("burnt fuel loading")
+                    burnt_batch_name = f"{batch['name']}-burnt" # needs to be uniquely identifying
+                    batch_dict = {'name':burnt_batch_name,'section':(section_idx+1),'constraint':{type: 'meet_target', 'value': batch['num']}}
+                    self.input.fa_options['fuel'][burnt_batch_name] = batch_dict # add to assembly options (of the copied single-cycle input) for burnt fuel
+                cycle_genome[batch['name']] = batch_dict # add to fuel assemblies for both fresh and burnt fuel
+        print("Assembly options after:",self.input.fa_options['fuel'])
+        print("Cycle genome:", cycle_genome,"for cycle",cycle_num)
+
+
+        # ideally i'd llike to just feed something into the initial LP generating function,
+        # but it takes input_obj.calculation_type for the contraceptive check.
+        # (maybe just temproarily set self.calculation_type to single_cycle and then reset it back afterwards)
+
+
+        return cycle_genome
+
     def SS_decoder(chromosome):
         """
         Extracts the encoded loading pattern from a chromosome 

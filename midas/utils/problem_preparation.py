@@ -251,11 +251,11 @@ class Prepare_Problem_Values():
     Written by Nicholas Rollins. 10/04/2024
     """
     def prepare_calc(input_obj): #!TODO: this is currently just a placeholder, "prepare_lattice" isn't in use.
-        if input_obj.calculation_type in ["single_cycle","eq_cycle"]:
+        if input_obj.calculation_type in ["single_cycle","eq_cycle","multi_cycle"]:
             input_obj = Prepare_Problem_Values.prepare_cycle(input_obj)
-        elif input_obj.calculation_type in ["multi_cycle"]:
+        # elif input_obj.calculation_type in ["multi_cycle"]: # I don't think this needs a separate mutlicycle version. Prepare Problem Values is applied to the single cycle input in multicycle.py
             # input_obj = Prepare_Problem_Values.prepare_multicycle(input_obj)
-            print("Multi-cycle calculation is not yet implemented.")
+            # print("Multi-cycle calculation is not yet implemented.")
         elif input_obj.calculation_type in ["lattice_physics"]:
             input_obj = Prepare_Problem_Values.prepare_lattice(input_obj)
         return input_obj
