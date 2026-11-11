@@ -472,32 +472,38 @@ class Solution():
         
         return chromosome
 
-    def single_cycle_from_multicycle(self,cycle_num,chromosome):
+    def single_cycle_from_multicycle(self,cycle_num,FA_opts):
         """
         Creates an initial loading pattern for a given cycle from a multicycle chromosome.
+
+        INPUT:
+        self (MUTLI-CYCLE SOLUTION!)
+        cycle_num (int)
+        FA_opts (the fa_opts input line from the SINGLE-CYCLE SOLUTION! ONLY THE SINGLE-CYCLE SOLUTION IS DIRECTLY MODIFIED)
         """
 
         # Extract the current cycle in question
-        current_cycle = deepcopy(chromosome[cycle_num])
+        current_cycle = deepcopy(self.chromosome[cycle_num])
 
         # genome is a dictionary of assemblies for the current cycle
         # prepare it using the batches in the current cycle
-        cycle_genome = {}
-        print("Assembly options before:",self.input.fa_options['fuel'])
+        cycle_genome = {} # for assembly parameters
+        # print("Assembly options before:",self.input.fa_options['fuel'])
 
-        for section_idx in range(0,3): # step through each section in the given cycle
+        for section_idx in range(0,3): # step through each section in the given cycle and add it to the genome
             for batch in current_cycle[section_idx]:
                 # prepare a dictionary entry for that
-                if batch['first_cycle'] == cycle_num: # fresh fuel load
-                    batch_dict = {'name':batch['name'],'section':(section_idx+1),'constraint':{type: 'meet_target', 'value': batch['num']}}
-                else: # burnt fuel load
-                    print("burnt fuel loading")
-                    burnt_batch_name = f"{batch['name']}-burnt" # needs to be uniquely identifying
-                    batch_dict = {'name':burnt_batch_name,'section':(section_idx+1),'constraint':{type: 'meet_target', 'value': batch['num']}}
-                    self.input.fa_options['fuel'][burnt_batch_name] = batch_dict # add to assembly options (of the copied single-cycle input) for burnt fuel
-                cycle_genome[batch['name']] = batch_dict # add to fuel assemblies for both fresh and burnt fuel
-        print("Assembly options after:",self.input.fa_options['fuel'])
-        print("Cycle genome:", cycle_genome,"for cycle",cycle_num)
+                if batch['first_cycle'] == cycle_num: # fresh fuel load - only need to write to genome
+                    batch_dict = {'section':(section_idx+1),'constraint':{'type': 'meet_target', 'value': batch['num']}}
+                    cycle_genome[batch['name']] = batch_dict # add entry to genome
+                else: # burnt fuel load - need to write to FA_options and genome
+                    pre_loc = "A08" # TODO: Retrieve previous location of the assembly as a unique identifier - this allows you to trace the history of the assembly and grab BU history from the previous cycle
+                    burnt_batch_name = f"{batch['name']}-{pre_loc}" # needs to be uniquely identifying`
+                    batch_dict = {'section':(section_idx+1),'constraint':{'type': 'meet_target', 'value': batch['num']}}
+                    FA_opts['fuel'][burnt_batch_name] = {'type': 5, 'serial': 'no'} # Type is a temporary number, should probably be retrieved from the appropriate cycle calculation. Add to fuel options
+                    cycle_genome[burnt_batch_name] = batch_dict
+        # print("Assembly options after:",self.input.fa_options['fuel'])
+        # print("Cycle genome:", cycle_genome,"for cycle",cycle_num)
 
 
         # ideally i'd llike to just feed something into the initial LP generating function,

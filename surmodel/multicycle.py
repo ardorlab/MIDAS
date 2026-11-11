@@ -19,9 +19,23 @@ def evaluate(solution, mc_input, xsdict):
     C.King 2026-11
     """
 
+    # initialize parameter result collector
     cycle_param_results = {}
+    for obj_key in mc_input.objectives.keys():
+        cycle_param_results[obj_key] = {}
 
-    print("MULTICYCLE INPUT:",mc_input)
+    print("MULTICYCLE INPUT:")
+    print("Chromosome:",solution.chromosome)
+    print("Output directory:",mc_input.results_dir_name)
+    # print("Num cycles:", mc_input.num_cycles)
+    # print("Optimizer:",mc_input.methodology)
+    # print("Pop Size:",mc_input.population_size)
+    # print("Num Gens:",mc_input.num_generations)
+    # print("Objectives:",mc_input.objectives)
+    # print("Perturbs:",mc_input.perturbation_type)   
+    print("Assembly Options:",mc_input.fa_options)
+    print("Assembly Params/Genome:",mc_input.genome)
+
 
     for cycle_num in range(mc_input.num_cycles):
         # include a more interpretable printout of each 
@@ -34,13 +48,13 @@ def evaluate(solution, mc_input, xsdict):
         # cycle_input.calculation_type = "single_cycle" # switch to single-cycle for evaluating the single-cycle problem
         # we don't have to switch to single_cycle since 
 
-        cycle_input = problem_preparation.prep_inp.prepare_calc(cycle_input) # prepare calculation values
+        cycle_input = problem_preparation.Prepare_Problem_Values.prepare_calc(cycle_input) # prepare calculation values
         # Some of the inputs for multicycle can be copied over to single-cycle. Others need to be adjusted
         # Since the inputs have been copied, we do not have to worry about breaking the original multicycle problem
 
         # GENERAL BLOCK
         # optimizer: simulated_annealing
-        cycle_input.optimizer = "simulated_annealing"
+        cycle_input.methodology = "simulated_annealing"
         # set initial_temperature and other PSA defaults
         # code_type: surrogate (maybe?)
         # results_dreictory_name: smoething not output_files
@@ -68,11 +82,22 @@ def evaluate(solution, mc_input, xsdict):
                 raise ValueError(f"Cooling schedule '{cycle_input.cooling_schedule}' only available for parallel simulated annealing.")
         cycle_input.secondary_cooling_schedule = 'exponential_decrease'
 
-        cycle_input.assembly_parameters = solution.single_cycle_from_multicycle(solution,cycle_num,solution.chromosome) # single_cycle_from_mutlicycle modifies asssembly_options already
+        cycle_input.genome = solution.single_cycle_from_multicycle(cycle_num,cycle_input.fa_options) # single_cycle_from_mutlicycle modifies asssembly_options already
         # add burn assemblies will have to be in the process above!
         # parcs_data can remain the same
         
-        print(f"CYCLE {cycle_num+1} INPUT:",cycle_input)
+        print(f"CYCLE {cycle_num+1} INPUT:")
+        print("Output directory:",cycle_input.results_dir_name)
+        # print("Num cycles:", cycle_input.num_cycles) # this may be an issue for anything that uses the number of cycles as a check
+        # print("Optimizer:",cycle_input.methodology)
+        # print("Pop Size:",cycle_input.population_size)
+        # print("Num Gens:",cycle_input.num_generations)
+        # print("Objectives:",cycle_input.objectives)
+        # print("Perturbs:",cycle_input.perturbation_type)
+        print("Assembly Options:",cycle_input.fa_options)
+        print("Assembly Params/Genome:",cycle_input.genome)
+
+
         # optimizer = Optimizer(cycle_input) # Run the optimizer with the cycle_input parameters
         # optimizer.build_optimizer()
         # logger.info(f"Completed secondary Optimizer assembly for cycle {cycle_num+1}. Running secondary optimizer...\n")
@@ -83,8 +108,23 @@ def evaluate(solution, mc_input, xsdict):
 
         # extract info somehow
 
-    print("MULTICYCLE INPUT MODIFICATION CHECK:",mc_input)
-    # process cycle_param_results to get final numbers for solution fitness function params
-    cycle_param_results["cycle_length"]['value'] = 5 # TODO: this
+    print("MULTICYCLE INPUT MODIFICATION CHECK")
+    print("Chromosome:",solution.chromosome)
+    print("Output directory:",mc_input.results_dir_name)
+    # print("Num cycles:",mc_input.num_cycles)
+    # print("Optimizer:",mc_input.methodology)
+    # print("Pop Size:",mc_input.population_size)
+    # print("Num Gens:",mc_input.num_generations)
+    # print("Objectives:",mc_input.objectives)
+    # print("Perturbs:",mc_input.perturbation_type)
+    print("Assembly Options:",mc_input.fa_options)
+    print("Assembly Params/Genome:",mc_input.genome)
 
-    return cycle_param_results # solution parameters
+    # Sum up results of each cycle
+    for item in cycle_param_results:
+        cycle_param_results[item] = 5
+        solution.parameters[item]['value'] = cycle_param_results[item]
+
+    # process cycle_param_results to get final numbers for solution fitness function params
+
+    return solution # return solution object and return to standard MIDAS execution

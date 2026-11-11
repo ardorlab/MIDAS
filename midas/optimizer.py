@@ -27,6 +27,7 @@ from midas.codes import surrogatemodel
 import midas_data
 # from midas.codes import surrogatemodel
 from midas.codes import surrogatemodel_BK
+from surmodel import multicycle
 from tests.regression.listsum import listsum
 ## for surrogate retrain 
 from surmodel.trainmodelRPF import trainmodelrpf
@@ -76,8 +77,12 @@ class Optimizer():
             self.eval_func = listsum.evaluate
         ## test surrogate 
         elif self.input.code_interface == "surrogate":
-            self.eval_func = surrogatemodel_BK.evaluate
+            if self.input.calculation_type == 'multi_cycle':
+                self.eval_func = multicycle.evaluate
+            else:
+                self.eval_func = surrogatemodel_BK.evaluate
         # getattr(globals()[self.input.code_interface],'evaluate') this command can be used to avoid a list of if else statements. The requirement is that the option matches the intended class.
+        
         else:
             raise ValueError(f"Could not identify eval_func for code type '{self.input.code_interface}'. This is highly irregular.")
         
