@@ -1289,7 +1289,7 @@ class Input_Parser():
                     if 'map' in self.genome[item]:
                         logger.warning(f"Although a loading pattern has been chosen, a map has been defined in the input for {item}. Overriding the loading pattern map with the map given in the input.")
                     elif 'region' in self.genome[item]:
-                        self.genome[item]['map'] = LP_map(self.loading_pattern, self.genome[item]['region']) # copy LP from list, unless it is overridden
+                        self.genome[item]['map'] = LP_map(self, self.genome[item]['region']) # copy LP from list, unless it is overridden
                     else: # throw error if no region provided
                         raise ValueError(f"Each fuel assembly in the genome must have a designated 'region' or an override map if a loading pattern is specified. {item} has neither.")
                 for item in self.genome:

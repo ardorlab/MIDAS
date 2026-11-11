@@ -255,7 +255,7 @@ class Solution():
         """
         Generates an initial solution for a multi-cycle problem.
         A multi-cycle problem consists of a 3 x n list, where n is the number of cycles.
-        Each region within a cycle can hold any number of fuel assembly batches based on the provided fresh fuel assemblies.
+        Each section within a cycle can hold any number of fuel assembly batches based on the provided fresh fuel assemblies.
         Fuel assemblies for future cycles
         
         C. King 2026-11
@@ -264,10 +264,9 @@ class Solution():
         # count the number of assemblies in each region - remembering multiplicity!
         multidict = LWR_Core_Shapes.get_symmetry_multiplicity(LWR_core_parameters[0],LWR_core_parameters[1],LWR_core_parameters[2],LWR_core_parameters[3])
 
-        region_amts = [] # build an array of the amounts of assemblies per region for validation purposes
-        for region in range(1,4):
-            region_amts.append(LWR_Core_Shapes.count_in_LP(multidict,LP_map(self.input.loading_pattern,region))[1]) # get count of '1s' in the whole map (Accounting for multiplicty)
-        # print("Region amounts:",region_amts)
+        section_amts = [] # build an array of the amounts of assemblies per region for validation purposes
+        for section in range(1,4):
+            section_amts.append(LWR_Core_Shapes.count_in_LP(multidict,LP_map(self.input,section))[1]) # get count of '1s' in the whole map (Accounting for multiplicty)
 
         chromosome_is_valid = False
         attempts = 0
@@ -275,65 +274,65 @@ class Solution():
         while not chromosome_is_valid:
             chromosome = []
             for i in range(self.input.num_cycles):
-                chromosome.append([[],[],[]]) # initialize for three regions for n cycles
+                chromosome.append([[],[],[]]) # initialize for three sections for n cycles
             
             # print("Has the chromosome been reset? see here:",chromosome)
-            # For Cycle 1 (fresh fuel in all regions - alternatively, the given LP)
-            for region in range(1,4): 
+            # For Cycle 1 (fresh fuel in all sections - alternatively, the given LP)
+            for section in range(1,4): 
                 counter = 0
                 assembly_list = list(genome.keys())
-                while counter < region_amts[region - 1]:
+                while counter < section_amts[section - 1]:
                     new_batch = {}
                     # Dictionary has: name, first_cycle, num (of assemblies)
                     # There are no restrictions on which assemblies can be added in which region! So simply select all the available assemblies in the genome
                     new_batch['name'] = random.choice(assembly_list)
                     new_batch['first_cycle'] = 0 # is cycle_num right? it will be zero for the first cycle. I think that's fine - will be zero for fresh load
-                    new_batch['first_region'] = region # if fresh fuel is placed into all the regions at cycle 1, then there will need to be some other way of differentiating them
-                    # this first_region is not needed in subsequent cycles has the fresh fuel from here on out is placed in cycle 1
+                    new_batch['first_section'] = section # if fresh fuel is placed into all the sections at cycle 1, then there will need to be some other way of differentiating them
+                    # this first_section is not needed in subsequent cycles has the fresh fuel from here on out is placed in cycle 1
     
                     if len(assembly_list) == 1: # if there is only one assembly left, then the next batch must be the remainder of the available space
-                        new_batch['num'] = region_amts[region - 1] - counter # randomize!
+                        new_batch['num'] = section_amts[section - 1] - counter # randomize!
                     else:
-                        new_batch['num'] = random.randint(1, region_amts[region - 1] - counter)
+                        new_batch['num'] = random.randint(1, section_amts[section - 1] - counter)
 
                     assembly_list.remove(new_batch['name']) # Remove this assembly from the list of possible assemblies to use for the batch
                     
                     counter += new_batch['num']
-                    chromosome[0][region - 1].append(new_batch)
+                    chromosome[0][section - 1].append(new_batch)
 
             # print("Generated partial chromosome for cycle 1:", chromosome)
             
-            # For Cycle 2 to n (fresh fuel only in region 1)
+            # For Cycle 2 to n (fresh fuel only in section 1)
             for cycle_num in range(1,len(chromosome)):
-                # perform standard fresh load for first region from the available assemblies (at this viewpoint, there are no limitations on sections)
+                # perform standard fresh load for first section from the available assemblies (at this viewpoint, there are no limitations on sections)
                 counter = 0
                 assembly_list = list(genome.keys())
-                while counter < region_amts[0]:
+                while counter < section_amts[0]:
                     new_batch = {}
                     # Dictionary has: name, first_cycle, num (of assemblies)
-                    # There are no restrictions on which assemblies can be added in which region! So simply select all the available assemblies in the genome
+                    # There are no restrictions on which assemblies can be added in which section! So simply select all the available assemblies in the genome
                     new_batch['name'] = random.choice(assembly_list)
                     new_batch['first_cycle'] = cycle_num # cycle_num is used here. Keep in mind that the first cycle is cycle 0! I think that's fine - will be zero for fresh load
 
                     if len(assembly_list) == 1: # if there is only one assembly left, then the next batch must be the remainder of the available space
-                        new_batch['num'] = region_amts[0] - counter # remaining assemblies
+                        new_batch['num'] = section_amts[0] - counter # remaining assemblies
                     else:
-                        new_batch['num'] = random.randint(1, region_amts[0] - counter) # randomize!
+                        new_batch['num'] = random.randint(1, section_amts[0] - counter) # randomize!
 
-                    assembly_list.remove(new_batch['name']) # Remove this assembly from the list of possible assemblies to use for the region
+                    assembly_list.remove(new_batch['name']) # Remove this assembly from the list of possible assemblies to use for the section
                     
                     counter += new_batch['num']
-                    chromosome[cycle_num][0].append(new_batch) # place fresh fuel in region m
+                    chromosome[cycle_num][0].append(new_batch) # place fresh fuel in section 1
                 
                 # print("Generated partial chromosome for cycle",cycle_num+1,":",chromosome)
-                # use the previously burnt assemblies for the other two regions
-                # both regions processed at the same tiem
+                # use the previously burnt assemblies for the other two sections
+                # both sections processed at the same tiem
                 
                 # Obtain list of all previously used
                 prev_batches = []
                 for cycle_num_2 in range(0,cycle_num): # iterate through previous cycles
-                    for region in range(1,4):
-                        for batch in chromosome[cycle_num_2][region - 1]:
+                    for section in range(1,4):
+                        for batch in chromosome[cycle_num_2][section - 1]:
                             prev_batches.append(batch) # write out the whole history and process it in the next step
                 # print("All previous batches",prev_batches)    
 
@@ -347,47 +346,47 @@ class Solution():
                 prev_batches = temp_store                
 
                 # print("Previous batches (after removing dupes):",prev_batches)
-                valid_region_combo = False
+                valid_section_combo = False
                 antihang = 0
-                # find combination for regions 2 and 3
-                while not valid_region_combo:
+                # find combination for sections 2 and 3
+                while not valid_section_combo:
                     # randomize the list
-                    # check if the list, in that order, matches the sizes of the two regions
+                    # check if the list, in that order, matches the sizes of the two sections
                     # any batches after that are simply not included
                     prev_batches = np.array(prev_batches) # shuffling will require numpy array as random.shuffle needs a sequence, which can't be done with dictionairies
                     np.random.shuffle(prev_batches)
                     prev_batches = prev_batches.tolist()
                     # print("Shuffled batches:",prev_batches)                    
 
-                    counter_region_2 = 0
-                    counter_region_3 = 0
-                    temp_region_2 = []
-                    temp_region_3 = []
+                    counter_section_2 = 0
+                    counter_section_3 = 0
+                    temp_section_2 = []
+                    temp_section_3 = []
                     for batch in prev_batches:
-                        # region overflow checks to make sure the batch order fits
-                        if counter_region_2 > region_amts[1] or counter_region_3 > region_amts[2]:
+                        # section overflow checks to make sure the batch order fits
+                        if counter_section_2 > section_amts[1] or counter_section_3 > section_amts[2]:
                             break # break and go straight to the antihang
 
-                        if counter_region_2 < region_amts[1]: # add to region 2 counter first
-                            counter_region_2 += batch['num']
-                            temp_region_2.append(batch) # build the working suggestion for the region
-                        elif counter_region_3 < region_amts[2]: # then add to region 3 counter
-                            counter_region_3 += batch['num']
-                            temp_region_3.append(batch)
-                        elif counter_region_2 == region_amts[1] and counter_region_3 == region_amts[2]: # both regions succesfully filled!
-                            valid_region_combo = True
+                        if counter_section_2 < section_amts[1]: # add to section 2 counter first
+                            counter_section_2 += batch['num']
+                            temp_section_2.append(batch) # build the working suggestion for the section
+                        elif counter_section_3 < section_amts[2]: # then add to section 3 counter
+                            counter_section_3 += batch['num']
+                            temp_section_3.append(batch)
+                        elif counter_section_2 == section_amts[1] and counter_section_3 == section_amts[2]: # both sections succesfully filled!
+                            valid_section_combo = True
                             break
                         # a potential issue - if you have multiple batches of 3 assemblies, due to mutliplicty these will not be able to fit into the core.
                         # however, it'd still pass this check. is that fine?
                     
-                    # with antihang, randomly distribute these assemblies within the two remaining regions until you get a total quantity thatfits                
+                    # with antihang, randomly distribute these assemblies within the two remaining sections until you get a total quantity thatfits                
                     antihang += 1
                     if antihang > 1000:
                         print("antihang tripped, restarting multicycle chromosome generation from cycle 1")
                         # Don't raise an error! Instead, simply retry with cycle 1's batches!
                 
-                chromosome[cycle_num][1] = temp_region_2 # add the finalizeds
-                chromosome[cycle_num][2] = temp_region_3
+                chromosome[cycle_num][1] = temp_section_2 # add the finalizeds
+                chromosome[cycle_num][2] = temp_section_3
                 # print("Generated full chromosome for cycle",cycle_num+1,":",chromosome)
 
             print("Generated full chromosome for all cycles in the multicycle calculation:", chromosome)
@@ -400,17 +399,16 @@ class Solution():
             chromosome_is_valid = True # there have been multiple checks for validity. set this to true, and only set it to false if any check fails
             for cycle in chromosome:
                 cycle_counter = 0
-                for region_idx in range(0,3):
-                    region_counter = 0 
-                    for batch in cycle[region_idx]:
-                        region_counter += batch['num']
+                for section_idx in range(0,3):
+                    section_counter = 0 
+                    for batch in cycle[section_idx]:
+                        section_counter += batch['num']
                         cycle_counter += batch['num']
                         all_the_batches.append(batch)
-                    # print("Region",region_idx+1,"has",region_counter,"assemblies")
-                    if region_counter != region_amts[region_idx]: # check that all region-specific numbers add up
+                    if section_counter != section_amts[section_idx]: # check that all region-specific numbers add up
                         chromosome_is_valid = False
                         
-                        print("Validity Check Failed: number of assemblies in each region does not add up! Retrying.")
+                        print("Validity Check Failed: number of assemblies in each section does not add up! Retrying.")
                         break 
                 if cycle_counter != LWR_core_parameters[2]: # check that the number of assemblies in each cycle matches the number of FA assemblies
                     chromosome_is_valid = False
@@ -1141,122 +1139,238 @@ def is_integer(s):
     except ValueError:
         return False
 
-def LP_map(loading_pattern,region):
+def LP_map(input,section):
     """
-    Returns corresponding loading pattern maps according to the user selection 
+    Returns corresponding loading pattern maps for the input according to the user selection 
 
-    Currently only supports 157 assemblies
+    Currently only supports 157 and 193 assemblies
 
     this could be a dictionary right now, but probably when different sizes are introduced this'd make it complicated enough to where this function is worth it
     """
+
+    loading_pattern = input.loading_pattern
+    num_assemblies = input.num_assemblies
+
     lp_maps = [] # all temporary maps entirely arbitrarily chosen
-    if loading_pattern == "in_out": # these are the same format
-        lp_maps = [
-            [1,
-            1, 1, 1, 1, 0, 0, 0, 0,
-            1, 1, 1, 1, 0, 0, 0,
-            1, 1, 1, 0, 0, 0, 0,
-            1, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0,
-            0, 0],
-            [0,
-            0, 0, 0, 0, 1, 1, 0, 0,
-            0, 0, 0, 0, 1, 1, 0,
-            0, 0, 0, 1, 1, 0, 0,
-            0, 1, 1, 1, 0, 0,
-            1, 1, 1, 0, 0,
-            1, 0, 0, 0,
-            0, 0],
-            [0,
-            0, 0, 0, 0, 0, 0, 1, 1,
-            0, 0, 0, 0, 0, 0, 1,
-            0, 0, 0, 0, 0, 1, 1,
-            0, 0, 0, 0, 1, 1,
-            0, 0, 0, 1, 1,
-            0, 1, 1, 1,
-            1, 1]
+
+    if num_assemblies == 193:
+        if loading_pattern == "in_out":
+            lp_maps = [
+                [1,
+                1, 1, 1, 1, 1, 0, 0, 0,
+                1, 1, 1, 1, 0, 0, 0, 0,
+                1, 1, 1, 1, 0, 0, 0, 0,
+                1, 1, 1, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0,                        
+                0, 0, 0, 0],
+                [0,
+                0, 0, 0, 0, 0, 1, 1, 0,
+                0, 0, 0, 0, 1, 1, 0, 0,
+                0, 0, 0, 0, 1, 1, 0, 0,
+                0, 0, 0, 1, 1, 1, 0,
+                1, 1, 1, 1, 1, 0, 0,
+                1, 1, 0, 0, 0, 0,                        
+                0, 0, 0, 0],
+                [0,
+                0, 0, 0, 0, 0, 0, 0, 1,
+                0, 0, 0, 0, 0, 0, 1, 1,
+                0, 0, 0, 0, 0, 0, 1, 1,
+                0, 0, 0, 0, 0, 0, 1,
+                0, 0, 0, 0, 0, 1, 1,
+                0, 0, 1, 1, 1, 1,                        
+                1, 1, 1, 1]
             ]
-    elif loading_pattern == "out_in":
-        lp_maps = [
-            [0,
-            0, 0, 0, 0, 0, 0, 1, 1,
-            0, 0, 0, 0, 0, 0, 1,
-            0, 0, 0, 0, 0, 1, 1,
-            0, 0, 0, 0, 1, 1,
-            0, 0, 0, 1, 1,
-            0, 1, 1, 1,
-            1, 1],
-            [0,
-            0, 0, 0, 0, 1, 1, 0, 0,
-            0, 0, 0, 0, 1, 1, 0,
-            0, 0, 0, 1, 1, 0, 0,
-            0, 1, 1, 1, 0, 0,
-            1, 1, 1, 0, 0,
-            1, 0, 0, 0,
-            0, 0],
-            [1,
-            1, 1, 1, 1, 0, 0, 0, 0,
-            1, 1, 1, 1, 0, 0, 0,
-            1, 1, 1, 0, 0, 0, 0,
-            1, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0,
-            0, 0, 0, 0,
-            0, 0]
-        ]
-    elif loading_pattern == "checkerboard":
-        lp_maps = [
-            [0,
-            0, 0, 0, 0, 0, 0, 1, 1,
-            0, 0, 0, 0, 0, 0, 1,
-            0, 0, 0, 0, 0, 1, 1,
-            0, 0, 0, 0, 1, 1,
-            0, 0, 0, 1, 1,
-            0, 1, 1, 1,
-            1, 1],
-            [1,
-            0, 1, 0, 1, 0, 1, 0, 0,
-            1, 0, 1, 0, 1, 0, 0,
-            0, 1, 0, 1, 0, 0, 0,
-            1, 0, 1, 0, 0, 0,
-            0, 1, 0, 0, 0,
-            1, 0, 0, 0,
-            0, 0],
-            [0,
-            1, 0, 1, 0, 1, 0, 0, 0,
-            0, 1, 0, 1, 0, 1, 0,
-            1, 0, 1, 0, 1, 0, 0,
-            0, 1, 0, 1, 0, 0,
-            1, 0, 1, 0, 0,
-            0, 0, 0, 0,
-            0, 0]
+        elif loading_pattern == "out_in":
+            lp_maps = [
+                [0,
+                0, 0, 0, 0, 0, 0, 0, 1,
+                0, 0, 0, 0, 0, 0, 1, 1,
+                0, 0, 0, 0, 0, 0, 1, 1,
+                0, 0, 0, 0, 0, 0, 1,
+                0, 0, 0, 0, 0, 1, 1,
+                0, 0, 1, 1, 1, 1,                        
+                1, 1, 1, 1],
+                [0,
+                0, 0, 0, 0, 0, 1, 1, 0,
+                0, 0, 0, 0, 1, 1, 0, 0,
+                0, 0, 0, 0, 1, 1, 0, 0,
+                0, 0, 0, 1, 1, 1, 0,
+                1, 1, 1, 1, 1, 0, 0,
+                1, 1, 0, 0, 0, 0,                        
+                0, 0, 0, 0],
+                [1,
+                1, 1, 1, 1, 1, 0, 0, 0,
+                1, 1, 1, 1, 0, 0, 0, 0,
+                1, 1, 1, 1, 0, 0, 0, 0,
+                1, 1, 1, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0,                        
+                0, 0, 0, 0]
             ]
-    elif loading_pattern == "low_leakage":
-        lp_maps = [
-            [0,
-            0, 0, 1, 0, 0, 0, 1, 0,
-            1, 1, 0, 0, 0, 1, 0,
-            0, 0, 0, 0, 1, 1, 0,
-            0, 0, 0, 1, 1, 0,
-            0, 0, 1, 1, 0,
-            1, 1, 0, 0,
-            0, 0],
-            [0,
-            0, 0, 0, 1, 1, 1, 0, 0,
-            0, 0, 1, 1, 1, 0, 0,
-            0, 1, 1, 1, 0, 0, 0,
-            1, 1, 1, 0, 0, 0,
-            0, 1, 0, 0, 0,
-            0, 0, 0, 0,
-            0, 0],
-            [1,
-            1, 1, 0, 0, 0, 0, 0, 1,
-            0, 0, 0, 0, 0, 0, 1,
-            1, 0, 0, 0, 0, 0, 1,
-            0, 0, 0, 0, 0, 1,
-            1, 0, 0, 0, 1,
-            0, 0, 1, 1,
-            1, 1]
+        elif loading_pattern == "checkerboard":
+            lp_maps = [
+                [0,
+                0, 0, 0, 0, 0, 0, 0, 1,
+                0, 0, 0, 0, 0, 0, 1, 1,
+                0, 0, 0, 0, 0, 0, 1, 1,
+                0, 0, 0, 0, 0, 0, 1,
+                0, 0, 0, 0, 0, 1, 1,
+                0, 0, 1, 1, 1, 1,                        
+                1, 1, 1, 1],
+                [1,
+                0, 1, 0, 1, 0, 1, 0, 0,
+                1, 0, 1, 0, 1, 0, 0, 0,
+                0, 1, 0, 1, 0, 1, 0, 0,
+                1, 0, 1, 0, 1, 0, 0,
+                0, 1, 0, 1, 0, 0, 0,
+                1, 0, 0, 0, 0, 0,                        
+                0, 0, 0, 0],
+                [0,
+                1, 0, 1, 0, 1, 0, 1, 0,
+                0, 1, 0, 1, 0, 1, 0, 0,
+                1, 0, 1, 0, 1, 0, 0, 0,
+                0, 1, 0, 1, 0, 1, 0,
+                1, 0, 1, 0, 1, 0, 0,
+                0, 1, 0, 0, 0, 0,                        
+                0, 0, 0, 0]
             ]
+        elif loading_pattern == "low_leakage":
+            lp_maps = [
+                [0,
+                0, 0, 1, 0, 0, 0, 1, 0,
+                1, 1, 0, 0, 0, 0, 1, 0,
+                0, 0, 0, 0, 0, 1, 1, 0,
+                0, 0, 0, 0, 1, 1, 0,
+                0, 0, 0, 1, 1, 1, 0,
+                1, 1, 1, 1, 0, 0,                        
+                0, 0, 0, 0],
+                [0,
+                0, 0, 0, 1, 1, 0, 0, 0,
+                0, 0, 1, 1, 1, 1, 0, 0,
+                1, 1, 1, 1, 1, 0, 0, 0,
+                0, 1, 1, 1, 0, 0, 0,
+                1, 0, 1, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0,                        
+                0, 0, 0, 0],
+                [1,
+                1, 1, 0, 0, 0, 1, 0, 1,
+                0, 0, 0, 0, 0, 0, 0, 1,
+                0, 0, 0, 0, 0, 0, 0, 1,
+                1, 0, 0, 0, 0, 0, 1,
+                0, 1, 0, 0, 0, 0, 1,
+                0, 0, 0, 0, 1, 1,                        
+                1, 1, 1, 1]
+            ]
+
+    elif num_assemblies == 157:
+        if loading_pattern == "in_out": # these are the same format
+            lp_maps = [
+                [1,
+                1, 1, 1, 1, 0, 0, 0, 0,
+                1, 1, 1, 1, 0, 0, 0,
+                1, 1, 1, 0, 0, 0, 0,
+                1, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0,
+                0, 0, 0, 0,
+                0, 0],
+                [0,
+                0, 0, 0, 0, 1, 1, 0, 0,
+                0, 0, 0, 0, 1, 1, 0,
+                0, 0, 0, 1, 1, 0, 0,
+                0, 1, 1, 1, 0, 0,
+                1, 1, 1, 0, 0,
+                1, 0, 0, 0,
+                0, 0],
+                [0,
+                0, 0, 0, 0, 0, 0, 1, 1,
+                0, 0, 0, 0, 0, 0, 1,
+                0, 0, 0, 0, 0, 1, 1,
+                0, 0, 0, 0, 1, 1,
+                0, 0, 0, 1, 1,
+                0, 1, 1, 1,
+                1, 1]
+                ]
+        elif loading_pattern == "out_in":
+            lp_maps = [
+                [0,
+                0, 0, 0, 0, 0, 0, 1, 1,
+                0, 0, 0, 0, 0, 0, 1,
+                0, 0, 0, 0, 0, 1, 1,
+                0, 0, 0, 0, 1, 1,
+                0, 0, 0, 1, 1,
+                0, 1, 1, 1,
+                1, 1],
+                [0,
+                0, 0, 0, 0, 1, 1, 0, 0,
+                0, 0, 0, 0, 1, 1, 0,
+                0, 0, 0, 1, 1, 0, 0,
+                0, 1, 1, 1, 0, 0,
+                1, 1, 1, 0, 0,
+                1, 0, 0, 0,
+                0, 0],
+                [1,
+                1, 1, 1, 1, 0, 0, 0, 0,
+                1, 1, 1, 1, 0, 0, 0,
+                1, 1, 1, 0, 0, 0, 0,
+                1, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0,
+                0, 0, 0, 0,
+                0, 0]
+            ]
+        elif loading_pattern == "checkerboard":
+            lp_maps = [
+                [0,
+                0, 0, 0, 0, 0, 0, 1, 1,
+                0, 0, 0, 0, 0, 0, 1,
+                0, 0, 0, 0, 0, 1, 1,
+                0, 0, 0, 0, 1, 1,
+                0, 0, 0, 1, 1,
+                0, 1, 1, 1,
+                1, 1],
+                [1,
+                0, 1, 0, 1, 0, 1, 0, 0,
+                1, 0, 1, 0, 1, 0, 0,
+                0, 1, 0, 1, 0, 0, 0,
+                1, 0, 1, 0, 0, 0,
+                0, 1, 0, 0, 0,
+                1, 0, 0, 0,
+                0, 0],
+                [0,
+                1, 0, 1, 0, 1, 0, 0, 0,
+                0, 1, 0, 1, 0, 1, 0,
+                1, 0, 1, 0, 1, 0, 0,
+                0, 1, 0, 1, 0, 0,
+                1, 0, 1, 0, 0,
+                0, 0, 0, 0,
+                0, 0]
+                ]
+        elif loading_pattern == "low_leakage":
+            lp_maps = [
+                [0,
+                0, 0, 1, 0, 0, 0, 1, 0,
+                1, 1, 0, 0, 0, 1, 0,
+                0, 0, 0, 0, 1, 1, 0,
+                0, 0, 0, 1, 1, 0,
+                0, 0, 1, 1, 0,
+                1, 1, 0, 0,
+                0, 0],
+                [0,
+                0, 0, 0, 1, 1, 1, 0, 0,
+                0, 0, 1, 1, 1, 0, 0,
+                0, 1, 1, 1, 0, 0, 0,
+                1, 1, 1, 0, 0, 0,
+                0, 1, 0, 0, 0,
+                0, 0, 0, 0,
+                0, 0],
+                [1,
+                1, 1, 0, 0, 0, 0, 0, 1,
+                0, 0, 0, 0, 0, 0, 1,
+                1, 0, 0, 0, 0, 0, 1,
+                0, 0, 0, 0, 0, 1,
+                1, 0, 0, 0, 1,
+                0, 0, 1, 1,
+                1, 1]
+                ]
         
-    return lp_maps[region-1]
+    return lp_maps[section-1]
