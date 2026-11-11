@@ -1398,3 +1398,39 @@ def LP_map(input,section):
             raise ValueError("Unsupported number of assemblies for section map retrieval!")
         
     return lp_maps[section-1]
+
+def LP_map_loader(input):
+    """
+    Takes an InputParser object and adds the needed maps to the genome.
+    """
+    if input.loading_pattern != 'none':
+        print("Loading pattern is:",input.loading_pattern)
+        for item in input.genome:
+            if 'map' in input.genome[item]:
+                logger.warning(f"Although a loading pattern has been chosen, a map has been defined in the input for {item}. Overriding the loading pattern map with the map given in the input.")
+            elif 'section' in input.genome[item]:
+                input.genome[item]['map'] = LP_map(input, input.genome[item]['section']) # copy LP from list, unless it is overridden
+            else: # throw error if no section provided
+                raise ValueError(f"Each fuel assembly in the genome must have a designated 'section' or an override map if a loading pattern is specified. {item} has neither.")
+        for item in input.genome:
+            if 'map' not in input.genome[item]:
+                logger.warning(f"Neither a section or a map has been given for {item}. Filling with a default map.")
+                input.genome[item]['map'] = LP_map(input, 0) # retrieve default map
+    print("Here are the maps:") # print out maps to verify that they are correct
+    for item in input.genome:
+        print(item,input.genome[item]['map'])
+                
+    # check to make sure all the slots have at least 1 assembly assigned
+    first_map = input.genome[next(iter(input.genome))]['map']
+    for i in range(0,len(first_map)): # iterate through each assembly slot
+        found = False
+        for item in input.genome: # step through each assembly map assigned until a 1 value is foundi
+            # print(f"Does {item} have position {i} covered?")
+            if input.genome[item]['map'][i]:
+                found = True
+                    # print("Yes, proceeding to next position")
+                break # if a 1 is found, position i is cleared. Proceed to next slot
+                        # print("No, maybe the next one has it...")
+        if not found:
+            raise ValueError(f"Position {i} in the fuel assembly map does not have any possible options in the genome. Please ensure that this slot has at least one assigned fuel assembly.")
+    return input # return the input object with the maps added to the genome, though the return is not necessary as they should be directly adjusted already

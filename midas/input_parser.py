@@ -6,7 +6,7 @@ import re
 import logging
 from pathlib import Path
 from midas.utils import problem_preparation
-from midas.utils.optimizer_tools import LP_map
+from midas.utils.optimizer_tools import LP_map_loader
 
 """
 Classes for parsing and cleansing input data from the user-specified '.yaml' MIDAS input file.
@@ -1419,35 +1419,6 @@ class Input_Parser():
         if self.calculation_type in ['single_cycle','eq_cycle','multi_cycle']:
             # Build loading pattern map at the end, once all the data necessary to choose the right maps is imported
             # run map modifications for loading patterns
-            if self.loading_pattern != 'none':
-                print("Loading pattern is:",self.loading_pattern)
-                for item in self.genome:
-                    if 'map' in self.genome[item]:
-                        logger.warning(f"Although a loading pattern has been chosen, a map has been defined in the input for {item}. Overriding the loading pattern map with the map given in the input.")
-                    elif 'section' in self.genome[item]:
-                        self.genome[item]['map'] = LP_map(self, self.genome[item]['section']) # copy LP from list, unless it is overridden
-                    else: # throw error if no section provided
-                        raise ValueError(f"Each fuel assembly in the genome must have a designated 'section' or an override map if a loading pattern is specified. {item} has neither.")
-                for item in self.genome:
-                    if 'map' not in self.genome[item]:
-                        logger.warning(f"Neither a section or a map has been given for {item}. Filling with a default map.")
-                        self.genome[item]['map'] = LP_map(self, 0) # retrieve default map
-            print("Here are the maps:") # print out maps to verify that they are correct
-            for item in self.genome:
-                print(item,self.genome[item]['map'])
-                
-            # check to make sure all the slots have at least 1 assembly assigned
-            first_map = self.genome[next(iter(self.genome))]['map']
-            for i in range(0,len(first_map)): # iterate through each assembly slot
-                found = False
-                for item in self.genome: # step through each assembly map assigned until a 1 value is foundi
-                    # print(f"Does {item} have position {i} covered?")
-                    if self.genome[item]['map'][i]:
-                        found = True
-                            # print("Yes, proceeding to next position")
-                        break # if a 1 is found, position i is cleared. Proceed to next slot
-                        # print("No, maybe the next one has it...")
-                if not found:
-                    raise ValueError(f"Position {i} in the fuel assembly map does not have any possible options in the genome. Please ensure that this slot has at least one assigned fuel assembly.")
+            LP_map_loader(self)
         
         return
