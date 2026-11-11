@@ -777,11 +777,11 @@ def validate_input(keyword, value):
                         new_subkey = str(subkey).lower()
                         if new_subkey == 'map':
                             new_dict[new_key][new_subkey] = subitem
-                        elif new_subkey == 'region': # for region of the core, e.g. m / m+1 / m+2
+                        elif new_subkey == 'section': # for section of the core, e.g. m / m+1 / m+2
                             if subitem in range(1,4):
                                 new_dict[new_key][new_subkey] = subitem
                             else:
-                                raise ValueError(f"Invalid value for 'region': {subitem}. Must be 1, 2, or 3.")
+                                raise ValueError(f"Invalid value for 'section': {subitem}. Must be 1, 2, or 3.")
                         elif new_subkey == 'constraint':
                             new_subitem = {}
                             if isinstance(subitem, dict):
@@ -808,10 +808,10 @@ def validate_input(keyword, value):
                     # raise ValueError(f"Decision variables '{key}' must be nested with its parameters.")
             #check decision variable logic
             for key, value in new_dict.items():
-                if 'map' not in value and 'region' not in value:
-                    logger.warning(f"Decision variable '{key}' should include a 'map' parameter, or a region parameter for a loading pattern. Proceeding with default map of assembly being valid anywhere in the core.")
-                if 'map' in value and 'region' in value:
-                    logger.warning(f"User-provided 'map' included with 'region' parameter. Overriding LP maps with user-provided map when applicable.") # only warn, as there is funcitonality to consider this
+                if 'map' not in value and 'section' not in value:
+                    logger.warning(f"Decision variable '{key}' should include a 'map' parameter, or a section parameter for a loading pattern. Proceeding with default map of assembly being valid anywhere in the core.")
+                if 'map' in value and 'section' in value:
+                    logger.warning(f"User-provided 'map' included with 'section' parameter. Overriding LP maps with user-provided map when applicable.") # only warn, as there is funcitonality to consider this
                 if 'constraint' in value:
                     if 'type' not in value['constraint']:
                         raise ValueError(f"Decision variable '{key}' includes a constraint but no 'type' parameter.")
@@ -1280,46 +1280,6 @@ class Input_Parser():
 
         if self.calculation_type in ['single_cycle','eq_cycle','listsum','multi_cycle']:
             self.genome = yaml_line_reader(info, 'assembly_parameters', None)
-            
-            print("assembly params imported. Loading pattern is",self.loading_pattern)
-            # run map modifications for loading patterns
-            if self.loading_pattern != 'none':
-                print("Loading pattern is:",self.loading_pattern)
-                for item in self.genome:
-                    if 'map' in self.genome[item]:
-                        logger.warning(f"Although a loading pattern has been chosen, a map has been defined in the input for {item}. Overriding the loading pattern map with the map given in the input.")
-                    elif 'region' in self.genome[item]:
-                        self.genome[item]['map'] = LP_map(self, self.genome[item]['region']) # copy LP from list, unless it is overridden
-                    else: # throw error if no region provided
-                        raise ValueError(f"Each fuel assembly in the genome must have a designated 'region' or an override map if a loading pattern is specified. {item} has neither.")
-                for item in self.genome:
-                    if 'map' not in self.genome[item]:
-                        logger.warning(f"Neither a region or a map has been given for {item}. Filling with a default map.")
-                        self.genome[item]['map'] = [1, # default for 157. TODO: have defaults based on the given size of the reactor
-                                    1, 1, 1, 1, 1, 1, 1, 1,
-                                    1, 1, 1, 1, 1, 1, 1,
-                                    1, 1, 1, 1, 1, 1, 1,
-                                    1, 1, 1, 1, 1, 1,
-                                    1, 1, 1, 1, 1,
-                                    1, 1, 1, 1,
-                                    1, 1] # use default map if no map provided
-            print("Here are the maps:") # print out maps to verify that they are correct
-            for item in self.genome:
-               print(item,self.genome[item]['map'])
-            
-            # check to make sure all the slots have at least 1 assembly assigned
-            first_map = self.genome[next(iter(self.genome))]['map']
-            for i in range(0,len(first_map)): # iterate through each assembly slot
-                found = False
-                for item in self.genome: # step through each assembly map assigned until a 1 value is foundi
-                    # print(f"Does {item} have position {i} covered?")
-                    if self.genome[item]['map'][i]:
-                        found = True
-                        # print("Yes, proceeding to next position")
-                        break # if a 1 is found, position i is cleared. Proceed to next slot
-                    # print("No, maybe the next one has it...")
-                if not found:
-                    raise ValueError(f"Position {i} in the fuel assembly map does not have any possible options in the genome. Please ensure that this slot has at least one assigned fuel assembly.")
         
         elif self.calculation_type in ['lattice_physics']:
             self.genome = yaml_line_reader(info, 'lattice_parameters', None)
@@ -1455,4 +1415,39 @@ class Input_Parser():
             for assembly in self.fa_options['fuel']:
                 if int(self.fa_options['fuel'][assembly]['type']) not in [1, 2, 3, 4, 5, 6, 7]:
                     raise ValueError(f'Assembly {assembly} parameter "type" is incorrect. For ipwr database, types 1-6 exist. (type 7 exists for legacy versions)')
+
+        if self.calculation_type in ['single_cycle','eq_cycle','multi_cycle']:
+            # Build loading pattern map at the end, once all the data necessary to choose the right maps is imported
+            # run map modifications for loading patterns
+            if self.loading_pattern != 'none':
+                print("Loading pattern is:",self.loading_pattern)
+                for item in self.genome:
+                    if 'map' in self.genome[item]:
+                        logger.warning(f"Although a loading pattern has been chosen, a map has been defined in the input for {item}. Overriding the loading pattern map with the map given in the input.")
+                    elif 'section' in self.genome[item]:
+                        self.genome[item]['map'] = LP_map(self, self.genome[item]['section']) # copy LP from list, unless it is overridden
+                    else: # throw error if no section provided
+                        raise ValueError(f"Each fuel assembly in the genome must have a designated 'section' or an override map if a loading pattern is specified. {item} has neither.")
+                for item in self.genome:
+                    if 'map' not in self.genome[item]:
+                        logger.warning(f"Neither a section or a map has been given for {item}. Filling with a default map.")
+                        self.genome[item]['map'] = LP_map(self, 0) # retrieve default map
+            print("Here are the maps:") # print out maps to verify that they are correct
+            for item in self.genome:
+                print(item,self.genome[item]['map'])
+                
+            # check to make sure all the slots have at least 1 assembly assigned
+            first_map = self.genome[next(iter(self.genome))]['map']
+            for i in range(0,len(first_map)): # iterate through each assembly slot
+                found = False
+                for item in self.genome: # step through each assembly map assigned until a 1 value is foundi
+                    # print(f"Does {item} have position {i} covered?")
+                    if self.genome[item]['map'][i]:
+                        found = True
+                            # print("Yes, proceeding to next position")
+                        break # if a 1 is found, position i is cleared. Proceed to next slot
+                        # print("No, maybe the next one has it...")
+                if not found:
+                    raise ValueError(f"Position {i} in the fuel assembly map does not have any possible options in the genome. Please ensure that this slot has at least one assigned fuel assembly.")
+        
         return
