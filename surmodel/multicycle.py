@@ -1,10 +1,11 @@
 from copy import deepcopy
 from zipfile import Path
 
-from skopt import Optimizer
 from midas.codes import surrogatemodel_BK
 from midas.utils import optimizer_tools
 from midas.utils import problem_preparation
+from midas.utils.optimizer_tools import LP_map_loader
+
 import os
 import logging
 import time as TT
@@ -36,7 +37,8 @@ def evaluate(solution, mc_input, xsdict):
     print("Assembly Options:",mc_input.fa_options)
     print("Assembly Params/Genome:",mc_input.genome)
 
-
+    print("Attempting to import the Optimizer!!")
+    from midas.optimizer import Optimizer # import in function to prevent circular input
     for cycle_num in range(mc_input.num_cycles):
         # include a more interpretable printout of each 
         logger.info(f"Evaluating cycle {cycle_num+1} of {mc_input.num_cycles+1}")
@@ -48,7 +50,6 @@ def evaluate(solution, mc_input, xsdict):
         # cycle_input.calculation_type = "single_cycle" # switch to single-cycle for evaluating the single-cycle problem
         # we don't have to switch to single_cycle since 
 
-        cycle_input = problem_preparation.Prepare_Problem_Values.prepare_calc(cycle_input) # prepare calculation values
         # Some of the inputs for multicycle can be copied over to single-cycle. Others need to be adjusted
         # Since the inputs have been copied, we do not have to worry about breaking the original multicycle problem
 
@@ -95,16 +96,26 @@ def evaluate(solution, mc_input, xsdict):
         # print("Objectives:",cycle_input.objectives)
         # print("Perturbs:",cycle_input.perturbation_type)
         print("Assembly Options:",cycle_input.fa_options)
-        print("Assembly Params/Genome:",cycle_input.genome)
 
 
-        # optimizer = Optimizer(cycle_input) # Run the optimizer with the cycle_input parameters
-        # optimizer.build_optimizer()
-        # logger.info(f"Completed secondary Optimizer assembly for cycle {cycle_num+1}. Running secondary optimizer...\n")
-        # ts = TT.time()
-        # optimizer.main() # reinitializing is probably not the most efficient way of doing this...
+        print("Assembly Params/Genome Before:",cycle_input.genome)
+        print("Running LP map loader")
+        LP_map_loader(cycle_input)
+
+        print("Assembly Params/Genome After:",cycle_input.genome)
+
+        
+
+
+        # cycle_input = problem_preparation.Prepare_Problem_Values.prepare_calc(cycle_input) # prepare calculation values
+        print(f"Optimizer for Cycle {cycle_num+1} is activated! Beware!")
+        optimizer2 = Optimizer(cycle_input) # Run the optimizer with the cycle_input parameters
+        optimizer2.build_optimizer()
+        logger.info(f"Completed secondary Optimizer assembly for cycle {cycle_num+1}. Running secondary optimizer...\n")
+        ts = TT.time()
+        optimizer2.main() # reinitializing is probably not the most efficient way of doing this...
         # nevertheless, this can be resolved later
-        # logger.info(f'Execution completed after {TT.time()-ts:.5f} seconds')
+        logger.info(f'Execution completed after {TT.time()-ts:.5f} seconds')
 
         # extract info somehow
 

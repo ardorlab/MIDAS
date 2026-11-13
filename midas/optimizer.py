@@ -43,9 +43,12 @@ class Optimizer():
     Written by Nicholas Rollins. 09/23/2024
     """
     def __init__(self, inp_lines):
+        print("I'm initializing!")
         self.input = inp_lines
+        print("Input lines set to Optimizer.input...")
         self.termination_criteria = TC.Termination_Criteria()
-    
+        print("termination criteria found")    
+
     def build_optimizer(self):
         """
         Assembles all the pieces of the optimization and create the
