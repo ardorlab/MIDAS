@@ -18,10 +18,11 @@ class Problem_Preparation_Tools():
         """
         xs_list = {'fuel':[], 'reflectors':{'top':[], 'radial':[], 'bottom':[]}, 'blankets':[]}
         tag_list = {'fuel':[], 'reflectors':[]}
-        
+
         for key, param in input_obj.fa_options['fuel'].items():
-            xs_list['fuel'].append(param['serial'])
-            tag_list['fuel'].append((str(param['type']),key))
+            if param['serial'] not in xs_list['fuel']: # do not add duplicates for params that are identical across multiple tags
+                xs_list['fuel'].append(param['serial'])
+            tag_list['fuel'].append((str(param['type']),key)) # this should be kept as-is since each key needs to be associated with the type, even if multiplate keys are associated with the same type
         for key, param in input_obj.fa_options['reflectors'].items():
             if param['refl_type'] == 'all':
                 xs_list['reflectors']['top'].append(param['serial'])
