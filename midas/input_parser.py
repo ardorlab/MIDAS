@@ -518,7 +518,6 @@ def validate_input(keyword, value):
                     if isinstance(item, dict):
                         #check assembly type
                         for subkey, subitem in item.items():
-                            new_subkey = str(subkey)
                             new_subitem = {}
                             if isinstance(subitem, dict):
                                 #check types and cross sections
@@ -539,7 +538,11 @@ def validate_input(keyword, value):
                                     new_subitem[new_subsubkey] = new_subsubitem
                             else:
                                 raise ValueError("Requested fuel type missing parameters.")
-                            new_item[new_subkey] = new_subitem
+                            new_subkey = str(subkey).split(",") # if multiple fuel options e.g. "FA-201, FA2-201", split it and add multiple fuel options with the same params
+                            # for addition of multiple instances of a fuel assembly under different constraints
+                            for split_subkey in new_subkey:
+                                new_item[split_subkey] = new_subitem # assign the same parameters to all of the associated labels
+
                         new_dict[new_key] = new_item
                     else:
                         raise ValueError("Fuels option missing fuels and their parameters.")
@@ -562,7 +565,7 @@ def validate_input(keyword, value):
                 for key, value in new_dict['blankets'].items():
                     if "serial" not in value:
                         raise ValueError(f"'serial' parameter missing from '{key}'.")
-            list_unique_fuel_types = []
+            # list_unique_fuel_types = []
             for key, value in new_dict['fuel'].items():
                 if "type" not in value and "serial" not in value:
                     raise ValueError(f"'type' or 'serial' parameters missing from '{key}'.")
@@ -574,10 +577,11 @@ def validate_input(keyword, value):
                     except KeyError:
                         raise ValueError(f"Requested blanket '{new_dict['fuel'][key]['blanket']}'" + \
                                               f" for fuel type '{key}' does not exist in blankets.")
-                if value['type'] not in list_unique_fuel_types:
-                    list_unique_fuel_types.append(value['type'])
-                else:
-                    raise ValueError("All fuel types must have a unique 'type' value.")
+                # if value['type'] not in list_unique_fuel_types:
+                #    list_unique_fuel_types.append(value['type'])
+                #else:
+                #    raise ValueError("All fuel types must have a unique 'type' value.")
+                # Unique fuel types checker removed as there should now be compatibility for multiple keys associated with the same fuel type
             return new_dict
         else:
             if value:

@@ -545,8 +545,12 @@ def without_template(solution, input, cwd, filename):
             xsnum_fuel = xsnum_radtop + len(input.xs_list['blankets'])
         else:
             xsnum_fuel = xsnum_radtop
+        keys_added_to_assy_type = [] # duplicate type checker
         for key in input.fa_options['fuel'].keys():
             fuel = input.fa_options['fuel'][key]
+            if fuel['type'] in keys_added_to_assy_type: # if a type has already been added, don't write to the input file
+                continue # skip this iteration if already added
+            keys_added_to_assy_type.append(fuel['type'])
             xsnum_fuel += 1
             if 'blanket' in fuel:
                 xsnum_blanket = xsnum_radtop + \
