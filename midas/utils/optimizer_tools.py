@@ -283,6 +283,7 @@ class Solution():
             for section in range(1,4): 
                 counter = 0
                 assembly_list = list(genome.keys())
+
                 while counter < section_amts[section - 1]:
                     new_batch = {}
                     # Dictionary has: name, first_cycle, num (of assemblies)
@@ -291,11 +292,18 @@ class Solution():
                     new_batch['first_cycle'] = 0 # is cycle_num right? it will be zero for the first cycle. I think that's fine - will be zero for fresh load
                     new_batch['first_section'] = section # if fresh fuel is placed into all the sections at cycle 1, then there will need to be some other way of differentiating them
                     # this first_section is not needed in subsequent cycles has the fresh fuel from here on out is placed in cycle 1
-    
+
                     if len(assembly_list) == 1: # if there is only one assembly left, then the next batch must be the remainder of the available space
-                        new_batch['num'] = section_amts[section - 1] - counter # randomize!
+                        new_batch['num'] = section_amts[section - 1] - counter
+                    elif section_amts[section-1] - counter < 6: # If there are five or less assemblies remaining, add the reaminder
+                        new_batch['num'] = section_amts[section - 1] - counter
                     else:
-                        new_batch['num'] = random.randint(1, section_amts[section - 1] - counter)
+                        new_batch['num'] = random.randint(1, np.floor((section_amts[section - 1] - counter)/4)) * 4 # TODO: hardcoded to add in multiples of four only (quarter symmetry only)
+                        # if this section hass an odd number of assemblies, the first batch should include this odd amount
+                        # this way, the odd amount can be at any size of assembly rather than always being a batch of 5 or 1
+                        if counter == 0: # check if this is the first batch added
+                            if section_amts[section - 1] % 4 != 0:
+                                new_batch['num'] += section_amts[section - 1] % 4 # add the odd-sized batch for multiplicity reasons
 
                     assembly_list.remove(new_batch['name']) # Remove this assembly from the list of possible assemblies to use for the batch
                     
@@ -309,6 +317,7 @@ class Solution():
                 # perform standard fresh load for first section from the available assemblies (at this viewpoint, there are no limitations on sections)
                 counter = 0
                 assembly_list = list(genome.keys())
+
                 while counter < section_amts[0]:
                     new_batch = {}
                     # Dictionary has: name, first_cycle, num (of assemblies)
@@ -318,8 +327,14 @@ class Solution():
 
                     if len(assembly_list) == 1: # if there is only one assembly left, then the next batch must be the remainder of the available space
                         new_batch['num'] = section_amts[0] - counter # remaining assemblies
+                    elif section_amts[0] - counter < 6: # If there are five or less assemblies remaining, add the reaminder
+                        new_batch['num'] = section_amts[0] - counter
                     else:
-                        new_batch['num'] = random.randint(1, section_amts[0] - counter) # randomize!
+                        new_batch['num'] = random.randint(1, np.floor((section_amts[0] - counter)/4)) * 4 # randomize!
+                        if counter == 0: # check if this is the first batch added
+                            if section_amts[section - 1] % 4 != 0:
+                                new_batch['num'] += section_amts[section - 1] % 4 # add the odd-sized batch for multiplicity reasons
+
 
                     assembly_list.remove(new_batch['name']) # Remove this assembly from the list of possible assemblies to use for the section
                     

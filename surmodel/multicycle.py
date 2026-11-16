@@ -53,7 +53,7 @@ def evaluate(solution, mc_input, xsdict):
         # Since the inputs have been copied, we do not have to worry about breaking the original multicycle problem
 
         # GENERAL BLOCK
-        cycle_input.calc_type = "single_cycle" # set to single cycle
+        cycle_input.calculation_type = "single_cycle" # set to single cycle
         cycle_input.methodology = "simulated_annealing"
         # set initial_temperature and other PSA defaults
         # code_type: surrogate (maybe?)
@@ -102,14 +102,14 @@ def evaluate(solution, mc_input, xsdict):
 
         print("Assembly Params/Genome:",cycle_input.genome)
 
-        print("Calc Type:",cycle_input.calc_type)
+        print("Calc Type:",cycle_input.calculation_type)
 
 
         cycle_input = problem_preparation.Prepare_Problem_Values.prepare_calc(cycle_input) # prepare calculation values
-        print("Calc Type:",cycle_input.calc_type)
+        print("Calc Type:",cycle_input.calculation_type)
         print(f"Optimizer for Cycle {cycle_num+1} is activated! Beware!")
         optimizer2 = Optimizer(cycle_input) # Run the optimizer with the cycle_input parameters
-        print("Calc type after optimizer initialized:",cycle_input)
+        print("Calc type after optimizer initialized:",cycle_input.calculation_type)
         optimizer2.build_optimizer()
         logger.info(f"Completed secondary Optimizer assembly for cycle {cycle_num+1}. Running secondary optimizer...\n")
         ts = TT.time()
