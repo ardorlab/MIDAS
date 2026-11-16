@@ -2,9 +2,19 @@ from copy import deepcopy
 from zipfile import Path
 
 from midas.codes import surrogatemodel_BK
-from midas.utils import optimizer_tools
+from midas.utils import optimizer_tools as optools
 from midas.utils import problem_preparation
-from midas.utils.optimizer_tools import LP_map_loader
+import midas_data
+import csv
+import pickle
+from shutil import rmtree
+from midas.codes import parcs343
+from midas.utils import LWR_fuelcyclecost
+from midas.utils import LWR_averageenrichment
+from surmodel.trainmodelRPF import trainmodelrpf
+from surmodel.trainmodelcore import traincoremodel_update
+import joblib
+from itertools import repeat
 
 import os
 import logging
@@ -37,7 +47,6 @@ def evaluate(solution, mc_input, xsdict):
     print("Multicycle Assembly Options:",mc_input.fa_options)
     print("Multicycle Assembly Params/Genome:",mc_input.genome)
 
-    from midas.optimizer import Optimizer # import in function to prevent circular input
     for cycle_num in range(mc_input.num_cycles):
         # include a more interpretable printout of each 
         logger.info(f"Evaluating CYCLE {cycle_num+1} of {mc_input.num_cycles+1}")
@@ -98,7 +107,7 @@ def evaluate(solution, mc_input, xsdict):
 
 
         print("Running LP map loader")
-        LP_map_loader(cycle_input)
+        optools.LP_map_loader(cycle_input)
 
         print("Assembly Params/Genome:",cycle_input.genome)
 
@@ -106,18 +115,8 @@ def evaluate(solution, mc_input, xsdict):
 
 
         cycle_input = problem_preparation.Prepare_Problem_Values.prepare_calc(cycle_input) # prepare calculation values
-        print("Calc Type:",cycle_input.calculation_type)
-        print(f"Optimizer for Cycle {cycle_num+1} is activated! Beware!")
-        optimizer2 = Optimizer(cycle_input) # Run the optimizer with the cycle_input parameters
-        print("Calc type after optimizer initialized:",cycle_input.calculation_type)
-        optimizer2.build_optimizer()
-        logger.info(f"Completed secondary Optimizer assembly for cycle {cycle_num+1}. Running secondary optimizer...\n")
-        ts = TT.time()
-        optimizer2.main() # reinitializing is probably not the most efficient way of doing this...
-        # nevertheless, this can be resolved later
-        logger.info(f'Execution completed after {TT.time()-ts:.5f} seconds')
-
-        # extract info somehow
+        run_single_cycle(cycle_input) # run the single-cycle optimization for this cycle
+        # extract info later
 
     print("MULTICYCLE INPUT MODIFICATION CHECK")
     print("Chromosome:",solution.chromosome)
@@ -139,3 +138,408 @@ def evaluate(solution, mc_input, xsdict):
     # process cycle_param_results to get final numbers for solution fitness function params
 
     return solution # return solution object and return to standard MIDAS execution
+
+def run_single_cycle(cycle_input):
+    """
+    Runs a single-cycle optimization using PSA with the MIDAS optimization technique.
+    Primarily copied from Optimizer.py() - parallelization cannot be nested so the pool technique leads to an error
+
+    """ 
+    from midas.optimizer import Optimizer # import in function to prevent circular input
+
+    print("Calc Type:",cycle_input.calculation_type)
+    print(f"Optimizer is activated! Beware!")
+    optimizer2 = Optimizer(cycle_input) # Run the optimizer with the cycle_input parameters
+    
+    print("Calc type after optimizer initialized:",cycle_input.calculation_type)
+    optimizer2.build_optimizer()
+
+    logger.info(f"Completed secondary Optimizer assembly. Running secondary optimizer...\n")
+    ts = TT.time()
+
+    # equivalent of optimizer2.main()
+
+    restart = False
+    ## Initialize logging for the present file
+    logger = logging.getLogger("MIDAS_logger")
+    if not restart:
+## Create results directory and/or clear old
+        cwd = Path(os.getcwd())
+        results_dir = cwd.joinpath(optimizer2.input.results_dir_name)
+        if os.path.exists(results_dir):
+            logger.debug("Overwriting existing results directory...")
+            rmtree(results_dir)
+            os.makedirs(results_dir)
+        else:
+            os.makedirs(results_dir)
+        ## cleaning retrain data if any
+        if os.path.exists(midas_data.__path_to_store_retrain_data__):
+            rmtree(midas_data.__path_to_store_retrain_data__)
+    
+## Delete old results file, if necessary, to avoid confusion
+        # this step is useful since the new results file won't be written until after Generation 0 is completed.
+        if os.path.exists(midas_data.__odir__ + "/optimizer_results.csv"):
+            logger.debug("Removing existing 'optimizer_results.csv' results file...")
+            os.remove(midas_data.__odir__ + "/optimizer_results.csv")
+        
+## Initialize beginning population
+        optimizer2.population.current = []
+        namedir = []
+        if optimizer2.input.methodology == 'simulated_annealing' and optimizer2.input.num_procs > 1:
+            # for parallel simulated annealing the initial population is the size of the buffer
+            logger.info("Generating initial population of %s individuals...", optimizer2.input.buffer_size)
+            for i in range(optimizer2.input.buffer_size):
+                chromosome = optimizer2.get_initial_population(i) 
+                optimizer2.population.current.append(optimizer2.generate_solution(f'Gen_0_Indv_{i}', chromosome))
+        else:
+            logger.info("Generating initial population of %s individuals...", optimizer2.input.population_size)
+            for i in range(optimizer2.population.size):
+                chromosome = optimizer2.get_initial_population(i) 
+                optimizer2.population.current.append(optimizer2.generate_solution(f'Gen_0_Indv_{i}', chromosome))
+                namedir.append(f'Gen_0_Indv_{i}')
+
+        
+        #if optimizer2.input.code_interface == "surrogate":
+        #    import multiprocessing as mp
+        #    mp.set_start_method('spawn', force=True) ### NOTE: do not use this for debug mode!!!!!
+        #    from surmodel.paralel_MLmodel import init_worker, init_worker_updated
+        #    chunksize = max(1, optimizer2.population.size // (optimizer2.input.num_procs * 4))
+        xsdict = joblib.load(midas_data.__path_xs_pickle__)#,mmap_mode='r')
+        #    ### set pool once 
+        #    pool = Pool(processes=optimizer2.input.num_procs, initializer=init_worker)
+        #else:
+        #    pool = Pool(processes=optimizer2.input.num_procs) #initialize parallel execution
+
+        if optimizer2.input.methodology == 'simulated_annealing'and optimizer2.input.num_procs == 1:
+            logger.info(f"Initial Temperature: {optimizer2.input.initial_temperature}")
+        
+## Evaluate fitness
+        logger.info("Calculating fitness for generation %s...", optimizer2.generation.current)
+        ## Execute and parse objective/constraint values
+        ### initial with PARCRs running first 
+        if optimizer2.generation.current in optimizer2.input.parcs_steps:
+            optimizer2.eval_func = parcs343.evaluate
+            print('Run parcs initially ', optimizer2.generation.current )
+            # if 'pool' in locals():
+            #        pool.close()
+            #        pool.join()
+            #        del pool
+            #        gc.collect()
+            #        pool = Pool(processes=optimizer2.input.num_procs)
+            optimizer2.population.current= optimizer2.eval_func(optimizer2.population.current, optimizer2.input)
+            temppop = optimizer2.population.current
+            surrogatemodel_BK.extract_data(namedir,optimizer2.input, xsdict) ## extract data after PARCs done
+            # # temparcs = optimizer2.population.current
+            if optimizer2.generation.current in optimizer2.input.retrain_steps:
+                trainmodelrpf(optimizer2.input.if_calibrate)
+                traincoremodel_update(optimizer2.input.if_calibrate)
+                if optimizer2.input.keep_retraindata==False: ## delete retrain data after retrainning
+                    rmtree(midas_data.__path_to_store_retrain_data__)
+                ## update pool 
+                # if 'pool' in locals():
+                #    pool.close()
+                #    pool.join()
+                #    del pool
+                #    gc.collect()
+                #    pool = Pool(processes=optimizer2.input.num_procs, initializer=init_worker_updated)
+                # ## for printing out fitness value at this step 
+                optimizer2.eval_func = surrogatemodel_BK.evaluate
+                surrogate_sol = optimizer2.eval_func(temppop,optimizer2.input,xsdict)
+
+                for soln in surrogate_sol:
+                    soln.fitness_value = optimizer2.fitness.calculate(soln.parameters)
+                for i in range(len(temppop)):
+                    soln = surrogate_sol[i]
+                    soln_result_list = [str(optimizer2.generation.current),str(i),'{0:.3f}'.format(soln.fitness_value)]
+                    for param in soln.parameters.keys():
+                        if param == 'av_fuelenrichment': #reformat this parameter prior to printing
+                            soln_result_list.append('{0:.3f}'.format(100*soln.parameters[param]['value'])) #convert w.t. to wo%
+                        else:
+                            soln_result_list.append('{0:.3f}'.format(soln.parameters[param]['value']))
+                    for gene in soln.chromosome:
+                        soln_result_list.append(str(gene))
+                    ## write to output file
+                    with open("optimizer_results_at_retrain.csv", 'a') as csvfile:
+                        csvwriter = csv.writer(csvfile, delimiter=',')
+                        csvwriter.writerow(soln_result_list)
+            optimizer2.eval_func = surrogatemodel_BK.evaluate ## reset
+       
+            # for i in range(optimizer2.population.size):
+            #     optimizer2.population.current[i] = optimizer2.eval_func(optimizer2.population.current[i], optimizer2.input) ## serial test
+    
+        else:
+            optimizer2.population.current = optimizer2.eval_func(optimizer2.population.current, optimizer2.input, xsdict)
+        
+        # if 'cost_fuelcycle' in optimizer2.input.objectives.keys():
+        #     for soln in optimizer2.population.current:
+        #         soln.parameters = LWR_fuelcyclecost.get_fuelcycle_cost(soln, optimizer2.input)
+        # if 'av_fuelenrichment' in optimizer2.input.objectives.keys():
+        #     for soln in optimizer2.population.current:
+        #         soln.parameters = LWR_averageenrichment.get_avfuelenrichment(soln, optimizer2.input)
+        ## Calculate fitness from objective/constriant values
+        for soln in optimizer2.population.current:
+            soln.fitness_value = optimizer2.fitness.calculate(soln.parameters)
+        logger.info("Done!")
+    
+## Archive initial results
+        for soln in optimizer2.population.current:
+            optimizer2.population.archive['solutions'].append(soln.chromosome)
+            optimizer2.population.archive['fitnesses'].append(soln.fitness_value)
+            optimizer2.population.archive['parameters'].append(soln.parameters)
+        
+        ## Only initialize the results file the first time.
+        archive_header = ["Generation","Individual","Fitness Value"]
+        for param in optimizer2.input.objectives.keys():
+            archive_header.append(str(param))
+        archive_header.append("Chromosome")
+        ## write output file
+        with open(midas_data.__odir__ + "/optimizer_results.csv", 'w') as csvfile:
+            csvwriter = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
+            csvwriter.writerow(archive_header)
+        
+        best_soln_index = [s.fitness_value for s in optimizer2.population.current].index(max([s.fitness_value for s in optimizer2.population.current]))
+        for i in range(len(optimizer2.population.current)):
+            soln = optimizer2.population.current[i]
+            soln_result_list = [str(optimizer2.generation.current),str(i),'{0:.3f}'.format(soln.fitness_value)]
+            for param in soln.parameters.keys():
+                if param == 'av_fuelenrichment': #reformat this parameter prior to printing
+                    soln_result_list.append('{0:.3f}'.format(100*soln.parameters[param]['value'])) #convert w.t. to wo%
+                else:
+                    soln_result_list.append('{0:.3f}'.format(soln.parameters[param]['value']))
+            for gene in soln.chromosome:
+                soln_result_list.append(str(gene))
+            ## write to output file
+            with open(midas_data.__odir__ + "/optimizer_results.csv", 'a') as csvfile:
+                csvwriter = csv.writer(csvfile, delimiter=',')
+                csvwriter.writerow(soln_result_list)
+            if i == best_soln_index:
+                best_soln_string = ",".join(soln_result_list)
+        
+        logger.info("Generation %s Best Individual:", optimizer2.generation.current)
+        logger.info(', '.join(archive_header)+'\n'+best_soln_string+'\n')
+        
+## Create restart file
+        logger.debug("Writing restart file %s...",optimizer2.input.job_name+".rst")
+        with open(optimizer2.input.job_name+".rst", "wb") as f: # Open in binary write mode
+            pickle.dump(optimizer2, f)
+    
+## Clear solution files to save disk space
+        if optimizer2.input.clear_results == "all":
+            logger.info("Clearing solution files for Generation 0...")
+            os.system(f'rm -rf ./{optimizer2.input.results_dir_name}/Gen_0_Indv_*')
+            logger.info("Done!\n")
+        elif optimizer2.input.clear_results == "all_but_best":
+            logger.info("Clearing all but best solution files for Generation 0...")
+            os.system(f'mv ./{optimizer2.input.results_dir_name}/Gen_0_Indv_{best_soln_index} ./{optimizer2.input.results_dir_name}/safeGen_0_Indv_{best_soln_index}')
+            os.system(f'rm -rf ./{optimizer2.input.results_dir_name}/Gen_0_Indv_*')
+            os.system(f'mv ./{optimizer2.input.results_dir_name}/safeGen_0_Indv_{best_soln_index} ./{optimizer2.input.results_dir_name}/Gen_0_Indv_{best_soln_index}')
+            logger.info("Done!\n")
+        
+## Iterate Over Generations  ##
+
+    for iter_gens in range(1,optimizer2.generation.total):
+        optimizer2.generation.current += 1
+    ## Create new generation
+        logger.info("Creating population of %s individuals for generation %s...", optimizer2.input.population_size, optimizer2.generation.current)
+        new_chromosome_list = optimizer2.algorithm.reproduction(optimizer2.population.current, optimizer2.generation)
+
+        if optimizer2.input.methodology == 'simulated_annealing' and optimizer2.input.num_procs > 1: # if parallel simulated annealing skip evaluation
+            optimizer2.population.current = []
+            for i in range(len(new_chromosome_list)):
+                if os.path.exists(f"{optimizer2.input.results_dir_name}/{new_chromosome_list[i].name}"): 
+                    os.rename(f"{optimizer2.input.results_dir_name}/{new_chromosome_list[i].name}", f'{optimizer2.input.results_dir_name}/Gen_{optimizer2.generation.current}_Indv_{i}')
+                new_chromosome_list[i].name = f'Gen_{optimizer2.generation.current}_Indv_{i}'
+                optimizer2.population.current.append(new_chromosome_list[i])
+            logger.info("Calculating fitness for generation %s...", optimizer2.generation.current)
+            logger.info("Done!")
+
+        else: #every other algorithm
+            optimizer2.population.current = []
+            namedir = []
+            for i in range(len(new_chromosome_list)):
+                optimizer2.population.current.append(optimizer2.generate_solution(f'Gen_{optimizer2.generation.current}_Indv_{i}', new_chromosome_list[i]))
+                namedir.append(f'Gen_{optimizer2.generation.current}_Indv_{i}')
+        
+        ## Evaluate fitness
+            ## If chromosome exists in previous generations, skip call to external code.
+            ### testtttttttttt
+            # inactive_solutions = []
+            # for soln in optimizer2.population.current:
+            #     try:
+            #         soln_index = optimizer2.population.archive['solutions'].index(soln.chromosome)
+            #         soln.fitness_value = optimizer2.population.archive['fitnesses'][soln_index]
+            #         soln.parameters = optimizer2.population.archive['parameters'][soln_index]
+            #         inactive_solutions.append(soln)
+            #         ## skip the removal for test??
+            #         optimizer2.population.current.remove(soln)
+            #         ## take out some in active solution 
+            #         namedir.remove(soln.name)
+            #         logger.debug(f"Fitness value for solution '{soln.name}' will be taken from archive entry: {soln_index}.")
+            #     except ValueError:
+            #         continue #chromosome is unique, do nothing.
+            
+            logger.info("Calculating fitness for generation %s...", optimizer2.generation.current)
+            ## Execute and parse objective/constraint values
+            if optimizer2.generation.current in optimizer2.input.parcs_steps:
+                optimizer2.eval_func = parcs343.evaluate
+                print('Run parcs initially ', optimizer2.generation.current )
+                # if 'pool' in locals():
+                #    pool.close()
+                #    pool.join()
+                #    del pool
+                #    gc.collect()
+                #    pool = Pool(processes=optimizer2.input.num_procs)
+                ## new pool 
+                optimizer2.population.current= optimizer2.eval_func(optimizer2.population.current, optimizer2.input)
+                temppop = optimizer2.population.current 
+                # ## extract data after PARCS done 
+                surrogatemodel_BK.extract_data(namedir, optimizer2.input, xsdict)
+                if optimizer2.generation.current in optimizer2.input.retrain_steps:
+                    trainmodelrpf(optimizer2.input.if_calibrate)
+                    traincoremodel_update(optimizer2.input.if_calibrate)
+                    if optimizer2.input.keep_retraindata==False: ## delete retrain data after retrainning
+                        rmtree(midas_data.__path_to_store_retrain_data__)
+                    # update pool
+                    #if 'pool' in locals():
+                    #    pool.close()
+                    #    pool.join()
+                    #    del pool
+                    #    gc.collect()
+                    #    pool = Pool(processes=optimizer2.input.num_procs, initializer=init_worker_updated)
+                    ## for printing out fitness value at this step 
+                    optimizer2.eval_func = surrogatemodel_BK.evaluate
+                    surrogate_sol = optimizer2.eval_func(temppop, optimizer2.input, xsdict)
+                    
+                    for soln in surrogate_sol:
+                        soln.fitness_value = optimizer2.fitness.calculate(soln.parameters)
+                    for i in range(len(temppop)):
+                        soln = surrogate_sol[i]
+                        soln_result_list = [str(optimizer2.generation.current),str(i),'{0:.3f}'.format(soln.fitness_value)]
+                        for param in soln.parameters.keys():
+                            if param == 'av_fuelenrichment': #reformat this parameter prior to printing
+                                soln_result_list.append('{0:.3f}'.format(100*soln.parameters[param]['value'])) #convert w.t. to wo%
+                            else:
+                                soln_result_list.append('{0:.3f}'.format(soln.parameters[param]['value']))
+                        for gene in soln.chromosome:
+                            soln_result_list.append(str(gene))
+                        ## write to output file
+                        with open("optimizer_results_at_retrain.csv", 'a') as csvfile:
+                            csvwriter = csv.writer(csvfile, delimiter=',')
+                            csvwriter.writerow(soln_result_list)
+
+                optimizer2.eval_func = surrogatemodel_BK.evaluate ## reset
+            else:
+                optimizer2.population.current = optimizer2.eval_func(optimizer2.population.current, optimizer2.input, xsdict)
+
+            if 'cost_fuelcycle' in optimizer2.input.objectives.keys():
+                for soln in optimizer2.population.current:
+                    soln.parameters = LWR_fuelcyclecost.get_fuelcycle_cost(soln, optimizer2.input)
+            if 'av_fuelenrichment' in optimizer2.input.objectives.keys():
+                for soln in optimizer2.population.current:
+                    soln.parameters = LWR_averageenrichment.get_avfuelenrichment(soln, optimizer2.input)
+            
+            ## Calculate fitness from objective/constriant values
+            for soln in optimizer2.population.current:
+                soln.fitness_value = optimizer2.fitness.calculate(soln.parameters)
+            logger.info("Done!")
+            
+            ## Recombine active and inactive solutions.
+            # for soln in inactive_solutions:
+            #     optimizer2.population.current.append(soln)
+    
+    ## Archive results
+        for soln in optimizer2.population.current:
+            optimizer2.population.archive['solutions'].append(soln.chromosome)
+            optimizer2.population.archive['fitnesses'].append(soln.fitness_value)
+            optimizer2.population.archive['parameters'].append(soln.parameters)
+        
+        best_soln_index = [s.fitness_value for s in optimizer2.population.current].index(max([s.fitness_value for s in optimizer2.population.current]))
+        for i in range(len(optimizer2.population.current)):
+            soln = optimizer2.population.current[i]
+            soln_result_list = [str(optimizer2.generation.current),str(i),'{0:.3f}'.format(soln.fitness_value)]
+            for param in soln.parameters.keys():
+                if param == 'av_fuelenrichment': #reformat this parameter prior to printing
+                    soln_result_list.append('{0:.3f}'.format(100*soln.parameters[param]['value'])) #convert w.t. to wo%
+                else:
+                    soln_result_list.append('{0:.3f}'.format(soln.parameters[param]['value']))
+            for gene in soln.chromosome:
+                soln_result_list.append(str(gene))
+            ## write to output file
+            with open(midas_data.__odir__ + "/optimizer_results.csv", 'a') as csvfile:
+                csvwriter = csv.writer(csvfile, delimiter=',')
+                csvwriter.writerow(soln_result_list)
+            if i == best_soln_index:
+                best_soln_string = ",".join(soln_result_list)
+        
+        logger.info("Generation %s Best Individual:", optimizer2.generation.current)
+        logger.info(', '.join(archive_header)+'\n'+best_soln_string+'\n')
+        
+    ## Create restart file
+        logger.debug("Rewriting restart file %s...",optimizer2.input.job_name+".rst")
+        with open(optimizer2.input.job_name+".rst", "wb") as f: # Open in binary write mode
+            pickle.dump(optimizer2, f)
+        
+    ## Clear solution files to save disk space
+        if optimizer2.input.clear_results == "all":
+            logger.info(f"Clearing solution files for Generation {optimizer2.generation.current}...")
+            os.system(f'rm -rf ./{optimizer2.input.results_dir_name}/Gen_{optimizer2.generation.current}_Indv_*')
+            logger.info("Done!\n")
+        elif optimizer2.input.clear_results == "all_but_best":
+            logger.info(f"Clearing all but best solution files for Generation {optimizer2.generation.current}...")
+            os.system(f'mv ./{optimizer2.input.results_dir_name}/Gen_{optimizer2.generation.current}_Indv_{best_soln_index} ./{optimizer2.input.results_dir_name}/safeGen_{optimizer2.generation.current}_Indv_{best_soln_index}')
+            os.system(f'rm -rf ./{optimizer2.input.results_dir_name}/Gen_{optimizer2.generation.current}_Indv_*')
+            os.system(f'mv ./{optimizer2.input.results_dir_name}/safeGen_{optimizer2.generation.current}_Indv_{best_soln_index} ./{optimizer2.input.results_dir_name}/Gen_{optimizer2.generation.current}_Indv_{best_soln_index}')
+            logger.info("Done!\n")
+        terminate = optimizer2.termination_criteria.TC_methods(optimizer2.population.current, optimizer2.input.termination_criteria)
+        if terminate == True: 
+            logger.info("--Run terminated due to termination criterion being met--\n")
+            break
+
+    ## Optimization concluded
+    ## cleanning
+    #if 'pool' in locals():
+    #    pool.close()
+    #    pool.join()
+    #    gc.collect()
+    # Report best solution information in output file
+    optimization_information = optools.Solution_Reporting()
+    best_solution_info = optimization_information.best_solution_information(midas_data.__odir__ + "/optimizer_results.csv")
+    logger.info("Best solution found in optimization: \n")
+    for key in best_solution_info:
+        logger.info(f'{key}: {best_solution_info[key]}')
+        
+    with open(midas_data.__odir__ + "/best_solution_chromosome.csv", 'w') as csvfile:
+        csvwriter = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
+        csvwriter.writerow(best_solution_info['Chromosome'])
+    
+    statistics = optimization_information.optimization_statistics()
+    last_gen_key = max(statistics.keys(), key=lambda x: int(x.split('_')[1]))  # Extracts last generation key
+    last_gen_data = statistics[last_gen_key]  # Retrieves the statistics for that generation
+    #Print statistics of last generation to output file
+    logger.info("\nStatistics for last generation: \n")
+    for key in last_gen_data:
+        logger.info(f'{key}: {last_gen_data[key]}')
+    ## cleaning and close pool 
+    #gc.collect() 
+    #Create output statistics file
+    with open(midas_data.__odir__ + "/optimization_statistics.csv", 'w') as file:
+        file.write('Generation, Average Fitness, Maximum Fitness, Standard Deviation of Fitness\n')
+        for gen in statistics:
+            avg_fit = statistics[gen]['Average_Fitness']
+            max_fit = statistics[gen]['Average_Fitness']
+            std_fit = statistics[gen]['Std_Fitness']
+            file.write(f"{int(gen.split('_')[1])},{avg_fit},{max_fit},{std_fit}\n")
+    #Plot statistics info if user turned on plot
+    if optimizer2.input.statistics_plots:
+        optimization_information.plot_optimization_statistics()
+    #Plot convergence if user turned on convergence
+    if optimizer2.input.convergence_plots:
+        optimization_information.plot_optimization_convergence()
+
+
+
+    # nevertheless, this can be resolved later
+    logger.info(f'Execution completed after {TT.time()-ts:.5f} seconds')
+
+    
+    return
