@@ -546,6 +546,7 @@ def validate_input(keyword, value):
                         new_dict[new_key] = new_item
                     else:
                         raise ValueError("Fuels option missing fuels and their parameters.")
+            print(new_dict)
             #check parameters logic
             if 'fuel' not in new_dict or len(new_dict['fuel']) == 0:
                 raise ValueError("Assembly options must include fuel types.")

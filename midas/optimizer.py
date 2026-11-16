@@ -46,6 +46,8 @@ class Optimizer():
         print("I'm initializing!")
         self.input = inp_lines
         print("Input lines set to Optimizer.input...")
+        print("calc type (from inp_lines)",inp_lines)
+        print("calc type (from self.input)",self.input.calc_type)
         self.termination_criteria = TC.Termination_Criteria()
         print("termination criteria found")    
 

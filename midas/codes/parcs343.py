@@ -582,7 +582,7 @@ def without_template(solution, input, cwd, filename):
         if 'blankets' in input.fa_options:
             xsnum_fuel = xsnum_radtop + len(input.xs_list['blankets'])
         else:
-            xsnum_fuel = 
+            xsnum_fuel = xsnum_radtop
         keys_added_to_assy_type = [] # duplicate type checker
         for key in input.fa_options['fuel'].keys():
             fuel = input.fa_options['fuel'][key]

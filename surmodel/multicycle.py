@@ -26,22 +26,21 @@ def evaluate(solution, mc_input, xsdict):
         cycle_param_results[obj_key] = {}
 
     print("MULTICYCLE INPUT:")
-    print("Chromosome:",solution.chromosome)
-    print("Output directory:",mc_input.results_dir_name)
+    print("Multicycle Chromosome:",solution.chromosome)
+    print("Multicycle Output directory:",mc_input.results_dir_name)
     # print("Num cycles:", mc_input.num_cycles)
     # print("Optimizer:",mc_input.methodology)
     # print("Pop Size:",mc_input.population_size)
     # print("Num Gens:",mc_input.num_generations)
     # print("Objectives:",mc_input.objectives)
     # print("Perturbs:",mc_input.perturbation_type)   
-    print("Assembly Options:",mc_input.fa_options)
-    print("Assembly Params/Genome:",mc_input.genome)
+    print("Multicycle Assembly Options:",mc_input.fa_options)
+    print("Multicycle Assembly Params/Genome:",mc_input.genome)
 
-    print("Attempting to import the Optimizer!!")
     from midas.optimizer import Optimizer # import in function to prevent circular input
     for cycle_num in range(mc_input.num_cycles):
         # include a more interpretable printout of each 
-        logger.info(f"Evaluating cycle {cycle_num+1} of {mc_input.num_cycles+1}")
+        logger.info(f"Evaluating CYCLE {cycle_num+1} of {mc_input.num_cycles+1}")
         cycle_input = deepcopy(mc_input) # copy all settings from the input object to avoid modifying the original multicycle problem
         
         # Change settings to be for single-cycle. Not all settings need to be changed.
@@ -54,7 +53,7 @@ def evaluate(solution, mc_input, xsdict):
         # Since the inputs have been copied, we do not have to worry about breaking the original multicycle problem
 
         # GENERAL BLOCK
-        # optimizer: simulated_annealing
+        cycle_input.calc_type = "single_cycle" # set to single cycle
         cycle_input.methodology = "simulated_annealing"
         # set initial_temperature and other PSA defaults
         # code_type: surrogate (maybe?)
@@ -83,11 +82,11 @@ def evaluate(solution, mc_input, xsdict):
                 raise ValueError(f"Cooling schedule '{cycle_input.cooling_schedule}' only available for parallel simulated annealing.")
         cycle_input.secondary_cooling_schedule = 'exponential_decrease'
 
-        cycle_input.genome = solution.single_cycle_from_multicycle(cycle_num,cycle_input.fa_options) # single_cycle_from_mutlicycle modifies asssembly_options already
+        print(f"CYCLE {cycle_num+1} INPUT:")
+        cycle_input.genome = deepcopy(solution.single_cycle_from_multicycle(cycle_num,cycle_input.fa_options)) # single_cycle_from_mutlicycle modifies asssembly_optionsdirectly
         # add burn assemblies will have to be in the process above!
         # parcs_data can remain the same
         
-        print(f"CYCLE {cycle_num+1} INPUT:")
         print("Output directory:",cycle_input.results_dir_name)
         # print("Num cycles:", cycle_input.num_cycles) # this may be an issue for anything that uses the number of cycles as a check
         # print("Optimizer:",cycle_input.methodology)
@@ -98,18 +97,19 @@ def evaluate(solution, mc_input, xsdict):
         print("Assembly Options:",cycle_input.fa_options)
 
 
-        print("Assembly Params/Genome Before:",cycle_input.genome)
         print("Running LP map loader")
         LP_map_loader(cycle_input)
 
-        print("Assembly Params/Genome After:",cycle_input.genome)
+        print("Assembly Params/Genome:",cycle_input.genome)
 
-        
+        print("Calc Type:",cycle_input.calc_type)
 
 
-        # cycle_input = problem_preparation.Prepare_Problem_Values.prepare_calc(cycle_input) # prepare calculation values
+        cycle_input = problem_preparation.Prepare_Problem_Values.prepare_calc(cycle_input) # prepare calculation values
+        print("Calc Type:",cycle_input.calc_type)
         print(f"Optimizer for Cycle {cycle_num+1} is activated! Beware!")
         optimizer2 = Optimizer(cycle_input) # Run the optimizer with the cycle_input parameters
+        print("Calc type after optimizer initialized:",cycle_input)
         optimizer2.build_optimizer()
         logger.info(f"Completed secondary Optimizer assembly for cycle {cycle_num+1}. Running secondary optimizer...\n")
         ts = TT.time()
