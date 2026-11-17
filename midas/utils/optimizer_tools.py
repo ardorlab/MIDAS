@@ -510,13 +510,13 @@ class Solution():
             for batch in current_cycle[section_idx]:
                 # prepare a dictionary entry for that
                 if batch['first_cycle'] == cycle_num: # fresh fuel load - only need to write to genome
-                    new_batch_name = f"{batch['name']}-CYC{cycle_num}-SEC{section_idx+1}"
+                    new_batch_name = f"{batch['name']}-CYC{cycle_num+1}-SEC{section_idx+1}"
                     batch_dict = {'section':(section_idx+1),'constraint':{'type': 'meet_target', 'value': batch['num']}}
                     cycle_genome[new_batch_name] = batch_dict # add entry to genome
                     FA_opts['fuel'][new_batch_name] = self.input.fa_options['fuel'][batch['name']] # copy the params for this fuel type
                 else: # burnt fuel load - need to write to FA_options and genome
                     # identify previous batches this batch was used in
-                    batch_to_find = f"{batch['name']}-CYC{cycle_num}-SEC{section_idx+1}" # search for this name in the output files
+                    batch_to_find = f"{batch['name']}-CYC{cycle_num+1}-SEC{section_idx+1}" # search for this name in the output files
                     pre_loc = "burnt" # TODO: Retrieve previous location of the assembly as a unique identifier - this allows you to trace the history of the assembly and grab BU history from the previous cycle
                     burnt_batch_name = f"{batch_to_find}-{pre_loc}" # needs to be uniquely identifying`
                     batch_dict = {'section':(section_idx+1),'constraint':{'type': 'meet_target', 'value': batch['num']}}

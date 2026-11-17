@@ -15,6 +15,7 @@ from surmodel.trainmodelRPF import trainmodelrpf
 from surmodel.trainmodelcore import traincoremodel_update
 import joblib
 from itertools import repeat
+from pathlib import Path
 
 import os
 import logging
@@ -29,6 +30,14 @@ def evaluate(solution, mc_input, xsdict):
 
     C.King 2026-11
     """
+
+    cwd = Path(os.getcwd())
+    indv_dir = cwd / mc_input.results_dir_name / solution.name
+    if not indv_dir.exists():
+        logger.debug(f"Creating new results directory: {indv_dir}")
+        os.mkdir(indv_dir)
+    logger.debug(f"Changing to new working directory: {indv_dir}")
+    os.chdir(indv_dir)
 
     # initialize parameter result collector
     cycle_param_results = {}
@@ -67,20 +76,22 @@ def evaluate(solution, mc_input, xsdict):
         # set initial_temperature and other PSA defaults
         # code_type: surrogate (maybe?)
         # results_dreictory_name: smoething not output_files
-        cycle_input.results_dir_name = "output_files" + "_cycle_" + str(cycle_num + 1) # might need to adjust this for each cycle that is made
+        cycle_input.results_dir_name = "cycle_" + str(cycle_num + 1) # might need to adjust this for each cycle that is made
         # BIG ISSUE: might blow up file size
-        
+        print("path test",cycle_input.results_dir_name)
+
+
         # OPTIMIZER BLOCK
         cycle_input.population_size = 1 # pop size is 1 for simulated annealing
         cycle_input.num_generations = 100 # set a reasonable number of generations for simulated annealing
         cycle_input.objectives = {'max_boron': {'goal': 'less_than_target', 'target': 1300, 'weight': 1.0},
-                                  'PinPowerPeaking': {'goal': 'less_than_target', 'target': 5000, 'weight': 2.1},
-                                  'FDeltaH': {'goal': 'less_than_target', 'target': 1.48, 'weight': 6000},
+                                  'pinpowerpeaking': {'goal': 'less_than_target', 'target': 5000, 'weight': 2.1},
+                                  'fdeltah': {'goal': 'less_than_target', 'target': 1.48, 'weight': 6000},
                                   'cycle_length': {'goal': 'maximize', 'weight': 1.0}                                  
         }
 
         # ALGORITHM BLOCK
-        cycle_input.perturbation_type = {"method": "perturb_by_swap", "num_permutations": 4}
+        cycle_input.perturbation_type = {"method": "perturb_by_swap", "num_perturbations": 4}
 
         cycle_input.initial_temperature = 100
         if cycle_input.num_procs > 1:
@@ -102,7 +113,6 @@ def evaluate(solution, mc_input, xsdict):
         # print("Pop Size:",cycle_input.population_size)
         # print("Num Gens:",cycle_input.num_generations)
         # print("Objectives:",cycle_input.objectives)
-        # print("Perturbs:",cycle_input.perturbation_type)
         print("Assembly Options:",cycle_input.fa_options)
 
 
@@ -136,6 +146,10 @@ def evaluate(solution, mc_input, xsdict):
         solution.parameters[item]['value'] = cycle_param_results[item]
 
     # process cycle_param_results to get final numbers for solution fitness function params
+    
+    # return to proper working directory
+    logger.debug(f"Returning to original working directory: {cwd}")
+    os.chdir(cwd)
 
     return solution # return solution object and return to standard MIDAS execution
 
@@ -146,24 +160,21 @@ def run_single_cycle(cycle_input):
 
     """ 
     from midas.optimizer import Optimizer # import in function to prevent circular input
-
+    logger = logging.getLogger("MIDAS_logger")
     print("Calc Type:",cycle_input.calculation_type)
     print(f"Optimizer is activated! Beware!")
     optimizer2 = Optimizer(cycle_input) # Run the optimizer with the cycle_input parameters
-    
-    print("Calc type after optimizer initialized:",cycle_input.calculation_type)
     optimizer2.build_optimizer()
 
     logger.info(f"Completed secondary Optimizer assembly. Running secondary optimizer...\n")
     ts = TT.time()
 
     # equivalent of optimizer2.main()
-
+    print("------------ CHECK 1: Optimizer Assembled ------------")
     restart = False
-    ## Initialize logging for the present file
-    logger = logging.getLogger("MIDAS_logger")
     if not restart:
 ## Create results directory and/or clear old
+        print(os.getcwd())
         cwd = Path(os.getcwd())
         results_dir = cwd.joinpath(optimizer2.input.results_dir_name)
         if os.path.exists(results_dir):
@@ -175,12 +186,13 @@ def run_single_cycle(cycle_input):
         ## cleaning retrain data if any
         if os.path.exists(midas_data.__path_to_store_retrain_data__):
             rmtree(midas_data.__path_to_store_retrain_data__)
-    
+        print("path for the cycle",results_dir)
+        results_csv_loc = cycle_input.results_dir_name + "/optimizer_results.csv"
 ## Delete old results file, if necessary, to avoid confusion
         # this step is useful since the new results file won't be written until after Generation 0 is completed.
-        if os.path.exists(midas_data.__odir__ + "/optimizer_results.csv"):
+        if os.path.exists(results_csv_loc):
             logger.debug("Removing existing 'optimizer_results.csv' results file...")
-            os.remove(midas_data.__odir__ + "/optimizer_results.csv")
+            os.remove(results_csv_loc)
         
 ## Initialize beginning population
         optimizer2.population.current = []
@@ -197,8 +209,8 @@ def run_single_cycle(cycle_input):
                 chromosome = optimizer2.get_initial_population(i) 
                 optimizer2.population.current.append(optimizer2.generate_solution(f'Gen_0_Indv_{i}', chromosome))
                 namedir.append(f'Gen_0_Indv_{i}')
-
-        
+        print("name directories",namedir)
+        print("name of the soution at idx 0",optimizer2.population.current[0].name)
         #if optimizer2.input.code_interface == "surrogate":
         #    import multiprocessing as mp
         #    mp.set_start_method('spawn', force=True) ### NOTE: do not use this for debug mode!!!!!
@@ -212,7 +224,9 @@ def run_single_cycle(cycle_input):
 
         if optimizer2.input.methodology == 'simulated_annealing'and optimizer2.input.num_procs == 1:
             logger.info(f"Initial Temperature: {optimizer2.input.initial_temperature}")
-        
+       
+
+        print("------------ CHECK 2: Initial Populations Generated ------------") 
 ## Evaluate fitness
         logger.info("Calculating fitness for generation %s...", optimizer2.generation.current)
         ## Execute and parse objective/constraint values
@@ -226,7 +240,11 @@ def run_single_cycle(cycle_input):
             #        del pool
             #        gc.collect()
             #        pool = Pool(processes=optimizer2.input.num_procs)
-            optimizer2.population.current= optimizer2.eval_func(optimizer2.population.current, optimizer2.input)
+            soln_list = []
+            for soln in optimizer2.population.current:
+                soln_list.append(optimizer2.eval_func(soln, optimizer2.input))
+
+            optimizer2.population.current = soln_list
             temppop = optimizer2.population.current
             surrogatemodel_BK.extract_data(namedir,optimizer2.input, xsdict) ## extract data after PARCs done
             # # temparcs = optimizer2.population.current
@@ -244,7 +262,10 @@ def run_single_cycle(cycle_input):
                 #    pool = Pool(processes=optimizer2.input.num_procs, initializer=init_worker_updated)
                 # ## for printing out fitness value at this step 
                 optimizer2.eval_func = surrogatemodel_BK.evaluate
-                surrogate_sol = optimizer2.eval_func(temppop,optimizer2.input,xsdict)
+                
+                surrogate_sol = []
+                for soln in temppop:
+                    surrogate_sol.append(optimizer2.evaluate_func(soln,optimizer2.input,xsdict))
 
                 for soln in surrogate_sol:
                     soln.fitness_value = optimizer2.fitness.calculate(soln.parameters)
@@ -268,8 +289,13 @@ def run_single_cycle(cycle_input):
             #     optimizer2.population.current[i] = optimizer2.eval_func(optimizer2.population.current[i], optimizer2.input) ## serial test
     
         else:
-            optimizer2.population.current = optimizer2.eval_func(optimizer2.population.current, optimizer2.input, xsdict)
+            soln_list = []
+            for soln in optimizer2.population.current:
+                soln_list.append(optimizer2.eval_func(soln, optimizer2.input, xsdict))
+            optimizer2.population.current = soln_list
         
+        print("------------ CHECK 3: Results Evaluated ------------")
+
         # if 'cost_fuelcycle' in optimizer2.input.objectives.keys():
         #     for soln in optimizer2.population.current:
         #         soln.parameters = LWR_fuelcyclecost.get_fuelcycle_cost(soln, optimizer2.input)
@@ -293,7 +319,8 @@ def run_single_cycle(cycle_input):
             archive_header.append(str(param))
         archive_header.append("Chromosome")
         ## write output file
-        with open(midas_data.__odir__ + "/optimizer_results.csv", 'w') as csvfile:
+        opt_results_loc = os.getcwd() + "/cycle/"
+        with open(results_csv_loc, 'w') as csvfile:
             csvwriter = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
             csvwriter.writerow(archive_header)
         
@@ -309,7 +336,7 @@ def run_single_cycle(cycle_input):
             for gene in soln.chromosome:
                 soln_result_list.append(str(gene))
             ## write to output file
-            with open(midas_data.__odir__ + "/optimizer_results.csv", 'a') as csvfile:
+            with open(results_csv_loc, 'a') as csvfile:
                 csvwriter = csv.writer(csvfile, delimiter=',')
                 csvwriter.writerow(soln_result_list)
             if i == best_soln_index:
@@ -334,14 +361,16 @@ def run_single_cycle(cycle_input):
             os.system(f'rm -rf ./{optimizer2.input.results_dir_name}/Gen_0_Indv_*')
             os.system(f'mv ./{optimizer2.input.results_dir_name}/safeGen_0_Indv_{best_soln_index} ./{optimizer2.input.results_dir_name}/Gen_0_Indv_{best_soln_index}')
             logger.info("Done!\n")
-        
+        print("------------ CHECK 4: Results stored in the correct location ------------")
 ## Iterate Over Generations  ##
 
     for iter_gens in range(1,optimizer2.generation.total):
         optimizer2.generation.current += 1
     ## Create new generation
         logger.info("Creating population of %s individuals for generation %s...", optimizer2.input.population_size, optimizer2.generation.current)
+        
         new_chromosome_list = optimizer2.algorithm.reproduction(optimizer2.population.current, optimizer2.generation)
+        
 
         if optimizer2.input.methodology == 'simulated_annealing' and optimizer2.input.num_procs > 1: # if parallel simulated annealing skip evaluation
             optimizer2.population.current = []
@@ -389,8 +418,12 @@ def run_single_cycle(cycle_input):
                 #    del pool
                 #    gc.collect()
                 #    pool = Pool(processes=optimizer2.input.num_procs)
-                ## new pool 
-                optimizer2.population.current= optimizer2.eval_func(optimizer2.population.current, optimizer2.input)
+                ## new pool
+                soln_list = []
+                for soln in optimizer2.population.current:
+                    soln_list.append(optimizer2.eval_func(soln,optimizer2.input))
+                optimizer2.population.current = soln_list
+ 
                 temppop = optimizer2.population.current 
                 # ## extract data after PARCS done 
                 surrogatemodel_BK.extract_data(namedir, optimizer2.input, xsdict)
@@ -408,7 +441,9 @@ def run_single_cycle(cycle_input):
                     #    pool = Pool(processes=optimizer2.input.num_procs, initializer=init_worker_updated)
                     ## for printing out fitness value at this step 
                     optimizer2.eval_func = surrogatemodel_BK.evaluate
-                    surrogate_sol = optimizer2.eval_func(temppop, optimizer2.input, xsdict)
+                    surrogate_sol = []
+                    for soln in temppop:
+                        surrogate_sol.append(optimizer2.eval_func(temppop, optimizer2.input, xsdict))
                     
                     for soln in surrogate_sol:
                         soln.fitness_value = optimizer2.fitness.calculate(soln.parameters)
@@ -429,7 +464,9 @@ def run_single_cycle(cycle_input):
 
                 optimizer2.eval_func = surrogatemodel_BK.evaluate ## reset
             else:
-                optimizer2.population.current = optimizer2.eval_func(optimizer2.population.current, optimizer2.input, xsdict)
+                soln_list = []
+                for soln in optimizer2.population.current:
+                    soln_list.append(optimizer2.eval_func(soln,optimizer2.input,xsdict))
 
             if 'cost_fuelcycle' in optimizer2.input.objectives.keys():
                 for soln in optimizer2.population.current:
@@ -446,6 +483,7 @@ def run_single_cycle(cycle_input):
             ## Recombine active and inactive solutions.
             # for soln in inactive_solutions:
             #     optimizer2.population.current.append(soln)
+        print("------------ CHECK 5: All remaining generation iterations evaluated -----------")
     
     ## Archive results
         for soln in optimizer2.population.current:
@@ -465,7 +503,7 @@ def run_single_cycle(cycle_input):
             for gene in soln.chromosome:
                 soln_result_list.append(str(gene))
             ## write to output file
-            with open(midas_data.__odir__ + "/optimizer_results.csv", 'a') as csvfile:
+            with open(results_csv_loc, 'a') as csvfile:
                 csvwriter = csv.writer(csvfile, delimiter=',')
                 csvwriter.writerow(soln_result_list)
             if i == best_soln_index:
@@ -495,7 +533,10 @@ def run_single_cycle(cycle_input):
             logger.info("--Run terminated due to termination criterion being met--\n")
             break
 
+        print("------------ CHECK 6: Solutions written and cleared ------------")
+
     ## Optimization concluded
+    print("------------ CHECK 7: OPTIMIZATION LOOP ESCAPED ------------")
     ## cleanning
     #if 'pool' in locals():
     #    pool.close()
@@ -503,12 +544,12 @@ def run_single_cycle(cycle_input):
     #    gc.collect()
     # Report best solution information in output file
     optimization_information = optools.Solution_Reporting()
-    best_solution_info = optimization_information.best_solution_information(midas_data.__odir__ + "/optimizer_results.csv")
+    best_solution_info = optimization_information.best_solution_information(results_csv_loc)
     logger.info("Best solution found in optimization: \n")
     for key in best_solution_info:
         logger.info(f'{key}: {best_solution_info[key]}')
         
-    with open(midas_data.__odir__ + "/best_solution_chromosome.csv", 'w') as csvfile:
+    with open(cycle_input.results_dir_name + "/best_solution_chromosome.csv", 'w') as csvfile:
         csvwriter = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_NONE)
         csvwriter.writerow(best_solution_info['Chromosome'])
     
@@ -522,21 +563,21 @@ def run_single_cycle(cycle_input):
     ## cleaning and close pool 
     #gc.collect() 
     #Create output statistics file
-    with open(midas_data.__odir__ + "/optimization_statistics.csv", 'w') as file:
+    with open(cycle_input.results_dir_name + "/optimization_statistics.csv", 'w') as file:
         file.write('Generation, Average Fitness, Maximum Fitness, Standard Deviation of Fitness\n')
         for gen in statistics:
             avg_fit = statistics[gen]['Average_Fitness']
             max_fit = statistics[gen]['Average_Fitness']
             std_fit = statistics[gen]['Std_Fitness']
             file.write(f"{int(gen.split('_')[1])},{avg_fit},{max_fit},{std_fit}\n")
-    #Plot statistics info if user turned on plot
-    if optimizer2.input.statistics_plots:
-        optimization_information.plot_optimization_statistics()
+    #Plot statistics info if user turned on plot (don't plot)
+    # if optimizer2.input.statistics_plots:
+    #    optimization_information.plot_optimization_statistics()
     #Plot convergence if user turned on convergence
-    if optimizer2.input.convergence_plots:
-        optimization_information.plot_optimization_convergence()
+    # if optimizer2.input.convergence_plots:
+    #    optimization_information.plot_optimization_convergence()
 
-
+    print("------------ CHECK 8: Statistics Saved ------------")
 
     # nevertheless, this can be resolved later
     logger.info(f'Execution completed after {TT.time()-ts:.5f} seconds')
