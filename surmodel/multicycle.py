@@ -83,15 +83,22 @@ def evaluate(solution, mc_input, xsdict):
 
         # OPTIMIZER BLOCK
         cycle_input.population_size = 1 # pop size is 1 for simulated annealing
-        cycle_input.num_generations = 100 # set a reasonable number of generations for simulated annealing
-        cycle_input.objectives = {'max_boron': {'goal': 'less_than_target', 'target': 1300, 'weight': 1.0},
-                                  'pinpowerpeaking': {'goal': 'less_than_target', 'target': 5000, 'weight': 2.1},
-                                  'fdeltah': {'goal': 'less_than_target', 'target': 1.48, 'weight': 6000},
+        cycle_input.num_generations = 75 # set a reasonable number of generations for simulated annealing
+        # preset objectives for the single-cycle optimization. maybe these can be set based on user input
+        cycle_input.objectives = {'max_boron': {'goal': 'less_than_target', 'target': 1500, 'weight': 14.0},
+                                  'pinpowerpeaking': {'goal': 'less_than_target', 'target': 2.5, 'weight': 5000},
+                                  'fdeltah': {'goal': 'less_than_target', 'target': 1.65, 'weight': 5000},
                                   'cycle_length': {'goal': 'maximize', 'weight': 1.0}                                  
         }
+        
+        if cycle_num == 0:
+            cycle_input.burnt_assemblies = False # no burnt assemblies for the first cycle
+            # in the future, when you have burnt assemblies as a possilbe input, this will have to be adjusted to figure out another method of determining is burnt assemvblies are present or not
+        else: # all other cycles
+            cycle_input.burnt_assemblies = True # burnt assemblies are present for all other cycles
 
         # ALGORITHM BLOCK
-        cycle_input.perturbation_type = {"method": "perturb_by_swap", "num_perturbations": 4}
+        cycle_input.perturbation_type = {"method": "perturb_by_swap", "num_perturbations": 2}
 
         cycle_input.initial_temperature = 100
         if cycle_input.num_procs > 1:
