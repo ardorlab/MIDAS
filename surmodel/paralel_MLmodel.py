@@ -769,7 +769,7 @@ def get_result_157(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx
     pinpower =[]
     test = " ".join(LPs).strip().split()
     ## initializing 
-    initbumap = np.zeros((1,81,16))
+    # initbumap = np.zeros((1,81,16))
     inputdata = getdata_fully_vectorized(initbumap, xsdict, test, fabulist, scalerparam, minmaxscale)
     pow_0 = depletion_power_157(model, tuple(inputdata+[trunks]), scalerparam,idx11, idx22, total_height, faaxial)
     pinpowerbu = getfqFd_pinrecontruct(initbumap, pow_0, test, fabulist, xsdict, faaxial, total_height) # first step

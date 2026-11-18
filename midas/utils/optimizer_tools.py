@@ -12,7 +12,7 @@ import midas_data
 """
 These are generic optimizer classes that are shared by all algorithms. #!TODO: can this be solved with the super().__init__ method?
 """
-
+from pathlib import Path
 
 ## Initialize logging for the present file
 logger = logging.getLogger("MIDAS_logger")
@@ -489,7 +489,7 @@ class Solution():
 
     def single_cycle_from_multicycle(self,cycle_num,FA_opts):
         """
-        Creates an initial loading pattern for a given cycle from a multicycle chromosome.
+        Creates an initial loading pattern for a given cycle from the multicycle chromosome.
 
         INPUT:
         self (MUTLI-CYCLE SOLUTION!)
@@ -515,13 +515,37 @@ class Solution():
                     cycle_genome[new_batch_name] = batch_dict # add entry to genome
                     FA_opts['fuel'][new_batch_name] = self.input.fa_options['fuel'][batch['name']] # copy the params for this fuel type
                 else: # burnt fuel load - need to write to FA_options and genome
-                    # identify previous batches this batch was used in
-                    batch_to_find = f"{batch['name']}-CYC{cycle_num+1}-SEC{section_idx+1}" # search for this name in the output files
-                    pre_loc = "burnt" # TODO: Retrieve previous location of the assembly as a unique identifier - this allows you to trace the history of the assembly and grab BU history from the previous cycle
-                    burnt_batch_name = f"{batch_to_find}-{pre_loc}" # needs to be uniquely identifying`
-                    batch_dict = {'section':(section_idx+1),'constraint':{'type': 'meet_target', 'value': batch['num']}}
-                    FA_opts['fuel'][burnt_batch_name] = {'type': 5, 'serial': 'no'} # Type is a temporary number, should probably be retrieved from the appropriate cycle calculation. Add to fuel options
-                    cycle_genome[burnt_batch_name] = batch_dict # add to genome
+                    assembly_to_find = f"{batch['name']}-CYC{cycle_num+1}-SEC{section_idx+1}" # search for this name in the output files
+
+                    # We already know the first cycle and section this batch was used in from the name
+                    # Grab the corresponding best_solution_chromosome.csv
+                    print("cwd",os.getcwd())
+                    most_recent_cycle_path = Path(os.getcwd() + f"/cycle_{batch['first_cycle']+1}/best_solution_chromosome.csv") # default most recent is the first cycle
+                    
+                    # remember multiplicities! if the batch goes into a seciton with multiplictiy 1, then it can only be used once??
+
+                    # Find if this is a twice-burnt assembly (and in which cycle/section it was previously used)
+                    for cycle_idx in range(batch['first_cycle'] + 1,cycle_num): # search in the cycles between the first cycle and the current one (exclusive)
+                        for section in self.chromosome[cycle_idx]:
+                            if batch in section:
+                                print(f"Batch has been found in section of cycle {cycle_idx+1}. This is a twice-burnt assembly.")
+                                most_recent_cycle_path = Path(os.getcwd() + f"/cycle_{cycle_idx+1}/best_solution_chromosome.csv")
+                                continue # past location identified, proceed
+                                # if batch is not in any of these previous cycles, it has only been burnt once
+
+                    with open(most_recent_cycle_path, 'r') as csvfile:
+                        most_recent_cycle = csvfile.readline() # grab the first line (which is the chromosome)\
+                    most_recent_cycle = most_recent_cycle.split(",") # split into a list to retrieve the actual choromosome
+                    
+                    for assembly_idx in range(0,len(most_recent_cycle)):
+                        if assembly_to_find in most_recent_cycle[assembly_idx]:
+                            burnt_batch_name = f"{most_recent_cycle[assembly_idx]}_{assembly_idx}" # append the index to the name of the batch 
+                            batch_dict = {'section':(section_idx+1),'constraint':{'type': 'meet_target', 'value': 4}} # TODO: add multiplicity instead of 4
+                            FA_opts['fuel'][burnt_batch_name] = self.input.fa_options['fuel'][batch['name']] # {'type': 5, 'serial': 'no'} # TODO: type is fresh lol, will need to add a new type for burnt fuel assemblies
+                            cycle_genome[burnt_batch_name] = batch_dict # add to genome
+        
+                            # Grab BUs after, for now let's do it all for fresh
+
         # print("Assembly options after:",FA_opts)
         # print("Cycle genome:", cycle_genome,"for cycle",cycle_num)
 
