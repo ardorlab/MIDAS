@@ -151,9 +151,9 @@ def init_worker_updated():
 def getXSlist(xsdict, fatype, xstype, axialnode):
     return [xsdict[fatype][key][xstype][axialnode] for key in xsdict[fatype]]
 
-def depletion_power(model, modelinput, scaler,idx1, idx2, total_height, faaxial):
+def depletion_power(model, modelinput, scaler,idx1, idx2, total_height, faaxial, num_assemblies):
     '''
-    Predict the new powdistribution based on new burnup distribution for 193 core
+    Predict the new powdistribution based on new burnup distribution for core
     input: bustep: bu step on the burnup distribution (1)
     input: model: DeepOnet model 
     input: modelinput: (7FA data, trunk) to generate input for model 
@@ -164,35 +164,16 @@ def depletion_power(model, modelinput, scaler,idx1, idx2, total_height, faaxial)
     newpow = model.predict(modelinput)
     # print('pred time, ',TT.time() -t0)
     tmp_pred = newpow.reshape(-1,81, 16)
-    ### assign 0 to reflector and void region 
-    idx = np.r_[8, 17, 26, 35, 43:45, 52:54, 60:63, 67:tmp_pred.shape[1]]
+    ### assign 0 to reflector and void region
+    if num_assemblies == 193:
+        idx = np.r_[8, 17, 26, 35, 43:45, 52:54, 60:63, 67:tmp_pred.shape[1]]
+    elif num_assemblies == 157:
+        idx = np.r_[8, 17, 25, 26, 34, 35, 42:45, 50:54, 58:63, 65:tmp_pred.shape[1]]
+
     tmp_pred[:, idx, :] = 0
 
     # tmp_pred[abs(tmp_pred)<1e-4] = 0
-    tmp_pred = normalize(tmp_pred,idx2, idx1,total_height, faaxial,193)
-    # y_predr = minmaxReverse(tmp_pred.reshape(tmp_pred.shape[0],newpow.shape[-1]),scaler['omax'],scaler['omin'])
-    y_predr = tmp_pred.reshape(newpow.shape)
-    return y_predr
-
-def depletion_power_157(model, modelinput, scaler,idx1, idx2, total_height, faaxial):
-    '''
-    Predict the new powdistribution based on new burnup distribution for 157 core
-    input: bustep: bu step on the burnup distribution (1)
-    input: model: DeepOnet model 
-    input: modelinput: (7FA data, trunk) to generate input for model 
-    input: scaler for scaling input output of model 
-    ouput: new power distribution (1,81,16)
-    '''
-    # t0 = TT.time()
-    newpow = model.predict(modelinput)
-    # print('pred time, ',TT.time() -t0)
-    tmp_pred = newpow.reshape(-1,81, 16)
-    ### assign 0 to reflector and void region 
-    idx = np.r_[8, 17, 25, 26, 34, 35, 42:45, 50:54, 58:63, 65:tmp_pred.shape[1]]
-
-    tmp_pred[:, idx, :] = 0
-    # tmp_pred[abs(tmp_pred)<1e-4] = 0
-    tmp_pred = normalize(tmp_pred,idx2, idx1,total_height, faaxial,157)
+    tmp_pred = normalize(tmp_pred,idx2, idx1,total_height, faaxial, num_assemblies)
     # y_predr = minmaxReverse(tmp_pred.reshape(tmp_pred.shape[0],newpow.shape[-1]),scaler['omax'],scaler['omin'])
     y_predr = tmp_pred.reshape(newpow.shape)
     return y_predr
@@ -647,7 +628,7 @@ def normalize(output,idx2, idx1,total_height, faaxial,numactivatefa):
 
 # --- MAIN EXECUTION FUNCTION ---
 
-def get_result(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, idx22, initbumap) :
+def get_result(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, idx22, initbumap, num_assemblies):
     """
     Function executed by worker processes.
     """
@@ -668,7 +649,7 @@ def get_result(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, 
     ## initializing 
     # initbumap = np.zeros((1,81,16))
     inputdata = getdata_fully_vectorized(initbumap, xsdict, test, fabulist, scalerparam, minmaxscale)
-    pow_0 = depletion_power(model, tuple(inputdata+[trunks]), scalerparam,idx11, idx22, total_height, faaxial)
+    pow_0 = depletion_power(model, tuple(inputdata+[trunks]), scalerparam,idx11, idx22, total_height, faaxial,num_assemblies)
     pinpowerbu = getfqFd_pinrecontruct(initbumap, pow_0, test, fabulist, xsdict, faaxial, total_height) # first step
     pinpower.append(pinpowerbu)
     bor_pred0, cyc_pred0 = depletion_boroncycle(modelcore, tuple(inputdata+[trunk_core]), scaler_core,minmaxReverse)
@@ -688,7 +669,7 @@ def get_result(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, 
                 delE = bu * (0.5 * pow_0 + 0.5 * pow_prev)
                 bumap = initbumap + delE.reshape((1, 81, 16))
             input_data = getdata_fully_vectorized(bumap, xsdict, test, fabulist, scalerparam, minmaxscale)
-            pow_new = depletion_power(model, tuple(input_data+[trunks]), scalerparam,idx11, idx22, total_height,faaxial)
+            pow_new = depletion_power(model, tuple(input_data+[trunks]), scalerparam,idx11, idx22, total_height,faaxial,num_assemblies)
             # Check convergence
             if iteration > 0:
                 max_delta = np.max(np.abs(pow_new - pow_prev))
@@ -699,7 +680,7 @@ def get_result(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, 
                                                                 tuple(input_data+[trunk_core]), 
                                                                 scaler_core, minmaxReverse)
                     # print(bor_pred0)
-                    if bor_pred0[0] <50:
+                    if bor_pred0[0] <50: # this value is 20 in the remove get_result_157 version. why?
                         complete_flag = True
                     print(f"BU={bu}, iter={iteration} → Converged (tol={max_delta:.2e})")
                     # Update for next burnup
@@ -750,109 +731,6 @@ def get_result(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, 
        print("Solution from surrogate model failed.")
     return Fd_all, Fq_all, np.max(boron_his), cycle_length
 
-def get_result_157(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, idx22, initbumap) :
-    """
-    Function executed by worker processes for core 157 FAs.
-    """
-    # Access the process-specific models
-    global worker_data
-    model = worker_data['model']
-    modelcore = worker_data['modelcore']
-    pinmodel = worker_data['pinmodel']
-    scalerparam = worker_data['scalerparam']
-    trunks = worker_data['trunks']
-    scaler_core = worker_data['scaler_core']
-    trunk_core = worker_data['trunk_core']
-    minmaxReverse = worker_data['minmaxReverse']
-    minmaxscale = worker_data['minmaxscale']
-    
-    pinpower =[]
-    test = " ".join(LPs).strip().split()
-    ## initializing 
-    # initbumap = np.zeros((1,81,16))
-    inputdata = getdata_fully_vectorized(initbumap, xsdict, test, fabulist, scalerparam, minmaxscale)
-    pow_0 = depletion_power_157(model, tuple(inputdata+[trunks]), scalerparam,idx11, idx22, total_height, faaxial)
-    pinpowerbu = getfqFd_pinrecontruct(initbumap, pow_0, test, fabulist, xsdict, faaxial, total_height) # first step
-    pinpower.append(pinpowerbu)
-    bor_pred0, cyc_pred0 = depletion_boroncycle(modelcore, tuple(inputdata+[trunk_core]), scaler_core,minmaxReverse)
-    # bustep+=1
-    # Initialize
-    power_history = [pow_0]
-    boron_his = [bor_pred0]
-    cycle_his = [cyc_pred0]
-    complete_flag = False
-    for bu in corebulist:
-            converged = False
-            for iteration in range(100):
-                if iteration == 0:
-                    delE = bu * pow_0
-                    bumap = initbumap + delE.reshape((1, 81, 16))
-                else:
-                    delE = bu * (0.5 * pow_0 + 0.5 * pow_prev)
-                    bumap = initbumap + delE.reshape((1, 81, 16))
-                input_data = getdata_fully_vectorized(bumap, xsdict, test, fabulist, scalerparam, minmaxscale)
-                pow_new = depletion_power_157(model, tuple(input_data+[trunks]), scalerparam,idx11, idx22, total_height,faaxial)
-                # Check convergence
-                if iteration > 0:
-                    max_delta = np.max(np.abs(pow_new - pow_prev))
-                    if max_delta < 1e-4:
-                        pinpowerbu= getfqFd_pinrecontruct(bumap, pow_new, test, fabulist, xsdict, faaxial, total_height)
-                        pinpower.append(pinpowerbu)
-                        bor_pred0, cyc_pred0 = depletion_boroncycle(modelcore, 
-                                                                    tuple(input_data+[trunk_core]), 
-                                                                    scaler_core, minmaxReverse)
-                        if bor_pred0[0] <20:
-                            complete_flag = True
-                        # print(f"BU={bu}, iter={iteration} → Converged (tol={max_delta:.2e})")
-                        # Update for next burnup
-                        initbumap = bumap
-                        power_history.append(pow_new)
-                        boron_his.append(bor_pred0)
-                        cycle_his.append(cyc_pred0)
-                        pow_0 = pow_new
-                        converged = True
-                        # bustep+=1
-                        break
-        
-                pow_prev = pow_new
-        
-            if not converged:
-                print(f"BU={bu} → ❌ Unconverged after 100 iterations")
-                raise ValueError("Solution did not converge.")
-                # stop
-            if complete_flag:
-                break
-    ## get the Fdmax and Fqmax here 
-    pinpower = np.array(pinpower).reshape(-1,153,153,1)
-    pinpower_reconstruct = pinmodel.predict(pinpower, verbose=0) # verbose=0 suppresses Keras logs for speed
-    # 6. Apply Mask and Calculate Statistics
-    # Create mask from the first node (assuming geometry is axially constant)
-    # Using np.not_equal is slightly faster/cleaner than != 0
-    keep_mask = np.not_equal(pinpower[0], 0) 
-    
-    # Broadcast multiply: (16,153,153,1) * (153,153,1)
-    pinpower_reconstruct *= keep_mask
-    # Calculate Max Fq
-    Fq_all = np.max(pinpower_reconstruct)
-    
-    # Calculate Max Fdel (Fdelta-H equivalent?)
-    # Pre-calculate axial shape factor
-    ax_factor = (np.array(faaxial) / total_height).reshape(1, 16, 1, 1)
-    
-    # Multiply and find max
-    Fd_all = np.max(np.sum(pinpower_reconstruct.reshape(-1,16,153,153) * ax_factor,axis = 1))
-    cycle_his_adj = cycle_his-cycle_his[0]
-    cycle_length = interpolatecycle(10,boron_his,cycle_his_adj)
-    if cycle_length>1000:
-       print('boron list',boron_his)
-       print('cycle list',cycle_his)
-       print(LPs)
-       print("Solution from surrogate model failed.")
-       
-
-    return Fd_all, Fq_all, np.max(boron_his), cycle_length
-
-
 # def retrained_models_1(datafile):
 #     from .loadmodel_Nov25 import model as m1, scalerparam as s1, trunks as t1, minmaxReverse as mm1re, minmaxscale as mm1
 #     return 
@@ -867,6 +745,7 @@ def get_result_157(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx
 def get_result_serial(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, idx22) :
     """
     Function executed by worker processes.
+    HARDCODED TO 193 ASSEMBLIES
     """
     
     model = m1
@@ -884,7 +763,7 @@ def get_result_serial(LPs, corebulist, xsdict, fabulist, faaxial, total_height, 
     ## initializing 
     initbumap = np.zeros((1,81,16))
     inputdata = getdata_fully_vectorized(initbumap, xsdict, test, fabulist, scalerparam, minmaxscale)
-    pow_0 = depletion_power(model, tuple(inputdata+[trunks]), scalerparam,idx11, idx22, total_height, faaxial)
+    pow_0 = depletion_power(model, tuple(inputdata+[trunks]), scalerparam,idx11, idx22, total_height, faaxial,193)
     pinpowerbu = getfqFd_pinrecontruct(initbumap, pow_0, test, fabulist, xsdict, faaxial, total_height) # first step
     pinpower.append(pinpowerbu)
     bor_pred0, cyc_pred0 = depletion_boroncycle(modelcore, tuple(inputdata+[trunk_core]), scaler_core,minmaxReverse)
@@ -903,7 +782,7 @@ def get_result_serial(LPs, corebulist, xsdict, fabulist, faaxial, total_height, 
                     delE = bu * (0.5 * pow_0 + 0.5 * pow_prev)
                     bumap = initbumap + delE.reshape((1, 81, 16))
                 input_data = getdata_fully_vectorized(bumap, xsdict, test, fabulist, scalerparam, minmaxscale)
-                pow_new = depletion_power(model, tuple(input_data+[trunks]), scalerparam,idx11, idx22, total_height,faaxial)
+                pow_new = depletion_power(model, tuple(input_data+[trunks]), scalerparam,idx11, idx22, total_height,faaxial,193)
                 # Check convergence
                 if iteration > 0:
                     max_delta = np.max(np.abs(pow_new - pow_prev))

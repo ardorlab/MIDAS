@@ -25,7 +25,6 @@ import copy
 import time as TT
 import matplotlib.pyplot as plt
 from surmodel.paralel_MLmodel import get_result
-from surmodel.paralel_MLmodel import get_result_157
 
 ## Initialize logging for the present file
 logger = logging.getLogger("MIDAS_logger")
@@ -81,10 +80,8 @@ def evaluate(solution, input,xsdict):
         initbumap = np.zeros((1,81,16))
     else:
         initbumap = initburnup
-    if input.num_assemblies==157:
-        Fd_all, Fq_all, maxboron, cycle_length = get_result_157(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, idx22, initbumap)
-    elif input.num_assemblies==193:
-        Fd_all, Fq_all, maxboron, cycle_length = get_result(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, idx22, initbumap)
+
+    Fd_all, Fq_all, maxboron, cycle_length = get_result(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, idx22, initbumap, input.num_assemblies)
     
     solution.parameters["cycle_length"]['value'] = cycle_length
     solution.parameters["pinpowerpeaking"]['value'] = Fq_all
