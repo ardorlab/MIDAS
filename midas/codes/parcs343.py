@@ -136,6 +136,7 @@ def burnup_input_generation(solution, input, cwd, filename):
             soln_fuel_locations[fuel_locations[i]] = solution.chromosome[i]
     
     soln_core_dict = deepcopy(input.core_dict)
+    soln_core_dict_tag = deepcopy(input.core_dict) # assign BU value via tag
     for loc, label in soln_fuel_locations.items():
         tag = None
         for fueltype in input.tag_list['fuel']:
@@ -144,6 +145,7 @@ def burnup_input_generation(solution, input, cwd, filename):
         if not tag:
             raise ValueError(f"FA label '{label}' not found in fuel types ({input.tag_list['fuel']}).")
         soln_core_dict[loc]['Value'] = label ## use label rather than tag here
+        soln_core_dict_tag[loc]['Value'] = [label,tag] ## use tag for assigning burnup value
     #!for loc, label in soln_refl_locations.items(): #!TODO: create a way to specify reflector locs for multiple radial refls.
 
     soln_core_lattice = deepcopy(input.core_lattice) # core lattice filled with chromosome
@@ -163,6 +165,59 @@ def burnup_input_generation(solution, input, cwd, filename):
                 soln_core_lattice[i][j] = ' '
             elif soln_core_lattice[i][j] == '10':
                 soln_core_lattice[i][j] = '0'
+
+    ## by Khang - build BU lattice / map for input to surrogate (?)
+    burnuplattice = deepcopy(input.core_lattice) # core lattice filled with chromosome
+    for loc, vals in soln_core_dict_tag.items():
+        sym_locs = [loc] + vals['Symmetric_Assemblies']
+        for j in range(len(burnuplattice)):
+            for i in range(len(burnuplattice[j])):
+                if burnuplattice[j][i] in sym_locs:
+                    if burnuplattice[j][i][0] == "R" and len(soln_core_lattice[j][i]) >= 5: #reflector
+                        burnuplattice[j][i] = "10" #!TODO: add support more multiple radial refls.
+                    elif vals['Value'] is None:
+                        burnuplattice[j][i] = '00'
+                    elif not isinstance(vals['Value'][0], int):
+                        burnuplattice[j][i] = vals['Value'][1]
+                    else:
+                        burnuplattice[j][i] = '00'
+        ## get burnup map 
+    boc_dep = (Path(cwd)/str(input.depletion_file)).resolve()
+ 
+    if input.num_assemblies==193:
+        bu3dmap = np.array(get_burnup_17(boc_dep)) ## (n_bu,n_fa,n_axial)
+    elif input.num_assemblies==157:
+        bu3dmap = np.array(get_burnup_15(boc_dep))
+    else:
+        raise ValueError(f"{input.num_assemblies} core is not supported in current version.")
+    initbu3dmap = bu3dmap[input.depletion_restart_point-1]
+    initburnup = np.zeros((1,9,9,16))
+    for row in range(burnuplattice.shape[0]):
+        for col in range(burnuplattice.shape[1]):
+            faidx = int(burnuplattice[row][col])
+            if faidx !=0:
+                initburnup[:,row,col,:]=initbu3dmap[faidx-1,:]
+    ## reshape 
+    initburnup = initburnup.reshape((1,81,16))
+    ## convert LPs
+    locationmap = input.core_lattice.T ## transpose 
+    depleted_map = np.array(input.depleted_map).reshape(soln_core_lattice.shape)
+    LPs = deepcopy(depleted_map)
+    for x in range(soln_core_lattice.shape[0]):
+        for y in range(soln_core_lattice.shape[1]):
+            if isinstance(soln_core_lattice[x,y],int):
+                if int(soln_core_lattice[x,y])!=0:
+                    LPs[x,y] = soln_core_lattice[x,y].lstrip('-') ## take the FA id
+            else:
+                idx =  np.where(locationmap == soln_core_lattice[x,y].replace('-', ''))
+                if len(idx[0]) >0:
+                    LPs[x,y] = depleted_map[idx[0][0], idx[1][0]]
+    LP_text = ""
+    for x in range(LPs.shape[0]):
+        for y in range(LPs.shape[1]):
+            LP_text +=  LPs[x,y]+" "
+
+
     ## write input 
     ## CaseID Block ##
     with open(filename,"w") as ofile:
@@ -436,7 +491,7 @@ def burnup_input_generation(solution, input, cwd, filename):
     with open(filename,"a") as ofile:
         ofile.write(".")
 
-
+    return LP_text, initburnup
 
 
 
@@ -545,6 +600,7 @@ def without_template(solution, input, cwd, filename):
         ofile.write("!******************************************************************************\n\n")
     
     ## GEOM Block Inputs ##
+    LP_text = ""
     with open(filename,"a") as ofile:
         ofile.write("GEOM\n")
         if input.map_size == 'quarter':
@@ -557,8 +613,10 @@ def without_template(solution, input, cwd, filename):
             ofile.write("      ")
             for y in range(soln_core_lattice.shape[1]):
                 ofile.write(soln_core_lattice[x,y])
+                LP_text += soln_core_lattice[x,y] + " "
                 ofile.write("  ")
             ofile.write("\n")
+            LP_text += "\n"
         ofile.write("\n")
     
         if input.map_size == 'quarter':
@@ -748,6 +806,8 @@ def without_template(solution, input, cwd, filename):
     ## Termination Character ##
     with open(filename,"a") as ofile:
         ofile.write(".")
+
+    return LP_text
 
 def with_template(solution, input, cwd, filename): 
 
