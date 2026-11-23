@@ -56,6 +56,8 @@ def evaluate(solution, mc_input, xsdict):
     print("Multicycle Assembly Options:",mc_input.fa_options)
     print("Multicycle Assembly Params/Genome:",mc_input.genome)
 
+    print("Suboptimization Parameters:",mc_input.suboptimization)
+
     for cycle_num in range(mc_input.num_cycles):
         # include a more interpretable printout of each 
         logger.info(f"Evaluating CYCLE {cycle_num+1} of {mc_input.num_cycles+1}")
@@ -72,22 +74,18 @@ def evaluate(solution, mc_input, xsdict):
 
         # GENERAL BLOCK
         cycle_input.calculation_type = "single_cycle" # set to single cycle
-        cycle_input.methodology = "simulated_annealing"
+        cycle_input.methodology = mc_input.suboptimization['optimizer']
         # set initial_temperature and other PSA defaults
         # code_type: surrogate (maybe?)
         # results_dreictory_name: smoething not output_files
         cycle_input.results_dir_name = "cycle_" + str(cycle_num + 1) # might need to adjust this for each cycle that is made
 
         # OPTIMIZER BLOCK
-        cycle_input.population_size = 1 # pop size is 1 for simulated annealing
-        cycle_input.num_generations = 3 # set a reasonable number of generations for simulated annealing - temp num for testing
+        cycle_input.population_size = mc_input.suboptimization['population_size'] # pop size is 1 for simulated annealing
+        cycle_input.num_generations = mc_input.suboptimization['number_of_generations']# set a reasonable number of generations for simulated annealing - temp num for testing
         # preset objectives for the single-cycle optimization. maybe these can be set based on user input
-        cycle_input.objectives = {'max_boron': {'goal': 'less_than_target', 'target': 1500, 'weight': 14.0},
-                                  'pinpowerpeaking': {'goal': 'less_than_target', 'target': 2.5, 'weight': 5000},
-                                  'fdeltah': {'goal': 'less_than_target', 'target': 1.65, 'weight': 5000},
-                                  'cycle_length': {'goal': 'maximize', 'weight': 1.0}                                  
-        }
-        
+        cycle_input.objectives = mc_input.suboptimization['objectives']
+    
         if cycle_num == 0:
             cycle_input.burnt_assemblies = False # no burnt assemblies for the first cycle
             print("THIS IS A FRESH CYCLE, BURNT ASSEMBLIES IS",cycle_input.burnt_assemblies)
@@ -98,18 +96,13 @@ def evaluate(solution, mc_input, xsdict):
             # cycle_input.burnt_assemblies = True # burnt assemblies are present for all other cycles
 
         # ALGORITHM BLOCK
-        cycle_input.perturbation_type = {"method": "perturb_by_swap", "num_perturbations": 2}
+        cycle_input.perturbation_type = mc_input.suboptimization['perturbation_type']
 
         cycle_input.multicycle_suboptimization = True
 
-        cycle_input.initial_temperature = 100
-        if cycle_input.num_procs > 1:
-            cycle_input.cooling_schedule = 'lam' 
-        if cycle_input.num_procs <= 1:
-            cycle_input.cooling_schedule = 'exponential_decrease'
-            if cycle_input.cooling_schedule == "lam":
-                raise ValueError(f"Cooling schedule '{cycle_input.cooling_schedule}' only available for parallel simulated annealing.")
-        cycle_input.secondary_cooling_schedule = 'exponential_decrease'
+        cycle_input.initial_temperature = mc_input.suboptimization['temperature']
+        cycle_input.cooling_schedule = mc_input.suboptimization['cooling_schedule']
+        cycle_input.secondary_cooling_schedule = mc_input.suboptimization['secondary_cooling_schedule']
 
         print(f"CYCLE {cycle_num+1} INPUT:")
         cycle_input.genome = deepcopy(solution.single_cycle_from_multicycle(cycle_num,cycle_input)) # single_cycle_from_mutlicycle modifies asssembly_optionsdirectly
@@ -122,6 +115,7 @@ def evaluate(solution, mc_input, xsdict):
         # print("Pop Size:",cycle_input.population_size)
         # print("Num Gens:",cycle_input.num_generations)
         # print("Objectives:",cycle_input.objectives)
+        # print("Perturbation:",cycle_input.perturbation_type)
         print("Assembly Options:",cycle_input.fa_options)
 
 

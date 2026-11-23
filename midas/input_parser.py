@@ -283,6 +283,119 @@ def validate_input(keyword, value):
         else:
             raise ValueError("'Objectives' must be nested with objectives/constraints and their parameters.")
     
+    elif keyword == 'suboptimization':
+        if isinstance(value,dict):
+            new_dict = {}
+            
+            # fill with suboptimization defaults
+            if 'optimizer' not in value.items():
+                new_dict['optimizer'] = 'simulated_annealing'
+            if 'population_size' not in value.items():
+                if new_dict['optimizer'] == 'simulated_annealing':
+                    new_dict['population_size'] = 1 # default for simulated annealing
+                else:
+                    new_dict['population_size'] = 75
+            if 'number_of_generations' not in value.items():
+                new_dict['number_of_generations'] = 100
+            if 'objectives' not in value.items():
+                new_dict['objectives'] = {'max_boron': {'goal': 'less_than_target', 'target': 1500, 'weight': 14.0},
+                                          'pinpowerpeaking': {'goal': 'less_than_target', 'target': 2.5, 'weight': 5000},
+                                          'fdeltah': {'goal': 'less_than_target', 'target': 1.65, 'weight': 5000},
+                                          'cycle_length': {'goal': 'maximize', 'weight': 1.0}}
+            if 'temperature' not in value.items():
+                new_dict['temperature'] = 100
+
+            if 'cooling_schedule' not in value.items():
+                new_dict['cooling_schedule'] = 'exponential_decrease'
+            if 'secondary_cooling_schedule' not in value.items():
+                new_dict['secondary_cooling_schedule'] = 'exponential_decrease'
+            if 'perturbation_type' not in value.items():
+                new_dict['perturbation_type'] = {'method': 'perturb_by_swap', 'num_perturbations': 2}
+
+
+            # fill non-defaults
+            for key, item in value.items():
+                new_key = str(key).lower()
+                if new_key == 'optimizer':
+                    item = str(item).lower().replace(' ','_')
+                    if item not in ["simulated_annealing"]:
+                        raise ValueError("Simulated annealing is the only supported suboptimization method available.")
+                elif new_key == 'population_size':
+                    try:
+                        item = item.lower().replace(' ','_')
+                        if item not in ["calculate_from_genes"]:
+                            raise ValueError("Population size may be a positive number, or 'calculate_from_genes'.")
+                    except AttributeError:
+                        item = int(item)
+                        if item != 1 and new_dict['optimizer'] == 'simulated_annealing':
+                            raise ValueError("Population size must be 1 for simulated annealing!")
+                elif new_key == 'number_of_generations':
+                    try:
+                        item = item.lower().replace(' ','_')
+                        if item not in ["calculate_from_genes"]:
+                            raise ValueError("Population size may be a positive number, or 'calculate_from_genes'.")
+                    except AttributeError:
+                        item = int(item)
+                elif new_key == 'objectives':
+                    if isinstance(item,dict):
+                        new_subdict = {}
+                        for subkey, subitem in item.items():
+                            sub_key = str(subkey).lower().replace(' ','_')
+                            if sub_key not in ['max_boron','pinpowerpeaking','fdeltah', 'cycle_length']:
+                                raise ValueError(f"Requested objective/constraint '{sub_key}' not supported for the suboptimization.")
+                            new_subitem = {}
+                            if isinstance(subitem, dict):
+                                # set defaults here? or maybe below
+                                for subsubkey, subsubitem in subitem.items():
+                                    subsubkey = str(subsubkey).lower()
+                                    if subsubkey == 'goal':
+                                        subsubitem = str(subsubitem).lower().replace(' ','_')
+                                        if subsubitem not in ['maximize','minimize','meet_target','less_than_target']:
+                                            raise ValueError(f"Requested objective/constraint goal '{subsubitem}' is not supported for the suboptimization.")
+                                    elif subsubkey == 'weight':
+                                        subsubitem = float(subsubitem)
+                                    elif subsubkey == 'target':
+                                        subsubitem = float(subsubitem)
+                                    
+                                    new_subitem[subsubkey] = subsubitem
+                            else:
+                                raise ValueError("Requested objective/constraint must be nested with its applicable parameters.")
+                            if 'weight' not in subitem.items():
+                                new_subitem['weight'] = 1.00 # default weight
+                            new_subdict[sub_key] = new_subitem
+                        item = new_subdict
+                    else:
+                        raise ValueError("'Objectives' must be nested with the objectives/constraints and their parameters for the suboptimization.")
+                elif new_key == 'temperature':
+                    item = float(item)
+                    if item < 0.0:
+                        raise ValueError("Simulated Annealing initial temperature must be greater than 0.")
+                elif new_key == 'cooling_schedule':
+                    item = str(item).lower().replace(' ','_')
+                    if item not in ["exponential_decrease", "linear_update", "log_update", "lam"]:
+                        raise ValueError(f"Cooling schedule 'item' not supported.")
+                elif new_key == 'secondary_cooling_schedule':
+                    item = str(item).lower().replace(' ',',')
+                    if item not in ["exponential_decrease", "linear_update", "log_update", "lam"]:
+                        raise ValueError(f"Secondary cooling schedule '{value}' not supported.")
+                elif new_key == 'perturbation_type':
+                    if isinstance(value, dict):
+                        new_subdict = {}
+                        for subkey, subitem in item.items():
+                            subkey = str(subkey).lower()
+                            if subkey == 'method':
+                                subitem = str(subitem).lower().replace(' ','_')
+                                if subitem not in ["perturb_by_gene","perturb_by_swap"]:
+                                    raise valueError(f"Requested perturbation method '{item}' not supported.")
+                            elif subkey == 'num_perturbations':
+                                subitem = int(subitem)
+                                if subitem < 1:
+                                    raise ValueError("num_perturbations must be 1 or greater")
+                            new_subdict[subkey] = subitem
+                        item = new_subdict
+                new_dict[key] = item
+            return new_dict    # no error for not having it as it's not needed if it's not a multicycle calculation
+
 ## Algorithm Block ##
     elif keyword == 'selection':
         if isinstance(value, dict):
@@ -1215,7 +1328,8 @@ class Input_Parser():
         self.objectives = yaml_line_reader(info, 'objectives', None)
         termination_criteria_default = {'method':'None','termination_generations':0}
         self.termination_criteria = yaml_line_reader(info, 'termination_criteria', termination_criteria_default)
-        
+        self.suboptimization = yaml_line_reader(info, 'suboptimization', None)       
+ 
     ## Algorithm Block ##
         try:
             info = self.file_settings['algorithm']
