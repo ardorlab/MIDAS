@@ -291,7 +291,8 @@ class Solution():
                     new_batch['name'] = random.choice(assembly_list)
                     new_batch['first_cycle'] = 0 # is cycle_num right? it will be zero for the first cycle. I think that's fine - will be zero for fresh load
                     new_batch['first_section'] = section # if fresh fuel is placed into all the sections at cycle 1, then there will need to be some other way of differentiating them
-                    # this first_section is not needed in subsequent cycles has the fresh fuel from here on out is placed in cycle 1
+                    # this first_section is not needed in subsequent cycles has the fresh fuel from here on out is placed in cycle 1 (under normal calculations)
+                    # theoretically, this method allows you to load fresh fuel in multiple sections in subsequent cycles, but that is unlikely
 
                     if len(assembly_list) == 1: # if there is only one assembly left, then the next batch must be the remainder of the available space
                         new_batch['num'] = section_amts[section - 1] - counter
@@ -311,7 +312,7 @@ class Solution():
                     chromosome[0][section - 1].append(new_batch)
 
             # print("Generated partial chromosome for cycle 1:", chromosome)
-            
+            antihang_tripped = False
             # For Cycle 2 to n (fresh fuel only in section 1)
             for cycle_num in range(1,len(chromosome)):
                 # perform standard fresh load for first section from the available assemblies (at this viewpoint, there are no limitations on sections)
@@ -346,19 +347,20 @@ class Solution():
                 # both sections processed at the same tiem
                 
                 # Obtain list of all previously used
+                # due to the inhomogeneity of the array, we sadly have no one-line solution
                 prev_batches = []
-                for cycle_num_2 in range(0,cycle_num): # iterate through previous cycles
-                    for section in range(1,4):
-                        for batch in chromosome[cycle_num_2][section - 1]:
-                            prev_batches.append(batch) # write out the whole history and process it in the next step
-                # print("All previous batches",prev_batches)    
+                for cyc in chromosome[:cycle_num]:
+                    prev_batches.append(list(np.concatenate(cyc)))
+                prev_batches = list(np.concatenate(prev_batches))
+                print("All previous batches",prev_batches)
 
-                # remove duplicates (cannot be done simply as dictionaries are involved)
+                # remove duplicates and thrice burnt assemblies
                 temp_store = []
                 for b in prev_batches:
+                    print(f"{b} has {prev_batches.count(b)} appearances previously")
                     if prev_batches.count(b) > 3: # validation check
-                        raise ValueError(f"The batch {b} has been used more than three times. This should not be possible.")
-                    if b not in temp_store:
+                        raise ValueError(f"The batch {b} has been used more than three times. Error!")
+                    if b not in temp_store and prev_batches.count(b) < 3:
                         temp_store.append(b)
                 prev_batches = temp_store                
 
@@ -383,7 +385,6 @@ class Solution():
                         # section overflow checks to make sure the batch order fits
                         if counter_section_2 > section_amts[1] or counter_section_3 > section_amts[2]:
                             break # break and go straight to the antihang
-
                         if counter_section_2 < section_amts[1]: # add to section 2 counter first
                             counter_section_2 += batch['num']
                             temp_section_2.append(batch) # build the working suggestion for the section
@@ -400,6 +401,8 @@ class Solution():
                     antihang += 1
                     if antihang > 1000:
                         print("antihang tripped, restarting multicycle chromosome generation from cycle 1")
+                        antihang_tripped = True # preserve trip info so that the general while loop continues to run with a new attempt
+                        break
                         # Don't raise an error! Instead, simply retry with cycle 1's batches!
                 
                 chromosome[cycle_num][1] = temp_section_2 # add the finalizeds
@@ -410,10 +413,23 @@ class Solution():
             print("Running validity checks")
 
         # validity checks
-
-            # no assembly burnt more than three times
+            # once again, concatenating the whole chromosome proves to be more complicated than a one-line solution
             all_the_batches = []
+            for cyc in chromosome[:cycle_num]:
+                all_the_batches.append(list(np.concatenate(cyc)))
+            all_the_batches = list(np.concatenate(all_the_batches))
+
             chromosome_is_valid = True # there have been multiple checks for validity. set this to true, and only set it to false if any check fails
+            
+            if antihang_tripped:
+                chromosome_is_valid = False
+
+            # verify (again) that each batch is only burnt once
+            for b_verify in all_the_batches:
+                if all_the_batches.count(b_verify) > 3:
+                    print(f"Validity Check Failed: Batch {b_verify} is used {all_the_batches.count(b_verify)} times, which is greater than the maximum allowable amount of 3. Retrying.")
+                    chromosome_is_valid = False
+
             for cycle in chromosome:
                 cycle_counter = 0
                 for section_idx in range(0,3):
@@ -421,7 +437,6 @@ class Solution():
                     for batch in cycle[section_idx]:
                         section_counter += batch['num']
                         cycle_counter += batch['num']
-                        all_the_batches.append(batch)
                     if section_counter != section_amts[section_idx]: # check that all region-specific numbers add up
                         chromosome_is_valid = False
                         
@@ -487,15 +502,17 @@ class Solution():
         
         return chromosome
 
-    def single_cycle_from_multicycle(self,cycle_num,FA_opts):
+    def single_cycle_from_multicycle(self,cycle_num,cycle_input):
         """
         Creates an initial loading pattern for a given cycle from the multicycle chromosome.
 
         INPUT:
         self (MUTLI-CYCLE SOLUTION!)
         cycle_num (int)
-        FA_opts (the fa_opts input line from the SINGLE-CYCLE SOLUTION! ONLY THE SINGLE-CYCLE SOLUTION IS DIRECTLY MODIFIED)
+        cycle_input (the SINGLE-CYCLE INPUT OBJECT - only the SINGLE-CYCLE solution is directly modified)    
         """
+
+        multdict = LWR_Core_Shapes.get_symmetry_multiplicity(cycle_input.nrow,cycle_input.ncol,cycle_input.num_assemblies,cycle_input.symmetry)
 
         # Extract the current cycle in question
         current_cycle = deepcopy(self.chromosome[cycle_num])
@@ -505,23 +522,33 @@ class Solution():
         cycle_genome = {} # for assembly parameters
         
         # print("Assembly options before:",self.input.fa_options['fuel'])
-
+            
+        print("last cycle:",self.chromosome[cycle_num-1])
         for section_idx in range(0,3): # step through each section in the given cycle and add it to the genome
+            print("Adding the batches for section",section_idx+1,"into the calculation")
             for batch in current_cycle[section_idx]:
                 # prepare a dictionary entry for that
                 if batch['first_cycle'] == cycle_num: # fresh fuel load - only need to write to genome
-                    new_batch_name = f"{batch['name']}-CYC{cycle_num+1}-SEC{section_idx+1}"
+                    if "first_section" in batch.keys(): # the first cycle may have some fresh assemblies in multiple sections, so append the section number if needed
+                        new_batch_name = f"{batch['name']}-CYC{cycle_num+1}-SEC{batch['first_section']}"
+                    else: # otherwise, we know the assembly is in the fresh fuel section
+                        new_batch_name = f"{batch['name']}-CYC{cycle_num+1}"
                     batch_dict = {'section':(section_idx+1),'constraint':{'type': 'meet_target', 'value': batch['num']}}
                     cycle_genome[new_batch_name] = batch_dict # add entry to genome
-                    FA_opts['fuel'][new_batch_name] = self.input.fa_options['fuel'][batch['name']] # copy the params for this fuel type
+                    cycle_input.fa_options['fuel'][new_batch_name] = self.input.fa_options['fuel'][batch['name']] # copy the params for this fuel type
                 else: # burnt fuel load - need to write to FA_options and genome
-                    assembly_to_find = f"{batch['name']}-CYC{cycle_num+1}-SEC{section_idx+1}" # search for this name in the output files
+                    if "first_section" in batch.keys(): # if the batch is originally from the first cycle, account for the section number when tracking the name of the batches of the assembly
+                        # fresh fuel added in cycles are the first won't have a first_section as they are always added into the first section
+                        assembly_to_find = f"{batch['name']}-CYC{batch['first_cycle']+1}-SEC{batch['first_section']}" # search for this name in the output files
+                    else:
+                        assembly_to_find = f"{batch['name']}-CYC{batch['first_cycle']+1}"                        
+
+                    print("assembly to find",assembly_to_find)
 
                     # We already know the first cycle and section this batch was used in from the name
                     # Grab the corresponding best_solution_chromosome.csv
-                    print("cwd",os.getcwd())
+                    # print("cwd",os.getcwd())
                     most_recent_cycle_path = Path(os.getcwd() + f"/cycle_{batch['first_cycle']+1}/best_solution_chromosome.csv") # default most recent is the first cycle
-                    
                     # remember multiplicities! if the batch goes into a seciton with multiplictiy 1, then it can only be used once??
 
                     # Find if this is a twice-burnt assembly (and in which cycle/section it was previously used)
@@ -534,20 +561,23 @@ class Solution():
                                 # if batch is not in any of these previous cycles, it has only been burnt once
 
                     with open(most_recent_cycle_path, 'r') as csvfile:
-                        most_recent_cycle = csvfile.readline() # grab the first line (which is the chromosome)\
-                    most_recent_cycle = most_recent_cycle.split(",") # split into a list to retrieve the actual choromosome
-                    
+                        most_recent_cycle = csvfile.readline() # grab the first line (which is the chromosome)
+                    most_recent_cycle = most_recent_cycle.replace("\n","").split(",") # split into a list to retrieve the actual choromosome (and get rid of the newline at the end)
+                     
+                    # print("most recent cycle",most_recent_cycle)
                     for assembly_idx in range(0,len(most_recent_cycle)):
-                        if assembly_to_find in most_recent_cycle[assembly_idx]:
-                            burnt_batch_name = f"{most_recent_cycle[assembly_idx]}_{assembly_idx}" # append the index to the name of the batch 
-                            batch_dict = {'section':(section_idx+1),'constraint':{'type': 'meet_target', 'value': 4}} # TODO: add multiplicity instead of 4
-                            FA_opts['fuel'][burnt_batch_name] = self.input.fa_options['fuel'][batch['name']] # {'type': 5, 'serial': 'no'} # TODO: type is fresh lol, will need to add a new type for burnt fuel assemblies
+                        if assembly_to_find in most_recent_cycle[assembly_idx]: # use "in" since twice-burnt assemblies will ahve their location ID at the end, so assembly_to_find won't match exactly
+                            burnt_batch_name = f"{most_recent_cycle[assembly_idx]}_{assembly_idx}" # append the index to the name of the batch (which can inclujde previously location history)
+                            batch_dict = {'section':(section_idx+1),'constraint':{'type': 'max_quantity', 'value': multdict[assembly_idx]}} # TODO: add multiplicity instead of 4
+                            # MAX_QUANTITY USED HERE B/C OF MULTIPLICITY ISSUES
+                            cycle_input.fa_options['fuel'][burnt_batch_name] = self.input.fa_options['fuel'][batch['name']] # {'type': 5, 'serial': 'no'} # TODO: type is fresh lol, will need to add a new type for burnt fuel assemblies
+                            print(f"New assembly added for cycle {cycle_num} in section {section_idx+1}: {batch_dict}")
                             cycle_genome[burnt_batch_name] = batch_dict # add to genome
         
-                            # Grab BUs after, for now let's do it all for fresh
+                            # Grab BUs after, for now let's do it all treating them like they're fresh
 
         # print("Assembly options after:",FA_opts)
-        # print("Cycle genome:", cycle_genome,"for cycle",cycle_num)
+        print("Cycle genome:", cycle_genome,"for cycle",cycle_num)
 
 
         # ideally i'd llike to just feed something into the initial LP generating function,
@@ -749,7 +779,7 @@ class Gene_Validity_check():
         symmetry = LWR_core_parameters[3]
         multdict = LWR_Core_Shapes.get_symmetry_multiplicity(num_rows, num_cols, num_FA, symmetry)
         gene_counts = LWR_Core_Shapes.count_in_LP(multdict,chromosome)
-        print("Gene Counts",gene_counts)
+        # print("Gene Counts",gene_counts)
         ## if chromosome represents a shuffling scheme, not a loading pattern, the LP needs to be extracted before this step.
         valid_genes_list = []
         for gene in genes_list:
@@ -760,7 +790,7 @@ class Gene_Validity_check():
                     gene_counts[gene] = 0
                 if ctype in ['max_quantity','meet_target']:
                     # only include option if less than the max quantity have been already used and there are still enough to fulfill multiplicity requirements
-                    print(gene,"gene_counts[gene]",gene_counts[gene],",cvalue",cvalue,",",gene_counts)
+                    # print(gene,"gene_counts[gene]",gene_counts[gene],",cvalue",cvalue,",",gene_counts)
                     if gene_counts[gene] < cvalue and (cvalue - gene_counts[gene]) >= multdict[index]:
                         valid_genes_list.append(gene)
                 elif ctype == 'less_than_variable':
@@ -930,7 +960,7 @@ class Gene_Validity_check():
                     gene_counts[gene] = 0
                 if ctype == 'max_quantity': #quantity of gene type must be less than the max allowed quantity.
                     if calc_type not in ['multi_cycle']:
-                        if gene_counts[gene] >=cvalue:
+                        if gene_counts[gene] > cvalue:
                             return False
                     else:
                         if is_integer(gene):
@@ -944,7 +974,7 @@ class Gene_Validity_check():
                 elif ctype == 'less_than_variable': #quantity of gene type must be less than the quantity of the target variable.
                     if cvalue not in gene_counts:
                         gene_counts[cvalue] = 0
-                    if gene_counts[gene] > gene_counts[cvalue] :#and cvalue!=1: ## 1 for reload core
+                    if gene_counts[gene] >= gene_counts[cvalue] :#and cvalue!=1: ## 1 for reload core
                         return False
                 elif ctype == 'meet_target': #quantity of gene type must be equal to the target quantity
                     if gene_counts[gene] != cvalue:

@@ -11,7 +11,6 @@ from subprocess import STDOUT
 from midas.utils import optimizer_tools as optools
 from midas_data import __parcs343exe__
 
-
 ## Initialize logging for the present file
 logger = logging.getLogger("MIDAS_logger")
 
@@ -183,6 +182,7 @@ def burnup_input_generation(solution, input, cwd, filename):
                         burnuplattice[j][i] = '00'
         ## get burnup map 
     boc_dep = (Path(cwd)/str(input.depletion_file)).resolve()
+    from midas.codes.surrogatemodel_BK import get_burnup_17, get_burnup_15 # for BU input generation
  
     if input.num_assemblies==193:
         bu3dmap = np.array(get_burnup_17(boc_dep)) ## (n_bu,n_fa,n_axial)

@@ -682,7 +682,7 @@ def get_result(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, 
                     # print(bor_pred0)
                     if bor_pred0[0] <50: # this value is 20 in the remove get_result_157 version. why?
                         complete_flag = True
-                    print(f"BU={bu}, iter={iteration} → Converged (tol={max_delta:.2e})")
+                    # print(f"BU={bu}, iter={iteration} → Converged (tol={max_delta:.2e})")
                     # Update for next burnup
                     initbumap = bumap
                     power_history.append(pow_new)
@@ -692,7 +692,7 @@ def get_result(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, 
                     converged = True
                     # bustep+=1
                     break
-    
+            
             pow_prev = pow_new
     
         if not converged:

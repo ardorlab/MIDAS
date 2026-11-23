@@ -77,13 +77,10 @@ def evaluate(solution, mc_input, xsdict):
         # code_type: surrogate (maybe?)
         # results_dreictory_name: smoething not output_files
         cycle_input.results_dir_name = "cycle_" + str(cycle_num + 1) # might need to adjust this for each cycle that is made
-        # BIG ISSUE: might blow up file size
-        print("path test",cycle_input.results_dir_name)
-
 
         # OPTIMIZER BLOCK
         cycle_input.population_size = 1 # pop size is 1 for simulated annealing
-        cycle_input.num_generations = 75 # set a reasonable number of generations for simulated annealing
+        cycle_input.num_generations = 3 # set a reasonable number of generations for simulated annealing - temp num for testing
         # preset objectives for the single-cycle optimization. maybe these can be set based on user input
         cycle_input.objectives = {'max_boron': {'goal': 'less_than_target', 'target': 1500, 'weight': 14.0},
                                   'pinpowerpeaking': {'goal': 'less_than_target', 'target': 2.5, 'weight': 5000},
@@ -93,12 +90,17 @@ def evaluate(solution, mc_input, xsdict):
         
         if cycle_num == 0:
             cycle_input.burnt_assemblies = False # no burnt assemblies for the first cycle
+            print("THIS IS A FRESH CYCLE, BURNT ASSEMBLIES IS",cycle_input.burnt_assemblies)
             # in the future, when you have burnt assemblies as a possilbe input, this will have to be adjusted to figure out another method of determining is burnt assemvblies are present or not
         else: # all other cycles
-            cycle_input.burnt_assemblies = True # burnt assemblies are present for all other cycles
+            print("THIS IS A BURNT CYCLE BUT I AM RUNNING THEM FRESH JUST FOR TESTING - CK - cycle num is",cycle_num)
+            cycle_input.burnt_assemblies = False
+            # cycle_input.burnt_assemblies = True # burnt assemblies are present for all other cycles
 
         # ALGORITHM BLOCK
         cycle_input.perturbation_type = {"method": "perturb_by_swap", "num_perturbations": 2}
+
+        cycle_input.multicycle_suboptimization = True
 
         cycle_input.initial_temperature = 100
         if cycle_input.num_procs > 1:
@@ -110,7 +112,7 @@ def evaluate(solution, mc_input, xsdict):
         cycle_input.secondary_cooling_schedule = 'exponential_decrease'
 
         print(f"CYCLE {cycle_num+1} INPUT:")
-        cycle_input.genome = deepcopy(solution.single_cycle_from_multicycle(cycle_num,cycle_input.fa_options)) # single_cycle_from_mutlicycle modifies asssembly_optionsdirectly
+        cycle_input.genome = deepcopy(solution.single_cycle_from_multicycle(cycle_num,cycle_input)) # single_cycle_from_mutlicycle modifies asssembly_optionsdirectly
         # add burn assemblies will have to be in the process above!
         # parcs_data can remain the same
         
@@ -127,9 +129,6 @@ def evaluate(solution, mc_input, xsdict):
         optools.LP_map_loader(cycle_input)
 
         print("Assembly Params/Genome:",cycle_input.genome)
-
-        print("Calc Type:",cycle_input.calculation_type)
-
 
         cycle_input = problem_preparation.Prepare_Problem_Values.prepare_calc(cycle_input) # prepare calculation values
         run_single_cycle(cycle_input) # run the single-cycle optimization for this cycle
@@ -168,7 +167,6 @@ def run_single_cycle(cycle_input):
     """ 
     from midas.optimizer import Optimizer # import in function to prevent circular input
     logger = logging.getLogger("MIDAS_logger")
-    print("Calc Type:",cycle_input.calculation_type)
     print(f"Optimizer is activated! Beware!")
     optimizer2 = Optimizer(cycle_input) # Run the optimizer with the cycle_input parameters
     optimizer2.build_optimizer()

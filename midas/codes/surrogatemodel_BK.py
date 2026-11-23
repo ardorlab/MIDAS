@@ -32,7 +32,7 @@ logger = logging.getLogger("MIDAS_logger")
 def evaluate(solution, input,xsdict):
     """
     Interface used to run surrogate model calculations.
-    
+   
     evaluate function creates working directory and prepares depletion file.
     if a parcs input file template is provided by the user in the yaml file, the parcs input will be created in with_template()
     if no template is provided (base case) then the files will be created using without_template()
@@ -79,7 +79,15 @@ def evaluate(solution, input,xsdict):
     if not input.burnt_assemblies:
         initbumap = np.zeros((1,81,16))
     else:
-        initbumap = initburnup
+        try:
+            input.multicycle_suboptimization # if this is a multicycle suboptimization, BU data must be retrieved from the previous cycle
+        except NameError: # not a multicycle suboptimization, but has burnt assemblies
+            initbumap = initburnup # pull from the burnup_input_generation
+        else: # multicycle suboptimization    
+            initbumap = np.zeros((1,81,16)) # initialize to zeroes for fresh assemblies
+            
+            # obtain BUs from other assemblies
+            print("placeholder for multicycle optimization")
 
     Fd_all, Fq_all, maxboron, cycle_length = get_result(LPs, corebulist, xsdict, fabulist, faaxial, total_height, idx11, idx22, initbumap, input.num_assemblies)
     
